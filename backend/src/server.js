@@ -7,6 +7,8 @@ const dotenv = require('dotenv');
 dotenv.config();
 const app = express();  // Tạo app
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Middlewares
 
@@ -15,7 +17,6 @@ const app = express();  // Tạo app
 // Import routes
 // Cần bao nhiêu routes thì import bấy nhiêu
 const productRoutes = require('./routes/product.route.js');
-
 
 
 // Gán các routes vào đường dẫn

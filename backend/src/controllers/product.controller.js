@@ -45,7 +45,7 @@ const updateProduct = async (req, res) => {
         res.json({ success: true, data: product });
     }
     catch (error) {
-        res.status(400).json({ success: true, message: error.message });
+        res.status(400).json({ success: false, message: error.message });
     }
 }
 
