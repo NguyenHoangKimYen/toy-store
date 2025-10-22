@@ -42,5 +42,4 @@ const OrderItemSchema = new mongoose.Schema({
 // Thêm index kết hợp để truy vấn nhanh các mục thuộc một đơn hàng cụ thể
 OrderItemSchema.index({ orderId: 1, productVariantId: 1 });
 
-// Tạo Model từ Schema
 module.exports = mongoose.model('OrderItem', OrderItemSchema);

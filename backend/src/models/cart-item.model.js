@@ -35,5 +35,4 @@ const CartItemSchema = new mongoose.Schema({
 // Thêm index kết hợp để đảm bảo mỗi biến thể sản phẩm chỉ có 1 dòng trong 1 giỏ hàng
 CartItemSchema.index({ cartId: 1, productVariantId: 1 }, { unique: true });
 
-// Tạo Model từ Schema
 module.exports = mongoose.model('CartItem', CartItemSchema);

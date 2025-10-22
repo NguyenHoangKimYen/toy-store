@@ -1,10 +1,29 @@
 const Product = require('../models/product.model.js');
 
-
 const findAll = async (filter = {}, options = {}) => {
     return Product.find(filter)
-        // .populate("brand category tags variants discountCode")
-        .populate("brandId categoryId")
+        .populate([
+            {
+                path: "brandId",
+                select: "name slug description"
+            },
+            {
+                path: "categoryId",
+                select: "name slug description"
+            },
+            {
+                path: "tags",
+                select: "name slug"
+            },
+            // {
+            //     path: "variants",
+            //     select: "name options price stock"
+            // },
+            // {
+            //     path: "discountCode",
+            //     select: "code discountPercentage validUntil"
+            // }
+        ])
         .skip(options.skip || 0)
         .limit(options.limit || 20)
         .sort(options.sort || { createdAt: -1 });
@@ -12,12 +31,54 @@ const findAll = async (filter = {}, options = {}) => {
 
 const findById = async (id) => {
     return Product.findById(id)
-        .populate("brand category tags variants discountCode");
+        .populate([
+            {
+                path: "brandId",
+                select: "name slug description"
+            },
+            {
+                path: "categoryId",
+                select: "name slug description"
+            },
+            {
+                path: "tags",
+                select: "name slug"
+            },
+            // {
+            //     path: "variants",
+            //     select: "name options price stock"
+            // },
+            // {
+            //     path: "discountCode",
+            //     select: "code discountPercentage validUntil"
+            // }
+        ])
 }
 
 const findBySlug = async (slug) => {
     return Product.findOne({ slug })
-        .populate("brand category tags variants discountCode");
+        .populate([
+            {
+                path: "brandId",
+                select: "name slug description"
+            },
+            {
+                path: "categoryId",
+                select: "name slug description"
+            },
+            {
+                path: "tags",
+                select: "name slug"
+            },
+            // {
+            //     path: "variants",
+            //     select: "name options price stock"
+            // },
+            // {
+            //     path: "discountCode",
+            //     select: "code discountPercentage validUntil"
+            // }
+        ])
 }
 
 const create = async (data) => {

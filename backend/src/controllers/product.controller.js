@@ -21,7 +21,7 @@ const getProductById = async (req, res) => {
 
 const getProductBySlug = async (req, res) => {
     try {
-        const product = await productService.getProductBySlug(req.params.slut);
+        const product = await productService.getProductBySlug(req.params.slug);
         res.json({ success: true, data: product })
     }
     catch (error) {
