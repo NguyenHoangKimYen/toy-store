@@ -68,6 +68,7 @@ const ProductSchema = new mongoose.Schema({
   // createdAt / updatedAt (Tự động)
 }, {
   timestamps: true, // Tự động thêm createdAt và updatedAt
+  collection: 'products', // Đặt tên collection là 'products'
 });
 
 // Tạo Model từ Schema

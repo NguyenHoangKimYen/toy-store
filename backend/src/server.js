@@ -16,17 +16,18 @@ app.use((req, res, next) => {
 });
 
 // Middlewares
-
-
+app.use(express.json()); // Cho phép phân tích cú pháp JSON trong body của request
+app.use(express.urlencoded({ extended: true })); // Cho phép phân tích cú pháp URL-encoded trong body của request
 
 // Import routes
 // Cần bao nhiêu routes thì import bấy nhiêu
 const productRoutes = require('./routes/product.route.js');
-
+const userRoutes = require('./routes/user.route.js');
 
 
 // Gán các routes vào đường dẫn
 app.use('/api/products', productRoutes);
+app.use('/api/users', userRoutes);
 
 
 const PORT = process.env.PORT || 5000;
@@ -38,7 +39,7 @@ const startServer = async() => {
 
     // Sau đó, chỉ start server khi đã kết nối được db
     app.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT} http://localhost:${PORT}/api/products`);
+        console.log(`Server is running on port ${PORT} http://localhost:${PORT}/api/users`);
     })
 };
 

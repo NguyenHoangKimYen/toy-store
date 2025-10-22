@@ -1,7 +1,7 @@
 const { mongo } = require('mongoose');
 const productService = require('../services/product.service.js');
 
-const getAllProducts = async (req, res) => {
+const getAllProducts = async (req, res, next) => {
     try {
         const products = await productService.getAllProducts(req.query);
         res.json({ success: true, data: products });

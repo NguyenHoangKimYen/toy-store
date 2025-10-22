@@ -10,6 +10,15 @@ const BrandSchema = new mongoose.Schema({
     unique: true, // Thường thì tên thương hiệu là duy nhất
     trim: true,
   },
+
+  slug: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true,
+    index: true,
+  },
   
   // Mô tả ngắn
   description: {

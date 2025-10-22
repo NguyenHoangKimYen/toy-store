@@ -3,7 +3,6 @@ const Product = require('../models/product.model.js');
 
 const findAll = async (filter = {}, options = {}) => {
     return Product.find(filter)
-        // .populate("brand category tags variants discountCode")
         .populate("brandId categoryId")
         .skip(options.skip || 0)
         .limit(options.limit || 20)
@@ -12,12 +11,18 @@ const findAll = async (filter = {}, options = {}) => {
 
 const findById = async (id) => {
     return Product.findById(id)
-        .populate("brand category tags variants discountCode");
+        .populate({ path: "brandId", select: "name slug" })
+        .populate({ path: "categoryId", select: "name slug" })
+        .populate({ path: "tags", select: "name slug" });
+        // .populate("variants discountCode");
 }
 
 const findBySlug = async (slug) => {
     return Product.findOne({ slug })
-        .populate("brand category tags variants discountCode");
+        .populate({ path: "brandId", select: "name slug" })
+        .populate({ path: "categoryId", select: "name slug" })
+        .populate({ path: "tags", select: "name slug" })
+        // .populate(" variants discountCode");
 }
 
 const create = async (data) => {
