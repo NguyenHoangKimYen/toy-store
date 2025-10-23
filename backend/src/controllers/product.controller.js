@@ -1,31 +1,42 @@
+const { mongo } = require('mongoose');
 const productService = require('../services/product.service.js');
 
-const getAllProducts = async (req, res) => {
+const getAllProducts = async (req, res, next) => {
     try {
         const products = await productService.getAllProducts(req.query);
         res.json({ success: true, data: products });
     }
     catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        return next(error); //error middleware will handle this
     }
 }
 
-const getProductById = async (req, res) => {
+const getProductById = async (req, res, next) => {
     try {
-        const product = await productService.getProductById(req.params.id);
-        res.json({ success: true, data: product });
-    } catch (err) {
-        res.status(404).json({ success: false, message: err.message });
+        const { id } = req.params;
+        if (!mongo.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: "Invalid product ID" });
+        }
+        const product = await productService.getProductById(id);
+        if (!product) {
+            return res.status(404).json({ success: false, message: "Product not found" });
+        }
+        return res.json({ success: true, data: product });
+    } catch (error) {
+        return next(error);
     }
 }
 
 const getProductBySlug = async (req, res) => {
     try {
-        const product = await productService.getProductBySlug(req.params.slug);
-        res.json({ success: true, data: product })
-    }
-    catch (error) {
-        res.status(404).json({ success: false, message: error.message });
+        const { slug } = req.params;
+        const product = await productService.getProductBySlug(slug);
+        if (!product) {
+            return res.status(404).json({ success: false, message: "Product not found" });
+        }
+        return res.json({ success: true, data: product });
+    } catch (error) {
+        return next(error);
     }
 }
 
@@ -41,8 +52,15 @@ const createProduct = async (req, res) => {
 
 const updateProduct = async (req, res) => {
     try {
-        const product = await productService.updateProduct(req.params.id, req.body);
-        res.json({ success: true, data: product });
+        const { id } = req.params;
+        if (!mongo.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: "Invalid product ID" });
+        }
+        const product = await productService.updateProduct(id, req.body);
+        if (!product) {
+            return res.status(404).json({ success: false, message: "Product not found" });
+        }
+        return res.json({ success: true, data: product });
     }
     catch (error) {
         res.status(400).json({ success: false, message: error.message });
@@ -51,10 +69,18 @@ const updateProduct = async (req, res) => {
 
 const deleteProduct = async (req, res) => {
     try {
-        productService.deleteProduct(req.params.id)
+        const { id } = req.params;
+        if (!mongo.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: "Invalid product ID" });
+        }
+        const deleted = await productService.deleteProduct(id);
+        if (!deleted) {
+            return res.status(404).json({ success: false, message: "Product not found" });
+        }
+        return res.status(204).send();
     }
-    catch (error) {
-        res.status(400).json({ success: false, message: error.message});
+    catch (error){
+        return next(error);
     }
 }
 
