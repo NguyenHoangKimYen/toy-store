@@ -36,5 +36,4 @@ const AdminActionLogSchema = new mongoose.Schema({
   timestamps: { createdAt: 'createdAt', updatedAt: false }, // Chỉ cần createdAt
 });
 
-// Tạo Model từ Schema
 module.exports = mongoose.model('AdminActionLog', AdminActionLogSchema);

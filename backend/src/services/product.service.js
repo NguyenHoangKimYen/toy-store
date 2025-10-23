@@ -16,7 +16,6 @@ const getAllProducts = async (query) => {
     return productRepository.findAll(filter, options);
 }
 
-// Dùng để code logic nè, thay vì ở repository code logic thì code ở đây
 const getProductById = async (id) => {
     const product = await productRepository.findById(id);
     if (!product) {
@@ -25,7 +24,7 @@ const getProductById = async (id) => {
     return product;
 }
 
-const getProductBySlug = async (req, res) => {
+const getProductBySlug = async (slug) => {
     const product = await productRepository.findBySlug(slug);
     if (!product) {
         throw new Error('Product not found');
