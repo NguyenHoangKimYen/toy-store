@@ -20,8 +20,8 @@ router.get("/phone/:phone", getUserByPhone);
 router.get("/username/:username", getUserByUsername);
 router.get("/:id", getUserById);
 router.post("/", createUser);
-router.put("/:id/verify", verifyUser);
-router.patch("/:id/set-password", setUserPassword);
+router.patch("/:id/verify", verifyUser);
+router.patch('/:id/set-password', setUserPassword);
 router.put("/:id", updateUser);
 router.delete("/:id", deleteUser);
 

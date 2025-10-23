@@ -6,13 +6,13 @@ const getAllUsers = async (query) => {
     const { page = 1, limit = 20, role, keyword } = query;
     const filter = {};
     
-    if (role) filter.role = role;
-    if (keyword) filter.$text = { $search: keyword };
+    if (role) filter.role = role; //lọc theo vai trò người dùng
+    if (keyword) filter.$text = { $search: keyword }; //tìm kiếm toàn văn bản trên các trường được đánh chỉ mục văn bản
     const options = {
         skip: (page - 1) * limit,
         limit: parseInt(limit),
         };
-    return userRepository.findAll(filter, options);
+    return userRepository.findAll(filter, options); //truy xuất người dùng với bộ lọc và tùy chọn phân trang
 }
 
 const getUserById = async (id) => {
@@ -68,13 +68,28 @@ const setUserVerified = async (id, isVerified = true) => {
     return verifiedUser;
 }
 
-const setUserPassword = async (id, hashedFieldName, hashValue) => {
-    const saltRound = 10; //số vòng băm
-    const hashedPassword = await bcrypt.hash(hashValue, saltRound); //băm mật khẩu
-
-    return userRepository.setPassword(id, hashedFieldName, hashedPassword); //tạo người dùng mới
+const setUserPassword = async (id, plainPassword) => {
+    if (//kiểm tra tính hợp lệ của mật khẩu
+        !plainPassword ||
+        typeof plainPassword !== 'string' || 
+        !plainPassword.trim() ||
+        plainPassword.length < 8 ||
+        plainPassword.length > 32
+    )
+    {
+        throw new Error('Invalid password');
+    }
+    
+    const saltRound = 10;
+    const hashedPassword = await bcrypt.hash(plainPassword, saltRound); //băm mật khẩu
+    
+    const updated = await userRepository.setPassword(id, hashedPassword);//cập nhật mật khẩu đã băm vào cơ sở dữ liệu
+    if (!updated) {
+        throw new Error('User not found or password update failed');
+    }
+    return updated;
 }
-
+    
 const updateUser = async (id, userData) => {
     const updatedUser = await userRepository.update(id, userData);
     if (!updatedUser) {

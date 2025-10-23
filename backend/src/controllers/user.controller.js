@@ -100,11 +100,19 @@ const verifyUser = async (req, res, next) => {
 const setUserPassword = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { hashedFieldName, hashValue } = req.body;
+        const { password, confirmPassword } = req.body;
         if (!mongo.ObjectId.isValid(id)) {
             return res.status(400).json({ success: false, message: "Invalid user ID" });
         }
-        const user = await userService.setUserPassword(id, hashedFieldName, hashValue);
+        if (!password || typeof password !== 'string' || !password.trim() || password.length < 8 || password.length > 32) { //kiểm tra tính hợp lệ của mật khẩu
+            return res.status(400).json({ success: false, message: "Invalid password" });
+        }
+
+        if (confirmPassword !== undefined && password !== confirmPassword) { //kiểm tra xác nhận mật khẩu
+            return res.status(400).json({ success: false, message: 'Password confirmation does not match' });
+        }
+
+        const user = await userService.setUserPassword(id, password); //cập nhật mật khẩu
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found or password update failed" });
         }
