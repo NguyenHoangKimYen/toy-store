@@ -28,7 +28,7 @@ const CategorySchema = new mongoose.Schema({
   },
 }, {
   timestamps: true, // Tự động thêm createdAt và updatedAt
+  collection: 'categories'
 });
 
-// Tạo Model từ Schema
 module.exports = mongoose.model('Category', CategorySchema);

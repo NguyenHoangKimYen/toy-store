@@ -24,7 +24,6 @@ app.use(express.urlencoded({ extended: true })); // Cho phép phân tích cú ph
 const productRoutes = require('./routes/product.route.js');
 const userRoutes = require('./routes/user.route.js');
 
-
 // Gán các routes vào đường dẫn
 app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);

@@ -39,5 +39,4 @@ const AnalyticsLogSchema = new mongoose.Schema({
   }],
 });
 
-// Tạo Model từ Schema
 module.exports = mongoose.model('AnalyticsLog', AnalyticsLogSchema);
