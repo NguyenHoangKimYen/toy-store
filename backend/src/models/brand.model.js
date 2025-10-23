@@ -14,11 +14,12 @@ const BrandSchema = new mongoose.Schema({
   slug: {
     type: String,
     required: true,
-    unique: true, // Slug phải là duy nhất
+    unique: true,
     lowercase: true,
     trim: true,
+    index: true,
   },
-
+  
   // Mô tả ngắn
   description: {
     type: String,
