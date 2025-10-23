@@ -43,6 +43,7 @@ const addressSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     }
-});
+},{ collection: 'addresses' }
+);
 
-module.exports = mongoose.Schema('Address', addressSchema);
+module.exports = mongoose.model('Address', addressSchema);
