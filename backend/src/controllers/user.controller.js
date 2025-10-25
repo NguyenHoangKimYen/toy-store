@@ -1,5 +1,6 @@
 const { mongo } = require('mongoose');
 const userService = require('../services/user.service.js');
+const userRepository = require('../repositories/user.repository.js');
 
 const getAllUsers = async (req, res, next) => {
     try {
@@ -82,15 +83,24 @@ const createUser = async (req, res, next) => {
 
 const verifyUser = async (req, res, next) => {
     try {
+        const { token } = req.body;
         const { id } = req.params;
-        if (!mongo.ObjectId.isValid(id)) {
-            return res.status(400).json({ success: false, message: "Invalid user ID" });
-        }
-        const user = await userService.setUserVerified(id, true);
+
+        const user = await userRepository.findById(id);
         if (!user) {
-            return res.status(404).json({ success: false, message: "User not found or verification update failed" });
+            return res.status(404).json({ success: false, message: "User not found" });
         }
-        return res.json({ success: true, data: user });
+        
+        if (user.verificationCode !== token) {
+            return res.status(400).json({ success: false, message: "Invalid verification code" });
+        }
+
+        const verifiedUser = await userService.setUserVerified(id, true);
+        res.json({ 
+            success: true, 
+            message: "User verified successfully",
+            user: verifiedUser 
+        });
     }
     catch (error) {
         return next(error);
