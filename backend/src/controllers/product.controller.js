@@ -79,7 +79,23 @@ const deleteProduct = async (req, res) => {
         }
         return res.status(204).send();
     }
-    catch (error){
+    catch (error) {
+        return next(error);
+    }
+}
+
+const updateProductImages = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const files = req.files;
+
+        const product = await productService.updateProductImages(id, files);
+
+        return res.json({
+            message: 'Product images updated successfully',
+            data: product,
+        });
+    } catch (error) {
         return next(error);
     }
 }
@@ -90,5 +106,6 @@ module.exports = {
     getProductBySlug,
     createProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    updateProductImages
 };

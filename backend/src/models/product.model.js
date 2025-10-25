@@ -1,12 +1,9 @@
 const mongoose = require('mongoose');
 
-require('./brand.model.js');
 require('./category.model.js');
 require('./tag.model.js');
 
 const ProductSchema = new mongoose.Schema({
-  // Trường _id (PK) tự động được Mongoose/MongoDB tạo ra
-
   // Tên sản phẩm
   name: {
     type: String,
@@ -18,55 +15,109 @@ const ProductSchema = new mongoose.Schema({
   slug: {
     type: String,
     required: true,
-    unique: true, // Slug phải là duy nhất
+    unique: true,
     lowercase: true,
     trim: true,
   },
 
-  // Khóa ngoại: Thương hiệu (FK → Brand)
-  brandId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Brand', // Tham chiếu đến Model 'Brand'
-    required: true,
-  },
-
-  // Khóa ngoại: Danh mục (FK → Category)
+  // Danh mục
   categoryId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Category', // Tham chiếu đến Model 'Category'
+    ref: 'Category',
     required: true,
-    index: true, // Index để tìm sản phẩm theo danh mục nhanh chóng
+    index: true,
   },
 
+  // Mô tả ngắn
   shortDescription: {
     type: String,
     required: true,
     trim: true,
-    maxlength: 500, // Giới hạn ký tự cho mô tả ngắn
+    maxlength: 500,
   },
 
+  // Mô tả chi tiết
   longDescription: {
-    type: String, // Trong MongoDB, Text thường được lưu trữ dưới dạng String
+    type: String,
     required: true,
   },
 
-  tags: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Tag',
-  }],
+  // Danh sách tag
+  tags: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Tag',
+    },
+  ],
 
-  // Điểm trung bình (Dữ liệu tính toán từ bảng Rating/Review)
+  // ✅ SKU (mã hàng hóa)
+  sku: {
+    type: String,
+    trim: true,
+    unique: true,
+    sparse: true, // tránh lỗi unique khi để trống
+  },
+
+  // ✅ Giá bán
+  price: {
+    type: mongoose.Schema.Types.Decimal128,
+    required: true,
+    min: 0,
+  },
+
+  // ✅ Giá gốc (nếu có khuyến mãi)
+  originalPrice: {
+    type: mongoose.Schema.Types.Decimal128,
+    default: null,
+  },
+
+  // ✅ Số lượng tồn kho
+  stockQuantity: {
+    type: Number,
+    required: true,
+    min: 0,
+    default: 0,
+  },
+
+  // ✅ Trạng thái còn hàng/hết hàng
+  inStock: {
+    type: Boolean,
+    default: true,
+  },
+
+  // ✅ Điểm đánh giá trung bình
   averageRating: {
-    type: Number, // Sử dụng Number (double) là đủ cho điểm số trung bình
+    type: Number,
     default: 0.0,
     min: 0,
     max: 5,
   },
 
-  // createdAt / updatedAt (Tự động)
+  // ✅ Ảnh sản phẩm
+  imageUrls: [
+    {
+      type: String,
+      trim: true,
+    },
+  ],
+
+  // ✅ Cờ xác định sản phẩm nổi bật, bán chạy, mới ra mắt, v.v.
+  isNew: {
+    type: Boolean,
+    default: false,
+  },
+  isBestSeller: {
+    type: Boolean,
+    default: false,
+  },
+  isFeatured: {
+    type: Boolean,
+    default: false,
+  },
+
 }, {
   timestamps: true,
-  collection: 'products'
+  collection: 'products',
 });
 
 module.exports = mongoose.model('Product', ProductSchema);
