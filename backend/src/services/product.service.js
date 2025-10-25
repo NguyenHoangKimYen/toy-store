@@ -1,4 +1,5 @@
 const productRepository = require('../repositories/product.repository.js');
+const { uploadToS3 } = require('../utils/s3Upload');
 
 const getAllProducts = async (query) => {
     const { page = 1, limit = 20, category, brand, keyword } = query;
@@ -52,11 +53,27 @@ const deleteProduct = async (id) => {
     return deletedProduct;
 }
 
+const updateProductImages = async (id, imgFiles) => {
+    if (!imgFiles || imgFiles.length === 0) {
+        throw new Error('No images provided for upload');
+    }
+
+    const product = await productRepository.findById(id);
+    if (!product) {
+        throw new Error('Product not found');
+    }
+
+    const uploadedImageUrls = await uploadToS3(imgFiles);
+    const updateProduct = await productRepository.updateImages(id, uploadedImageUrls);
+    return updateProduct;
+}
+
 module.exports = {
     getAllProducts,
     getProductById,
     getProductBySlug,
     createProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    updateProductImages
 };

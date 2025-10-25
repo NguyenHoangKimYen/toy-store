@@ -36,7 +36,8 @@ const CartSchema = new mongoose.Schema({
     default: null,
   },
 }, {
-  timestamps: true, // Tự động thêm createdAt và updatedAt
+  timestamps: true,
+  collection: 'carts'
 });
 
 // Tạo index kết hợp để đảm bảo tính duy nhất:

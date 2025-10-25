@@ -4,10 +4,6 @@ const findAll = async (filter = {}, options = {}) => {
     return Product.find(filter)
         .populate([
             {
-                path: "brandId",
-                select: "name slug description"
-            },
-            {
                 path: "categoryId",
                 select: "name slug description"
             },
@@ -15,10 +11,6 @@ const findAll = async (filter = {}, options = {}) => {
                 path: "tags",
                 select: "name slug"
             },
-            // {
-            //     path: "variants",
-            //     select: "name options price stock"
-            // },
             // {
             //     path: "discountCode",
             //     select: "code discountPercentage validUntil"
@@ -33,10 +25,6 @@ const findById = async (id) => {
     return Product.findById(id)
         .populate([
             {
-                path: "brandId",
-                select: "name slug description"
-            },
-            {
                 path: "categoryId",
                 select: "name slug description"
             },
@@ -44,10 +32,6 @@ const findById = async (id) => {
                 path: "tags",
                 select: "name slug"
             },
-            // {
-            //     path: "variants",
-            //     select: "name options price stock"
-            // },
             // {
             //     path: "discountCode",
             //     select: "code discountPercentage validUntil"
@@ -59,10 +43,6 @@ const findBySlug = async (slug) => {
     return Product.findOne({ slug })
         .populate([
             {
-                path: "brandId",
-                select: "name slug description"
-            },
-            {
                 path: "categoryId",
                 select: "name slug description"
             },
@@ -70,10 +50,6 @@ const findBySlug = async (slug) => {
                 path: "tags",
                 select: "name slug"
             },
-            // {
-            //     path: "variants",
-            //     select: "name options price stock"
-            // },
             // {
             //     path: "discountCode",
             //     select: "code discountPercentage validUntil"
@@ -94,6 +70,10 @@ const remove = async (id) => {
     return Product.findByIdAndDelete(id);
 }
 
+const updateImages = async (id, imageUrls) => {
+    return Product.findByIdAndUpdate(id, { $push: { images: { $each: imageUrls } } }, { new: true });
+}
+
 module.exports = {
     findAll,
     findById,
@@ -101,4 +81,5 @@ module.exports = {
     create,
     update,
     remove,
+    updateImages
 };
