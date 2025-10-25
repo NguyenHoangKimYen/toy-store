@@ -10,15 +10,10 @@ const userSchema = new mongoose.Schema({
         trim: true
     },
 
-    firstName:{
+    username:{
         type: String,
         required: true,
-        trim: true
-    },
-
-    lastName:{
-        type: String,
-        required: true,
+        unique: true,
         trim: true
     },
 
@@ -37,9 +32,34 @@ const userSchema = new mongoose.Schema({
     },
 
     // Mật khẩu (dạng hashed) - Không bắt buộc nếu đăng nhập bằng mxh
-    passwordHash: {
+    //Lưu hash
+    password: {
         type: String,
         select: false, // Mặc định không trả về trường này khi truy vấn
+    },
+
+    // reset token (link) – lưu dạng hash + hạn
+    resetTokenHash: {
+        type: String,
+        select: false,
+        default: null
+    },
+
+    resetTokenExpiresAt: {
+        type: Date,
+        default: null
+    },
+    
+    //otp để đặt lại mật khẩu 
+    resetOtpHash: {
+        type: String,
+        select: false,
+        default: null
+    },
+
+    resetOtpExpiresAt: {
+        type: Date,
+        default: null
     },
 
     role: {
@@ -84,7 +104,14 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 0,
         min: 0,
-    }
+    },
+
+    failLoginAttemps: {
+        type: Number,
+        default: 0,
+    },
+
+
 }, {
     timestamps: true,
     collection: 'users'

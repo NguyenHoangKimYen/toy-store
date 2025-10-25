@@ -61,8 +61,9 @@ const createUser = async (userData) => {
 }
 
 const setUserVerified = async (id, isVerified = true) => {
+    //Cập nhật trạng thái xác minh của người dùng
     const verifiedUser = await userRepository.setVerified(id, isVerified);
-    if (!verifiedUser) {
+    if (!verifiedUser) { //nếu không tìm thấy người dùng hoặc cập nhật thất bại
         throw new Error('User not found or verification update failed');
     }
     return verifiedUser;
