@@ -1,17 +1,17 @@
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
-    host: process.env.MAILER_HOST,
-    port: Number(process.env.MAILER_PORT || 587),
-    secure: process.env.MAILER_SECURE === 'true', //SSL/TLS
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT || 587),
+    secure: process.env.SMTP_SECURE === 'true', //SSL/TLS
     auth: {
-        user: process.env.MAILER_USER,
-        pass: process.env.MAILER_PASS,
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
     },
 });
 
 const sendMail = (otp) => transporter.sendMail({
-    from: process.env.MAILER_FROM,
+    from: process.env.SMTP_FROM,
     ...otp,
 });
 

@@ -1,5 +1,6 @@
 const userRepository = require('../repositories/user.repository.js');
 const bcrypt = require('bcrypt');
+// const jwt = require('jsonwebtoken');
 const Joi = require('joi');
 
 const userSchema = Joi.object({
@@ -150,6 +151,14 @@ const login = async (payload) => {
     }
 
     return { user: toPublicUser(user) };
+
+    // let token = null;
+    // try{
+    //     token = verificationCode(user);
+    // } catch (error){
+    //     console.error('JWT sign failed:', error.message);
+    // }
+    // return { user: toPublicUser(user), token }; //trả về user công khai và token
 };
 
 const profile = async (userId) => { //lấy thông tin hồ sơ người dùng
