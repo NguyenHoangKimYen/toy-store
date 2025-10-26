@@ -26,12 +26,13 @@ const requestReset = async (identifier, finders) => {
     const tokenHash = sha256(token);
     const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000); //tính thời gian hết hạn
 
-    await userRepository.setResetToken(user._id, { tokenHash, expiresAt });//lưu token đã băm và thời gian hết hạn vào cơ sở dữ liệu523
+    await userRepository.setResetToken(user._id, tokenHash, expiresAt);//lưu token đã băm và thời gian hết hạn vào cơ sở dữ liệu523
 
     const linkBase = process.env.CLIENT_URL || 'http://localhost:3000';
     const link = `${linkBase}/reset-password?uid=${user._id}&token=${token}`; //tạo link đặt lại mật khẩu
+    console.log('Reset link:', link);
 
-    await sendMail({
+    await sendMail({ //nội dung mail
         to: user.email,
         subject: 'Password Reset Request',
         text: `You requested a password reset. Click the link below to reset your password:\n\n${link}\n\nThis link will expire in ${ttlMinutes} minutes.\n\nIf you did not request this, please ignore this email.`,
@@ -72,8 +73,6 @@ const resetPasswordSchema = Joi.object({
     newPassword: Joi.string().min(8).max(32).required(),
 });
 
-
-    
 module.exports = {
     requestReset,
     resetPassword,
