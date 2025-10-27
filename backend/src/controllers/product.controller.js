@@ -42,7 +42,7 @@ const getProductBySlug = async (req, res) => {
 
 const createProduct = async (req, res) => {
     try {
-        const product = await productService.createProduct(req.body);
+        const product = await productService.createProduct(req.body, req.files);
         res.status(201).json({ success: true, data: product });
     }
     catch (error) {
@@ -51,21 +51,25 @@ const createProduct = async (req, res) => {
 }
 
 const updateProduct = async (req, res) => {
-    try {
-        const { id } = req.params;
-        if (!mongo.ObjectId.isValid(id)) {
-            return res.status(400).json({ success: false, message: "Invalid product ID" });
-        }
-        const product = await productService.updateProduct(id, req.body);
-        if (!product) {
-            return res.status(404).json({ success: false, message: "Product not found" });
-        }
-        return res.json({ success: true, data: product });
+  try {
+    const { id } = req.params;
+
+    if (!mongo.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid product ID" });
     }
-    catch (error) {
-        res.status(400).json({ success: false, message: error.message });
+
+    const product = await productService.updateProduct(id, req.body, req.files);
+
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Product not found" });
     }
-}
+
+    return res.json({ success: true, data: product });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
 
 const deleteProduct = async (req, res) => {
     try {
