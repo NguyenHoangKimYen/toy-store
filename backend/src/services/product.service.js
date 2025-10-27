@@ -10,8 +10,8 @@ const getAllProducts = async (query) => {
     if (keyword) filter.$text = { $search: keyword };
 
     const options = {
-      skip: (page - 1) * limit,
-      limit: parseInt(limit),
+        skip: (page - 1) * limit,
+        limit: parseInt(limit),
     };
 
     return productRepository.findAll(filter, options);
@@ -33,17 +33,56 @@ const getProductBySlug = async (slug) => {
     return product;
 }
 
-const createProduct = async (productData) => {
+const createProduct = async (productData, imgFiles) => {
+    // B1: Upload ảnh lên S3
+    let imageUrls = [];
+
+    if (imgFiles && imgFiles.length > 0) {
+        imageUrls = await uploadToS3(imgFiles);
+    }
+
+    // B2: Tạo sản phẩm với URL ảnh
+    const product = {
+        ...productData,
+        images: imageUrls,
+    };
     return productRepository.create(productData);
 }
 
-const updateProduct = async (id, productData) => {
-    const updatedProduct = await productRepository.update(id, productData); 
-    if (!updatedProduct) {
-        throw new Error('Product not found or could not be updated');
-    }
-    return updatedProduct;
-}
+const updateProduct = async (id, productData, imgFiles) => {
+  let uploadedImageUrls = [];
+
+  // 🟢 B1: Upload ảnh mới (nếu có)
+  if (imgFiles && imgFiles.length > 0) {
+    uploadedImageUrls = await uploadToS3(imgFiles, 'productImages');
+  }
+
+  // 🟢 B2: Lấy sản phẩm hiện tại để kiểm tra và giữ ảnh cũ
+  const existingProduct = await productRepository.findById(id);
+  if (!existingProduct) {
+    throw new Error('Product not found');
+  }
+
+  // 🟢 B3: Nếu có ảnh mới → ghép với ảnh cũ
+  const finalImages =
+    uploadedImageUrls.length > 0
+      ? [...(existingProduct.imageUrls || []), ...uploadedImageUrls]
+      : existingProduct.imageUrls;
+
+  // 🟢 B4: Gộp dữ liệu cần update
+  const dataToUpdate = {
+    ...productData,
+    imageUrls: finalImages, // đảm bảo luôn là mảng hợp lệ
+  };
+
+  // 🟢 B5: Gọi repository để update trong DB
+  const updated = await productRepository.update(id, dataToUpdate);
+  if (!updated) {
+    throw new Error('Failed to update product');
+  }
+
+  return updated;
+};
 
 const deleteProduct = async (id) => {
     const deletedProduct = await productRepository.remove(id);
