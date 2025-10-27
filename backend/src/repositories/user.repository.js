@@ -78,7 +78,7 @@ const setPassword = (id, hashValue) => { //cập nhật mật khẩu người d�
 };
 
 const setResetToken = (id, tokenHash, expiresAt) => { //đặt lại mật khẩu
-    User.findByIdAndUpdate(id, {
+    return User.findByIdAndUpdate(id, {
         resetTokenHash: tokenHash,
         resetTokenExpiresAt: expiresAt,
         resetOtpHash: tokenHash,
@@ -87,7 +87,7 @@ const setResetToken = (id, tokenHash, expiresAt) => { //đặt lại mật khẩ
 }
 
 const clearResetToken = (id) => { //xóa token sau khi đặt lại mật khẩu / hết hạn
-    User.findByIdAndUpdate(id, {
+    return User.findByIdAndUpdate(id, {
         resetTokenHash: null,
         resetTokenExpiresAt: null,
         resetOtpHash: null,
@@ -96,7 +96,7 @@ const clearResetToken = (id) => { //xóa token sau khi đặt lại mật khẩu
 }
 
 const findByIdWithSecret = async (id) => { // Tìm người dùng theo ID bao gồm tất cả các trường bí mật
-    User.findById(id)
+    return User.findById(id)
     .select('+password +resetTokenHash +resetTokenExpiresAt +resetOtpHash +resetOtpExpiresAt')
     .populate({
         path: 'defaultAddressId',
