@@ -104,7 +104,7 @@ const ProductSchema = new mongoose.Schema({
   // ✅ Cờ xác định sản phẩm nổi bật, bán chạy, mới ra mắt, v.v.
   isNew: {
     type: Boolean,
-    default: false,
+    default: true,
   },
   isBestSeller: {
     type: Boolean,

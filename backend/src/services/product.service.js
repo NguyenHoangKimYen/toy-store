@@ -1,5 +1,5 @@
 const productRepository = require('../repositories/product.repository.js');
-const { uploadToS3 } = require('../utils/s3Upload');
+const { uploadToS3 } = require('../utils/s3.helper.js');
 
 const getAllProducts = async (query) => {
     const { page = 1, limit = 20, category, brand, keyword } = query;
@@ -50,39 +50,31 @@ const createProduct = async (productData, imgFiles) => {
 }
 
 const updateProduct = async (id, productData, imgFiles) => {
-  let uploadedImageUrls = [];
+    let uploadedImageUrls = [];
 
-  // 🟢 B1: Upload ảnh mới (nếu có)
-  if (imgFiles && imgFiles.length > 0) {
-    uploadedImageUrls = await uploadToS3(imgFiles, 'productImages');
-  }
+    // B1: Nếu có ảnh mới, upload lên S3 
+    if (imgFiles && imgFiles.length > 0) {
+        uploadedImageUrls = await uploadToS3(imgFiles);
+        productData.images = uploadedImageUrls;
+    }
 
-  // 🟢 B2: Lấy sản phẩm hiện tại để kiểm tra và giữ ảnh cũ
-  const existingProduct = await productRepository.findById(id);
-  if (!existingProduct) {
-    throw new Error('Product not found');
-  }
+    // B2: Lấy product hiện tại để giữ ảnh cũ
+    const existingProduct = await productRepository.findById(id);
+    if (!existingProduct) {
+        throw new Error('Product not found');
+    }
 
-  // 🟢 B3: Nếu có ảnh mới → ghép với ảnh cũ
-  const finalImages =
-    uploadedImageUrls.length > 0
-      ? [...(existingProduct.imageUrls || []), ...uploadedImageUrls]
-      : existingProduct.imageUrls;
+    // B3: Cập nhật sản phẩm, giữ lại ảnh cũ nếu không có ảnh mới
+    const updatedProduct = {
+        ...existingProduct,
+        ...productData,
+        images: productData.images && productData.images.length > 0 
+            ? productData.images 
+            : existingProduct.images,
+    };
 
-  // 🟢 B4: Gộp dữ liệu cần update
-  const dataToUpdate = {
-    ...productData,
-    imageUrls: finalImages, // đảm bảo luôn là mảng hợp lệ
-  };
-
-  // 🟢 B5: Gọi repository để update trong DB
-  const updated = await productRepository.update(id, dataToUpdate);
-  if (!updated) {
-    throw new Error('Failed to update product');
-  }
-
-  return updated;
-};
+    return productRepository.update(id, updatedProduct);
+}
 
 const deleteProduct = async (id) => {
     const deletedProduct = await productRepository.remove(id);
