@@ -3,6 +3,7 @@ const { generateToken, sha256 } = require('../utils/token.js');
 const { sendMail } = require('../libs/mailer.js');
 const bcrypt = require('bcrypt');
 const Joi = require('joi');
+const { message } = require('statuses');
 
 const ttlMinutes = Number(process.env.RESET_TTL_MINUTES) || 15; //thời gian hết hạn của link reset
 
@@ -26,7 +27,7 @@ const requestReset = async (identifier, finders) => {
     const tokenHash = sha256(token);
     const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000); //tính thời gian hết hạn
 
-    await userRepository.setResetToken(user._id, tokenHash, expiresAt);//lưu token đã băm và thời gian hết hạn vào cơ sở dữ liệu523
+    await userRepository.setResetToken(user._id, { tokenHash, expiresAt }); // lưu token đã băm và thời gian hết hạn vào cơ sở dữ liệu
 
     const linkBase = process.env.CLIENT_URL || 'http://localhost:3000';
     const link = `${linkBase}/reset-password?uid=${user._id}&token=${token}`; //tạo link đặt lại mật khẩu
@@ -38,11 +39,11 @@ const requestReset = async (identifier, finders) => {
         text: `You requested a password reset. Click the link below to reset your password:\n\n${link}\n\nThis link will expire in ${ttlMinutes} minutes.\n\nIf you did not request this, please ignore this email.`,
     });
 
-    return { ok: true };
+    return { message: "Check your mail to reset password." };
 };
 
 const resetPassword = async (userId, token, newPassword) => {
-    const user = await userRepository.findByIdWithSecret(userId);
+    const user = await userRepository.findByIdWithSecrets(userId);
     if (!user || !user.resetTokenHash || !user.resetTokenExpiresAt) {
         throw new Error('Invalid token');
     }
@@ -79,4 +80,3 @@ module.exports = {
     forgotPasswordSchema,
     resetPasswordSchema,
 };
-

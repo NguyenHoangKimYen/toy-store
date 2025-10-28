@@ -1,6 +1,10 @@
-const { Result } = require('pg');
+// const { Result } = require('pg');
 const authService = require('../services/auth.service.js');
-const { expression } = require('joi');
+// const { expression } = require('joi');
+const { sha256 } = require('../utils/token.js');
+const userRepository = require('../repositories/user.repository.js');
+const { mongo } = require('mongoose');
+const { message } = require('statuses');
 
 const register = async (req, res, next) => {
     try {
@@ -12,6 +16,63 @@ const register = async (req, res, next) => {
 
     }catch (error) {
         next(error);
+    }
+};
+
+const verifyEmail = async (req, res, next) => {
+    try{
+        const { uid, token } = req.query;
+        if ( !uid || !token){
+            return res.status(400).json({
+                success: false,
+                message: 'Missing token or user id'
+            });
+        }
+
+        if (!mongo.ObjectId.isValid(uid)){
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid user id' 
+            });
+        }
+
+        const user = await userRepository.findByIdWithSecrets(uid);
+        if (!user){
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        if (!user.resetTokenHash || !user.resetTokenExpiresAt){
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or already verified'
+            });
+        }
+
+        if (user.resetTokenExpiresAt < new Date()){
+            return res.status(400).json({
+                success: false,
+                message: 'Token expired'
+            });
+        }
+
+    const expected = sha256('verify:' + token);
+        if (expected !== user.resetTokenHash){
+            return res.status(400).json({
+                success: false,
+                message: 'Token invalid'
+            });
+        }
+
+        await userRepository.accountIsVerified(uid);
+        return res.json({
+            success: true,
+            message: 'Email verified successfully! You can now login.'
+        });
+    } catch (err){
+        next(err);
     }
 };
 
@@ -83,4 +144,5 @@ module.exports = {
     verifyLoginOtp,
     resendLoginOtp,
     profile,
+    verifyEmail
 };
