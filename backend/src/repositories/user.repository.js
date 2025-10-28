@@ -37,7 +37,7 @@ const findByPhone = async (phone, includePassword = false) => {
         path: 'defaultAddressId',
         select: 'fullName phone addressLine city postalCode isDefault',
     })
-    .select(includePassword ? '+password' : '-password');
+    .select(includePassword ? '+password' : '-password'); //hiển thị hoặc không hiển thị password
 };
 
 const findByUsername = async (username, includePassword = false) => {
@@ -46,7 +46,7 @@ const findByUsername = async (username, includePassword = false) => {
         path: 'defaultAddressId',
         select: 'fullName phone addressLine city postalCode isDefault',
     })
-    .select(includePassword ? '+password' : '-password'); 
+    .select(includePassword ? '+password' : '-password'); //hiển thị hoặc không hiển thị password
 };
 
 // Tìm người dùng theo ID và bao gồm trường mật khẩu
@@ -77,13 +77,17 @@ const setPassword = (id, hashValue) => { //cập nhật mật khẩu người d�
     .select(PUBLIC_PROJECTION);
 };
 
-const setResetToken = (id, tokenHash, expiresAt) => { //đặt lại mật khẩu
-    return User.findByIdAndUpdate(id, {
-        resetTokenHash: tokenHash,
-        resetTokenExpiresAt: expiresAt,
-        resetOtpHash: tokenHash,
-        resetOtpExpiresAt: expiresAt,
-    }, { new: true }).select(PUBLIC_PROJECTION);
+const setResetToken = (id, { tokenHash, expiresAt }) => { //đặt lại mật khẩu
+    return User.findByIdAndUpdate(
+        id,
+    {
+    $set: {
+        resetTokenHash: tokenHash,      // <- String
+        resetTokenExpiresAt: expiresAt, // <- Date
+      },
+    },
+    { new: true }
+    ).select(PUBLIC_PROJECTION);
 };
 
 const clearResetToken = (id) => { //xóa token sau khi đặt lại mật khẩu / hết hạn
@@ -94,6 +98,17 @@ const clearResetToken = (id) => { //xóa token sau khi đặt lại mật khẩu
         resetOtpExpiresAt: null,
     }, { new: true }).select(PUBLIC_PROJECTION);
 };
+
+const accountIsVerified = (id) => {
+    return User.findByIdAndUpdate(id, {
+        $set:{
+            isVerified: true,
+            verifiedAt: new Date(),
+            resetTokenHash: null,
+            resetTokenExpiresAt: null,
+        },
+    },{ new: true });
+}
 
 const findByIdWithSecrets = async (id) => { // Tìm người dùng theo ID bao gồm tất cả các trường bí mật
     return User.findById(id)
@@ -187,5 +202,6 @@ module.exports = {
     incFailLogin,
     resetFailLogin,
     setLoginOtp,
-    clearLoginOtp
+    clearLoginOtp,
+    accountIsVerified
 };
