@@ -1,6 +1,5 @@
 const bcrypt = require('bcrypt');
 const userRepository = require('../repositories/user.repository.js');
-require('../models/address.model.js');
 
 const getAllUsers = async (query) => {
     const { page = 1, limit = 20, role, keyword } = query;

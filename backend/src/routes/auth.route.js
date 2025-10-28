@@ -1,8 +1,10 @@
 const express = require('express');
-const { register, login, verifyLoginOtp, resendLoginOtp } = require('../controllers/auth.controller.js');
+const { register, login, verifyLoginOtp, resendLoginOtp, verifyEmail } = require('../controllers/auth.controller.js');
 const { forgotPassword, resetPassword } = require('../controllers/password.controller.js');
 
 const router = express.Router();
+
+router.get('/verify-email', verifyEmail);
 
 router.post('/register', register); //đăng ký
 router.post('/login', login); //đăng nhập
