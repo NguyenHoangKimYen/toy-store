@@ -105,13 +105,11 @@ const userSchema = new mongoose.Schema({
         default: 0,
         min: 0,
     },
-
-    failLoginAttemps: {
+    // đăng nhập thất bại
+    failLoginAttempts: {
         type: Number,
         default: 0,
     },
-
-
 }, {
     timestamps: true,
     collection: 'users'

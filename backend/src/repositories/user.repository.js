@@ -84,7 +84,7 @@ const setResetToken = (id, tokenHash, expiresAt) => { //đặt lại mật khẩ
         resetOtpHash: tokenHash,
         resetOtpExpiresAt: expiresAt,
     }, { new: true }).select(PUBLIC_PROJECTION);
-}
+};
 
 const clearResetToken = (id) => { //xóa token sau khi đặt lại mật khẩu / hết hạn
     return User.findByIdAndUpdate(id, {
@@ -93,16 +93,61 @@ const clearResetToken = (id) => { //xóa token sau khi đặt lại mật khẩu
         resetOtpHash: null,
         resetOtpExpiresAt: null,
     }, { new: true }).select(PUBLIC_PROJECTION);
-}
+};
 
-const findByIdWithSecret = async (id) => { // Tìm người dùng theo ID bao gồm tất cả các trường bí mật
+const findByIdWithSecrets = async (id) => { // Tìm người dùng theo ID bao gồm tất cả các trường bí mật
     return User.findById(id)
     .select('+password +resetTokenHash +resetTokenExpiresAt +resetOtpHash +resetOtpExpiresAt')
     .populate({
         path: 'defaultAddressId',
         select: 'fullName phone addressLine city postalCode isDefault',
     });
-}
+};
+
+//Trường hợp đăng nhập sai quá 5 lần
+
+const incFailLogin = async (id) => {
+    return User.findByIdAndUpdate(
+        id,
+        { $inc: { failLoginAttempts: 1 } },
+        { new: true, runValidators: false}
+    ).select('+password'); //so sánh mật khẩu
+};
+
+const resetFailLogin = async (id) => { //nếu người dùng đăng nhập thành công, số lần đăng nhập sai sẽ được reset
+    return User.findByIdAndUpdate(
+        id,
+        { $set: {failLoginAttempts: 0 } },
+        { new: true }
+    );
+};
+
+const setLoginOtp = async (id, { otpHash, expiresAt}) => {
+    return User.findByIdAndUpdate(
+        id,
+        {
+            $set: {
+                resetOtpHash: otpHash,
+                resetOtpExpiresAt: expiresAt,
+                failLoginAttempts: 0,
+            },
+        },
+        { new: true }
+    );
+};
+
+const clearLoginOtp = async (id) => { //xoá otp sau khi user xác minh thành công
+    return User.findByIdAndUpdate(
+        id,
+        {
+        $set: {
+            resetOtpHash: null,
+            resetOtpExpiresAt: null,
+            },
+        },
+        { new: true }
+    );
+};
 
 const update = async (id, data) => {
     return User.findByIdAndUpdate(
@@ -136,7 +181,11 @@ module.exports = {
     setPassword,
     setResetToken,
     clearResetToken,
-    findByIdWithSecret,
+    findByIdWithSecrets,
     update,
     remove,
+    incFailLogin,
+    resetFailLogin,
+    setLoginOtp,
+    clearLoginOtp
 };
