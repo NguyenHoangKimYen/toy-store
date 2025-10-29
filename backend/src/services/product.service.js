@@ -1,3 +1,4 @@
+const { message } = require('statuses');
 const productRepository = require('../repositories/product.repository.js');
 const { uploadToS3 } = require('../utils/s3.helper.js');
 
@@ -84,20 +85,21 @@ const deleteProduct = async (id) => {
     return deletedProduct;
 }
 
-const updateProductImages = async (id, imgFiles) => {
-    if (!imgFiles || imgFiles.length === 0) {
-        throw new Error('No images provided for upload');
+const uploadProductImage = async (id) => {
+    try {
+        const { id } = req.params;
+        if (!req.files || req.files.length === 0){
+            return res.status(400).json({
+                success: false,
+                message: 'No files uploaded'
+            });
+        }
+        const urls = await uploadToS3(req.files, 'productImages');
+        const product = await productRepository.update(id, { imageUrls: urls});
+    } catch (error){
+        next(error);
     }
-
-    const product = await productRepository.findById(id);
-    if (!product) {
-        throw new Error('Product not found');
-    }
-
-    const uploadedImageUrls = await uploadToS3(imgFiles);
-    const updateProduct = await productRepository.updateImages(id, uploadedImageUrls);
-    return updateProduct;
-}
+};
 
 module.exports = {
     getAllProducts,
@@ -106,5 +108,5 @@ module.exports = {
     createProduct,
     updateProduct,
     deleteProduct,
-    updateProductImages
+    uploadProductImage
 };
