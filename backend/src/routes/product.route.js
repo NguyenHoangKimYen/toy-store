@@ -1,22 +1,24 @@
 const express = require('express');
-const { getAllProducts, 
-    getProductById, 
+const {
+    getAllProducts,
+    getProductById,
     getProductBySlug,
     createProduct,
     updateProduct,
     deleteProduct,
-    updateProductImages
+    updateProductImages,
 } = require('../controllers/product.controller.js');
-const upload = require('../middlewares/upload.middleware.js');
+const { uploadProductImages: uploadProductImagesMiddleware } = require('../middlewares/upload.middleware.js');
 
 const router = express.Router();
 
-router.get("/", getAllProducts);
-router.get("/slug/:slug", getProductBySlug);
-router.get("/:id", getProductById);
-router.post("/", upload, createProduct);
-router.put("/:id", upload, updateProduct);
-router.delete("/:id", deleteProduct);
-router.put('/:id/images', upload, updateProductImages);
+router.get('/', getAllProducts);
+router.get('/slug/:slug', getProductBySlug);
+router.get('/:id', getProductById);
+router.put('/:id', uploadProductImagesMiddleware, updateProduct);
+router.delete('/:id', deleteProduct);
+
+router.post('/', uploadProductImagesMiddleware, createProduct);
+router.patch('/:id/images', uploadProductImagesMiddleware, updateProductImages);
 
 module.exports = router;

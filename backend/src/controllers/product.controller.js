@@ -1,5 +1,9 @@
 const { mongo } = require('mongoose');
 const productService = require('../services/product.service.js');
+const { message } = require('statuses');
+const { uploadToS3 } = require('../utils/s3.helper.js');
+const productRepository = require('../repositories/product.repository.js');
+
 
 const getAllProducts = async (req, res, next) => {
     try {
@@ -93,16 +97,25 @@ const updateProductImages = async (req, res, next) => {
         const { id } = req.params;
         const files = req.files;
 
-        const product = await productService.updateProductImages(id, files);
+        if (!files || files.length === 0){
+            return res.status(400).json({
+                success: false,
+                message: 'No files uploads'
+            });
+        }
 
-        return res.json({
-            message: 'Product images updated successfully',
-            data: product,
+        const urls = await uploadToS3(files, 'productImages');
+        const product = await productRepository.update(id, { $push: { imageUrls: { $each: urls }}});
+
+        res.json({
+            success: true,
+            message: 'Product image uploaded succesfully!',
+            data: product
         });
-    } catch (error) {
-        return next(error);
-    }
-}
+    } catch (error){
+        next(error);
+    };
+};
 
 module.exports = {
     getAllProducts,
