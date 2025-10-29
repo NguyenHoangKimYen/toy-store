@@ -1,7 +1,7 @@
 // Khai báo thư viện cần sử dụng
 const dotenv = require('dotenv'); // Thư viện dotenv để quản lý biến môi trường
 dotenv.config();
-
+const cors = require('cors');
 const express = require('express'); //Thư viện express là framework của NodeJS để xây dựng web
 const connectDB = require('./config/db.js');
 
@@ -20,6 +20,17 @@ app.use((req, res, next) => {
 app.use(express.json()); // Cho phép phân tích cú pháp JSON trong body của request
 app.use(express.urlencoded({ extended: true })); // Cho phép phân tích cú pháp URL-encoded trong body của request
 
+app.use(cors({
+  origin: 'http://localhost:5173', // địa chỉ frontend
+  credentials: true, // nếu bạn gửi cookie/token
+}));
+
+// --- QUICK REDIRECT cho các link thiếu prefix ---
+// ✅ Bấm http://localhost:5000/verify-email?uid=...&token=... sẽ tự chuyển đúng route
+app.get('/verify-email', (req, res) => {
+  const qs = new URLSearchParams(req.query).toString();
+  res.redirect(302, `/api/auth/verify-email?${qs}`);
+});
 
 // Import routes
 // Cần bao nhiêu routes thì import bấy nhiêu

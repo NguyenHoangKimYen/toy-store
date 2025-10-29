@@ -1,13 +1,12 @@
 const bcrypt = require('bcrypt');
 const userRepository = require('../repositories/user.repository.js');
-require('../models/address.model.js');
 
 const getAllUsers = async (query) => {
     const { page = 1, limit = 20, role, keyword } = query;
     const filter = {};
     
     if (role) filter.role = role; //lọc theo vai trò người dùng
-    if (keyword) filter.$text = { $search: keyword }; //tìm kiếm toàn văn bản trên các trường được đánh chỉ mục văn bản
+    // if (keyword) filter.$text = { $search: keyword }; //tìm kiếm toàn văn bản trên các trường được đánh chỉ mục văn bản
     const options = {
         skip: (page - 1) * limit,
         limit: parseInt(limit),
