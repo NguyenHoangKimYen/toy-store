@@ -1,7 +1,19 @@
 const userRepository = require('../repositories/user.repository.js');
 const bcrypt = require('bcrypt');
 // const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const Joi = require('joi');
+const { generateToken, genOtp6, sha256 } = require('../utils/token.js');
+const User = require('../models/user.model.js');
+const { sendMail } = require('../libs/mailer.js');
+const { message } = require('statuses');
+
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+const VERIFY_TTL_MINUTES = Number(process.env.VERIFY_TTL_MINUTES || 15);
+
+//Trường hợp đăng nhập sai quá 5 lần thì phải nhập otp
+const MAX_FAILS = Number(process.env.LOGIN_MAX_FAILS || 5);
+const OTP_TTL_MINUTES = Number(process.env.LOGIN_OTP_TTL_MINUTES || 10);
 
 const userSchema = Joi.object({
     fullName: Joi.string().min(3).max(100).required(), // Họ và tên
@@ -20,26 +32,44 @@ const loginSchema = Joi.object({
     password: Joi.string().min(8).max(32).required(),
 })
 
-.rename('username', 'emailOrPhoneOrUsername', { ignoreUndefined: true, override: true })
-.rename('email', 'emailOrPhoneOrUsername', { ignoreUndefined: true, override: true })
-.rename('phone', 'emailOrPhoneOrUsername', { ignoreUndefined: true, override: true });
+    .rename('username', 'emailOrPhoneOrUsername', { ignoreUndefined: true, override: true })
+    .rename('email', 'emailOrPhoneOrUsername', { ignoreUndefined: true, override: true })
+    .rename('phone', 'emailOrPhoneOrUsername', { ignoreUndefined: true, override: true });
 
 // const generateRandomToken = (length = 6) => {
 //     return Math.random().toString().slice(2,8);
 // };
 
 const toPublicUser = (userDoc) => { //chuyển đổi đối tượng người dùng sang định dạng công khai
-  if (!userDoc) return null;
+    if (!userDoc) return null;
 
-  const obj = userDoc.toObject ? userDoc.toObject() : { ...userDoc };
-  const { password, __v, ...publicUser } = obj;
-  return publicUser;
+    const obj = userDoc.toObject ? userDoc.toObject() : { ...userDoc };
+    const { password, __v, ...publicUser } = obj;
+    return publicUser;
+};
+
+const detectIdentifierType = (s) => {
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return 'email';
+    if (/^[0-9]{10,15}$/.test(s)) return 'phone';
+    return 'username';
+};
+
+const findUserByIdentifier = async (identifier, withPassword = false) => {
+    const type = detectIdentifierType(identifier);
+    switch (type) {
+        case 'email':
+            return userRepository.findByEmail(identifier.trim().toLowerCase(), withPassword);
+        case 'phone':
+            return userRepository.findByPhone(identifier.trim(), withPassword);
+        default:
+            return userRepository.findByUsername(identifier.trim(), withPassword);
+    }
 };
 
 //Đăng ký tài khoản mới/ mỗi lần đăng nhập, hệ thống sẽ gửi token để xác thực trước khi truy cập các tài nguyên
 const register = async (data) => {
     const { value, error } = userSchema.validate(data, { abortEarly: false }); //validate dữ liệu
-    if (error){
+    if (error) {
         const message = error.details.map(detail => detail.message).join(', '); //gộp tất cả các lỗi
         throw new Error(message);
     }
@@ -56,7 +86,7 @@ const register = async (data) => {
         userRepository.findByUsername(username),
     ]);
 
-    const password = await bcrypt.hash(plainPassword, 10); //băm mật khẩu
+    const passwordHash = await bcrypt.hash(plainPassword, 10); //băm mật khẩu
 
     if (byEmail) {
         throw new Error('Email already in use');
@@ -68,12 +98,6 @@ const register = async (data) => {
         throw new Error('Username already in use');
     }
 
-    // const saltRounds = 10;
-    // const passwordHash = await bcrypt.hash(password, saltRounds); //mã hóa mật khẩu
-
-    const verificationCode = generateRandomToken(6);//tạo mã xác minh ngẫu nhiên
-    const verificationCodeExpires = new Date (Date.now * 5 * 60 * 1000) //5 phút
-
     const user = await userRepository.create({ //tạo người dùng mới
         fullName,
         email,
@@ -82,95 +106,152 @@ const register = async (data) => {
         password: passwordHash,
         isVerified: false,
     });
-    return { user: toPublicUser(user) }; //trả về user công khai
-    //     verificationCode,
-    //     verificationCodeExpires
-    // });
-    // return { user: toPublicUser(user), verificationCode }; //trả về user công khai và token
-};
 
-const login = async (payload) => {
-    const { value, error } = loginSchema.validate(payload, { abortEarly: false }); //validate dữ liệu
-    if (error){
-        const message = error.details.map(detail => detail.message).join(', '); //gộp tất cả các lỗi
-        throw new Error(message);
+    const token = generateToken();
+    const tokenHash = sha256('verify:' + token);
+    const expiresAt = new Date(Date.now() + VERIFY_TTL_MINUTES * 60 * 1000);
+
+    await userRepository.setResetToken(user._id, { tokenHash, expiresAt });
+
+    const verifyLink = `${FRONTEND_URL}/verify-email?uid=${user._id}&token=${token}`;
+    try {
+        await sendMail({
+            to: email,
+            subject: 'Verify your email address',
+            html: `
+      <p>Xin chào ${fullName},</p>
+      <p>Vui lòng xác thực email bằng cách nhấn vào liên kết sau (hạn ${VERIFY_TTL_MINUTES} phút):</p>
+      <p><a href="${verifyLink}">${verifyLink}</a></p>
+    `,
+        });
+    } catch (err){
+        console.error('[MAIL ERROR][VERIFY EMAIL]', err?.message || err);
     }
 
-    const { emailOrPhoneOrUsername, password } = value; //lấy định danh và mật khẩu
-    console.log('Login attempt with identifier:', emailOrPhoneOrUsername);
-    const detectIdentifierType = (s) => {
-        if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return 'email';
-        if (/^[0-9]{10,15}$/.test(s)) return 'phone';
-        return 'username';
+    return {
+        message:'Registration successful! Please check your email to verify your account.',
+        user: toPublicUser(user),
+    }
     };
 
-    const type = detectIdentifierType(emailOrPhoneOrUsername); // Tìm user kèm password ngay từ đầu để tránh truy vấn lặp
-    let user;
+    const createLoginOtp = async (userId) => {
+        const otp = genOtp6();
+        const otpHash = sha256(otp);
+        const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
+        await userRepository.setLoginOtp(userId, { otpHash, expiresAt });
+        return { otp, expiresAt };
+    };
 
-    switch (type){
-        case 'email':
-            user = await userRepository.findByEmail(emailOrPhoneOrUsername.trim().toLowerCase(), true);
-            break;
-        case 'phone':
-            user = await userRepository.findByPhone(emailOrPhoneOrUsername.trim(), true);
-            break;
-        case 'username':
-            user = await userRepository.findByUsername(emailOrPhoneOrUsername.trim(), true);
-            break;
-    }
+    const login = async (payload) => {
+        const { value, error } = loginSchema.validate(payload, { abortEarly: false });
+        if (error) {
+            const message = error.details.map(d => d.message).join(', ');
+            throw Object.assign(new Error(message), { status: 400 });
+        }
 
-    if (!user || !user.password){ //kiểm tra người dùng tồn tại
-        throw new Error('Invalid credentials'); //Trả về thông báo chung để tránh dò tìm thông tin
-    }
+        const { emailOrPhoneOrUsername, password } = value;
 
-    const userWithPassword = await userRepository.findByIdWithPassword(user._id); //lấy thông tin người dùng bao gồm mật khẩu
+        // 1) Tìm user theo identifier (id)
+        const found = await findUserByIdentifier(emailOrPhoneOrUsername);
+        if (!found) throw Object.assign(new Error('Incorrect Login'), { status: 401 });
 
-    if (!userWithPassword){ //kiểm tra xem người dùng có mật khẩu không (TH đăng nhập mxh)
-        throw new Error('Account has no password. Please set a password to login.');
-    }
+        // 2) Refetch với secrets để có password + resetOtp*
+        const user = await userRepository.findByIdWithSecrets(found._id);
+        if (!user) throw Object.assign(new Error('Incorrect Login'), { status: 401 });
 
-    const hash = user.password || user.passwordHash || user.hashedPassword;
-    if (!hash || typeof hash !== 'string'){
+        // 3) Nếu đang bị yêu cầu OTP thì buộc nhập OTP trước
+        if (user.resetOtpHash && user.resetOtpExpiresAt && user.resetOtpExpiresAt > new Date()) {
+            return { needOtp: true, message: 'The account requires OTP authentication.' };
+        }
 
-        console.error('No password hash on user',{
-            id: String(user._id),
-            hasPassword: !!user.password,
-            hasPasswordHash: !!user.passwordHash,
-            hasHashedPassword: !!user.hashedPassword,
-        });
-        throw new Error('Account has no password. Please set a password to login.');
-    }
+        // 4) Phải có hash password
+        if (!user.password || typeof user.password !== 'string') {
+            throw Object.assign(new Error('Account has no password. Please set a password to login.'), { status: 400 });
+        }
 
-    const valid = await bcrypt.compare(password, hash); //so sánh mật khẩu
-    if (!valid){
-        throw new Error('Invalid credentials');
-    }
+        // 5) So sánh mật khẩu
+        const valid = await bcrypt.compare(password, user.password);
 
-    if (!userWithPassword.isVerified){ //kiểm tra tài khoản đã được xác minh chưa
-        throw new Error('Account is not verified. Please verify your account before logging in.');
-    }
+        // 6) Nếu chưa verify
+        if (!user.isVerified) {
+            throw Object.assign(new Error('Account is not verified. Please verify your account before logging in.'), { status: 403 });
+        }
 
-    return { user: toPublicUser(user) };
+        // 7) Sai mật khẩu → tăng đếm + có thể bật OTP
+        if (!valid) {
+            const updated = await userRepository.incFailLogin(user._id); // new:true để có giá trị mới nhất
+            if ((updated.failLoginAttempts || 0) >= MAX_FAILS) {
+                const otp = genOtp6();
+                const otpHash = sha256(otp);
+                const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
 
-    // let token = null;
-    // try{
-    //     token = verificationCode(user);
-    // } catch (error){
-    //     console.error('JWT sign failed:', error.message);
-    // }
-    // return { user: toPublicUser(user), token }; //trả về user công khai và token
-};
+                await userRepository.setLoginOtp(updated._id, { otpHash, expiresAt });
 
-const profile = async (userId) => { //lấy thông tin hồ sơ người dùng
-    const user = await userRepository.findById(userId);
-    if (!user){
-        throw new Error('User not found');
-    }
-    return toPublicUser(user); //trả về user công khai
-};
+                // Gửi mail nhưng không để lỗi mailer phá flow
+                try {
+                    await sendMail({
+                        to: updated.email,
+                        subject: 'OTP Verification Code',
+                        html: `
+            <p>Xin chào ${updated.fullName || updated.username},</p>
+            <p>Bạn đã nhập sai mật khẩu quá ${MAX_FAILS} lần. Mã OTP của bạn:</p>
+            <h2 style="letter-spacing:3px;">${otp}</h2>
+            <p>Mã có hiệu lực trong ${OTP_TTL_MINUTES} phút.</p>
+          `,
+                    });
+                } catch (e) {
+                    console.error('[MAIL ERROR][LOGIN OTP]', e?.message || e);
+                }
 
-module.exports = {
-    register,
-    login,
-    profile,
-};
+                return { needOtp: true, message: `Incorrect ${MAX_FAILS} times. Please enter the OTP.` };
+            }
+
+            throw Object.assign(new Error('Login is incorrect'), { status: 401 });
+        }
+
+        // 8) Đúng mật khẩu → reset đếm sai
+        await userRepository.resetFailLogin(user._id);
+
+        return { user: toPublicUser(user) };
+    };
+
+    const verifyLoginOtp = async ({ emailOrPhoneOrUsername, otp }) => {
+        if (!otp || String(otp).length !== 6) {
+            throw Object.assign(new Error('Invalid OTP'), { status: 400 });
+        }
+
+        const found = await findUserByIdentifier(emailOrPhoneOrUsername);
+        if (!found) throw Object.assign(new Error('Invalid User'), { status: 404 });
+
+        const user = await userRepository.findByIdWithSecrets(found._id);
+        if (!user?.resetOtpExpiresAt || user.resetOtpExpiresAt < new Date()) {
+            throw Object.assign(new Error('OTP expired'), { status: 400 });
+        }
+
+        if (!user.resetOtpHash) {
+            throw Object.assign(new Error('OTP does not exist'), { status: 400 });
+        }
+
+        if (sha256(otp) !== user.resetOtpHash) {
+            throw Object.assign(new Error('OTP incorrect'), { status: 400 });
+        }
+
+        await userRepository.clearLoginOtp(user._id);
+        return { ok: true, message: 'OTP Verification Success. Please login again.' };
+    };
+
+    const profile = async (userId) => { //lấy thông tin hồ sơ người dùng
+        const user = await userRepository.findById(userId);
+        if (!user) {
+            throw new Error('User not found');
+        }
+        return toPublicUser(user); //trả về user công khai
+    };
+
+    module.exports = {
+        register,
+        login,
+        createLoginOtp,
+        verifyLoginOtp,
+        profile,
+    };
