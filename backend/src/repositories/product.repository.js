@@ -10,11 +10,7 @@ const findAll = async (filter = {}, options = {}) => {
             {
                 path: "tags",
                 select: "name slug"
-            },
-            // {
-            //     path: "discountCode",
-            //     select: "code discountPercentage validUntil"
-            // }
+            }
         ])
         .skip(options.skip || 0)
         .limit(options.limit || 20)
@@ -31,11 +27,7 @@ const findById = async (id) => {
             {
                 path: "tags",
                 select: "name slug"
-            },
-            // {
-            //     path: "discountCode",
-            //     select: "code discountPercentage validUntil"
-            // }
+            }
         ])
 }
 
@@ -49,13 +41,29 @@ const findBySlug = async (slug) => {
             {
                 path: "tags",
                 select: "name slug"
-            },
-            // {
-            //     path: "discountCode",
-            //     select: "code discountPercentage validUntil"
-            // }
+            }
         ])
 }
+
+const findByPrice = async (min, max) => {
+    return Product.find({
+        price: { $gte: min, $lte: max }
+    });
+}
+
+const findByRating = async (minRating = 0) => {
+    const rating = Number(minRating);
+    if (isNaN(rating)){
+        throw new Error("llll")
+    }
+    if (isNaN(rating) || rating < 0 || rating > 5) {
+        throw new Error('The minimum rating (minRating) must be a number between 0 and 5.');
+    }
+
+    return Product.find({
+        averageRating: { $gte: rating },
+    }).sort({ averageRating: -1 });
+};
 
 const create = async (data) => {
     const product = new Product(data);
@@ -70,16 +78,13 @@ const remove = async (id) => {
     return Product.findByIdAndDelete(id);
 }
 
-const updateImages = async (id, imageUrls) => {
-    return Product.findByIdAndUpdate(id, { $push: { images: { $each: imageUrls } } }, { new: true });
-}
-
 module.exports = {
     findAll,
     findById,
     findBySlug,
+    findByPrice,
+    findByRating,
     create,
     update,
-    remove,
-    updateImages
+    remove
 };

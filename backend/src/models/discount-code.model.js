@@ -48,9 +48,8 @@ const DiscountCodeSchema = new mongoose.Schema({
     // Trong logic nghiệp vụ, bạn sẽ kiểm tra role của User này là 'admin'
   },
 
-  // createdAt (Tự động)
 }, {
-  timestamps: { createdAt: 'createdAt', updatedAt: false }, // Chỉ cần createdAt
+  timestamps: { createdAt: 'createdAt', updatedAt: false },
 });
 
 module.exports = mongoose.model('DiscountCode', DiscountCodeSchema);

@@ -33,6 +33,14 @@ const getProductBySlug = async (slug) => {
     return product;
 }
 
+const getProductByPrice = (min, max) => {
+    return productRepository.findByPrice(min, max);
+}
+
+const getProductByRating = (minRating) => {
+    return productRepository.findByRating(minRating);
+}
+
 const createProduct = async (productData, imgFiles) => {
     // B1: Upload ảnh lên S3
     let imageUrls = [];
@@ -40,7 +48,7 @@ const createProduct = async (productData, imgFiles) => {
     if (imgFiles && imgFiles.length > 0) {
         imageUrls = await uploadToS3(imgFiles);
     }
-
+    
     // B2: Tạo sản phẩm với URL ảnh
     const product = {
         ...productData,
@@ -76,6 +84,7 @@ const updateProduct = async (id, productData, imgFiles) => {
     return productRepository.update(id, updatedProduct);
 }
 
+
 const deleteProduct = async (id) => {
     const deletedProduct = await productRepository.remove(id);
     if (!deletedProduct) {
@@ -84,27 +93,13 @@ const deleteProduct = async (id) => {
     return deletedProduct;
 }
 
-const updateProductImages = async (id, imgFiles) => {
-    if (!imgFiles || imgFiles.length === 0) {
-        throw new Error('No images provided for upload');
-    }
-
-    const product = await productRepository.findById(id);
-    if (!product) {
-        throw new Error('Product not found');
-    }
-
-    const uploadedImageUrls = await uploadToS3(imgFiles);
-    const updateProduct = await productRepository.updateImages(id, uploadedImageUrls);
-    return updateProduct;
-}
-
 module.exports = {
     getAllProducts,
     getProductById,
     getProductBySlug,
+    getProductByPrice,
+    getProductByRating,
     createProduct,
     updateProduct,
-    deleteProduct,
-    updateProductImages
+    deleteProduct
 };
