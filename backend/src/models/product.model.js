@@ -4,14 +4,20 @@ require('./category.model.js');
 require('./tag.model.js');
 
 const ProductSchema = new mongoose.Schema({
-  // Tên sản phẩm
+  sku: {
+    type: String,
+    trim: true,
+    unique: true,
+    sparse: true,
+  },
+
   name: {
     type: String,
     required: true,
     trim: true,
+    require: true,
   },
 
-  // Slug (Tên thân thiện với SEO)
   slug: {
     type: String,
     required: true,
@@ -20,7 +26,6 @@ const ProductSchema = new mongoose.Schema({
     trim: true,
   },
 
-  // Danh mục
   categoryId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
@@ -28,21 +33,11 @@ const ProductSchema = new mongoose.Schema({
     index: true,
   },
 
-  // Mô tả ngắn
-  shortDescription: {
-    type: String,
-    required: true,
-    trim: true,
-    maxlength: 500,
-  },
-
-  // Mô tả chi tiết
-  longDescription: {
+  description: {
     type: String,
     required: true,
   },
 
-  // Danh sách tag
   tags: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -50,28 +45,17 @@ const ProductSchema = new mongoose.Schema({
     },
   ],
 
-  // ✅ SKU (mã hàng hóa)
-  sku: {
-    type: String,
-    trim: true,
-    unique: true,
-    sparse: true, // tránh lỗi unique khi để trống
-  },
-
-  // ✅ Giá bán
   price: {
     type: mongoose.Schema.Types.Decimal128,
     required: true,
     min: 0,
   },
 
-  // ✅ Giá gốc (nếu có khuyến mãi)
   originalPrice: {
     type: mongoose.Schema.Types.Decimal128,
     default: null,
   },
 
-  // ✅ Số lượng tồn kho
   stockQuantity: {
     type: Number,
     required: true,
@@ -79,13 +63,14 @@ const ProductSchema = new mongoose.Schema({
     default: 0,
   },
 
-  // ✅ Trạng thái còn hàng/hết hàng
-  inStock: {
-    type: Boolean,
-    default: true,
+  soldCount: {
+    type: Number,
+    required: true,
+    min: 0,
+    default: 0,
+    index: true,
   },
 
-  // ✅ Điểm đánh giá trung bình
   averageRating: {
     type: Number,
     default: 0.0,
@@ -93,27 +78,12 @@ const ProductSchema = new mongoose.Schema({
     max: 5,
   },
 
-  // ✅ Ảnh sản phẩm
   imageUrls: [
     {
       type: String,
       trim: true,
     },
   ],
-
-  // ✅ Cờ xác định sản phẩm nổi bật, bán chạy, mới ra mắt, v.v.
-  isNew: {
-    type: Boolean,
-    default: true,
-  },
-  isBestSeller: {
-    type: Boolean,
-    default: false,
-  },
-  isFeatured: {
-    type: Boolean,
-    default: false,
-  },
 
 }, {
   timestamps: true,
