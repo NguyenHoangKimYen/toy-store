@@ -30,9 +30,9 @@ const ProductStats = ({ stats }) => {
         <div className='flex items-center justify-between'>
           <div>
             <p className='text-sm text-gray-600 dark:text-gray-400'>Total Sold</p>
-            <p className='text-2xl font-bold text-purple-600'>{totalSold}</p>
+            <p className='text-2xl font-bold text-blue-400'>{totalSold}</p>
           </div>
-          <TrendingUp className='w-8 h-8 text-purple-500' />
+          <TrendingUp className='w-8 h-8 text-blue-400' />
         </div>
       </div>
       
