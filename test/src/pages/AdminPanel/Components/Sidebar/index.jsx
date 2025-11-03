@@ -2,7 +2,7 @@ import React from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { House, User, Panda } from 'lucide-react'
 import Account from './Account'
-import Tabs from './Tabs/Tabs'
+import TabBtns from './Tabs/TabBtns'
 import SearchField from './SearchField'
 import { ADMIN_ROUTES } from '../../../../config/routes'
 
@@ -36,7 +36,7 @@ const Sidebar = () => {
     <div className='overflow-y-auto sticky top-4 h-full custom-scrollbar'>
       <Account />
       <SearchField />
-      <Tabs 
+      <TabBtns 
         tabs={navigationTabs}
         activeRoute={location.pathname}
         onTabClick={handleTabClick}

@@ -1,6 +1,6 @@
 import React from 'react'
 
-const Tab = ({ isSelected, icon, title, onClick }) => {
+const TabBtn = ({ isSelected, icon, title, onClick }) => {
 
 
     return (
@@ -11,4 +11,4 @@ const Tab = ({ isSelected, icon, title, onClick }) => {
     )
 }   
 
-export default Tab
+export default TabBtn

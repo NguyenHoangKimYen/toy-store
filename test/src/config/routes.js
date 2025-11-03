@@ -21,3 +21,10 @@ export const ADMIN_ROUTES = {
   SETTINGS: '/admin/settings',
 };
 
+// Backward compatibility
+export const ROUTES = {
+  ...PUBLIC_ROUTES,
+  ADMIN: ADMIN_ROUTES.BASE,
+  ADMIN_USERS: ADMIN_ROUTES.USERS,
+  ADMIN_PRODUCTS: ADMIN_ROUTES.PRODUCTS,
+};

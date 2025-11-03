@@ -1,13 +1,13 @@
 import React from 'react'
-import Tab from './Tab'
+import TabBtn from './TabBtn'
 
-const Tabs = ({ tabs, activeRoute, onTabClick }) => {
+const TabBtns = ({ tabs, activeRoute, onTabClick }) => {
     return (
         <div className='mt-4'>
             {
                 tabs.map((tab) => {
                     return (
-                        <Tab 
+                        <TabBtn 
                             key={tab.route} 
                             icon={tab.icon} 
                             title={tab.title} 
@@ -22,4 +22,4 @@ const Tabs = ({ tabs, activeRoute, onTabClick }) => {
 }
 
 
-export default Tabs
+export default TabBtns
