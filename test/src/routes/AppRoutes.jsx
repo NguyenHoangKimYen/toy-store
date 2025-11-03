@@ -10,25 +10,33 @@ import Login from '../pages/Login'
 import Signup from '../pages/Signup'
 import PlaceOrder from '../pages/PlaceOrder'
 import Orders from '../pages/Orders'
-import Dashboard from '../pages/Dashboard'
-
+import AdminPanel from '../pages/AdminPanel'
+import Dashboard from '../pages/AdminPanel/Components/Main'
+import Users from '../pages/AdminPanel/Users'
+import Products from '../pages/AdminPanel/Products'
+import { ROUTES } from '../config/routes'
 
 const AppRoutes = () => {
   return (
     <Routes>
-        <Route path='/login' element={<Login/>}/>
-        <Route path='/register' element={<Signup />}></Route>
-        <Route path='/admin' element={<Dashboard />}></Route>
+        <Route path={ROUTES.LOGIN} element={<Login/>}/>
+        <Route path={ROUTES.REGISTER} element={<Signup />}></Route>
+        
+        {/* Admin routes with nested routing */}
+        <Route path={ROUTES.ADMIN} element={<AdminPanel />}>
+          <Route index element={<Dashboard />} />
+          <Route path='users' element={<Users />} />
+          <Route path='products' element={<Products />} />
+        </Route>
 
         <Route element={<Layout />}>
-            <Route path='/' element={<Home />}></Route>
-            <Route path='/collection' element={<Collection />}></Route>
-            <Route path='/about' element={<About />}></Route>
-            <Route path='/contact' element={<Contact />}></Route>
-            <Route path='/cart' element={<Cart />}></Route>
-            <Route path='/place-order' element={<PlaceOrder />}></Route>
-            <Route path='/orders' element={<Orders />}></Route>
-            <Route path='/admin' element={<Dashboard />}></Route>
+            <Route path={ROUTES.HOME} element={<Home />}></Route>
+            <Route path={ROUTES.COLLECTION} element={<Collection />}></Route>
+            <Route path={ROUTES.ABOUT} element={<About />}></Route>
+            <Route path={ROUTES.CONTACT} element={<Contact />}></Route>
+            <Route path={ROUTES.CART} element={<Cart />}></Route>
+            <Route path={ROUTES.PLACE_ORDER} element={<PlaceOrder />}></Route>
+            <Route path={ROUTES.ORDERS} element={<Orders />}></Route>
         </Route>
     </Routes>
   )
