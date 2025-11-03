@@ -100,15 +100,21 @@ const clearResetToken = (id) => { //xóa token sau khi đặt lại mật khẩu
 };
 
 const accountIsVerified = (id) => {
-    return User.findByIdAndUpdate(id, {
-        $set:{
-            isVerified: true,
-            verifiedAt: new Date(),
-            resetTokenHash: null,
-            resetTokenExpiresAt: null,
-        },
-    },{ new: true });
-}
+  return User.findByIdAndUpdate(
+    id,
+    {
+      $set: {
+        isVerified: true,
+        verifiedAt: new Date(),
+      },
+      $unset: {
+        resetTokenHash: "",
+        resetTokenExpiresAt: "",
+      },
+    },
+    { new: true }
+  );
+};
 
 const findByIdWithSecrets = async (id) => { // Tìm người dùng theo ID bao gồm tất cả các trường bí mật
     return User.findById(id)

@@ -7,8 +7,9 @@ const { generateToken, genOtp6, sha256 } = require('../utils/token.js');
 const User = require('../models/user.model.js');
 const { sendMail } = require('../libs/mailer.js');
 const { message } = require('statuses');
+const AWS = require('../config/aws.config.js');
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://d1qc4bz6yrxl8k.cloudfront.net';
 const VERIFY_TTL_MINUTES = Number(process.env.VERIFY_TTL_MINUTES || 15);
 
 //Trường hợp đăng nhập sai quá 5 lần thì phải nhập otp
@@ -112,8 +113,8 @@ const register = async (data) => {
     const expiresAt = new Date(Date.now() + VERIFY_TTL_MINUTES * 60 * 1000);
 
     await userRepository.setResetToken(user._id, { tokenHash, expiresAt });
-
-    const verifyLink = `${FRONTEND_URL}/verify-email?uid=${user._id}&token=${token}`;
+    //Đường dẫn backend
+    const verifyLink = `https://milkybloom.us-east-1.elasticbeanstalk.com/api/auth/verify-email?uid=${user._id}&token=${token}`;
     try {
         await sendMail({
             to: email,
@@ -124,134 +125,153 @@ const register = async (data) => {
       <p><a href="${verifyLink}">${verifyLink}</a></p>
     `,
         });
-    } catch (err){
+    } catch (err) {
         console.error('[MAIL ERROR][VERIFY EMAIL]', err?.message || err);
     }
 
     return {
-        message:'Registration successful! Please check your email to verify your account.',
+        message: 'Registration successful! Please check your email to verify your account.',
         user: toPublicUser(user),
     }
-    };
+};
 
-    const createLoginOtp = async (userId) => {
-        const otp = genOtp6();
-        const otpHash = sha256(otp);
-        const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
-        await userRepository.setLoginOtp(userId, { otpHash, expiresAt });
-        return { otp, expiresAt };
-    };
+const createLoginOtp = async (userId) => {
+    const otp = genOtp6();
+    const otpHash = sha256(otp);
+    const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
+    await userRepository.setLoginOtp(userId, { otpHash, expiresAt });
+    return { otp, expiresAt };
+};
 
-    const login = async (payload) => {
-        const { value, error } = loginSchema.validate(payload, { abortEarly: false });
-        if (error) {
-            const message = error.details.map(d => d.message).join(', ');
-            throw Object.assign(new Error(message), { status: 400 });
-        }
+const login = async (payload) => {
+    const { value, error } = loginSchema.validate(payload, { abortEarly: false });
+    if (error) {
+        const message = error.details.map(d => d.message).join(', ');
+        throw Object.assign(new Error(message), { status: 400 });
+    }
 
-        const { emailOrPhoneOrUsername, password } = value;
+    const { emailOrPhoneOrUsername, password } = value;
 
-        // 1) Tìm user theo identifier (id)
-        const found = await findUserByIdentifier(emailOrPhoneOrUsername);
-        if (!found) throw Object.assign(new Error('Incorrect Login'), { status: 401 });
+    // 1) Tìm user theo identifier (id)
+    const found = await findUserByIdentifier(emailOrPhoneOrUsername);
+    if (!found) throw Object.assign(new Error('Incorrect Login'), { status: 401 });
 
-        // 2) Refetch với secrets để có password + resetOtp*
-        const user = await userRepository.findByIdWithSecrets(found._id);
-        if (!user) throw Object.assign(new Error('Incorrect Login'), { status: 401 });
+    // 2) Refetch với secrets để có password + resetOtp*
+    const user = await userRepository.findByIdWithSecrets(found._id);
+    if (!user) throw Object.assign(new Error('Incorrect Login'), { status: 401 });
 
-        // 3) Nếu đang bị yêu cầu OTP thì buộc nhập OTP trước
-        if (user.resetOtpHash && user.resetOtpExpiresAt && user.resetOtpExpiresAt > new Date()) {
-            return { needOtp: true, message: 'The account requires OTP authentication.' };
-        }
+    // 3) Nếu đang bị yêu cầu OTP thì buộc nhập OTP trước
+    if (user.resetOtpHash && user.resetOtpExpiresAt && user.resetOtpExpiresAt > new Date()) {
+        return { needOtp: true, message: 'The account requires OTP authentication.' };
+    }
 
-        // 4) Phải có hash password
-        if (!user.password || typeof user.password !== 'string') {
-            throw Object.assign(new Error('Account has no password. Please set a password to login.'), { status: 400 });
-        }
+    // 4) Phải có hash password
+    if (!user.password || typeof user.password !== 'string') {
+        throw Object.assign(new Error('Account has no password. Please set a password to login.'), { status: 400 });
+    }
 
-        // 5) So sánh mật khẩu
-        const valid = await bcrypt.compare(password, user.password);
+    // 5) So sánh mật khẩu
+    const valid = await bcrypt.compare(password, user.password);
 
-        // 6) Nếu chưa verify
-        if (!user.isVerified) {
-            throw Object.assign(new Error('Account is not verified. Please verify your account before logging in.'), { status: 403 });
-        }
+    // 6) Nếu chưa verify
+    if (!user.isVerified) {
+        throw Object.assign(new Error('Account is not verified. Please verify your account before logging in.'), { status: 403 });
+    }
 
-        // 7) Sai mật khẩu → tăng đếm + có thể bật OTP
-        if (!valid) {
-            const updated = await userRepository.incFailLogin(user._id); // new:true để có giá trị mới nhất
-            if ((updated.failLoginAttempts || 0) >= MAX_FAILS) {
-                const otp = genOtp6();
-                const otpHash = sha256(otp);
-                const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
+    // 7) Sai mật khẩu → tăng đếm + có thể bật OTP
+    if (!valid) {
+        const updated = await userRepository.incFailLogin(user._id); // new:true để có giá trị mới nhất
+        if ((updated.failLoginAttempts || 0) >= MAX_FAILS) {
+            const otp = genOtp6();
+            const otpHash = sha256(otp);
+            const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
 
-                await userRepository.setLoginOtp(updated._id, { otpHash, expiresAt });
+            await userRepository.setLoginOtp(updated._id, { otpHash, expiresAt });
 
-                // Gửi mail nhưng không để lỗi mailer phá flow
-                try {
-                    await sendMail({
-                        to: updated.email,
-                        subject: 'OTP Verification Code',
-                        html: `
+            // Gửi mail nhưng không để lỗi mailer phá flow
+            try {
+                await sendMail({
+                    to: updated.email,
+                    subject: 'OTP Verification Code',
+                    html: `
             <p>Xin chào ${updated.fullName || updated.username},</p>
             <p>Bạn đã nhập sai mật khẩu quá ${MAX_FAILS} lần. Mã OTP của bạn:</p>
             <h2 style="letter-spacing:3px;">${otp}</h2>
             <p>Mã có hiệu lực trong ${OTP_TTL_MINUTES} phút.</p>
           `,
-                    });
-                } catch (e) {
-                    console.error('[MAIL ERROR][LOGIN OTP]', e?.message || e);
-                }
-
-                return { needOtp: true, message: `Incorrect ${MAX_FAILS} times. Please enter the OTP.` };
+                });
+            } catch (e) {
+                console.error('[MAIL ERROR][LOGIN OTP]', e?.message || e);
             }
 
-            throw Object.assign(new Error('Login is incorrect'), { status: 401 });
+            return { needOtp: true, message: `Incorrect ${MAX_FAILS} times. Please enter the OTP.` };
         }
 
-        // 8) Đúng mật khẩu → reset đếm sai
-        await userRepository.resetFailLogin(user._id);
+        throw Object.assign(new Error('Login is incorrect'), { status: 401 });
+    }
 
-        return { user: toPublicUser(user) };
-    };
+    // 8) Đúng mật khẩu → reset đếm sai
+    await userRepository.resetFailLogin(user._id);
 
-    const verifyLoginOtp = async ({ emailOrPhoneOrUsername, otp }) => {
-        if (!otp || String(otp).length !== 6) {
-            throw Object.assign(new Error('Invalid OTP'), { status: 400 });
-        }
+    return { user: toPublicUser(user) };
+};
 
-        const found = await findUserByIdentifier(emailOrPhoneOrUsername);
-        if (!found) throw Object.assign(new Error('Invalid User'), { status: 404 });
+const verifyLoginOtp = async ({ emailOrPhoneOrUsername, otp }) => {
+    if (!otp || String(otp).length !== 6) {
+        throw Object.assign(new Error('Invalid OTP'), { status: 400 });
+    }
 
-        const user = await userRepository.findByIdWithSecrets(found._id);
-        if (!user?.resetOtpExpiresAt || user.resetOtpExpiresAt < new Date()) {
-            throw Object.assign(new Error('OTP expired'), { status: 400 });
-        }
+    const found = await findUserByIdentifier(emailOrPhoneOrUsername);
+    if (!found) throw Object.assign(new Error('Invalid User'), { status: 404 });
 
-        if (!user.resetOtpHash) {
-            throw Object.assign(new Error('OTP does not exist'), { status: 400 });
-        }
+    const user = await userRepository.findByIdWithSecrets(found._id);
+    if (!user?.resetOtpExpiresAt || user.resetOtpExpiresAt < new Date()) {
+        throw Object.assign(new Error('OTP expired'), { status: 400 });
+    }
 
-        if (sha256(otp) !== user.resetOtpHash) {
-            throw Object.assign(new Error('OTP incorrect'), { status: 400 });
-        }
+    if (!user.resetOtpHash) {
+        throw Object.assign(new Error('OTP does not exist'), { status: 400 });
+    }
 
-        await userRepository.clearLoginOtp(user._id);
-        return { ok: true, message: 'OTP Verification Success. Please login again.' };
-    };
+    if (sha256(otp) !== user.resetOtpHash) {
+        throw Object.assign(new Error('OTP incorrect'), { status: 400 });
+    }
 
-    const profile = async (userId) => { //lấy thông tin hồ sơ người dùng
-        const user = await userRepository.findById(userId);
-        if (!user) {
-            throw new Error('User not found');
-        }
-        return toPublicUser(user); //trả về user công khai
-    };
+    await userRepository.clearLoginOtp(user._id);
+    return { ok: true, message: 'OTP Verification Success. Please login again.' };
+};
 
-    module.exports = {
-        register,
-        login,
-        createLoginOtp,
-        verifyLoginOtp,
-        profile,
-    };
+const profile = async (userId) => { //lấy thông tin hồ sơ người dùng
+    const user = await userRepository.findById(userId);
+    if (!user) {
+        throw new Error('User not found');
+    }
+    return toPublicUser(user); //trả về user công khai
+};
+
+// export const getAWSCredentials = async (googleIdToken, facebookIdToken) => { //authentication processing
+//     const credentials = new AWS.CognitoIdentityCredentials({
+//         IdentityPoolId: 'us-east-1:7b6f9245-55c1-4578-84cc-2c8f6f95982c',
+//         Logins: {
+//             'accounts.google.com': googleIdToken,
+//             'graph.facebook.com': facebookIdToken
+//         },
+//     });
+
+//     await credentials.getPromise(); // chờ Cognito cấp accessKey/secretKey tạm thời
+
+//     return {
+//         accessKeyId: credentials.accessKeyId,
+//         secretAccessKey: credentials.secretAccessKey,
+//         sessionToken: credentials.sessionToken,
+//     };
+// };
+
+
+module.exports = {
+    register,
+    login,
+    createLoginOtp,
+    verifyLoginOtp,
+    profile,
+};
