@@ -15,6 +15,7 @@ const ProductSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true,
+    require: true,
   },
 
   slug: {
@@ -83,17 +84,6 @@ const ProductSchema = new mongoose.Schema({
       trim: true,
     },
   ],
-
-  // ✅ Cờ xác định sản phẩm nổi bật, bán chạy, mới ra mắt, v.v.
-  isNew: {
-    type: Boolean,
-    default: true,
-  },
-
-  isFeatured: {
-    type: Boolean,
-    default: false,
-  }
 
 }, {
   timestamps: true,

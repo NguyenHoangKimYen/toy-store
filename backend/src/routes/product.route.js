@@ -18,7 +18,7 @@ router.get("/rating/average", getProductByRating);
 router.get("/price/range", getProductByPrice);
 router.get("/:id", getProductById);
 router.post("/", upload, createProduct);
-router.put("/:id", upload, updateProduct);
+router.patch("/:id", upload, updateProduct);
 router.delete("/:id", deleteProduct);
 
 module.exports = router;

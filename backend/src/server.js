@@ -37,13 +37,17 @@ app.get('/verify-email', (req, res) => {
 const productRoutes = require('./routes/product.route.js');
 const userRoutes = require('./routes/user.route.js');
 const authRoutes = require('./routes/auth.route.js');
-const cartRoutes = require('./routes/cart.route');
+const cartRoutes = require('./routes/cart.route.js');
+const cartItemRoutes = require('./routes/cart-item.route.js');
+const orderRoutes = require('./routes/order.route');
 
 // Gán các routes vào đường dẫn
 app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/carts', cartRoutes);
+app.use('/api/cart-items', cartItemRoutes);
+app.use('/api/orders', orderRoutes);
 
 app.use((err, req, res, _next) => { // xử lý lỗi tổng quát
   const status = err.status || 500;
