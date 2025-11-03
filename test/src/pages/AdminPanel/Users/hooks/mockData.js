@@ -1,6 +1,24 @@
 // Mock data for testing Users page
 export const mockUsers = [
+
   {
+    "_id": "68faebb94ceef331a4dbe7be",
+    "fullName": "Ngô Gia Bảo",
+    "username": "ngbao2485",
+    "email": "cuchim123123@xyz.com",
+    "phone": "0123456789",
+    "password": "$2b$10$def456abc789examplehash123",
+    "role": "admin",
+    "isVerified": true,
+    "defaultAddressId": "addr123",
+    "socialProvider": null,
+    "socialId": null,
+    "loyaltyPoints": 9999999,
+    "createdAt": "2025-09-15T08:30:00.000Z",
+    "updatedAt": "2025-11-02T14:20:00.000Z",
+    "__v": 0
+  },
+    {
     "_id": "68faebb94ceef331a4dbe7bd",
     "fullName": "Nguyễn Duy Thiện",
     "username": "nguyenduythien",
@@ -15,23 +33,6 @@ export const mockUsers = [
     "loyaltyPoints": 0,
     "createdAt": "2025-10-24T03:00:09.429Z",
     "updatedAt": "2025-10-24T03:00:09.429Z",
-    "__v": 0
-  },
-  {
-    "_id": "68faebb94ceef331a4dbe7be",
-    "fullName": "Trần Minh Anh",
-    "username": "tranminhanh",
-    "email": "anh.tran@example.com",
-    "phone": "0912345678",
-    "password": "$2b$10$def456abc789examplehash123",
-    "role": "admin",
-    "isVerified": true,
-    "defaultAddressId": "addr123",
-    "socialProvider": null,
-    "socialId": null,
-    "loyaltyPoints": 1500,
-    "createdAt": "2025-09-15T08:30:00.000Z",
-    "updatedAt": "2025-11-02T14:20:00.000Z",
     "__v": 0
   },
   {

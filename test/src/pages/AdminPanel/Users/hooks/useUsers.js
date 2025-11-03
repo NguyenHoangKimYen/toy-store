@@ -13,14 +13,14 @@ export const useUsers = (searchQuery = '') => {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    // Debounce: Wait 500ms after user stops typing
+    // Debounce
     const delayTimer = setTimeout(() => {
       const fetchUsers = async () => {
         try {
           setLoading(true)
           setError(null)
           
-          // Build query parameters for backend filtering
+          // Query params
           const params = new URLSearchParams()
           if (searchQuery) {
             params.append('search', searchQuery)
@@ -35,7 +35,7 @@ export const useUsers = (searchQuery = '') => {
           // setUsers(data.users)
           // setStats(data.stats)
           
-          // USING MOCK DATA CURRENTLY (simulating backend filtering)
+          // MOCK
           await new Promise(resolve => setTimeout(resolve, 500))
           
           // Simulate server-side filtering
@@ -71,11 +71,11 @@ export const useUsers = (searchQuery = '') => {
       }
 
       fetchUsers()
-    }, 500) // 500ms debounce delay
+    }, 500) 
 
-    // Cleanup: Cancel the timer if user types again before 500ms
+    // Cleanup
     return () => clearTimeout(delayTimer)
-  }, [searchQuery]) // Re-fetch when search query changes
+  }, [searchQuery]) 
 
   return {
     users,

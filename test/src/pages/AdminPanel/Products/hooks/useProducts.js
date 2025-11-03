@@ -20,7 +20,7 @@ export const useProducts = (searchQuery = '') => {
                     setLoading(true)
                     setError(null)
 
-                    // Query to backend
+                    // Query params
                     const params = new URLSearchParams()
                     if (searchQuery) {
                         params.append('search', searchQuery)
