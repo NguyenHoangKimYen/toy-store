@@ -4,7 +4,7 @@ const Account = () => {
     return (
         <div className='border-b mb-4 mt-2 pb-4 border-stone-300'>
             <button className='flex p-3 cursor-pointer hover:bg-stone-400 rounded-md transition-colors relative gap-2 w-full items-center'>
-                <img src='https://scontent.fsgn5-11.fna.fbcdn.net/v/t39.30808-6/480735419_653448857040533_1287371868550362738_n.jpg?stp=cp6_dst-jpg_tt6&_nc_cat=111&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeHO8OtcfMdc6cZzv2GRp-oxIqtV1ypJH2wiq1XXKkkfbIjYwQZbTXbnbN3XJoF1rmb-3U_j_qPd5BUOH4a-1jUa&_nc_ohc=jD5qCnUN0CEQ7kNvwFlXrUr&_nc_oc=AdkXQcdSs7knqZ7ULDrSkpEMGRJEpDnRUEWUwK1ZJJuz_RAVfDVMgjwMLL22K6S6yjY&_nc_zt=23&_nc_ht=scontent.fsgn5-11.fna&_nc_gid=LSBl4c3Rq_R0oOwORa6x-g&oh=00_AfgQEaM_P3IjYkPG2qkztOLagXwiPAdbmOTgFWVADk87yw&oe=690E9567' alt='pfp' className='size-8 rounded shrink-0 shadow'></img>
+                <img src='https://scontent.fsgn5-11.fna.fbcdn.net/v/t39.30808-6/480735419_653448857040533_1287371868550362738_n.jpg?stp=cp6_dst-jpg_tt6&_nc_cat=111&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeHO8OtcfMdc6cZzv2GRp-oxIqtV1ypJH2wiq1XXKkkfbIjYwQZbTXbnbN3XJoF1rmb-3U_j_qPd5BUOH4a-1jUa&_nc_ohc=jD5qCnUN0CEQ7kNvwFlXrUr&_nc_oc=AdkXQcdSs7knqZ7ULDrSkpEMGRJEpDnRUEWUwK1ZJJuz_RAVfDVMgjwMLL22K6S6yjY&_nc_zt=23&_nc_ht=scontent.fsgn5-11.fna&_nc_gid=LSBl4c3Rq_R0oOwORa6x-g&oh=00_AfgQEaM_P3IjYkPG2qkztOLagXwiPAdbmOTgFWVADk87yw&oe=690E9567' alt='pfp' className='size-9 rounded shrink-0 shadow'></img>
 
                 <div className='text-start'>
                     <span className='text-sm font-bold block'>Bao Ngo</span>
