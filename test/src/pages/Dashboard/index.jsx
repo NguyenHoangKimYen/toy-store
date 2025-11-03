@@ -7,6 +7,7 @@ const Dashboard = () => {
     <div className='grid gap-4 bg-red-100 p-4 grid-cols-[250px_1fr] h-screen'>
       <Sidebar></Sidebar>
       <Main></Main>
+      
     </div>
   )
 }

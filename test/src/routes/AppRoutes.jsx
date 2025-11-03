@@ -10,7 +10,7 @@ import Login from '../pages/Login'
 import Signup from '../pages/Signup'
 import PlaceOrder from '../pages/PlaceOrder'
 import Orders from '../pages/Orders'
-import Dashboard from '../pages/Dashboard/Dashboard'
+import Dashboard from '../pages/Dashboard'
 
 
 const AppRoutes = () => {

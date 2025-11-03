@@ -47,7 +47,7 @@ const Signup = () => {
 
 
     return (
-        <div className="flex mt-5 items-center justify-center ">
+        <div className="flex items-center justify-center h-screen">
             <Card className="w-[450px] shadow-lg border border-gray-300 dark:border-gray-800 bg-gray-100">
                 <CardHeader>
                     <CardTitle className="text-2xl text-center font-semibold">Welcome!</CardTitle>
