@@ -4,6 +4,7 @@ require ('./address.model.js');
 const ROLE_ENUM = ['customer', 'admin'];
 
 const userSchema = new mongoose.Schema({
+    //image url
     fullName: {
         type: String,
         required: true,
@@ -89,7 +90,7 @@ const userSchema = new mongoose.Schema({
 
     socialProvider: {
         type: String,
-        enum: ['google', 'facebook', 'github', null],
+        enum: ['google', 'facebook', 'github', 'apple', null],
         default: null,
     },
 
