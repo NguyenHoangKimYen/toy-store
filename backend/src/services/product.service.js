@@ -2,45 +2,44 @@ const productRepository = require('../repositories/product.repository.js');
 const { uploadToS3, deleteFromS3 } = require('../utils/s3.helper.js');
 
 const getAllProducts = async (query) => {
-    // 1. Destructure tất cả các query params
-    const {
-        page = 1,
-        limit = 20,
-        categoryId, // <-- Đổi tên từ 'category' để khớp '?categoryId=...'
-        keyword,
-        sort // <-- Thêm trường sort
-    } = query;
+    // Sử dụng URLSearchParams để parse query (hỗ trợ cả object từ req.query)
+    const params = new URLSearchParams(Object.entries(query || {}));
+
+    const page = Math.max(1, parseInt(params.get('page') || '1', 10));
+    const limit = Math.max(1, parseInt(params.get('limit') || '20', 10));
+    const categoryId = params.get('categoryId') || params.get('category') || null;
+    const keyword = params.get('keyword') || null;
+    const sortParam = params.get('sort') || null; // dạng price:asc hoặc name:desc
 
     // 2. Xây dựng đối tượng filter cho MongoDB
     const filter = {};
-    if (categoryId) filter.categoryId = categoryId; // <-- Sửa ở đây
+    if (categoryId) filter.categoryId = categoryId;
 
     // 3. Xử lý keyword
     if (keyword) {
-        // Tùy chọn 2: Dùng Regex (linh hoạt hơn, không cần text index)
-        // Tìm kiếm không phân biệt hoa thường trên trường 'name' (hoặc trường bạn muốn)
         filter.name = { $regex: keyword, $options: 'i' };
     }
 
     // 4. Xây dựng đối tượng options (bao gồm cả sort)
     const options = {
         skip: (page - 1) * limit,
-        limit: parseInt(limit),
-        sort: {} // Khởi tạo đối tượng sort
+        limit: limit,
+        sort: {}
     };
 
     // 5. Xử lý logic cho sort
-    // Query sẽ có dạng: ?sort=price:asc hoặc ?sort=name:desc
-    if (sort) {
-        const [field, order] = sort.split(':');
-        options.sort[field] = order === 'desc' ? -1 : 1; // 1 = asc, -1 = desc
+    if (sortParam) {
+        const [field, order] = String(sortParam).split(':');
+        if (field) {
+            options.sort[field] = order === 'desc' ? -1 : 1;
+        } else {
+            options.sort.createdAt = -1;
+        }
     } else {
-        // Mặc định sắp xếp theo ngày tạo mới nhất
         options.sort.createdAt = -1;
     }
 
     // 6. Gọi repository và thêm thông tin phân trang
-    // Chúng ta cần repository trả về cả tổng số sản phẩm
     const { products, total } = await productRepository.findAll(filter, options);
 
     // 7. Trả về kết quả hoàn chỉnh cho controller
@@ -49,7 +48,7 @@ const getAllProducts = async (query) => {
         pagination: {
             totalProducts: total,
             totalPages: Math.ceil(total / options.limit),
-            currentPage: parseInt(page),
+            currentPage: page,
             limit: options.limit
         }
     };
