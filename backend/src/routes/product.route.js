@@ -8,7 +8,7 @@ const {
     deleteProduct,
     updateProductImages,
 } = require('../controllers/product.controller.js');
-const { uploadProductImages: uploadProductImagesMiddleware } = require('../middlewares/upload.middleware.js');
+const uploadProductImagesMiddleware = require('../middlewares/upload.middleware.js');
 
 const router = express.Router();
 

@@ -42,8 +42,10 @@ app.get('/verify-email', (req, res) => {
 const productRoutes = require('./routes/product.route.js');
 const userRoutes = require('./routes/user.route.js');
 const authRoutes = require('./routes/auth.route.js');
+const passport = require("./config/passport");
 
 // Gán các routes vào đường dẫn
+app.use(passport.initialize());
 app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
