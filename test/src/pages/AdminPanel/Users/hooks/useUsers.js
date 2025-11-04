@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { mockUsers } from './mockData'
+import { getUsers } from '@/services/users.service'
 
 export const useUsers = (searchQuery = '') => {
   const [users, setUsers] = useState([])
@@ -20,46 +20,32 @@ export const useUsers = (searchQuery = '') => {
           setLoading(true)
           setError(null)
           
-          // Query params
-          const params = new URLSearchParams()
-          if (searchQuery) {
-            params.append('search', searchQuery)
-          }
+          // Fetch from backend
+          const data = await getUsers({ 
+            search: searchQuery,
+            // Add other filters as needed
+            // role: 'customer',
+            // verified: true,
+            // hasSocialLogin: false,
+            // sortBy: 'createdAt',
+            // sortOrder: 'desc',
+            // page: 1,
+            // limit: 50
+          })
           
-          // ----When backend is ready----
-          // const response = await fetch(`/api/users?${params.toString()}`)
-          // if (!response.ok) {
-          //   throw new Error(`Error: ${response.status}`)
-          // }
-          // const data = await response.json()
-          // setUsers(data.users)
-          // setStats(data.stats)
+          // Backend can return array or object with users property
+          const usersArray = Array.isArray(data) ? data : data.users || []
           
-          // MOCK
-          await new Promise(resolve => setTimeout(resolve, 500))
-          
-          // Simulate server-side filtering
-          let filtered = mockUsers
-          if (searchQuery) {
-            const query = searchQuery.toLowerCase()
-            filtered = mockUsers.filter(user => 
-              user.fullName.toLowerCase().includes(query) ||
-              user.username.toLowerCase().includes(query) ||
-              user.email.toLowerCase().includes(query) ||
-              user.phone.includes(query)
-            )
-          }
-          
-          // Simulate backend calculating stats
+          // Calculate stats from users
           const calculatedStats = {
-            totalUsers: filtered.length,
-            verifiedUsers: filtered.filter(u => u.isVerified).length,
-            totalLoyaltyPoints: filtered.reduce((sum, u) => sum + u.loyaltyPoints, 0),
-            adminUsers: filtered.filter(u => u.role === 'admin').length,
+            totalUsers: usersArray.length,
+            verifiedUsers: usersArray.filter(u => u.isVerified).length,
+            totalLoyaltyPoints: usersArray.reduce((sum, u) => sum + (u.loyaltyPoints || 0), 0),
+            adminUsers: usersArray.filter(u => u.role === 'admin').length,
           }
           
-          setUsers(filtered)
-          setStats(calculatedStats)
+          setUsers(usersArray)
+          setStats(data.stats || calculatedStats)
           
         } catch (err) {
           setError(err.message)

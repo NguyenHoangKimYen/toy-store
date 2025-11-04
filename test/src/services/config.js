@@ -1,12 +1,12 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://milkybloom.us-east-1.elasticbeanstalk.com';
 
 // API Endpoints
 export const ENDPOINTS = {
-  PRODUCTS: '/products',
-  USERS: '/users',
-  AUTH: '/auth',
-  ORDERS: '/orders',
-  CATEGORIES: '/categories',
+  PRODUCTS: '/api/products',
+  USERS: '/api/users',
+  AUTH: '/api/auth',
+  ORDERS: '/api/orders',
+  CATEGORIES: '/api/categories',
 };
 
 // Default

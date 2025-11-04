@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { mockProducts } from './mockData'
+import { getProducts } from '@/services/products.service'
 
 export const useProducts = (searchQuery = '') => {
     const [products, setProducts] = useState([])
@@ -20,45 +20,35 @@ export const useProducts = (searchQuery = '') => {
                     setLoading(true)
                     setError(null)
 
-                    // Query params
-                    const params = new URLSearchParams()
-                    if (searchQuery) {
-                        params.append('search', searchQuery)
-                    }
+                    // Fetch from backend with filters
+                    const data = await getProducts({ 
+                        search: searchQuery,
+                        // Add other filters as needed:
+                        // category: selectedCategory,
+                        // minPrice: minPrice,
+                        // maxPrice: maxPrice,
+                        // isNew: true,
+                        // isFeatured: false,
+                        // inStock: true,
+                        // sortBy: 'name',
+                        // sortOrder: 'asc',
+                        // page: 1,
+                        // limit: 50
+                    })
 
-                    // ----BACKEND----
-                    // const response = await fetch(`/api/products?${params.toString()}`)
-                    // if (!response.ok) {
-                    //   throw new Error(`Error: ${response.status}`)
-                    // }
-                    // const data = await response.json()
-                    // setProducts(data.products)
-                    // setStats(data.stats)
+                    // Backend can return array or object with products property
+                    const productsArray = Array.isArray(data) ? data : data.products || []
 
-                    // MOCK
-                    await new Promise(resolve => setTimeout(resolve, 500))
-
-                    // Simulate backend filtering
-                    let filtered = mockProducts
-                    if (searchQuery) {
-                        const query = searchQuery.toLowerCase()
-                        filtered = mockProducts.filter(product =>
-                            product.name.toLowerCase().includes(query) ||
-                            product.categoryId.name.toLowerCase().includes(query) ||
-                            product.slug.toLowerCase().includes(query)
-                        )
-                    }
-
-                    // Simulate backend calculating stats
+                    // Calculate stats from products
                     const calculatedStats = {
-                        totalProducts: filtered.length,
-                        totalStock: filtered.reduce((sum, p) => sum + p.stockQuantity, 0),
-                        totalSold: filtered.reduce((sum, p) => sum + p.soldCount, 0),
-                        outOfStock: filtered.filter(p => p.stockQuantity === 0).length,
+                        totalProducts: productsArray.length,
+                        totalStock: productsArray.reduce((sum, p) => sum + (p.stockQuantity || 0), 0),
+                        totalSold: productsArray.reduce((sum, p) => sum + (p.soldCount || 0), 0),
+                        outOfStock: productsArray.filter(p => p.stockQuantity === 0).length,
                     }
 
-                    setProducts(filtered)
-                    setStats(calculatedStats)
+                    setProducts(productsArray)
+                    setStats(data.stats || calculatedStats)
 
                 } catch (err) {
                     setError(err.message)
