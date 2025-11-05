@@ -117,9 +117,17 @@ a.active hr {
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    }
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
     }
   body {
     @apply bg-background text-foreground;
+    position: relative;
     }
 }
 

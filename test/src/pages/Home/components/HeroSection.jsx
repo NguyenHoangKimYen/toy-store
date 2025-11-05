@@ -1,5 +1,6 @@
 ﻿import React, { useEffect } from 'react';
 import './HeroSection.css';
+import example from '../../../assets/example.png'
 
 const HeroSection = ({ featuredProducts }) => {
   useEffect(() => {
@@ -8,6 +9,7 @@ const HeroSection = ({ featuredProducts }) => {
     let carousel = document.querySelector('.hero-carousel');
     let listHTML = document.querySelector('.hero-carousel .list');
     let unAcceptClick;
+    let autoPlayInterval;
 
     if (!nextButton || !prevButton || !carousel || !listHTML) return;
 
@@ -33,21 +35,28 @@ const HeroSection = ({ featuredProducts }) => {
       }, 2000);
     };
 
+    const resetAutoPlay = () => {
+      clearInterval(autoPlayInterval);
+      autoPlayInterval = setInterval(() => {
+        showSlider('next');
+      }, 5000);
+    };
+
     nextButton.onclick = function() {
       showSlider('next');
+      resetAutoPlay();
     };
     
     prevButton.onclick = function() {
       showSlider('prev');
+      resetAutoPlay();
     };
 
-    // Auto-play
-    const autoPlay = setInterval(() => {
-      showSlider('next');
-    }, 5000);
+    // Initial auto-play
+    resetAutoPlay();
 
     return () => {
-      clearInterval(autoPlay);
+      clearInterval(autoPlayInterval);
     };
   }, [featuredProducts]);
 
@@ -61,23 +70,13 @@ const HeroSection = ({ featuredProducts }) => {
         {featuredProducts.slice(0, 6).map((product) => (
           <div className="item" key={product._id}>
             <img 
-              src={product.imageUrls?.[0] || '/placeholder.png'} 
+              src={example} 
               alt={product.name} 
             />
             <div className="introduce">
               <div className="title">FEATURED</div>
               <div className="topic">{product.name}</div>
               <div className="des">{product.description}</div>
-              <div className="price-section">
-                <span className="hero-price">
-                  ${(product.price?.$numberDecimal || product.price)?.toLocaleString()}
-                </span>
-                {product.originalPrice && (
-                  <span className="hero-original-price">
-                    ${(product.originalPrice?.$numberDecimal || product.originalPrice)?.toLocaleString()}
-                  </span>
-                )}
-              </div>
               <button className="cta-button">
                 Shop Now <span className="arrow">→</span>
               </button>

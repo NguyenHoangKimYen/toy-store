@@ -1,9 +1,28 @@
-import React, { useEffect } from 'react';
-import { carouselData } from './carouselData';
+import React, { useEffect, useState } from 'react';
+import { getProducts } from '@/services/products.service';
 import './ProductCarousel.css';
 
 const ProductCarousel = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
+    const fetchFeaturedProducts = async () => {
+      try {
+        const data = await getProducts({ isFeatured: true, limit: 6 });
+        setProducts(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Failed to fetch featured products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeaturedProducts();
+  }, []);
+
+  useEffect(() => {
+    if (loading || products.length === 0) return;
     let nextButton = document.getElementById('next');
     let prevButton = document.getElementById('prev');
     let carousel = document.querySelector('.carousel');
@@ -52,30 +71,70 @@ const ProductCarousel = () => {
     backButton.onclick = function() {
       carousel.classList.remove('showDetail');
     };
-  }, []);
+  }, [loading, products]);
+
+  if (loading) {
+    return (
+      <div className="carousel-loading" style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '800px',
+        fontSize: '1.5rem',
+        color: '#64748b'
+      }}>
+        Loading featured products...
+      </div>
+    );
+  }
+
+  if (products.length === 0) {
+    return (
+      <div className="carousel-loading" style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '800px',
+        fontSize: '1.5rem',
+        color: '#64748b'
+      }}>
+        No featured products available
+      </div>
+    );
+  }
 
   return (
     <div className="carousel">
       <div className="list">
-        {carouselData.map((item) => (
-          <div className="item" key={item.id}>
-            <img src={item.image} alt={item.topic} />
+        {products.map((product) => (
+          <div className="item" key={product._id}>
+            <img src={product.imageUrls?.[0] || '/placeholder.png'} alt={product.name} />
             <div className="introduce">
-              <div className="title">{item.title}</div>
-              <div className="topic">{item.topic}</div>
-              <div className="des">{item.description}</div>
+              <div className="title">FEATURED</div>
+              <div className="topic">{product.name}</div>
+              <div className="des">{product.description}</div>
               <button className="seeMore">SEE MORE &#8599;</button>
             </div>
             <div className="detail">
-              <div className="title">{item.detailTitle}</div>
-              <div className="des">{item.detailDescription}</div>
+              <div className="title">{product.name}</div>
+              <div className="des">{product.description}</div>
               <div className="specifications">
-                {item.specifications.map((spec, index) => (
-                  <div key={index}>
-                    <p>{spec.label}</p>
-                    <p>{spec.value}</p>
-                  </div>
-                ))}
+                <div>
+                  <p>Price</p>
+                  <p>${product.price?.$numberDecimal || product.price}</p>
+                </div>
+                <div>
+                  <p>Stock</p>
+                  <p>{product.stockQuantity}</p>
+                </div>
+                <div>
+                  <p>Rating</p>
+                  <p>{product.averageRating || 0} ⭐</p>
+                </div>
+                <div>
+                  <p>Sold</p>
+                  <p>{product.soldCount || 0}</p>
+                </div>
               </div>
               <div className="checkout">
                 <button>ADD TO CART</button>

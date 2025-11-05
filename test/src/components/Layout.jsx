@@ -6,13 +6,14 @@ import { Toaster } from './ui/sonner'
 
 const Layout = () => {
     return (
-        <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
-            <div>
-                <Navbar></Navbar>
+        <div className='min-h-screen overflow-x-hidden w-full'>
+            <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
+                <Navbar />
             </div>
-            <div className='content'>
-                <Outlet></Outlet>
-            </div>
+            <main className='w-full'>
+                <Outlet />
+            </main>
+            <Toaster />
         </div>
     )
 }
