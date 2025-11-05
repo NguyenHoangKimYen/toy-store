@@ -1,7 +1,7 @@
 import React from 'react';
-import HeroSection from './Home/components/HeroSection';
-import CategorySection from './Home/components/CategorySection';
-import FeaturedBanner from './Home/components/FeaturedBanner';
+import { HeroSection } from './Home/components/Hero';
+import { CategorySection, ProductCategoriesSection, NewArrivalsSection } from './Home/components/Category';
+import { FeaturedBanner } from './Home/components/Banner';
 import { useProductsByCategory } from './Home/hooks/useProductsByCategory';
 import './Home/Home.css';
 
@@ -34,6 +34,12 @@ const Home = () => {
 
       {/* Featured Banner */}
       <FeaturedBanner />
+
+      {/* New Arrivals Section - Above Everything */}
+      <NewArrivalsSection newProducts={categorizedProducts.newProducts} />
+
+      {/* Product Categories Section with shadcn */}
+      <ProductCategoriesSection categorizedProducts={categorizedProducts} />
 
       {/* New Products */}
       <CategorySection

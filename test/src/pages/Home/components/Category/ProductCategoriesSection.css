@@ -114,11 +114,15 @@
 /* Horizontal scrolling products */
 .products-horizontal-scroll {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 20px;
   overflow-x: auto;
+  overflow-y: hidden;
   padding-bottom: 10px;
   scroll-behavior: smooth;
+  /* Enable horizontal scrolling */
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(200px, 1fr);
 }
 
 .products-horizontal-scroll::-webkit-scrollbar {
@@ -202,13 +206,21 @@
 /* Responsive Design */
 @media screen and (max-width: 1400px) {
   .products-horizontal-scroll {
-    grid-template-columns: repeat(5, 1fr);
+    grid-auto-columns: minmax(180px, 1fr);
+  }
+  
+  .product-card-horizontal {
+    min-width: 180px;
   }
 }
 
 @media screen and (max-width: 1200px) {
   .products-horizontal-scroll {
-    grid-template-columns: repeat(4, 1fr);
+    grid-auto-columns: minmax(170px, 1fr);
+  }
+  
+  .product-card-horizontal {
+    min-width: 170px;
   }
 }
 
@@ -230,8 +242,12 @@
   }
 
   .products-horizontal-scroll {
-    grid-template-columns: repeat(3, 1fr);
+    grid-auto-columns: minmax(160px, 1fr);
     gap: 16px;
+  }
+  
+  .product-card-horizontal {
+    min-width: 160px;
   }
 }
 
@@ -255,7 +271,7 @@
   }
 
   .products-horizontal-scroll {
-    grid-template-columns: repeat(2, 1fr);
+    grid-auto-columns: minmax(150px, 1fr);
     gap: 12px;
   }
 
@@ -291,7 +307,7 @@
   }
 
   .products-horizontal-scroll {
-    grid-template-columns: repeat(2, 1fr);
+    grid-auto-columns: minmax(140px, 1fr);
     gap: 10px;
   }
 

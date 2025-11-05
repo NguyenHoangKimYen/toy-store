@@ -1,7 +1,9 @@
 ﻿import React from 'react'
 import { Sparkles, TrendingUp, Heart, ShoppingBag } from 'lucide-react'
-import { HeroSection, ProductSection, CTABanner } from './Home/components'
-import { useHomeProducts } from './Home/hooks/useHomeProducts'
+import { HeroSection } from './components/Hero'
+import { ProductSection } from './components/Product'
+import { CTABanner } from './components/Banner'
+import { useHomeProducts } from './hooks/useHomeProducts'
 
 const Home = () => {
   const { loading, featuredProduct, products, categorizedProducts } = useHomeProducts()

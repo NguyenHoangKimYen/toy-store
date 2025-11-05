@@ -96,7 +96,7 @@ const ProductCategoriesSection = () => {
 
       <div className="categories-container">
         {categories.map((category) => {
-          const displayProducts = category.products.slice(0, 6);
+          const displayProducts = category.products.slice(0, 12);
           
           if (displayProducts.length === 0) return null;
 
