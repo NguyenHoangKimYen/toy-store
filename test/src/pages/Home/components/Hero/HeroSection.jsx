@@ -1,15 +1,21 @@
 ﻿import React, { useEffect, useRef } from 'react';
 import HeroSlide from './HeroSlide';
 import HeroNavigation from './HeroNavigation';
-import { useCarouselAutoplay } from '../hooks/useCarouselAutoplay';
-import { useCarouselNavigation } from '../hooks/useCarouselNavigation';
-import { useResponsive } from '../hooks/useResponsive';
+import { useCarouselAutoplay } from '../../hooks/useCarouselAutoplay';
+import { useCarouselNavigation } from '../../hooks/useCarouselNavigation';
+import { useResponsive } from '../../hooks/useResponsive';
+import { mockProducts } from '../../data/mockProducts';
 import './HeroSection.css';
-import example from '../../../assets/example.png';
+import example from '../../../../assets/example.png';
 
 const HeroSection = ({ featuredProducts }) => {
   const carouselRef = useRef(null);
   const listRef = useRef(null);
+  
+  // Use mock data if featuredProducts is empty
+  const displayProducts = (featuredProducts && featuredProducts.length > 0) 
+    ? featuredProducts 
+    : mockProducts.featured;
   
   const { direction, triggerSlide, goToNext, goToPrev } = useCarouselNavigation();
   const { reset: resetAutoPlay } = useCarouselAutoplay(5000);
@@ -53,14 +59,14 @@ const HeroSection = ({ featuredProducts }) => {
     resetAutoPlay(goToNext);
   };
 
-  if (!featuredProducts || featuredProducts.length === 0) {
+  if (!displayProducts || displayProducts.length === 0) {
     return null;
   }
 
   return (
     <div className="hero-carousel" ref={carouselRef}>
       <div className="list" ref={listRef}>
-        {featuredProducts.slice(0, 6).map((product) => (
+        {displayProducts.slice(0, 6).map((product) => (
           <HeroSlide 
             key={product._id} 
             product={product} 
