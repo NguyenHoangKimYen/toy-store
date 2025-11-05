@@ -14,6 +14,7 @@ import AdminPanel from '../pages/AdminPanel'
 import Dashboard from '../pages/AdminPanel/Components/Main'
 import Users from '../pages/AdminPanel/Users'
 import Products from '../pages/AdminPanel/Products'
+import CarouselDemo from '../pages/CarouselDemo'
 import { ROUTES } from '../config/routes'
 
 const AppRoutes = () => {
@@ -37,6 +38,7 @@ const AppRoutes = () => {
             <Route path={ROUTES.CART} element={<Cart />}></Route>
             <Route path={ROUTES.PLACE_ORDER} element={<PlaceOrder />}></Route>
             <Route path={ROUTES.ORDERS} element={<Orders />}></Route>
+            <Route path='/carousel-demo' element={<CarouselDemo />}></Route>
         </Route>
     </Routes>
   )

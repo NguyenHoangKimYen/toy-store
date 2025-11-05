@@ -37,7 +37,7 @@ export const useProducts = (searchQuery = '') => {
                     })
 
                     // Backend can return array or object with products property
-                    const productsArray = Array.isArray(data) ? data : data.products || []
+                    const productsArray = Array.isArray(data) ? data :  []
 
                     // Calculate stats from products
                     const calculatedStats = {

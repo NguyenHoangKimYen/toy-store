@@ -8,7 +8,7 @@ const ProductInfo = ({ product }) => {
       {/* Category & Badges */}
       <div className='flex items-center gap-2 mb-3'>
         <span className='px-3 py-1 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded-full text-sm font-medium'>
-          {product.categoryId.name}
+          {product.categoryId}
         </span>
         {product.isNew && (
           <span className='px-3 py-1 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200 rounded-full text-sm font-semibold'>

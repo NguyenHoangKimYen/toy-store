@@ -20,7 +20,7 @@ const ProductCard = ({ product, onViewDetails }) => {
       <div className='p-4'>
         {/* Category */}
         <p className='text-xs text-gray-500 dark:text-gray-400 mb-1'>
-          {product.categoryId.name}
+          {product.categoryId}
         </p>
         
         {/* Product Name */}

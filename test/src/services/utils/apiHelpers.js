@@ -11,7 +11,12 @@ export const handleResponse = async (response) => {
     }));
     throw new Error(error.message || `HTTP error! status: ${response.status}`);
   }
-  return response.json();
+  const json = await response.json();
+  if (json.success && json.data !== undefined) {
+    return json.data;
+  }
+
+  return json;
 };
 
 /**
