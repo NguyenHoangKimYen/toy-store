@@ -86,12 +86,12 @@
     transition: opacity 0.5s;
     will-change: opacity;
 }
-.carousel .list .item .introduce .title{
+.carousel .list .item .introduce .tag{
     font-size: 2em;
     font-weight: 500;
     line-height: 1em;
 }
-.carousel .list .item .introduce .topic{
+.carousel .list .item .introduce .name{
     font-size: 4em;
     font-weight: 500;
 }
@@ -138,8 +138,8 @@
     pointer-events: none;
 }
 /* animation text in item2 */
-.carousel .list .item:nth-child(2) .introduce .title,
-.carousel .list .item:nth-child(2) .introduce .topic,
+.carousel .list .item:nth-child(2) .introduce .tag,
+.carousel .list .item:nth-child(2) .introduce .name,
 .carousel .list .item:nth-child(2) .introduce .des,
 .carousel .list .item:nth-child(2) .introduce .seeMore{
     opacity: 0;
@@ -155,7 +155,7 @@
         filter: blur(0px);
     }
 }
-.carousel .list .item:nth-child(2) .introduce .topic{
+.carousel .list .item:nth-child(2) .introduce .name{
     animation-delay: 1.2s;
 }
 .carousel .list .item:nth-child(2) .introduce .des{
@@ -258,7 +258,7 @@
     text-align: right;
     pointer-events: auto;
 }
-.carousel.showDetail .list .item:nth-child(2) .detail .title{
+.carousel.showDetail .list .item:nth-child(2) .detail .tag{
     font-size: 4em;
 }
 .carousel.showDetail .list .item:nth-child(2) .detail .specifications{
@@ -290,7 +290,7 @@
     background-color: #693EFF;
     color: #eee;
 }
-.carousel.showDetail .list .item:nth-child(2) .detail  .title,
+.carousel.showDetail .list .item:nth-child(2) .detail  .tag,
 .carousel.showDetail .list .item:nth-child(2) .detail  .des,
 .carousel.showDetail .list .item:nth-child(2) .detail .specifications,
 .carousel.showDetail .list .item:nth-child(2) .detail .checkout{
@@ -384,7 +384,7 @@
     .carousel.showDetail .list .item:nth-child(2) .detail .specifications{
         overflow: auto;
     }
-    .carousel.showDetail .list .item:nth-child(2) .detail .title{
+    .carousel.showDetail .list .item:nth-child(2) .detail .tag{
         font-size: 2em;
     }
 }

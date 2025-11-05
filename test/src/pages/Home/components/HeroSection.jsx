@@ -1,93 +1,80 @@
-﻿import React, { useEffect } from 'react';
+﻿import React, { useEffect, useRef } from 'react';
+import HeroSlide from './HeroSlide';
+import HeroNavigation from './HeroNavigation';
+import { useCarouselAutoplay } from '../hooks/useCarouselAutoplay';
+import { useCarouselNavigation } from '../hooks/useCarouselNavigation';
+import { useResponsive } from '../hooks/useResponsive';
 import './HeroSection.css';
-import example from '../../../assets/example.png'
+import example from '../../../assets/example.png';
 
 const HeroSection = ({ featuredProducts }) => {
+  const carouselRef = useRef(null);
+  const listRef = useRef(null);
+  
+  const { direction, triggerSlide, goToNext, goToPrev } = useCarouselNavigation();
+  const { reset: resetAutoPlay } = useCarouselAutoplay(5000);
+  const { isMobile } = useResponsive();
+
+  // Handle CSS class animation and DOM reordering
   useEffect(() => {
-    let nextButton = document.getElementById('hero-next');
-    let prevButton = document.getElementById('hero-prev');
-    let carousel = document.querySelector('.hero-carousel');
-    let listHTML = document.querySelector('.hero-carousel .list');
-    let unAcceptClick;
-    let autoPlayInterval;
+    if (!carouselRef.current || !listRef.current || !direction) return;
 
-    if (!nextButton || !prevButton || !carousel || !listHTML) return;
+    const carousel = carouselRef.current;
+    const list = listRef.current;
+    const items = list.querySelectorAll('.item');
 
-    const showSlider = (type) => {
-      nextButton.style.pointerEvents = 'none';
-      prevButton.style.pointerEvents = 'none';
+    if (items.length === 0) return;
 
-      carousel.classList.remove('next', 'prev');
-      let items = document.querySelectorAll('.hero-carousel .list .item');
-      
-      if (type === 'next') {
-        listHTML.appendChild(items[0]);
-        carousel.classList.add('next');
-      } else {
-        listHTML.prepend(items[items.length - 1]);
-        carousel.classList.add('prev');
-      }
-      
-      clearTimeout(unAcceptClick);
-      unAcceptClick = setTimeout(() => {
-        nextButton.style.pointerEvents = 'auto';
-        prevButton.style.pointerEvents = 'auto';
-      }, 2000);
-    };
+    // Remove previous classes
+    carousel.classList.remove('next', 'prev');
 
-    const resetAutoPlay = () => {
-      clearInterval(autoPlayInterval);
-      autoPlayInterval = setInterval(() => {
-        showSlider('next');
-      }, 5000);
-    };
+    // Reorder DOM based on direction
+    if (direction === 'next') {
+      list.appendChild(items[0]);
+      carousel.classList.add('next');
+    } else if (direction === 'prev') {
+      list.prepend(items[items.length - 1]);
+      carousel.classList.add('prev');
+    }
+  }, [triggerSlide, direction]);
 
-    nextButton.onclick = function() {
-      showSlider('next');
-      resetAutoPlay();
-    };
-    
-    prevButton.onclick = function() {
-      showSlider('prev');
-      resetAutoPlay();
-    };
+  // Auto-play
+  useEffect(() => {
+    resetAutoPlay(goToNext);
+  }, [goToNext, resetAutoPlay]);
 
-    // Initial auto-play
-    resetAutoPlay();
+  const handleNext = () => {
+    goToNext();
+    resetAutoPlay(goToNext);
+  };
 
-    return () => {
-      clearInterval(autoPlayInterval);
-    };
-  }, [featuredProducts]);
+  const handlePrev = () => {
+    goToPrev();
+    resetAutoPlay(goToNext);
+  };
 
   if (!featuredProducts || featuredProducts.length === 0) {
     return null;
   }
 
   return (
-    <div className="hero-carousel">
-      <div className="list">
+    <div className="hero-carousel" ref={carouselRef}>
+      <div className="list" ref={listRef}>
         {featuredProducts.slice(0, 6).map((product) => (
-          <div className="item" key={product._id}>
-            <img 
-              src={example} 
-              alt={product.name} 
-            />
-            <div className="introduce">
-              <div className="title">FEATURED</div>
-              <div className="topic">{product.name}</div>
-              <div className="des">{product.description}</div>
-              <button className="cta-button">
-                Shop Now <span className="arrow">→</span>
-              </button>
-            </div>
-          </div>
+          <HeroSlide 
+            key={product._id} 
+            product={product} 
+            image={example}
+          />
         ))}
       </div>
-      <div className="arrows">
-        <button id="hero-prev" aria-label="Previous slide">&lt;</button>
-        <button id="hero-next" aria-label="Next slide">&gt;</button>
-      </div>
+      
+      <HeroNavigation 
+        onPrev={handlePrev}
+        onNext={handleNext}
+        isMobile={isMobile}
+        showShopNow={true}
+      />
     </div>
   );
 };

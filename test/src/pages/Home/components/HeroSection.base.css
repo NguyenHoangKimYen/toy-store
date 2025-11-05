@@ -6,7 +6,7 @@
     height: 100vh;
     min-height: 600px;
     max-height: 900px;
-    overflow: hidden;
+    overflow: visible;
     background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     will-change: transform;
     contain: layout style paint;
@@ -30,7 +30,7 @@
     font-size: 15px;
     transition: left 0.5s, opacity 0.5s, width 0.5s;
     will-change: transform, filter, opacity;
-    contain: layout style paint;
+    overflow: visible;
 }
 
 .hero-carousel .list .item:nth-child(n + 6) {
@@ -38,14 +38,14 @@
 }
 
 .hero-carousel .list .item:nth-child(2) {
-    z-index: 10;
+    z-index: 0;
     transform: translateX(0);
 }
 
 .hero-carousel .list .item img {
-    width: 50%;
+    width: 75%;
     position: absolute;
-    right: 0;
+    right: -30%;
     top: 50%;
     transform: translateY(-50%);
     transition: right 1.5s;
@@ -57,21 +57,24 @@
 .hero-carousel .list .item .introduce {
     opacity: 0;
     pointer-events: none;
+    visibility: hidden;
+    transition: opacity 0.5s, visibility 0.5s;
 }
 
 .hero-carousel .list .item:nth-child(2) .introduce {
     opacity: 1;
     pointer-events: auto;
+    visibility: visible;
     width: 500px;
     max-width: 90%;
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    transition: opacity 0.5s;
+    transition: opacity 0.5s, visibility 0s;
     will-change: opacity;
 }
 
-.hero-carousel .list .item .introduce .title {
+.hero-carousel .list .item .introduce .tag {
     font-size: 1.5em;
     font-weight: 600;
     line-height: 1em;
@@ -80,8 +83,8 @@
     margin-bottom: 0.5em;
 }
 
-.hero-carousel .list .item .introduce .topic {
-    font-size: 4.5em;
+.hero-carousel .list .item .introduce .name {
+    font-size: 3.7em;
     font-weight: 700;
     color: #1e293b;
     margin-bottom: 0.3em;

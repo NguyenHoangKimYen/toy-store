@@ -1,8 +1,8 @@
 /* HeroSection Animations */
 
 /* Animation for text in item2 */
-.hero-carousel .list .item:nth-child(2) .introduce .title,
-.hero-carousel .list .item:nth-child(2) .introduce .topic,
+.hero-carousel .list .item:nth-child(2) .introduce .tag,
+.hero-carousel .list .item:nth-child(2) .introduce .name,
 .hero-carousel .list .item:nth-child(2) .introduce .des,
 .hero-carousel .list .item:nth-child(2) .introduce .cta-button {
     opacity: 0;
@@ -21,7 +21,7 @@
     }
 }
 
-.hero-carousel .list .item:nth-child(2) .introduce .topic {
+.hero-carousel .list .item:nth-child(2) .introduce .name {
     animation-delay: 1s;
 }
 

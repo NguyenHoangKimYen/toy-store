@@ -1,2 +1,2 @@
-export { default } from './ProductCarousel'
-export { default as ProductCarousel } from './ProductCarousel'
+export { default } from './ProductCarousel.jsx'
+export { default as ProductCarousel } from './ProductCarousel.jsx'
