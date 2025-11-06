@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { ProductCard } from '@/components/common';
 import { ArrowRight, Sparkles, Tag } from 'lucide-react';
 import { mockProducts } from '../../data/mockProducts';
@@ -34,9 +36,9 @@ const NewArrivalsSection = ({ newProducts }) => {
           <div>
             <h2 className="new-arrivals-title">
               New Arrivals
-              <span className="badge-new">NEW</span>
+              <Badge variant="default" className="ml-2">NEW</Badge>
             </h2>
-            <p className="new-arrivals-subtitle">Fresh drops you can't miss</p>
+            <p className="new-arrivals-subtitle text-muted-foreground">Fresh drops you can't miss</p>
           </div>
         </div>
         <Button
@@ -66,10 +68,10 @@ const NewArrivalsSection = ({ newProducts }) => {
               className={index === 0 ? 'featured-card' : ''}
             />
             {index === 0 && (
-              <div className="featured-overlay">
-                <Sparkles className="w-5 h-5" />
+              <Badge variant="secondary" className="featured-overlay">
+                <Sparkles className="w-4 h-4 mr-1" />
                 <span>Featured</span>
-              </div>
+              </Badge>
             )}
           </div>
         ))}

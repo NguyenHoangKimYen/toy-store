@@ -1,6 +1,9 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { ProductCard } from '@/components/common';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import './CategorySection.css';
 
 const CategorySection = ({ title, subtitle, products, viewAllLink }) => {
@@ -11,12 +14,14 @@ const CategorySection = ({ title, subtitle, products, viewAllLink }) => {
       <div className="category-header">
         <div>
           <h2 className="category-title">{title}</h2>
-          {subtitle && <p className="category-subtitle">{subtitle}</p>}
+          {subtitle && <p className="category-subtitle text-muted-foreground">{subtitle}</p>}
         </div>
         {viewAllLink && (
-          <a href={viewAllLink} className="view-all-link">
-            View All <ArrowRight className="arrow-icon" />
-          </a>
+          <Button variant="outline" asChild>
+            <a href={viewAllLink}>
+              View All <ArrowRight className="ml-2 h-4 w-4" />
+            </a>
+          </Button>
         )}
       </div>
 
