@@ -4,6 +4,8 @@ export const PUBLIC_ROUTES = {
   LOGIN: '/login',
   REGISTER: '/register',
   COLLECTION: '/collection',
+  PRODUCTS: '/products',
+  PRODUCT_DETAIL: '/products/:id',
   ABOUT: '/about',
   CONTACT: '/contact',
   CART: '/cart',

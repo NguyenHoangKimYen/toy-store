@@ -3,6 +3,8 @@ import { Route, Routes } from 'react-router-dom'
 import Layout from '../components/Layout'
 import Home from '../pages/Home'
 import Collection from '../pages/Collection'
+import Product from '../pages/Product'
+import ProductDetail from '../pages/Products/ProductDetail'
 import About from '../pages/About'
 import Contact from '../pages/Contact'
 import Cart from '../pages/Cart'
@@ -33,6 +35,8 @@ const AppRoutes = () => {
         <Route element={<Layout />}>
             <Route path={ROUTES.HOME} element={<Home />}></Route>
             <Route path={ROUTES.COLLECTION} element={<Collection />}></Route>
+            <Route path={ROUTES.PRODUCTS} element={<Product />}></Route>
+            <Route path={ROUTES.PRODUCT_DETAIL} element={<ProductDetail />}></Route>
             <Route path={ROUTES.ABOUT} element={<About />}></Route>
             <Route path={ROUTES.CONTACT} element={<Contact />}></Route>
             <Route path={ROUTES.CART} element={<Cart />}></Route>
