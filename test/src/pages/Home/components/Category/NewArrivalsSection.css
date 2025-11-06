@@ -98,11 +98,15 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
+  grid-auto-rows: 1fr;
 }
 
 /* Wrapper for featured overlay positioning */
 .new-arrival-wrapper {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 /* Product Card Styling */
@@ -111,6 +115,9 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid #e5e7eb;
   overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .new-arrival-card:hover {
@@ -119,22 +126,13 @@
   border-color: #f59e0b;
 }
 
-/* Featured Card - First Item */
-.featured-card {
-  grid-column: span 2;
-  grid-row: span 2;
-}
-
 .product-image-wrapper {
   position: relative;
   width: 100%;
   padding-bottom: 100%;
   overflow: hidden;
   background: #f9fafb;
-}
-
-.featured-card .product-image-wrapper {
-  padding-bottom: 50%;
+  flex-shrink: 0;
 }
 
 .product-image-wrapper img {
@@ -192,10 +190,10 @@
 /* Card Content */
 .product-card-content {
   padding: 16px !important;
-}
-
-.featured-card .product-card-content {
-  padding: 24px !important;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .product-name {
@@ -208,15 +206,11 @@
   white-space: nowrap;
 }
 
-.featured-card .product-name {
-  font-size: 18px;
-  font-weight: 600;
-}
-
 .product-footer {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-top: auto;
 }
 
 .product-price {
@@ -224,10 +218,6 @@
   font-weight: 700;
   color: #f59e0b;
   margin: 0;
-}
-
-.featured-card .product-price {
-  font-size: 22px;
 }
 
 .original-price {
@@ -246,27 +236,6 @@
 @media (max-width: 1200px) {
   .new-arrivals-grid {
     grid-template-columns: repeat(3, 1fr);
-  }
-  
-  .featured-card {
-    grid-column: span 1;
-    grid-row: span 1;
-  }
-  
-  .featured-card .product-image-wrapper {
-    padding-bottom: 100%;
-  }
-  
-  .featured-card .product-card-content {
-    padding: 16px !important;
-  }
-  
-  .featured-card .product-name {
-    font-size: 14px;
-  }
-  
-  .featured-card .product-price {
-    font-size: 16px;
   }
 }
 

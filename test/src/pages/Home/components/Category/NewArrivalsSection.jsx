@@ -52,10 +52,10 @@ const NewArrivalsSection = ({ newProducts }) => {
       </div>
 
       <div className="new-arrivals-grid">
-        {displayProducts.slice(0, 8).map((product, index) => (
+        {displayProducts.slice(0, 8).map((product) => (
           <div 
             key={product._id}
-            className={`new-arrival-wrapper ${index === 0 ? 'featured-wrapper' : ''}`}
+            className="new-arrival-wrapper"
           >
             <ProductCard
               product={product}
@@ -65,14 +65,7 @@ const NewArrivalsSection = ({ newProducts }) => {
               showQuickView={false}
               onQuickView={handleProductClick}
               onAddToCart={(product) => console.log('Add to cart:', product)}
-              className={index === 0 ? 'featured-card' : ''}
             />
-            {index === 0 && (
-              <Badge variant="secondary" className="featured-overlay">
-                <Sparkles className="w-4 h-4 mr-1" />
-                <span>Featured</span>
-              </Badge>
-            )}
           </div>
         ))}
       </div>
