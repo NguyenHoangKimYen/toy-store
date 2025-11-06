@@ -34,13 +34,23 @@
 /* Toolbar */
 .products-toolbar {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
   padding: 1rem;
   background: white;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.toolbar-search {
+  width: 100%;
+}
+
+.toolbar-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
 }
