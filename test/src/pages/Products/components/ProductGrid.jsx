@@ -1,9 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProductCard from '@/components/common/ProductCard';
-import { ErrorMessage } from '@/components/common';
+import { ErrorMessage, Pagination } from '@/components/common';
 import { Button } from '@/components/ui/button';
-import Pagination from './Pagination';
 
 const ProductGrid = ({
   products,
