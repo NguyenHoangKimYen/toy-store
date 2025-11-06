@@ -136,13 +136,25 @@
   white-space: normal;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-height: 42px;
-  line-height: 1.4;
+  min-height: 44px;
+  line-height: 1.5;
   margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .new-arrival-wrapper .product-footer {
   margin-top: auto;
+}
+
+.new-arrival-wrapper .current-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ef4444;
+}
+
+.new-arrival-wrapper .original-price {
+  font-size: 13px;
 }
 
 /* Product Card Styling */
