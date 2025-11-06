@@ -7,7 +7,6 @@ import ProductGrid from './components/ProductGrid';
 import './Products.css';
 
 const Products = () => {
-  const [viewMode, setViewMode] = useState('grid');
   const [showFilters, setShowFilters] = useState(false);
   
   const {
@@ -63,8 +62,6 @@ const Products = () => {
           sortBy={filters.sortBy}
           sortOrder={filters.sortOrder}
           onSortChange={handleSortChange}
-          viewMode={viewMode}
-          setViewMode={setViewMode}
         />
 
         <div className="products-content">
@@ -78,11 +75,10 @@ const Products = () => {
             onFilterChange={handleFilterChange}
           />
 
-          {/* Products Grid/List */}
+          {/* Products Grid */}
           <main className="products-main">
             <ProductGrid
               products={products}
-              viewMode={viewMode}
               loading={loading && currentPage > 1}
               error={error}
               hasActiveFilters={hasActiveFilters}

@@ -40,17 +40,6 @@ const Home = () => {
       {/* New Arrivals Section - Above Everything */}
       <NewArrivalsSection newProducts={categorizedProducts.newProducts} />
 
-      {/* Product Categories Section with shadcn */}
-      <ProductCategoriesSection categorizedProducts={categorizedProducts} />
-
-      {/* New Products */}
-      <CategorySection
-        title="New Arrivals"
-        subtitle="Fresh drops you'll love"
-        products={categorizedProducts.newProducts}
-        viewAllLink="/products?filter=new"
-      />
-
       {/* Best Sellers */}
       <CategorySection
         title="Best Sellers"
@@ -58,6 +47,9 @@ const Home = () => {
         products={categorizedProducts.bestSellers}
         viewAllLink="/products?filter=bestsellers"
       />
+
+      {/* Product Categories Section with shadcn */}
+      <ProductCategoriesSection categorizedProducts={categorizedProducts} />
 
       {/* Keychains */}
       {categorizedProducts.keychains.length > 0 && (

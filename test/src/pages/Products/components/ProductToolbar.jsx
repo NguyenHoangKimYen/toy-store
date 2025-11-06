@@ -3,8 +3,7 @@ import { SlidersHorizontal, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import ProductSort from '../ProductSort';
-import ProductViewToggle from './ProductViewToggle';
+import ProductSort from './ProductSort';
 
 const ProductToolbar = ({
   showFilters,
@@ -15,8 +14,6 @@ const ProductToolbar = ({
   sortBy,
   sortOrder,
   onSortChange,
-  viewMode,
-  setViewMode,
 }) => {
   return (
     <div className="products-toolbar">
@@ -59,10 +56,6 @@ const ProductToolbar = ({
           sortOrder={sortOrder}
           onSortChange={onSortChange}
         />
-
-        <Separator orientation="vertical" className="h-8 mx-2" />
-
-        <ProductViewToggle viewMode={viewMode} setViewMode={setViewMode} />
       </div>
     </div>
   );

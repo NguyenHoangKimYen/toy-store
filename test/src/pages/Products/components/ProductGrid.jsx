@@ -7,7 +7,6 @@ import Pagination from './Pagination';
 
 const ProductGrid = ({
   products,
-  viewMode,
   loading,
   error,
   hasActiveFilters,
@@ -47,7 +46,7 @@ const ProductGrid = ({
 
   return (
     <>
-      <div className={`products-${viewMode}`}>
+      <div className="products-grid">
         {products.map((product) => (
           <div
             key={product._id}
@@ -56,7 +55,7 @@ const ProductGrid = ({
           >
             <ProductCard
               product={product}
-              variant={viewMode === 'list' ? 'horizontal' : 'default'}
+              variant="default"
               showQuickView={false}
             />
           </div>
