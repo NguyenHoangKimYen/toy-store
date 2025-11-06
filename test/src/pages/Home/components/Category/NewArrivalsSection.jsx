@@ -63,7 +63,7 @@ const NewArrivalsSection = ({ newProducts }) => {
               showBadges={true}
               showCategory={false}
               showQuickView={false}
-              onQuickView={handleProductClick}
+              onClick={handleProductClick}
               onAddToCart={(product) => console.log('Add to cart:', product)}
             />
           </div>

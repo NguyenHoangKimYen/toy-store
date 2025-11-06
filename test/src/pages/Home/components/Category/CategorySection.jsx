@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { ProductCard } from '@/components/common';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,13 @@ import { Badge } from '@/components/ui/badge';
 import './CategorySection.css';
 
 const CategorySection = ({ title, subtitle, products, viewAllLink }) => {
+  const navigate = useNavigate();
+
   if (!products || products.length === 0) return null;
+
+  const handleProductClick = (product) => {
+    navigate(`/products/${product._id}`);
+  };
 
   return (
     <section className="category-section">
@@ -33,8 +40,8 @@ const CategorySection = ({ title, subtitle, products, viewAllLink }) => {
             variant="default"
             showBadges={true}
             showCategory={true}
-            showQuickView={true}
-            onQuickView={(product) => console.log('Quick view:', product)}
+            showQuickView={false}
+            onClick={handleProductClick}
             onAddToCart={(product) => console.log('Add to cart:', product)}
           />
         ))}

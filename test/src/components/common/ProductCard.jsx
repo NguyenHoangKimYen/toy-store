@@ -6,12 +6,14 @@ import './ProductCard.css';
  * Reusable Product Card Component
  * @param {Object} product - Product data object
  * @param {string} variant - 'default', 'horizontal', 'compact'
+ * @param {Function} onClick - Card click handler (navigates to product detail)
  * @param {Function} onQuickView - Quick view handler
  * @param {Function} onAddToCart - Add to cart handler
  */
 const ProductCard = ({ 
   product, 
   variant = 'default',
+  onClick,
   onQuickView,
   onAddToCart,
   showBadges = true,
@@ -26,6 +28,10 @@ const ProductCard = ({
   const imageUrl = product.imageUrls?.[0] || '/placeholder.png';
   const categoryName = product.categoryId?.name || 'Uncategorized';
 
+  const handleCardClick = () => {
+    onClick?.(product);
+  };
+
   const handleAddToCart = (e) => {
     e.stopPropagation();
     onAddToCart?.(product);
@@ -39,7 +45,7 @@ const ProductCard = ({
   // Horizontal variant (for category rows)
   if (variant === 'horizontal') {
     return (
-      <div className={`product-card-horizontal ${className}`}>
+      <div className={`product-card-horizontal ${className}`} onClick={handleCardClick}>
         <div className="product-card-image">
           <img
             src={imageUrl}
@@ -74,7 +80,7 @@ const ProductCard = ({
   // Compact variant (for small grids)
   if (variant === 'compact') {
     return (
-      <div className={`product-card-compact ${className}`}>
+      <div className={`product-card-compact ${className}`} onClick={handleCardClick}>
         <div className="product-card-image">
           <img src={imageUrl} alt={product.name} loading="lazy" />
           {showBadges && product.stockQuantity === 0 && (
@@ -91,7 +97,7 @@ const ProductCard = ({
 
   // Default variant (full featured)
   return (
-    <div className={`product-card ${className}`}>
+    <div className={`product-card ${className}`} onClick={handleCardClick}>
       <div className="product-image-wrapper">
         <img
           src={imageUrl}
