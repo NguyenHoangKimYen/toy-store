@@ -13,32 +13,43 @@ const ProductFilterSidebar = ({
   onFilterChange,
 }) => {
   return (
-    <aside className={`products-filters ${showFilters ? 'show' : ''}`}>
-      <div className="filters-header">
-        <h3 className="text-lg font-semibold">Filters</h3>
-        <Button
-          variant="ghost"
-          size="icon"
+    <>
+      {/* Backdrop for mobile */}
+      {showFilters && (
+        <div 
+          className="filters-backdrop"
           onClick={() => setShowFilters(false)}
-          aria-label="Close filters"
-        >
-          <X size={20} />
-        </Button>
-      </div>
+          aria-hidden="true"
+        />
+      )}
       
-      <Separator className="my-4" />
-      
-      <ProductFilters
-        categories={categories}
-        brands={brands}
-        selectedCategory={filters.category}
-        selectedBrand={filters.brand}
-        minPrice={filters.minPrice}
-        maxPrice={filters.maxPrice}
-        selectedRating={filters.rating}
-        onFilterChange={onFilterChange}
-      />
-    </aside>
+      <aside className={`products-filters ${showFilters ? 'show' : ''}`}>
+        <div className="filters-header">
+          <h3 className="text-lg font-semibold">Filters</h3>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowFilters(false)}
+            aria-label="Close filters"
+          >
+            <X size={20} />
+          </Button>
+        </div>
+        
+        <Separator className="my-4" />
+        
+        <ProductFilters
+          categories={categories}
+          brands={brands}
+          selectedCategory={filters.category}
+          selectedBrand={filters.brand}
+          minPrice={filters.minPrice}
+          maxPrice={filters.maxPrice}
+          selectedRating={filters.rating}
+          onFilterChange={onFilterChange}
+        />
+      </aside>
+    </>
   );
 };
 
