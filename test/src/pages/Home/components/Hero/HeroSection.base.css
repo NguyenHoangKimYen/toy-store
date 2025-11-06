@@ -58,7 +58,16 @@
     opacity: 0;
     pointer-events: none;
     visibility: hidden;
-    transition: opacity 0.5s, visibility 0.5s;
+}
+
+/* Explicitly hide buttons on non-active slides */
+.hero-carousel .list .item:nth-child(1) .introduce,
+.hero-carousel .list .item:nth-child(3) .introduce,
+.hero-carousel .list .item:nth-child(4) .introduce,
+.hero-carousel .list .item:nth-child(5) .introduce {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
 }
 
 .hero-carousel .list .item:nth-child(2) .introduce {
@@ -70,7 +79,7 @@
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    transition: opacity 0.5s, visibility 0s;
+    transition: opacity 0.5s 0.3s, visibility 0s 0.3s;
     will-change: opacity;
 }
 
@@ -138,6 +147,15 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s 0.5s, visibility 0s 0.5s, transform 0.3s ease;
+}
+
+/* Only show button on active slide with delay */
+.hero-carousel .list .item:nth-child(2) .introduce .cta-button {
+    opacity: 1;
+    visibility: visible;
 }
 
 .hero-carousel .list .item .introduce .cta-button:hover {

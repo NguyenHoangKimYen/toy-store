@@ -6,31 +6,31 @@
 .hero-carousel .list .item:nth-child(2) .introduce .des,
 .hero-carousel .list .item:nth-child(2) .introduce .cta-button {
     opacity: 0;
-    animation: showContent 0.5s 0.8s ease-in-out 1 forwards;
+    animation: showContent 0.5s 1s ease-in-out 1 forwards;
 }
 
 @keyframes showContent {
     from {
-        transform: translateY(-30px) translateZ(0);
+        transform: translateY(-30px);
         filter: blur(10px);
     }
     to {
-        transform: translateY(0) translateZ(0);
+        transform: translateY(0);
         opacity: 1;
         filter: blur(0px);
     }
 }
 
 .hero-carousel .list .item:nth-child(2) .introduce .name {
-    animation-delay: 1s;
-}
-
-.hero-carousel .list .item:nth-child(2) .introduce .des {
     animation-delay: 1.2s;
 }
 
-.hero-carousel .list .item:nth-child(2) .introduce .cta-button {
+.hero-carousel .list .item:nth-child(2) .introduce .des {
     animation-delay: 1.4s;
+}
+
+.hero-carousel .list .item:nth-child(2) .introduce .cta-button {
+    animation-delay: 1.6s;
 }
 
 /* Next click animations */

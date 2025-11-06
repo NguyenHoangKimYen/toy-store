@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ProductCard } from '@/components/common';
 import { ArrowRight, Sparkles, Tag } from 'lucide-react';
 import { mockProducts } from '../../data/mockProducts';
 import './NewArrivalsSection.css';
@@ -18,8 +18,8 @@ const NewArrivalsSection = ({ newProducts }) => {
     navigate('/products?filter=new');
   };
 
-  const handleProductClick = (productId) => {
-    navigate(`/product/${productId}`);
+  const handleProductClick = (product) => {
+    navigate(`/product/${product._id}`);
   };
 
   if (!displayProducts || displayProducts.length === 0) return null;
@@ -51,42 +51,27 @@ const NewArrivalsSection = ({ newProducts }) => {
 
       <div className="new-arrivals-grid">
         {displayProducts.slice(0, 8).map((product, index) => (
-          <Card 
-            key={product._id} 
-            className={`new-arrival-card ${index === 0 ? 'featured-card' : ''}`}
-            onClick={() => handleProductClick(product._id)}
+          <div 
+            key={product._id}
+            className={`new-arrival-wrapper ${index === 0 ? 'featured-wrapper' : ''}`}
           >
-            <div className="product-image-wrapper">
-              <img
-                src={product.imageUrls?.[0] || 'https://via.placeholder.com/400x400/3b82f6/ffffff?text=New'}
-                alt={product.name}
-                loading="lazy"
-              />
-              <div className="new-badge">
-                <Tag className="w-3 h-3" />
-                NEW
+            <ProductCard
+              product={product}
+              variant="default"
+              showBadges={true}
+              showCategory={false}
+              showQuickView={false}
+              onQuickView={handleProductClick}
+              onAddToCart={(product) => console.log('Add to cart:', product)}
+              className={index === 0 ? 'featured-card' : ''}
+            />
+            {index === 0 && (
+              <div className="featured-overlay">
+                <Sparkles className="w-5 h-5" />
+                <span>Featured</span>
               </div>
-              {index === 0 && (
-                <div className="featured-overlay">
-                  <Sparkles className="w-5 h-5" />
-                  <span>Featured</span>
-                </div>
-              )}
-            </div>
-            <CardContent className="product-card-content">
-              <p className="product-name">{product.name}</p>
-              <div className="product-footer">
-                <p className="product-price">
-                  ${(product.price?.$numberDecimal || product.price)?.toLocaleString()}
-                </p>
-                {product.originalPrice && (
-                  <span className="original-price">
-                    ${(product.originalPrice?.$numberDecimal || product.originalPrice)?.toLocaleString()}
-                  </span>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+            )}
+          </div>
         ))}
       </div>
     </section>

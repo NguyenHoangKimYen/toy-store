@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ProductCard } from '@/components/common';
 import { ArrowRight, Tag, Sparkles, Package } from 'lucide-react';
 import { mockProducts } from '../../data/mockProducts';
 import './ProductCategoriesSection.css';
@@ -126,21 +126,14 @@ const ProductCategoriesSection = () => {
 
               <div className="products-horizontal-scroll">
                 {displayProducts.map((product) => (
-                  <Card key={product._id} className="product-card-horizontal">
-                    <div className="product-card-image">
-                      <img
-                        src={product.imageUrls?.[0] || '/placeholder.png'}
-                        alt={product.name}
-                        loading="lazy"
-                      />
-                    </div>
-                    <CardContent className="product-card-content">
-                      <p className="product-card-name">{product.name}</p>
-                      <p className="product-card-price">
-                        ${(product.price?.$numberDecimal || product.price)?.toLocaleString()}
-                      </p>
-                    </CardContent>
-                  </Card>
+                  <ProductCard
+                    key={product._id}
+                    product={product}
+                    variant="horizontal"
+                    showBadges={false}
+                    showCategory={false}
+                    showQuickView={false}
+                  />
                 ))}
               </div>
             </div>

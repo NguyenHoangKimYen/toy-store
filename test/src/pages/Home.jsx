@@ -3,6 +3,7 @@ import { HeroSection } from './Home/components/Hero';
 import { CategorySection, ProductCategoriesSection, NewArrivalsSection } from './Home/components/Category';
 import { FeaturedBanner } from './Home/components/Banner';
 import { useProductsByCategory } from './Home/hooks/useProductsByCategory';
+import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import './Home/Home.css';
 
 const Home = () => {
@@ -11,8 +12,7 @@ const Home = () => {
   if (loading) {
     return (
       <div className="home-loading">
-        <div className="loading-spinner"></div>
-        <p>Loading amazing products...</p>
+        <LoadingSpinner/>
       </div>
     );
   }
@@ -20,9 +20,11 @@ const Home = () => {
   if (error) {
     return (
       <div className="home-error">
-        <h2>Oops! Something went wrong</h2>
-        <p>{error}</p>
-        <button onClick={() => window.location.reload()}>Retry</button>
+        <ErrorMessage 
+          title="Oops! Something went wrong"
+          message={error}
+          onRetry={() => window.location.reload()}
+        />
       </div>
     );
   }

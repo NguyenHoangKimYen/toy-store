@@ -100,6 +100,11 @@
   gap: 20px;
 }
 
+/* Wrapper for featured overlay positioning */
+.new-arrival-wrapper {
+  position: relative;
+}
+
 /* Product Card Styling */
 .new-arrival-card {
   cursor: pointer;

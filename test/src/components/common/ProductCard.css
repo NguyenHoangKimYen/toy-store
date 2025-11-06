@@ -1,0 +1,339 @@
+/* ========================================
+   PRODUCT CARD STYLES - SHARED
+   ======================================== */
+
+/* Default Variant - Full Featured Card */
+.product-card {
+  position: relative;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.product-image-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.product-card:hover .product-image {
+  transform: scale(1.05);
+}
+
+.product-info {
+  padding: 16px;
+}
+
+.product-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 4px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-category {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 12px 0;
+}
+
+.product-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.product-price {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.current-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: #3b82f6;
+}
+
+.original-price {
+  font-size: 14px;
+  color: #94a3b8;
+  text-decoration: line-through;
+}
+
+.add-to-cart-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: #3b82f6;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-to-cart-btn:hover {
+  background: #2563eb;
+  transform: scale(1.05);
+}
+
+.product-hover-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.product-card:hover .product-hover-overlay {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.quick-view-btn {
+  padding: 12px 24px;
+  background: white;
+  color: #1e293b;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quick-view-btn:hover {
+  background: #f1f5f9;
+  transform: scale(1.05);
+}
+
+/* Badges */
+.badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 1;
+}
+
+.badge-new {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+}
+
+.badge-featured {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.badge-out {
+  background: rgba(239, 68, 68, 0.95);
+  color: white;
+}
+
+/* ========================================
+   HORIZONTAL VARIANT
+   ======================================== */
+.product-card-horizontal {
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  max-width: 200px;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.product-card-horizontal:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.product-card-horizontal .product-card-image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.product-card-horizontal .product-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-card-horizontal .product-card-content {
+  padding: 12px;
+}
+
+.product-card-horizontal .product-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 4px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-card-horizontal .product-card-category {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0 0 8px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-card-horizontal .product-card-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: #3b82f6;
+  margin: 0;
+}
+
+.product-card-horizontal .product-card-original-price {
+  font-size: 12px;
+  color: #94a3b8;
+  text-decoration: line-through;
+  margin: 2px 0 0 0;
+}
+
+/* ========================================
+   COMPACT VARIANT
+   ======================================== */
+.product-card-compact {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.product-card-compact:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.product-card-compact .product-card-image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.product-card-compact .product-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-card-compact .product-card-content {
+  padding: 10px;
+}
+
+.product-card-compact .product-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 4px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-card-compact .product-card-price {
+  font-size: 14px;
+  font-weight: 700;
+  color: #3b82f6;
+  margin: 0;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+@media (max-width: 768px) {
+  .product-name {
+    font-size: 14px;
+  }
+
+  .current-price {
+    font-size: 16px;
+  }
+
+  .product-category {
+    font-size: 12px;
+  }
+
+  .add-to-cart-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .product-card-horizontal {
+    min-width: 160px;
+    max-width: 180px;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-info {
+    padding: 12px;
+  }
+
+  .product-name {
+    font-size: 13px;
+  }
+
+  .current-price {
+    font-size: 15px;
+  }
+
+  .product-card-horizontal {
+    min-width: 140px;
+    max-width: 160px;
+  }
+}
