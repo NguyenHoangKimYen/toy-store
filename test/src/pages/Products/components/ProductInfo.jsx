@@ -2,17 +2,13 @@ import React from 'react';
 import { Check, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { ProductBadges } from '@/components/common';
 
 const ProductInfo = ({ product, rating, reviewCount, price, originalPrice, inStock, stock, discount }) => {
   return (
     <div className="product-info-section">
       {/* Badges */}
-      <div className="product-badges">
-        {product.isNew && <Badge variant="default">New</Badge>}
-        {product.isFeatured && <Badge variant="secondary">Featured</Badge>}
-        {product.isBestSeller && <Badge variant="outline">Best Seller</Badge>}
-        {discount > 0 && <Badge variant="destructive">-{discount}%</Badge>}
-      </div>
+      <ProductBadges product={product} discount={discount} />
 
       {/* Title & Brand */}
       <h1 className="product-title">{product.name}</h1>
