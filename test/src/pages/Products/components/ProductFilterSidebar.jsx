@@ -20,7 +20,7 @@ const ProductFilterSidebar = ({
           variant="ghost"
           size="icon"
           onClick={() => setShowFilters(false)}
-          className="lg:hidden"
+          aria-label="Close filters"
         >
           <X size={20} />
         </Button>

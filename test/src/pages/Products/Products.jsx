@@ -56,7 +56,7 @@ const Products = () => {
           onSortChange={handleSortChange}
         />
 
-        <div className="products-content">
+        <div className={`products-content ${!showFilters ? 'filters-hidden' : ''}`}>
           {/* Filters Sidebar */}
           <ProductFilterSidebar
             showFilters={showFilters}

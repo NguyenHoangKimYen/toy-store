@@ -64,6 +64,11 @@
   grid-template-columns: 280px 1fr;
   gap: 2rem;
   position: relative;
+  transition: grid-template-columns 0.3s ease;
+}
+
+.products-content.filters-hidden {
+  grid-template-columns: 0 1fr;
 }
 
 /* Filters Sidebar */
@@ -77,6 +82,21 @@
   top: 1rem;
   max-height: calc(100vh - 2rem);
   overflow-y: auto;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  transform-origin: left;
+}
+
+.products-filters:not(.show) {
+  transform: scaleX(0);
+  opacity: 0;
+  width: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.products-filters.show {
+  transform: scaleX(1);
+  opacity: 1;
 }
 
 .filters-header {
@@ -188,6 +208,10 @@
     grid-template-columns: 1fr;
   }
 
+  .products-content.filters-hidden {
+    grid-template-columns: 1fr;
+  }
+
   .products-filters {
     position: fixed;
     top: 0;
@@ -196,19 +220,23 @@
     width: 320px;
     max-width: 85vw;
     z-index: 50;
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
     max-height: 100vh;
     border-radius: 0;
+    transform: translateX(-100%);
+    opacity: 1;
+  }
+
+  .products-filters:not(.show) {
+    transform: translateX(-100%);
+    opacity: 1;
+    width: 320px;
+    padding: 1.5rem;
   }
 
   .products-filters.show {
     transform: translateX(0);
     box-shadow: 0 0 0 100vw rgba(0, 0, 0, 0.5);
-  }
-
-  .filters-header button {
-    display: flex;
+    opacity: 1;
   }
 }
 
