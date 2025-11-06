@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getProducts, getProductCategories } from '@/services/products.service';
 
@@ -7,6 +7,8 @@ import { getProducts, getProductCategories } from '@/services/products.service';
  */
 export const useProductCatalog = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const queryString = searchParams.toString();
+  const prevQueryRef = useRef(queryString);
   
   // State
   const [products, setProducts] = useState([]);
@@ -38,26 +40,35 @@ export const useProductCatalog = () => {
         setLoading(true);
         setError(null);
 
+        // Re-parse filters from searchParams to ensure we always use the latest URL state
+        const paramsFromUrl = Object.fromEntries(new URLSearchParams(queryString || ''));
+
         const params = {
           page: currentPage,
           limit,
-          sortBy: filters.sortBy,
-          sortOrder: filters.sortOrder,
+          sortBy: paramsFromUrl.sortBy || filters.sortBy,
+          sortOrder: paramsFromUrl.sortOrder || filters.sortOrder,
         };
 
-        // Add filters if present
-        if (filters.search) params.search = filters.search;
-        if (filters.category) params.category = filters.category;
-        if (filters.brand) params.brand = filters.brand;
-        if (filters.minPrice) params.minPrice = filters.minPrice;
-        if (filters.maxPrice) params.maxPrice = filters.maxPrice;
-        if (filters.rating) params.rating = filters.rating;
+        // Add filters if present in URL or derived defaults
+        if (paramsFromUrl.search) params.search = paramsFromUrl.search;
+        else if (filters.search) params.search = filters.search;
+
+        if (paramsFromUrl.category) params.category = paramsFromUrl.category;
+        if (paramsFromUrl.brand) params.brand = paramsFromUrl.brand;
+        if (paramsFromUrl.minPrice) params.minPrice = paramsFromUrl.minPrice;
+        if (paramsFromUrl.maxPrice) params.maxPrice = paramsFromUrl.maxPrice;
+        if (paramsFromUrl.rating) params.rating = paramsFromUrl.rating;
 
         const response = await getProducts(params);
-        
-        setProducts(response.products || response || []);
-        setTotalPages(response.pagination?.totalPages || 1);
-        setTotalProducts(response.pagination?.total || response.length || 0);
+
+        const data = response || {};
+        // normalize response to always be an array of products
+        const productsList = data.products || data || [];
+
+        setProducts(Array.isArray(productsList) ? productsList : []);
+        setTotalPages(data.pagination?.totalPages || 1);
+        setTotalProducts(data.pagination?.total || (Array.isArray(productsList) ? productsList.length : 0));
       } catch (err) {
         console.error('Error fetching products:', err);
         setError(err.message || 'Failed to load products');
@@ -66,9 +77,17 @@ export const useProductCatalog = () => {
       }
     };
 
+    // If URL query changed externally, reset page to 1 and wait for state to stabilize
+    if (prevQueryRef.current !== queryString) {
+      prevQueryRef.current = queryString;
+      if (currentPage !== 1) {
+        setCurrentPage(1);
+        return; // wait for the effect to re-run with currentPage = 1
+      }
+    }
+
     fetchProducts();
-  }, [currentPage, limit, filters.search, filters.category, filters.brand, 
-      filters.minPrice, filters.maxPrice, filters.rating, filters.sortBy, filters.sortOrder]);
+  }, [currentPage, limit, queryString, filters.search, filters.sortBy, filters.sortOrder]);
 
   // Fetch metadata (categories and brands)
   useEffect(() => {

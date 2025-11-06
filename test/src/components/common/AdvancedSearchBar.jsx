@@ -19,6 +19,7 @@ const AdvancedSearchBar = ({
   const [searchResults, setSearchResults] = useState([]);
   const [recentSearches, setRecentSearches] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [originalPosition, setOriginalPosition] = useState(null);
   const searchRef = useRef(null);
   const navigate = useNavigate();
 
@@ -68,6 +69,14 @@ const AdvancedSearchBar = ({
   }, [searchQuery]);
 
   const handleSearchClick = () => {
+    if (searchRef.current && !isExpanded) {
+      const rect = searchRef.current.getBoundingClientRect();
+      setOriginalPosition({
+        top: rect.top,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
     setIsExpanded(true);
   };
 
@@ -133,6 +142,15 @@ const AdvancedSearchBar = ({
       <div 
         ref={searchRef}
         className={`advanced-search-container ${isExpanded ? 'expanded' : ''} ${className}`}
+        style={
+          isExpanded && originalPosition
+            ? {
+                '--original-top': `${originalPosition.top}px`,
+                '--original-left': `${originalPosition.left}px`,
+                '--original-width': `${originalPosition.width}px`,
+              }
+            : {}
+        }
       >
         {/* Search Input */}
         <div className="search-input-wrapper">
