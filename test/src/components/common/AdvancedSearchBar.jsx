@@ -1,0 +1,291 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, X, TrendingUp, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { searchProducts } from '@/services/products.service';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import './AdvancedSearchBar.css';
+
+/**
+ * Advanced search bar with expand animation, suggestions, and product preview
+ * Similar to Nike's search experience
+ */
+const AdvancedSearchBar = ({ 
+  placeholder = 'Search products...',
+  className = ''
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [recentSearches, setRecentSearches] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const searchRef = useRef(null);
+  const navigate = useNavigate();
+
+  // Popular/Trending searches
+  const trendingSearches = ['Pikachu Plush', 'Pokemon Keychain', 'Anime Figure', 'Stickers'];
+
+  // Load recent searches from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('recentSearches');
+    if (saved) {
+      setRecentSearches(JSON.parse(saved));
+    }
+  }, []);
+
+  // Handle click outside to close
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setIsExpanded(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Debounced search
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsLoading(true);
+      try {
+        const response = await searchProducts({ search: searchQuery, limit: 6 });
+        setSearchResults(response.products || response || []);
+      } catch (error) {
+        console.error('Search error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleSearchClick = () => {
+    setIsExpanded(true);
+  };
+
+  const handleClear = () => {
+    setSearchQuery('');
+    setSearchResults([]);
+  };
+
+  const handleProductClick = (productId) => {
+    saveRecentSearch(searchQuery);
+    navigate(`/products/${productId}`);
+    setIsExpanded(false);
+    setSearchQuery('');
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    setSearchQuery(suggestion);
+    saveRecentSearch(suggestion);
+  };
+
+  const handleViewAllResults = () => {
+    if (searchQuery.trim()) {
+      saveRecentSearch(searchQuery);
+      navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
+      setIsExpanded(false);
+      setSearchQuery('');
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      handleViewAllResults();
+    } else if (e.key === 'Escape') {
+      setIsExpanded(false);
+    }
+  };
+
+  const saveRecentSearch = (query) => {
+    if (!query.trim()) return;
+    
+    const updated = [query, ...recentSearches.filter(s => s !== query)].slice(0, 5);
+    setRecentSearches(updated);
+    localStorage.setItem('recentSearches', JSON.stringify(updated));
+  };
+
+  const clearRecentSearches = () => {
+    setRecentSearches([]);
+    localStorage.removeItem('recentSearches');
+  };
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(price);
+  };
+
+  return (
+    <>
+      {/* Backdrop overlay when expanded */}
+      {isExpanded && <div className="search-backdrop" onClick={() => setIsExpanded(false)} />}
+
+      <div 
+        ref={searchRef}
+        className={`advanced-search-container ${isExpanded ? 'expanded' : ''} ${className}`}
+      >
+        {/* Search Input */}
+        <div className="search-input-wrapper">
+          <Search className="search-icon" size={20} />
+          <Input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={handleSearchClick}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            className="search-input"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClear}
+              className="clear-button"
+            >
+              <X size={18} />
+            </Button>
+          )}
+        </div>
+
+        {/* Dropdown Panel */}
+        {isExpanded && (
+          <div className="search-dropdown">
+            {!searchQuery ? (
+              // Show suggestions when no search query
+              <div className="suggestions-section">
+                {/* Recent Searches */}
+                {recentSearches.length > 0 && (
+                  <div className="suggestion-group">
+                    <div className="suggestion-header">
+                      <div className="flex items-center gap-2">
+                        <Clock size={16} className="text-muted-foreground" />
+                        <h4 className="text-sm font-medium">Recent Searches</h4>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearRecentSearches}
+                        className="text-xs"
+                      >
+                        Clear
+                      </Button>
+                    </div>
+                    <div className="suggestion-list">
+                      {recentSearches.map((search, index) => (
+                        <button
+                          key={index}
+                          className="suggestion-item"
+                          onClick={() => handleSuggestionClick(search)}
+                        >
+                          <Clock size={14} />
+                          <span>{search}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Trending Searches */}
+                <div className="suggestion-group">
+                  <div className="suggestion-header">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp size={16} className="text-muted-foreground" />
+                      <h4 className="text-sm font-medium">Trending</h4>
+                    </div>
+                  </div>
+                  <div className="suggestion-list">
+                    {trendingSearches.map((search, index) => (
+                      <button
+                        key={index}
+                        className="suggestion-item"
+                        onClick={() => handleSuggestionClick(search)}
+                      >
+                        <TrendingUp size={14} />
+                        <span>{search}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // Show search results
+              <div className="results-section">
+                {isLoading ? (
+                  <div className="loading-state">
+                    <div className="spinner" />
+                    <p className="text-sm text-muted-foreground">Searching...</p>
+                  </div>
+                ) : searchResults.length > 0 ? (
+                  <>
+                    <div className="results-header">
+                      <h4 className="text-sm font-medium">Products</h4>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        onClick={handleViewAllResults}
+                        className="text-xs"
+                      >
+                        View All Results
+                      </Button>
+                    </div>
+                    <div className="results-grid">
+                      {searchResults.map((product) => (
+                        <button
+                          key={product._id}
+                          className="result-card"
+                          onClick={() => handleProductClick(product._id)}
+                        >
+                          <div className="result-image">
+                            <img
+                              src={product.imageUrls?.[0] || '/placeholder.png'}
+                              alt={product.name}
+                              loading="lazy"
+                            />
+                          </div>
+                          <div className="result-info">
+                            <h5 className="result-name">{product.name}</h5>
+                            <p className="result-category">
+                              {product.categoryId?.name || 'Uncategorized'}
+                            </p>
+                            <p className="result-price">{formatPrice(product.price)}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="empty-state">
+                    <Search size={48} className="text-muted-foreground opacity-50" />
+                    <p className="text-sm text-muted-foreground">
+                      No products found for "{searchQuery}"
+                    </p>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      onClick={handleClear}
+                    >
+                      Clear search
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
+
+export default AdvancedSearchBar;

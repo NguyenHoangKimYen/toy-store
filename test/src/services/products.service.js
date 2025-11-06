@@ -188,3 +188,10 @@ export const getProductCategories = async () => {
   
   return handleResponse(response);
 };
+
+/**
+ * Search products (alias for getProducts with search parameter)
+ * @param {Object} params - Search parameters
+ * @returns {Promise<{products: Array, pagination: Object}>}
+ */
+export const searchProducts = getProducts;

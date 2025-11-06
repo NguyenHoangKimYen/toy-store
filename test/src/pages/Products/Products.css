@@ -35,6 +35,7 @@
 .products-toolbar {
   display: flex;
   flex-direction: column;
+  align-items: center;
   padding: 1rem;
   background: white;
   border-radius: 0.5rem;
@@ -45,12 +46,15 @@
 
 .toolbar-search {
   width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .toolbar-controls {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
   gap: 1rem;
   flex-wrap: wrap;
 }

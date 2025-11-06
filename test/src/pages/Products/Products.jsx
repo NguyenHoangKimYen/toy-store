@@ -54,8 +54,6 @@ const Products = () => {
           sortBy={filters.sortBy}
           sortOrder={filters.sortOrder}
           onSortChange={handleSortChange}
-          searchQuery={filters.search}
-          onSearchChange={(value) => handleFilterChange('search', value)}
         />
 
         <div className={`products-content ${!showFilters ? 'filters-hidden' : ''}`}>

@@ -3,7 +3,7 @@ import { SlidersHorizontal, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { SearchBar } from '@/components/common';
+import { AdvancedSearchBar } from '@/components/common';
 import ProductSort from './ProductSort';
 
 const ProductToolbar = ({
@@ -15,19 +15,12 @@ const ProductToolbar = ({
   sortBy,
   sortOrder,
   onSortChange,
-  searchQuery,
-  onSearchChange,
 }) => {
   return (
     <div className="products-toolbar">
-      {/* Search Bar */}
+      {/* Advanced Search Bar */}
       <div className="toolbar-search">
-        <SearchBar
-          searchQuery={searchQuery}
-          onSearchChange={onSearchChange}
-          placeholder="Search products by name, brand..."
-          showFilters={false}
-        />
+        <AdvancedSearchBar placeholder="Search for products..." />
       </div>
 
       <div className="toolbar-controls">
