@@ -1,0 +1,33 @@
+/* Product Filters Styles */
+.product-filters {
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-section {
+  width: 100%;
+}
+
+.filter-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0.5rem 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.2s;
+}
+
+.filter-section-header:hover {
+  color: #3b82f6;
+}
+
+.filter-section-header h4 {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+}

@@ -169,23 +169,32 @@ const Products = () => {
         {/* Toolbar */}
         <div className="products-toolbar">
           <div className="toolbar-left">
-            <button
-              className="filter-toggle-btn"
+            <Button
+              variant="outline"
+              size="default"
               onClick={() => setShowFilters(!showFilters)}
+              className="gap-2"
             >
               <SlidersHorizontal size={20} />
               <span>Filters</span>
-              {hasActiveFilters && <span className="filter-badge"></span>}
-            </button>
+              {hasActiveFilters && <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center rounded-full"></Badge>}
+            </Button>
 
             {hasActiveFilters && (
-              <button className="clear-filters-btn" onClick={clearFilters}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className="gap-1"
+              >
                 <X size={16} />
                 Clear Filters
-              </button>
+              </Button>
             )}
 
-            <span className="products-count">
+            <Separator orientation="vertical" className="h-8 mx-2" />
+
+            <span className="products-count text-sm text-muted-foreground">
               {totalProducts} {totalProducts === 1 ? 'Product' : 'Products'}
             </span>
           </div>
@@ -197,21 +206,25 @@ const Products = () => {
               onSortChange={handleSortChange}
             />
 
-            <div className="view-mode-toggle">
-              <button
-                className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
+            <Separator orientation="vertical" className="h-8 mx-2" />
+
+            <div className="view-mode-toggle flex gap-1">
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'outline'}
+                size="icon"
                 onClick={() => setViewMode('grid')}
                 aria-label="Grid view"
               >
                 <Grid size={20} />
-              </button>
-              <button
-                className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'outline'}
+                size="icon"
                 onClick={() => setViewMode('list')}
                 aria-label="List view"
               >
                 <List size={20} />
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -220,14 +233,18 @@ const Products = () => {
           {/* Filters Sidebar */}
           <aside className={`products-filters ${showFilters ? 'show' : ''}`}>
             <div className="filters-header">
-              <h3>Filters</h3>
-              <button
-                className="close-filters-btn"
+              <h3 className="text-lg font-semibold">Filters</h3>
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setShowFilters(false)}
+                className="lg:hidden"
               >
                 <X size={20} />
-              </button>
+              </Button>
             </div>
+            
+            <Separator className="my-4" />
             
             <ProductFilters
               categories={categories}
@@ -251,11 +268,11 @@ const Products = () => {
               />
             ) : products.length === 0 ? (
               <div className="no-products">
-                <p>No products found</p>
+                <p className="text-lg text-muted-foreground">No products found</p>
                 {hasActiveFilters && (
-                  <button className="clear-filters-link" onClick={clearFilters}>
+                  <Button variant="link" onClick={clearFilters}>
                     Clear all filters
-                  </button>
+                  </Button>
                 )}
               </div>
             ) : (
