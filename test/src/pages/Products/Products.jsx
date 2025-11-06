@@ -31,14 +31,6 @@ const Products = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  if (loading && currentPage === 1) {
-    return (
-      <div className="products-loading">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
   return (
     <div className="products-page">
       <div className="products-container">
@@ -79,7 +71,7 @@ const Products = () => {
           <main className="products-main">
             <ProductGrid
               products={products}
-              loading={loading && currentPage > 1}
+              loading={loading}
               error={error}
               hasActiveFilters={hasActiveFilters}
               clearFilters={clearFilters}

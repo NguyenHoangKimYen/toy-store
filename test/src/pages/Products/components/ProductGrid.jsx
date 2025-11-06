@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProductCard from '@/components/common/ProductCard';
-import { ErrorMessage, Pagination } from '@/components/common';
+import { ErrorMessage, Pagination, LoadingSpinner } from '@/components/common';
 import { Button } from '@/components/ui/button';
 
 const ProductGrid = ({
@@ -30,6 +30,14 @@ const ProductGrid = ({
     );
   }
 
+  if (loading && products.length === 0) {
+    return (
+      <div className="products-grid-loading">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
   if (products.length === 0) {
     return (
       <div className="no-products">
@@ -44,8 +52,8 @@ const ProductGrid = ({
   }
 
   return (
-    <>
-      <div className="products-grid">
+    <div className="products-grid-container">
+      <div className={`products-grid ${loading ? 'loading' : ''}`}>
         {products.map((product) => (
           <div
             key={product._id}
@@ -61,18 +69,18 @@ const ProductGrid = ({
         ))}
       </div>
 
+      {loading && (
+        <div className="products-grid-loading-overlay">
+          <LoadingSpinner />
+        </div>
+      )}
+
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={onPageChange}
       />
-
-      {loading && (
-        <div className="loading-overlay">
-          <div className="spinner" />
-        </div>
-      )}
-    </>
+    </div>
   );
 };
 

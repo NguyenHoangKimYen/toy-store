@@ -21,7 +21,7 @@ const NewArrivalsSection = ({ newProducts }) => {
   };
 
   const handleProductClick = (product) => {
-    navigate(`/product/${product._id}`);
+    navigate(`/products/${product._id}`);
   };
 
   if (!displayProducts || displayProducts.length === 0) return null;
