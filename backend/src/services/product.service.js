@@ -1,21 +1,58 @@
 const { message } = require('statuses');
 const productRepository = require('../repositories/product.repository.js');
-const { uploadToS3 } = require('../utils/s3.helper.js');
+const { uploadToS3, deleteFromS3 } = require('../utils/s3.helper.js');
 
 const getAllProducts = async (query) => {
-    const { page = 1, limit = 20, category, brand, keyword } = query;
+    // Sử dụng URLSearchParams để parse query (hỗ trợ cả object từ req.query)
+    const params = new URLSearchParams(Object.entries(query || {}));
+
+    const page = Math.max(1, parseInt(params.get('page') || '1', 10));
+    const limit = Math.max(1, parseInt(params.get('limit') || '20', 10));
+    const categoryId = params.get('categoryId') || params.get('category') || null;
+    const keyword = params.get('keyword') || null;
+    const sortParam = params.get('sort') || null; // dạng price:asc hoặc name:desc
+
+    // 2. Xây dựng đối tượng filter cho MongoDB
     const filter = {};
+    if (categoryId) filter.categoryId = categoryId;
 
-    if (category) filter.category = category;
-    if (brand) filter.brand = brand;
-    if (keyword) filter.$text = { $search: keyword };
+    // 3. Xử lý keyword
+    if (keyword) {
+        filter.name = { $regex: keyword, $options: 'i' };
+    }
 
+    // 4. Xây dựng đối tượng options (bao gồm cả sort)
     const options = {
         skip: (page - 1) * limit,
-        limit: parseInt(limit),
+        limit: limit,
+        sort: {}
     };
 
-    return productRepository.findAll(filter, options);
+    // 5. Xử lý logic cho sort
+    if (sortParam) {
+        const [field, order] = String(sortParam).split(':');
+        if (field) {
+            options.sort[field] = order === 'desc' ? -1 : 1;
+        } else {
+            options.sort.createdAt = -1;
+        }
+    } else {
+        options.sort.createdAt = -1;
+    }
+
+    // 6. Gọi repository và thêm thông tin phân trang
+    const { products, total } = await productRepository.findAll(filter, options);
+
+    // 7. Trả về kết quả hoàn chỉnh cho controller
+    return {
+        products,
+        pagination: {
+            totalProducts: total,
+            totalPages: Math.ceil(total / options.limit),
+            currentPage: page,
+            limit: options.limit
+        }
+    };
 }
 
 const getProductById = async (id) => {
@@ -34,6 +71,14 @@ const getProductBySlug = async (slug) => {
     return product;
 }
 
+const getProductByPrice = (min, max) => {
+    return productRepository.findByPrice(min, max);
+}
+
+const getProductByRating = (minRating) => {
+    return productRepository.findByRating(minRating);
+}
+
 const createProduct = async (productData, imgFiles) => {
     // B1: Upload ảnh lên S3
     let imageUrls = [];
@@ -43,39 +88,42 @@ const createProduct = async (productData, imgFiles) => {
     }
 
     // B2: Tạo sản phẩm với URL ảnh
-    const product = {
+    const product = { 
         ...productData,
-        images: imageUrls,
+        imageUrls: imageUrls,
     };
-    return productRepository.create(productData);
+
+    return await productRepository.create(product); 
 }
 
-const updateProduct = async (id, productData, imgFiles) => {
-    let uploadedImageUrls = [];
-
-    // B1: Nếu có ảnh mới, upload lên S3 
-    if (imgFiles && imgFiles.length > 0) {
-        uploadedImageUrls = await uploadToS3(imgFiles);
-        productData.images = uploadedImageUrls;
-    }
-
-    // B2: Lấy product hiện tại để giữ ảnh cũ
+const updateProduct = async (id, productData, addImages = [], removeImages = []) => {
     const existingProduct = await productRepository.findById(id);
-    if (!existingProduct) {
-        throw new Error('Product not found');
+    if (!existingProduct) throw new Error('Product not found');
+
+    // Upload ảnh mới nếu có
+    let uploadedUrls = [];
+    if (addImages.length > 0) {
+        uploadedUrls = await uploadToS3(addImages);
     }
 
-    // B3: Cập nhật sản phẩm, giữ lại ảnh cũ nếu không có ảnh mới
-    const updatedProduct = {
-        ...existingProduct,
-        ...productData,
-        images: productData.images && productData.images.length > 0 
-            ? productData.images 
-            : existingProduct.images,
-    };
+    // Xóa ảnh cũ khỏi S3 (nếu cần)
+    if (removeImages.length > 0) {
+        await deleteFromS3(removeImages);
+    }
 
-    return productRepository.update(id, updatedProduct);
-}
+    // Cập nhật danh sách ảnh cuối cùng
+    const finalImages = existingProduct.imageUrls
+        .filter(url => !removeImages.includes(url))
+        .concat(uploadedUrls);
+
+    // Gộp lại dữ liệu update
+    const updatedProduct = await productRepository.update(id, {
+        ...productData,
+        imageUrls: finalImages,
+    });
+
+    return updatedProduct;
+};
 
 const deleteProduct = async (id) => {
     const deletedProduct = await productRepository.remove(id);
@@ -85,28 +133,13 @@ const deleteProduct = async (id) => {
     return deletedProduct;
 }
 
-const uploadProductImage = async (id) => {
-    try {
-        const { id } = req.params;
-        if (!req.files || req.files.length === 0){
-            return res.status(400).json({
-                success: false,
-                message: 'No files uploaded'
-            });
-        }
-        const urls = await uploadToS3(req.files, 'productImages');
-        const product = await productRepository.update(id, { imageUrls: urls});
-    } catch (error){
-        next(error);
-    }
-};
-
 module.exports = {
     getAllProducts,
     getProductById,
     getProductBySlug,
+    getProductByPrice,
+    getProductByRating,
     createProduct,
     updateProduct,
-    deleteProduct,
-    uploadProductImage
+    deleteProduct
 };
