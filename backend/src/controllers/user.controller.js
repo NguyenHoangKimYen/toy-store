@@ -1,6 +1,8 @@
 const { mongo } = require('mongoose');
 const userService = require('../services/user.service.js');
 const userRepository = require('../repositories/user.repository.js');
+const { message } = require('statuses');
+const { uploadToS3 } = require('../utils/s3.helper.js');
 
 const getAllUsers = async (req, res, next) => {
     try {
@@ -10,7 +12,7 @@ const getAllUsers = async (req, res, next) => {
     catch (error) {
         return next(error); //lỗi middleware sẽ xử lý
     }
-}
+};
 
 const getUserById = async (req, res, next) => {
     try {
@@ -27,7 +29,7 @@ const getUserById = async (req, res, next) => {
     catch (error) {
         return next(error);
     }
-}
+};
 
 const getUserByEmail = async (req, res, next) => {
     try {
@@ -41,7 +43,7 @@ const getUserByEmail = async (req, res, next) => {
     catch (error) {
         return next(error);
     }
-}   
+};   
 
 const getUserByPhone = async (req, res, next) => {
     try {
@@ -55,7 +57,7 @@ const getUserByPhone = async (req, res, next) => {
     catch (error) {
         return next(error);
     }
-}
+};
 
 const getUserByUsername = async (req, res, next) => {
     try {
@@ -69,7 +71,7 @@ const getUserByUsername = async (req, res, next) => {
     catch (error) {
         return next(error);
     }
-}
+};
 
 const createUser = async (req, res, next) => {
     try {
@@ -79,7 +81,7 @@ const createUser = async (req, res, next) => {
     catch (error) {
         return next(error);
     }
-}
+};
 
 const verifyUser = async (req, res, next) => {
     try {
@@ -105,7 +107,7 @@ const verifyUser = async (req, res, next) => {
     catch (error) {
         return next(error);
     }
-}
+};
 
 const setUserPassword = async (req, res, next) => {
     try {
@@ -131,7 +133,61 @@ const setUserPassword = async (req, res, next) => {
     catch (error) {
         return next(error);
     }
-}
+};
+
+const uploadAvatar = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'No file uploaded'
+            });
+        }
+
+        const [url] = await uploadToS3([req.file], 'avatarImages');
+        const user = await userRepository.update(id, { avatar: url });
+        res.json({
+            success: true,
+            message: 'Avatar uploaded successfully',
+            data: user
+        });
+    } catch (error){
+        next(error);
+    }
+};
+
+const updateAvatar = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongo.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid user ID' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    // Upload file lên S3
+    const [url] = await uploadToS3([req.file], 'avatars');
+
+    // Cập nhật avatar trong MongoDB
+    const updatedUser = await userRepository.update(id, { avatar: url });
+
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Avatar updated successfully',
+      data: updatedUser,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 const updateUser = async (req, res, next) => {
     try {
@@ -148,7 +204,7 @@ const updateUser = async (req, res, next) => {
     catch (error) {
         return next(error);
     }
-}
+};
 
 const deleteUser = async (req, res, next) => {
     try {
@@ -165,7 +221,7 @@ const deleteUser = async (req, res, next) => {
     catch (error) {
         return next(error);
     }
-}
+};
 
 module.exports = {
     getAllUsers,
@@ -177,5 +233,7 @@ module.exports = {
     verifyUser,
     setUserPassword,
     updateUser,
-    deleteUser
+    deleteUser,
+    uploadAvatar,
+    updateAvatar,
 };

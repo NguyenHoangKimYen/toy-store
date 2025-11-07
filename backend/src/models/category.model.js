@@ -15,12 +15,11 @@ const CategorySchema = new mongoose.Schema({
   slug: {
     type: String,
     required: true,
-    unique: true, // Slug phải là duy nhất
+    unique: true,
     lowercase: true,
     trim: true,
   },
   
-  // ID danh mục cha (Cho phép phân cấp cha/con)
   parentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category', // Tham chiếu tới chính Model 'Category' (Self-reference)
