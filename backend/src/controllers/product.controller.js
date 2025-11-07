@@ -1,5 +1,9 @@
 const { mongo } = require('mongoose');
 const productService = require('../services/product.service.js');
+const { message } = require('statuses');
+const { uploadToS3 } = require('../utils/s3.helper.js');
+const productRepository = require('../repositories/product.repository.js');
+
 
 const getAllProducts = async (req, res, next) => {
     try {
