@@ -1,16 +1,17 @@
 const mongoose = require('mongoose');
-require ('./address.model.js');
+require('./address.model.js');
 
 const ROLE_ENUM = ['customer', 'admin'];
 
 const userSchema = new mongoose.Schema({
+    //image url
     fullName: {
         type: String,
         required: true,
         trim: true
     },
 
-    username:{
+    username: {
         type: String,
         required: true,
         unique: true,
@@ -27,8 +28,11 @@ const userSchema = new mongoose.Schema({
 
     phone: {
         type: String,
-        required: true,
-        unique: true,
+        required: function () {
+            return !this.socialProvider; //đăng nhập mxh không bắt buộc phone
+        },
+        sparse: true,
+        default: null,
     },
 
     // Mật khẩu (dạng hashed) - Không bắt buộc nếu đăng nhập bằng mxh
@@ -55,7 +59,7 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: null
     },
-    
+
     //otp để đặt lại mật khẩu 
     resetOtpHash: {
         type: String,
@@ -95,7 +99,7 @@ const userSchema = new mongoose.Schema({
 
     socialProvider: {
         type: String,
-        enum: ['google', 'facebook', 'github', null],
+        enum: ['google', 'facebook', 'github', 'apple', null],
         default: null,
     },
 

@@ -3,8 +3,9 @@ const dotenv = require('dotenv'); // Thư viện dotenv để quản lý biến 
 dotenv.config();
 const cors = require('cors');
 const express = require('express'); //Thư viện express là framework của NodeJS để xây dựng web
+const session = require("express-session");
 const connectDB = require('./config/db.js');
-
+const passportGoogle = require("./config/passportGoogle.js");
 
 const app = express();  // Tạo app
 
@@ -29,6 +30,16 @@ app.use(cors({
   credentials: true,
 }));
 
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "milkybloom_secret",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+app.use(passportGoogle.initialize());
+app.use(passportGoogle.session());
 
 // --- QUICK REDIRECT cho các link thiếu prefix ---
 // ✅ Bấm http://localhost:5000/verify-email?uid=...&token=... sẽ tự chuyển đúng route
@@ -47,6 +58,7 @@ const cartItemRoutes = require('./routes/cart-item.route.js');
 const orderRoutes = require('./routes/order.route');
 
 // Gán các routes vào đường dẫn
+app.use(passportGoogle.initialize());
 app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
