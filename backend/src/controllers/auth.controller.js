@@ -1,7 +1,7 @@
 // const { Result } = require('pg');
 const authService = require('../services/auth.service.js');
 // const { expression } = require('joi');
-const { sha256 } = require('../utils/token.js');
+const { generateToken, sha256 } = require('../utils/token.js');
 const userRepository = require('../repositories/user.repository.js');
 const { mongo } = require('mongoose');
 const { message } = require('statuses');
@@ -126,6 +126,16 @@ const resendLoginOtp = async (req, res, next) => { //gửi otp
     }
 };
 
+const googleCallback = (req, res) => {
+    try {
+        const token = generateToken(req.user);
+        res.status(200).json({ success: true, token });
+    } catch (error) {
+        console.error("Google callback error:", error);
+        res.status(500).json({ success: false, message: "Google login failed" });
+    }
+};
+
 const profile = async (req, res, next) => {
     try {
         const userProfile = await authService.profile(req.user.id); //gọi service lấy thông tin người dùng
@@ -144,5 +154,6 @@ module.exports = {
     verifyLoginOtp,
     resendLoginOtp,
     profile,
-    verifyEmail
+    verifyEmail,
+    googleCallback,
 };
