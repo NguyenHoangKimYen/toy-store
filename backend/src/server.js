@@ -23,9 +23,8 @@ app.use(express.urlencoded({ extended: true })); // Cho phép phân tích cú ph
 
 app.use(cors({
   origin: [
-    process.env.FRONTEND_URL || 'http://localhost:5173',
+    process.env.FRONTEND_URL, 'http://localhost:5173',
     'http://milkybloomtoystore.us-east-1.elasticbeanstalk.com',
-    'https://d1qc4bz6yrxl8k.cloudfront.net'
   ],
   credentials: true,
 }));
@@ -41,8 +40,7 @@ app.use(
 app.use(passportGoogle.initialize());
 app.use(passportGoogle.session());
 
-// --- QUICK REDIRECT cho các link thiếu prefix ---
-// ✅ Bấm http://localhost:5000/verify-email?uid=...&token=... sẽ tự chuyển đúng route
+
 app.get('/verify-email', (req, res) => {
   const qs = new URLSearchParams(req.query).toString();
   res.redirect(302, `/api/auth/verify-email?${qs}`);
