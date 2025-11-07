@@ -11,7 +11,7 @@ const app = express();  // Tạo app
 app.use((req, res, next) => {
   const start = Date.now();
   res.on('finish', () => {
-    console.log(`➡️ ${req.method} ${req.originalUrl} → ${res.statusCode} (${Date.now()-start}ms)`);
+    console.log(`➡️ ${req.method} ${req.originalUrl} → ${res.statusCode} (${Date.now() - start}ms)`);
   });
   next();
 });
@@ -21,9 +21,14 @@ app.use(express.json()); // Cho phép phân tích cú pháp JSON trong body củ
 app.use(express.urlencoded({ extended: true })); // Cho phép phân tích cú pháp URL-encoded trong body của request
 
 app.use(cors({
-  origin: 'http://localhost:5173', // địa chỉ frontend
-  credentials: true, // nếu bạn gửi cookie/token
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:5173',
+    'http://milkybloomtoystore.us-east-1.elasticbeanstalk.com',
+    'https://d1qc4bz6yrxl8k.cloudfront.net'
+  ],
+  credentials: true,
 }));
+
 
 // --- QUICK REDIRECT cho các link thiếu prefix ---
 // ✅ Bấm http://localhost:5000/verify-email?uid=...&token=... sẽ tự chuyển đúng route
@@ -49,6 +54,10 @@ app.use('/api/carts', cartRoutes);
 app.use('/api/cart-items', cartItemRoutes);
 app.use('/api/orders', orderRoutes);
 
+app.get('/', (req, res) => {
+  res.status(200).json({ message: 'MilkyBloom backend is running on AWS 🚀' });
+});
+
 app.use((err, req, res, _next) => { // xử lý lỗi tổng quát
   const status = err.status || 500;
   res.status(status).json({
@@ -57,17 +66,19 @@ app.use((err, req, res, _next) => { // xử lý lỗi tổng quát
   });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 
 // Kết nối db
-const startServer = async() => {
-    // Chờ kết nối db trước
-    await connectDB();
+const startServer = async () => {
+  // Chờ kết nối db trước
+  await connectDB();
 
-    // Sau đó, chỉ start server khi đã kết nối được db
-    app.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT} http://localhost:${PORT}/api/carts`);
-    })
+  // Sau đó, chỉ start server khi đã kết nối được db
+  const PORT = process.env.PORT || 8080;
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log('MONGO_URI:', process.env.MONGO_URI);
+  });
 };
 
 startServer();

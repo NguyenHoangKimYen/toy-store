@@ -1,6 +1,7 @@
 const express = require('express');
-const { getAllProducts, 
-    getProductById, 
+const {
+    getAllProducts,
+    getProductById,
     getProductBySlug,
     getProductByPrice,
     getProductByRating,
@@ -22,5 +23,8 @@ router.get("/:id", getProductById);
 router.post("/", uploadProductImages, createProduct);
 router.patch("/:id", uploadProductImages, updateProduct);
 router.delete("/:id", deleteProduct);
+
+router.post('/', uploadProductImagesMiddleware, createProduct);
+router.patch('/:id/images', uploadProductImagesMiddleware, updateProductImages);
 
 module.exports = router;
