@@ -42,6 +42,12 @@ const userSchema = new mongoose.Schema({
         select: false, // Mặc định không trả về trường này khi truy vấn
     },
 
+    avatar: {
+        type: String,
+        trim: true,
+        default: null
+    },
+
     // reset token (link) – lưu dạng hash + hạn
     resetTokenHash: {
         type: String,

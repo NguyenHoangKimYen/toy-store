@@ -1,7 +1,14 @@
 const Product = require('../models/product.model.js');
 
+// Trong file product.repository.js
+
 const findAll = async (filter = {}, options = {}) => {
-    return Product.find(filter)
+    // Tách các options ra
+    const { skip = 0, limit = 20, sort = { createdAt: -1 } } = options;
+
+    // Định nghĩa 2 truy vấn
+    // 1. Truy vấn lấy sản phẩm CÓ populate, sort, skip, limit
+    const productsQuery = Product.find(filter)
         .populate([
             {
                 path: "categoryId",
@@ -10,15 +17,24 @@ const findAll = async (filter = {}, options = {}) => {
             {
                 path: "tags",
                 select: "name slug"
-            },
-            // {
-            //     path: "discountCode",
-            //     select: "code discountPercentage validUntil"
-            // }
+            }
         ])
-        .skip(options.skip || 0)
-        .limit(options.limit || 20)
-        .sort(options.sort || { createdAt: -1 });
+        .skip(skip)
+        .limit(limit)
+        .sort(sort)
+        .exec(); // Thêm .exec() để chuẩn bị cho Promise
+
+    // 2. Truy vấn đếm tổng số sản phẩm CHỈ CÓ filter
+    const totalQuery = Product.countDocuments(filter).exec();
+
+    // Chạy cả 2 truy vấn song song
+    const [products, total] = await Promise.all([
+        productsQuery,
+        totalQuery
+    ]);
+
+    // Trả về object chứa cả hai kết quả
+    return { products, total };
 }
 
 const findById = async (id) => {
@@ -31,11 +47,7 @@ const findById = async (id) => {
             {
                 path: "tags",
                 select: "name slug"
-            },
-            // {
-            //     path: "discountCode",
-            //     select: "code discountPercentage validUntil"
-            // }
+            }
         ])
 }
 
@@ -49,13 +61,29 @@ const findBySlug = async (slug) => {
             {
                 path: "tags",
                 select: "name slug"
-            },
-            // {
-            //     path: "discountCode",
-            //     select: "code discountPercentage validUntil"
-            // }
+            }
         ])
 }
+
+const findByPrice = async (min, max) => {
+    return Product.find({
+        price: { $gte: min, $lte: max }
+    });
+}
+
+const findByRating = async (minRating = 0) => {
+    const rating = Number(minRating);
+    if (isNaN(rating)) {
+        throw new Error("Giá trị minRating phải là một con số hợp lệ.")
+    }
+    if (isNaN(rating) || rating < 0 || rating > 5) {
+        throw new Error('The minimum rating (minRating) must be a number between 0 and 5.');
+    }
+
+    return Product.find({
+        averageRating: { $gte: rating },
+    }).sort({ averageRating: -1 });
+};
 
 const create = async (data) => {
     const product = new Product(data);
@@ -70,16 +98,13 @@ const remove = async (id) => {
     return Product.findByIdAndDelete(id);
 }
 
-const updateImages = async (id, imageUrls) => {
-    return Product.findByIdAndUpdate(id, { $push: { images: { $each: imageUrls } } }, { new: true });
-}
-
 module.exports = {
     findAll,
     findById,
     findBySlug,
+    findByPrice,
+    findByRating,
     create,
     update,
-    remove,
-    updateImages
+    remove
 };
