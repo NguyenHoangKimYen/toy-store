@@ -1,5 +1,6 @@
 const express = require('express');
 const auth = require('../middlewares/auth.middleware.js');
+const { uploadAvatar: uploadAvatarMiddleware } = require('../middlewares/upload.middleware.js');
 const {
     getAllUsers,
     getUserById,
@@ -10,7 +11,9 @@ const {
     verifyUser,
     setUserPassword,
     updateUser,
-    deleteUser
+    deleteUser,
+    uploadAvatar: uploadAvatarController,
+    updateAvatar: updateAvatarController,
 } = require ('../controllers/user.controller.js');
 
 const router = express.Router();
@@ -26,5 +29,8 @@ router.patch('/:id/set-password', setUserPassword);
 router.put("/:id", updateUser);
 router.delete("/:id", deleteUser);
 router.get('/profile/:id', auth); //lấy thông tin người dùng hiện tại
+
+router.post('/:id/avatar', uploadAvatarMiddleware, uploadAvatarController);
+router.patch('/:id/avatar', uploadAvatarMiddleware, updateAvatarController);
 
 module.exports = router;
