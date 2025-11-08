@@ -1,4 +1,4 @@
-const passportGoogle = require("passport");
+const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const User = require("../models/user.model");
 
@@ -32,7 +32,7 @@ const generateUniqueUsername = async (profile) => {
 };
 
 // 🧭 Cấu hình Google Strategy
-passportGoogle.use(
+passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
@@ -87,10 +87,10 @@ passportGoogle.use(
 );
 
 // 🧠 Serialize / Deserialize
-passportGoogle.serializeUser((user, done) => {
+passport.serializeUser((user, done) => {
   done(null, user.id);
 });
-passportGoogle.deserializeUser(async (id, done) => {
+passport.deserializeUser(async (id, done) => {
   try {
     const user = await User.findById(id);
     done(null, user);
@@ -99,4 +99,4 @@ passportGoogle.deserializeUser(async (id, done) => {
   }
 });
 
-module.exports = passportGoogle;
+module.exports = passport;
