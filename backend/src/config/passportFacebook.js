@@ -3,6 +3,7 @@ const FacebookStrategy = require('passport-facebook').Strategy;
 const User = require('../models/user.model');
 
 module.exports = function setupFacebookPassport() {
+  console.log("🔍 FACEBOOK_CALLBACK_URL in runtime:", process.env.FACEBOOK_CALLBACK_URL);
   passportFacebook.use(
     new FacebookStrategy(
       {
