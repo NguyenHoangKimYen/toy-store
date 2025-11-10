@@ -44,6 +44,26 @@ const getProductBySlug = async (req, res) => {
     }
 }
 
+const getProductByPrice = async (req, res, next) => {
+    try {
+        const { min, max } = req.query;
+        const products = await productService.getProductByPrice(parseFloat(min), parseFloat(max));
+        return res.json({ success: true, data: products });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+const getProductByRating = async (req, res, next) => {
+    try {
+        const { minRating } = req.query;
+        const products = await productService.getProductByRating(parseFloat(minRating));
+        return res.json({ success: true, data: products });
+    } catch (error) {
+        return next(error);
+    }
+}
+
 const createProduct = async (req, res) => {
     try {
         const product = await productService.createProduct(req.body, req.files);
@@ -55,24 +75,72 @@ const createProduct = async (req, res) => {
 }
 
 const updateProduct = async (req, res) => {
-  try {
-    const { id } = req.params;
+    try {
+        const { id } = req.params;
 
-    if (!mongo.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid product ID" });
+        // Kiểm tra ID hợp lệ
+        if (!mongo.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid product ID",
+            });
+        }
+
+        let productData = {};
+        let removeImages = [];
+        let addImages = req.files || [];
+
+        if (req.body.productData) {
+            try {
+                productData = JSON.parse(req.body.productData);
+            } catch (err) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid JSON format in 'productData'",
+                });
+            }
+        } else {
+            productData = req.body;
+        }
+
+        if (req.body.removeImages) {
+            try {
+                removeImages = JSON.parse(req.body.removeImages);
+            } catch (err) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid JSON format in 'removeImages'",
+                });
+            }
+        }
+
+        const updatedProduct = await productService.updateProduct(
+            id,
+            productData,
+            addImages,
+            removeImages
+        );
+
+        if (!updatedProduct) {
+            return res.status(404).json({
+                success: false,
+                message: "Product not found",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: updatedProduct,
+        });
+    } catch (error) {
+        console.error("Update product error:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
     }
-
-    const product = await productService.updateProduct(id, req.body, req.files);
-
-    if (!product) {
-      return res.status(404).json({ success: false, message: "Product not found" });
-    }
-
-    return res.json({ success: true, data: product });
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
 };
+
 
 
 const deleteProduct = async (req, res) => {
@@ -92,37 +160,13 @@ const deleteProduct = async (req, res) => {
     }
 }
 
-const updateProductImages = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const files = req.files;
-
-        if (!files || files.length === 0){
-            return res.status(400).json({
-                success: false,
-                message: 'No files uploads'
-            });
-        }
-
-        const urls = await uploadToS3(files, 'productImages');
-        const product = await productRepository.update(id, { $push: { imageUrls: { $each: urls }}});
-
-        res.json({
-            success: true,
-            message: 'Product image uploaded succesfully!',
-            data: product
-        });
-    } catch (error){
-        next(error);
-    };
-};
-
 module.exports = {
     getAllProducts,
     getProductById,
     getProductBySlug,
+    getProductByPrice,
+    getProductByRating,
     createProduct,
     updateProduct,
     deleteProduct,
-    updateProductImages
 };
