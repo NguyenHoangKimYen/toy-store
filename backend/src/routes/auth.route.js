@@ -1,8 +1,12 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const passport = require("passport");
 const passportGoogle = require("../config/passportGoogle.js");
+const setupFacebookPassport = require("../config/passportFacebook.js");
 const { register, login, verifyLoginOtp, resendLoginOtp, verifyEmail, googleCallback } = require('../controllers/auth.controller.js');
 const { forgotPassword, resetPassword } = require('../controllers/password.controller.js');
+
+setupFacebookPassport();
 
 const router = express.Router();
 
@@ -50,7 +54,53 @@ router.get(
                     </html>
                 `);
 
-                // .redirect(`${process.env.FRONTEND_URL}/auth/success`); //fixing
+        // .redirect(`${process.env.FRONTEND_URL}/auth/success`); //fixing
+    }
+);
+
+router.get(
+    '/facebook',
+    passport.authenticate('facebook', { scope: ['email'] })
+);
+
+router.get(
+    '/facebook/callback',
+    passport.authenticate('facebook', {
+        failureRedirect: `/login?error=facebook`,
+        session: false,
+    }),
+    (req, res) => {
+        const user = req.user;
+        const token = jwt.sign(
+            {
+                id: user._id,
+                email: user.email,
+                username: user.username,
+                role: user.role,
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        // Gửi JWT qua cookie (an toàn hơn query param)
+        const isProd = process.env.NODE_ENV === 'production';
+        res
+            .cookie('token', token, {
+                httpOnly: true,
+                secure: isProd,
+                sameSite: isProd ? 'none' : 'lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+            })
+            .send(`
+                    <html>
+                        <body style="font-family: sans-serif; text-align: center; padding: 50px;">
+                        <h2>Đăng nhập Facebook được rồi nha Mẹ, Tự Vô Mongo mà check!</h2>
+                        <p>Ai rảnh mà chào</p>
+                        </body>
+                    </html>
+                `);
+
+        // return res.redirect(`${FRONTEND_URL}/auth/success`);
     }
 );
 
