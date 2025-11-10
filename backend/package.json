@@ -4,6 +4,8 @@
   "main": "index.js",
   "dependencies": {
     "aws-sdk": "^2.1692.0",
+    "axios": "^1.13.2",
+    "balanced-match": "^1.0.2",
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.0",
     "brace-expansion": "^1.1.12",

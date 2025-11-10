@@ -38,6 +38,8 @@ app.use(
   })
 );
 
+//thêm passportFacebook
+
 app.use(passportGoogle.initialize());
 app.use(passportGoogle.session());
 app.use((req, res, next) => { //trình duyệt luôn dùng https
@@ -57,18 +59,16 @@ app.get('/verify-email', (req, res) => {
 const productRoutes = require('./routes/product.route.js');
 const userRoutes = require('./routes/user.route.js');
 const authRoutes = require('./routes/auth.route.js');
-const cartRoutes = require('./routes/cart.route.js');
-const cartItemRoutes = require('./routes/cart-item.route.js');
-const orderRoutes = require('./routes/order.route');
+const addressRoutes = require('./routes/address.route.js');
+const shippingRoutes = require('./routes/shipping.route.js');
 
 // Gán các routes vào đường dẫn
 app.use(passportGoogle.initialize());
 app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/carts', cartRoutes);
-app.use('/api/cart-items', cartItemRoutes);
-app.use('/api/orders', orderRoutes);
+app.use('/api/addresses', addressRoutes);
+app.use('/api/shipping', shippingRoutes);
 
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'MilkyBloom backend is running on AWS 🚀' });

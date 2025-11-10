@@ -4,10 +4,11 @@ const addressSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
+        required: true,
+        index: true //truy vấn nhanh hơn
     },
 
-    fullName: {
+    fullName: { //đổi thành fullNameofReceiver
         type: String,
         required: true,
         trim: true
@@ -38,12 +39,25 @@ const addressSchema = new mongoose.Schema({
         default: null
     },
 
+    lat: { //latitude (vi do Bac-Nam)
+        type: Number,
+        default: null,
+    },
+
+    lng: { //longtitude (kinh do Dong-Tay)
+        type: Number,
+        default: null,
+    },
+
     // Đánh dấu địa chỉ mặc định
     isDefault: {
         type: Boolean,
-        default: false
+        default: false,
     }
-},{ collection: 'addresses' }
+},{ 
+    collection: 'addresses',
+    timestamps: true
+ }
 );
 
 module.exports = mongoose.model('Address', addressSchema);
