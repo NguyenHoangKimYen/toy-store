@@ -8,7 +8,7 @@ const auth = (req , res, next) => {
     const token = authHeader.split(' ')[1]; // Lấy token từ header, tách bỏ phần Bearer
 
     try{
-        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY); // Giải mã token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET); // Giải mã token
 
         req.user = { id: decoded.id, role: decoded.role }; // Gắn thông tin user vào req để các middleware hoặc route handler sau có thể sử dụng
         next();
