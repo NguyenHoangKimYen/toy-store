@@ -1,6 +1,6 @@
 const userRepository = require('../repositories/user.repository.js');
 const bcrypt = require('bcrypt');
-// const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const Joi = require('joi');
 const { generateToken, genOtp6, sha256 } = require('../utils/token.js');
@@ -11,6 +11,8 @@ const AWS = require('../config/aws.config.js');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://d1qc4bz6yrxl8k.cloudfront.net';
 const VERIFY_TTL_MINUTES = Number(process.env.VERIFY_TTL_MINUTES || 15);
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '30m';
 
 //Trường hợp đăng nhập sai quá 5 lần thì phải nhập otp
 const MAX_FAILS = Number(process.env.LOGIN_MAX_FAILS || 5);
@@ -173,12 +175,7 @@ const login = async (payload) => {
     // 5) So sánh mật khẩu
     const valid = await bcrypt.compare(password, user.password);
 
-    // 6) Nếu chưa verify
-    if (!user.isVerified) {
-        throw Object.assign(new Error('Account is not verified. Please verify your account before logging in.'), { status: 403 });
-    }
-
-    // 7) Sai mật khẩu → tăng đếm + có thể bật OTP
+    // 6) Sai mật khẩu → tăng đếm + có thể bật OTP
     if (!valid) {
         const updated = await userRepository.incFailLogin(user._id); // new:true để có giá trị mới nhất
         if ((updated.failLoginAttempts || 0) >= MAX_FAILS) {
@@ -210,10 +207,29 @@ const login = async (payload) => {
         throw Object.assign(new Error('Login is incorrect'), { status: 401 });
     }
 
-    // 8) Đúng mật khẩu → reset đếm sai
+    // 7) Đúng mật khẩu → reset đếm sai
     await userRepository.resetFailLogin(user._id);
 
-    return { user: toPublicUser(user) };
+    // 8) Nếu chưa verify
+    if (!user.isVerified) {
+        throw Object.assign(new Error('Account is not verified. Please verify your account before logging in.'), { status: 403 });
+    }
+
+    if (!JWT_SECRET) {
+        throw Object.assign(new Error('JWT secret is not configured'), { status: 500 });
+    }
+
+    const token = jwt.sign(
+        {
+            id: user._id,
+            email: user.email,
+            role: user.role,
+        },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRES_IN }
+    );
+
+    return { user: toPublicUser(user), token };
 };
 
 const verifyLoginOtp = async ({ emailOrPhoneOrUsername, otp }) => {
@@ -248,24 +264,6 @@ const profile = async (userId) => { //lấy thông tin hồ sơ người dùng
     }
     return toPublicUser(user); //trả về user công khai
 };
-
-// export const getAWSCredentials = async (googleIdToken, facebookIdToken) => { //authentication processing
-//     const credentials = new AWS.CognitoIdentityCredentials({
-//         IdentityPoolId: 'us-east-1:7b6f9245-55c1-4578-84cc-2c8f6f95982c',
-//         Logins: {
-//             'accounts.google.com': googleIdToken,
-//             'graph.facebook.com': facebookIdToken
-//         },
-//     });
-
-//     await credentials.getPromise(); // chờ Cognito cấp accessKey/secretKey tạm thời
-
-//     return {
-//         accessKeyId: credentials.accessKeyId,
-//         secretAccessKey: credentials.secretAccessKey,
-//         sessionToken: credentials.sessionToken,
-//     };
-// };
 
 
 module.exports = {
