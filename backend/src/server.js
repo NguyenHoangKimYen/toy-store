@@ -23,9 +23,9 @@ app.use(express.urlencoded({ extended: true })); // Cho phép phân tích cú ph
 
 app.use(cors({
   origin: [
-    process.env.FRONTEND_URL || 'http://localhost:5173',
-    'http://milkybloomtoystore.us-east-1.elasticbeanstalk.com',
-    'https://d1qc4bz6yrxl8k.cloudfront.net'
+    process.env.FRONTEND_URL, 'http://localhost:5173',
+    'https://milkybloomtoystore.id.vn',
+    'https://d1qc4bz6yrxl8k.cloudfront.net',
   ],
   credentials: true,
 }));
@@ -40,13 +40,17 @@ app.use(
 
 app.use(passportGoogle.initialize());
 app.use(passportGoogle.session());
+app.use((req, res, next) => { //trình duyệt luôn dùng https
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  next();
+});
 
-// --- QUICK REDIRECT cho các link thiếu prefix ---
-// ✅ Bấm http://localhost:5000/verify-email?uid=...&token=... sẽ tự chuyển đúng route
+
 app.get('/verify-email', (req, res) => {
   const qs = new URLSearchParams(req.query).toString();
   res.redirect(302, `/api/auth/verify-email?${qs}`);
 });
+
 
 // Import routes
 // Cần bao nhiêu routes thì import bấy nhiêu
@@ -78,7 +82,14 @@ app.use((err, req, res, _next) => { // xử lý lỗi tổng quát
   });
 });
 
-const PORT = process.env.PORT || 8080;
+app.get('/privacy', (req, res) => {
+  res.send('<h2>MilkyBloom Privacy Policy</h2><p>We respect your privacy...</p>');
+});
+
+app.get('/delete-data', (req, res) => {
+  res.send('<h2>Data Deletion</h2><p>Contact vxq123@icloud.com to request deletion.</p>');
+});
+
 
 // Kết nối db
 const startServer = async () => {
