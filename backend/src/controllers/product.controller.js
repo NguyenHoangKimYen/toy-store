@@ -1,35 +1,32 @@
-const { mongo } = require('mongoose');
-const productService = require('../services/product.service.js');
-const { message } = require('statuses');
-const { uploadToS3 } = require('../utils/s3.helper.js');
-const productRepository = require('../repositories/product.repository.js');
+const { mongo } = require("mongoose");
+const productService = require("../services/product.service.js");
 
-
+/** Lấy danh sách sản phẩm */
 const getAllProducts = async (req, res, next) => {
     try {
-        const products = await productService.getAllProducts(req.query);
-        res.json({ success: true, data: products });
+        const result = await productService.getAllProducts(req.query);
+        res.json({ success: true, data: result });
+    } catch (err) {
+        next(err);
     }
-    catch (error) {
-        return next(error); //error middleware will handle this
-    }
-}
+};
 
+/** Lấy chi tiết sản phẩm theo ID */
 const getProductById = async (req, res, next) => {
     try {
         const { id } = req.params;
-        if (!mongo.ObjectId.isValid(id)) {
-            return res.status(400).json({ success: false, message: "Invalid product ID" });
-        }
+        if (!mongo.ObjectId.isValid(id))
+            return res.status(400).json({ success: false, message: "Invalid ID" });
+
         const product = await productService.getProductById(id);
         if (!product) {
             return res.status(404).json({ success: false, message: "Product not found" });
         }
-        return res.json({ success: true, data: product });
-    } catch (error) {
-        return next(error);
+        res.json({ success: true, data: product });
+    } catch (err) {
+        next(err);
     }
-}
+};
 
 const getProductBySlug = async (req, res) => {
     try {
@@ -64,6 +61,7 @@ const getProductByRating = async (req, res, next) => {
     }
 }
 
+/** Tạo sản phẩm mới */
 const createProduct = async (req, res) => {
     try {
         const product = await productService.createProduct(req.body, req.files);
@@ -74,11 +72,12 @@ const createProduct = async (req, res) => {
     }
 }
 
-const updateProduct = async (req, res) => {
+/** Cập nhật thông tin sản phẩm */
+const updateProduct = async (req, res, next) => { // Thêm "next"
     try {
         const { id } = req.params;
 
-        // Kiểm tra ID hợp lệ
+        // 1. Kiểm tra ID hợp lệ (Controller làm là đúng)
         if (!mongo.ObjectId.isValid(id)) {
             return res.status(400).json({
                 success: false,
@@ -86,79 +85,67 @@ const updateProduct = async (req, res) => {
             });
         }
 
-        let productData = {};
-        let removeImages = [];
-        let addImages = req.files || [];
-
-        if (req.body.productData) {
-            try {
-                productData = JSON.parse(req.body.productData);
-            } catch (err) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Invalid JSON format in 'productData'",
-                });
-            }
-        } else {
-            productData = req.body;
-        }
-
-        if (req.body.removeImages) {
-            try {
-                removeImages = JSON.parse(req.body.removeImages);
-            } catch (err) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Invalid JSON format in 'removeImages'",
-                });
-            }
-        }
-
+        // 2. Gọi service và truyền "nguyên liệu"
+        // Service sẽ tự xử lý việc parsing req.body và req.files
         const updatedProduct = await productService.updateProduct(
             id,
-            productData,
-            addImages,
-            removeImages
+            req.body,
+            req.files || [] // Gửi mảng rỗng nếu không có files
         );
 
-        if (!updatedProduct) {
-            return res.status(404).json({
-                success: false,
-                message: "Product not found",
-            });
-        }
-
+        // 3. Gửi response
+        // Service sẽ throw error nếu không tìm thấy, nên không cần check !updatedProduct ở đây
         return res.status(200).json({
             success: true,
             data: updatedProduct,
         });
+
     } catch (error) {
-        console.error("Update product error:", error);
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        // 4. Bất kỳ lỗi nào (parsing, not found, S3...) sẽ được đẩy ra middleware xử lý lỗi
+        next(error);
     }
 };
 
-
-
-const deleteProduct = async (req, res) => {
+/** Xóa sản phẩm (và ảnh S3) */
+const deleteProduct = async (req, res, next) => {
     try {
         const { id } = req.params;
-        if (!mongo.ObjectId.isValid(id)) {
-            return res.status(400).json({ success: false, message: "Invalid product ID" });
-        }
-        const deleted = await productService.deleteProduct(id);
-        if (!deleted) {
-            return res.status(404).json({ success: false, message: "Product not found" });
-        }
-        return res.status(204).send();
+        const result = await productService.deleteProduct(id);
+        res.json({ success: true, message: result.message });
+    } catch (err) {
+        next(err);
     }
-    catch (error) {
-        return next(error);
+};
+
+/** Thêm ảnh (upload lên S3) */
+const addProductImages = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const files = req.files;
+        if (!files?.length)
+            return res.status(400).json({ message: "No files uploaded" });
+
+        const updated = await productService.addImagesToProduct(id, files);
+        res.json({ success: true, data: updated });
+    } catch (err) {
+        next(err);
     }
-}
+};
+
+/** Xóa ảnh sản phẩm */
+const removeProductImages = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { removeImages } = req.body;
+        if (!Array.isArray(removeImages) || !removeImages.length)
+            return res.status(400).json({ message: "No image URLs provided" });
+
+        const updated = await productService.removeImagesFromProduct(id, removeImages);
+        res.json({ success: true, data: updated });
+    } catch (err) {
+        next(err);
+    }
+};
 
 module.exports = {
     getAllProducts,
@@ -169,4 +156,6 @@ module.exports = {
     createProduct,
     updateProduct,
     deleteProduct,
+    addProductImages,
+    removeProductImages,
 };

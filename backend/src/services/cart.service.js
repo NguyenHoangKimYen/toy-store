@@ -1,12 +1,12 @@
-const CartRepository = require('../repositories/cart.repository');
-const CartItem = require('../models/cart-item.model');
+const CartRepository = require("../repositories/cart.repository");
+const CartItem = require("../models/cart-item.model");
 
 const getCartByUserOrSession = async ({ userId, sessionId }) => {
     if (userId) {
         return await CartRepository.findCartByUserId(userId);
     }
     return await CartRepository.findCartBySessionId(sessionId);
-}
+};
 
 // Tạo giỏ hàng mới nếu chưa tồn tại
 const createCart = async ({ userId, sessionId }) => {
@@ -20,7 +20,7 @@ const createCart = async ({ userId, sessionId }) => {
         totalPrice: 0,
     };
     return await CartRepository.create(newCart);
-}
+};
 
 const addItem = async (cartId, cartItemId, itemPrice) => {
     const cart = await CartRepository.update(cartId, {
@@ -28,7 +28,7 @@ const addItem = async (cartId, cartItemId, itemPrice) => {
         $inc: { totalPrice: itemPrice },
     });
     return cart;
-}
+};
 
 const removeItem = async (cartId, cartItemId, itemPrice) => {
     const cart = await CartRepository.update(cartId, {
@@ -36,24 +36,24 @@ const removeItem = async (cartId, cartItemId, itemPrice) => {
         $inc: { totalPrice: -itemPrice },
     });
     return cart;
-}
+};
 
 const clearCart = async (cartId) => {
     return await CartRepository.update(cartId, {
         items: [],
         totalPrice: 0,
     });
-}
+};
 
 // Xóa giỏ hàng (phía admin)
 const deleteCart = async (cartId) => {
     return await CartRepository.delete(cartId);
-}
+};
 
 // Lấy tất cả giỏ hàng (phía admin)
 const getAllCarts = async () => {
     return await CartRepository.getAll();
-}
+};
 
 module.exports = {
     getCartByUserOrSession,

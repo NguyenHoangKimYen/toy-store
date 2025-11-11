@@ -1,7 +1,7 @@
-const multer = require('multer');
+const multer = require("multer");
 
 const storage = multer.memoryStorage();
-const allowedMimeTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const allowedMimeTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 const upload = multer({
     storage,
@@ -9,16 +9,18 @@ const upload = multer({
     fileFilter: (_req, file, cb) => {
         const ok = allowedMimeTypes.has(file.mimetype);
         if (!ok) {
-            return cb(new Error('Only JPG/PNG/WebP images allowed'));
+            return cb(new Error("Only JPG/PNG/WebP images allowed"));
         }
         return cb(null, true);
     },
 });
 
-const uploadAvatar = upload.single('avatar');
-const uploadProductImages = upload.array('images', 10);
+const uploadAvatar = upload.single("avatar");
+const uploadProductImages = upload.array("images", 10);
+const uploadProductVariants = upload.array("variantImages", 10);
 
 module.exports = {
     uploadAvatar,
     uploadProductImages,
+    uploadProductVariants
 };

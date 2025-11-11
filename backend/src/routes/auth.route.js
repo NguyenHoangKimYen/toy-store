@@ -106,13 +106,13 @@ router.get(
 
 router.get('/verify-email', verifyEmail);
 
-router.post('/register', register); //đăng ký
-router.post('/login', login); //đăng nhập
+router.post("/register", register); //đăng ký
+router.post("/login", login); //đăng nhập
 
-router.post('/forgot-password', forgotPassword); //quên mật khẩu
-router.post('/reset-password', resetPassword); //đặt lại mật khẩu
+router.post("/forgot-password", forgotPassword); //quên mật khẩu
+router.post("/reset-password", resetPassword); //đặt lại mật khẩu
 
-router.post('/login/verify-otp', verifyLoginOtp);
-router.post('/login/resend-otp', resendLoginOtp);
+router.post("/login/verify-otp", verifyLoginOtp);
+router.post("/login/resend-otp", resendLoginOtp);
 
 module.exports = router;

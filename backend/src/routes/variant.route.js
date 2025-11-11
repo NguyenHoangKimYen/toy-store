@@ -1,0 +1,21 @@
+const express = require("express");
+const router = express.Router();
+const {
+    getVariantsByProduct,
+    createVariant,
+    updateVariant,
+    deleteVariant
+} = require("../controllers/variant.controller");
+const { uploadProductVariants } = require("../middlewares/upload.middleware"); // nếu bạn có multer
+
+// CRUD cơ bản
+router.get("/:productId", getVariantsByProduct);
+router.post("/:productId", uploadProductVariants, createVariant);
+router.put("/:id", updateVariant);
+router.delete("/:id", deleteVariant);
+
+// Quản lý ảnh variant
+// router.post("/:id/images", uploadProductVariants, variantController.addVariantImages);
+// router.patch("/:id/images", variantController.removeVariantImages);
+
+module.exports = router;
