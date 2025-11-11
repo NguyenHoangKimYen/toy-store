@@ -23,21 +23,23 @@ const deleteFromS3 = async (urls) => {
     for (const url of urls) {
         try {
             const key = url.split(".amazonaws.com/")[1];
-
             if (!key) {
                 console.warn("Could not extract key from URL:", url);
                 continue;
             }
 
+            const decodedKey = decodeURIComponent(key.replace(/\+/g, " "));
+            console.log("Extracted and decoded key:", decodedKey);
+
             const params = {
                 Bucket: process.env.AWS_BUCKET_NAME,
-                Key: decodeURIComponent(key), // handle special characters like %20
+                Key: decodedKey,
             };
 
             await s3.deleteObject(params).promise();
-            console.log("Successfully deleted from S3:", key);
+            console.log("✅ Successfully deleted from S3:", decodedKey);
         } catch (error) {
-            console.error("Error deleting image from S3:", error.message);
+            console.error("❌ Error deleting image from S3:", error.message);
         }
     }
 };

@@ -48,14 +48,18 @@ const createVariant = async (productId, variantData, imgFiles) => {
         );
         
         if (!definition) {
-            throw new Error(`Attribute '${variantAttr.name}' does not exist on this product.`);
-        }
-
-        if (!definition.values.includes(variantAttr.value)) {
-            throw new Error(`The value '${variantAttr.value}' is not valid for attribute '${variantAttr.name}'. Allowed values are: ${definition.values.join(", ")}`);
+            allowedAttributes.push({
+                name: variantAttr.name,
+                values: [variantAttr.value]
+            });
+            
+        } else {
+            if (!definition.values.includes(variantAttr.value)) {
+                definition.values.push(variantAttr.value);
+            }
         }
     }
-    
+
     let imageUrls = [];
     if (imgFiles && imgFiles.length > 0) {
         imageUrls = await uploadToS3(imgFiles, "variantImages");
@@ -69,7 +73,9 @@ const createVariant = async (productId, variantData, imgFiles) => {
     }
     
     const createdVariant = await variantRepository.create(newVariant);
+    
     product.variants.push(createdVariant._id);
+    
     await product.save();
 
     await updateProductPriceRange(productId);
