@@ -18,12 +18,14 @@ const ProductSchema = new mongoose.Schema(
             trim: true,
         },
 
-        categoryId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Category",
-            required: true,
-            index: true,
-        },
+        categoryId: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Category",
+                required: true,
+                index: true,
+            }
+        ],
 
         description: {
             type: String,
@@ -64,7 +66,13 @@ const ProductSchema = new mongoose.Schema(
         status: {
             type: String,
             enum: ["Draft", "Published", "Archived", "Disabled"],
-            default: "Published",
+            default: "Draft",
+            index: true,
+        },
+
+        isFeatured: {
+            type: Boolean,
+            default: false,
             index: true,
         },
 
