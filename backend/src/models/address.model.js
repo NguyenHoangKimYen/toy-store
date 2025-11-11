@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const addressSchema = new mongoose.Schema({
     userId: {
@@ -14,23 +14,23 @@ const addressSchema = new mongoose.Schema({
         trim: true
     },
 
-    phone: {
-        type: String,
-        required: true,
-        trim: true
-    },
+        phone: {
+            type: String,
+            required: true,
+            trim: true,
+        },
 
-    addressLine: {
-        type: String,
-        required: true,
-        trim: true
-    },
+        addressLine: {
+            type: String,
+            required: true,
+            trim: true,
+        },
 
-    city: {
-        type: String,
-        trim: true,
-        default: null
-    },
+        city: {
+            type: String,
+            trim: true,
+            default: null,
+        },
 
     // Nếu không cần thì bỏ phần mã bưu chính
     postalCode: {
@@ -60,4 +60,4 @@ const addressSchema = new mongoose.Schema({
  }
 );
 
-module.exports = mongoose.model('Address', addressSchema);
+module.exports = mongoose.model("Address", addressSchema);
