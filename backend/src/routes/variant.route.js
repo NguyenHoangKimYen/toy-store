@@ -4,18 +4,20 @@ const {
     getVariantsByProduct,
     createVariant,
     updateVariant,
-    deleteVariant
+    deleteVariant,
+    addVariantImages,
+    removeVariantImages,
 } = require("../controllers/variant.controller");
 const { uploadProductVariants } = require("../middlewares/upload.middleware"); // nếu bạn có multer
 
 // CRUD cơ bản
 router.get("/:productId", getVariantsByProduct);
 router.post("/:productId", uploadProductVariants, createVariant);
-router.put("/:id", updateVariant);
+router.patch("/:id", updateVariant);
 router.delete("/:id", deleteVariant);
 
 // Quản lý ảnh variant
-// router.post("/:id/images", uploadProductVariants, variantController.addVariantImages);
-// router.patch("/:id/images", variantController.removeVariantImages);
+router.post("/:id/images", uploadProductVariants, addVariantImages);
+router.delete("/:id/images", removeVariantImages);
 
 module.exports = router;
