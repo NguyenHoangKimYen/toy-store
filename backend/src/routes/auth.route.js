@@ -70,31 +70,26 @@ router.get(
         session: false,
     }),
     (req, res) => {
-        const user = req.user;
         const token = jwt.sign(
             {
-                id: user._id,
-                email: user.email,
-                username: user.username,
-                role: user.role,
+                id: req.user._id,
+                email: req.user.email,
             },
             process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
 
-        // Gửi JWT qua cookie (an toàn hơn query param)
-        const isProd = process.env.NODE_ENV === 'production';
         res
-            .cookie('token', token, {
+            .cookie('token', token, { //gửi cookie http-only, redirect về fe
                 httpOnly: true,
-                secure: isProd,
-                sameSite: isProd ? 'none' : 'lax',
-                maxAge: 7 * 24 * 60 * 60 * 1000,
+                secure: true, // chỉ gửi qua HTTPS (khi bạn bật SSL)
+                sameSite: 'lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000, // 7 ngày
             })
             .send(`
                     <html>
                         <body style="font-family: sans-serif; text-align: center; padding: 50px;">
-                        <h2>Đăng nhập Facebook được rồi nha Mẹ, Tự Vô Mongo mà check!</h2>
+                        <h2>Đăng nhập Google được rồi nha Mẹ, Tự Vô Mongo mà check!</h2>
                         <p>Ai rảnh mà chào</p>
                         </body>
                     </html>
