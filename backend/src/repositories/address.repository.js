@@ -6,10 +6,10 @@ const findAll = async (filter = {}, options = {}) => { //tìm tắt cả
     return Address.find(filter)
     .populate({
         path: 'userId',
-        select: 'fullName email phone defaultAddressId',
+        select: 'fullNameOfReceiver email phone defaultAddressId',
         populate: {
             path: 'defaultAddressId',
-            select: 'fullName phone addressLine city postalCode isDefault',
+            select: 'fullNameOfReceiver phone addressLine city postalCode isDefault',
         },
     })
     .skip(options.skip || 0) //phân trang
@@ -21,7 +21,7 @@ const findById = async (id) => { //tìm địa chỉ theo ID
     return Address.findById(id)
     .populate({
         path: 'userId',
-        select: 'fullName email phone defaultAddressId',
+        select: 'fullNameOfReceiver email phone defaultAddressId',
     })
 };
 
@@ -32,10 +32,10 @@ const findByUserId = async (userId) => { //tim tat ca dia chi cua mot user
 
 //tạo địa chỉ
 const create = async (data) => {
-    const { userId, fullName, phone, addressLine, city, postalCode, lat, lng, isDefault } = data;
+    const { userId, fullNameOfReceiver, phone, addressLine, city, postalCode, lat, lng, isDefault } = data;
     return new Address({
         userId,
-        fullName,
+        fullNameOfReceiver,
         phone,
         addressLine,
         city,
