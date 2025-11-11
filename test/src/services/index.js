@@ -1,7 +1,7 @@
 export * from './products.service';
 export * from './users.service';
 export * from './config';
-export * from './utils/apiHelpers';
+export * from '../utils/apiHelpers';
 export * from './utils/authHelpers';
 
 // Organize by module

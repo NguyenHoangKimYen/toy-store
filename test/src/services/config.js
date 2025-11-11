@@ -1,4 +1,4 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://milkybloom.us-east-1.elasticbeanstalk.com';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://milkybloom.us-east-1.elasticbeanstalk.com';
 
 // API Endpoints
 export const ENDPOINTS = {

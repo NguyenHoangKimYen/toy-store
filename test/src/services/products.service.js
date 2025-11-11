@@ -1,12 +1,12 @@
 import { API_BASE_URL, ENDPOINTS } from './config';
-import { handleResponse, createUrl } from './utils/apiHelpers';
-import { getAuthHeaders } from './utils/authHelpers';
+import { handleResponse, createUrl } from '../utils/apiHelpers';
+import { getAuthHeaders } from '../utils/authHelpers';
 
 /**
  * Optional filters
  * @param {Object} params - Query parameters
  * @param {string} params.search - Search query
- * @param {string} params.category - Filter by category
+ * @param {string} params.categoryId - Filter by category
  * @param {string} params.status - Filter by status (active/draft/archived)
  * @param {string} params.sortBy - Sort field
  * @param {string} params.sortOrder - Sort order (asc/desc)

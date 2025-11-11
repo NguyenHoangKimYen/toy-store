@@ -21,13 +21,13 @@ export const useProductsByCategory = () => {
         
         // Fetch each category from backend with proper filters
         const [featured, newProducts, bestSellers, keychains, plushToys, figures, accessories] = await Promise.all([
-          getProducts({ isFeatured: true }).then(products => products.slice(0, 6)),
-          getProducts({ isNew: true }).then(products => products.slice(0, 8)),
-          getProducts({ isBestSeller: true }).then(products => products.slice(0, 12)),
-          getProducts({ category: 'keychains' }).then(products => products.slice(0, 12)),
-          getProducts({ category: 'plush' }).then(products => products.slice(0, 12)),
-          getProducts({ category: 'figures' }).then(products => products.slice(0, 12)),
-          getProducts({ category: 'accessories' }).then(products => products.slice(0, 12)),
+          getProducts({ isFeatured: true }).then(res => res.products.slice(0, 6)),
+          getProducts({ isNew: true }).then(res => res.products.slice(0, 8)),
+          getProducts({ isBestSeller: true }).then(res => res.products.slice(0, 12)),
+          getProducts({ categoryId: '671ff0010000000000000002' }).then(res => res.products.slice(0, 12)),
+          getProducts({ categoryId: '671ff0010000000000000002' }).then(res => res.products.slice(0, 12)),
+          getProducts({ categoryId: '671ff0010000000000000002' }).then(res => res.products.slice(0, 12)),
+          getProducts({ categoryId: '671ff0010000000000000002' }).then(res => res.products.slice(0, 12)),
         ]);
 
         setCategorizedProducts({

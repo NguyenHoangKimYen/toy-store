@@ -1,6 +1,6 @@
 import { API_BASE_URL, ENDPOINTS } from './config';
-import { handleResponse, createUrl } from './utils/apiHelpers';
-import { getAuthHeaders } from './utils/authHelpers';
+import { handleResponse, createUrl } from '../utils/apiHelpers';
+import { getAuthHeaders } from '../utils/authHelpers';
 
 /**
  * Optional filters
