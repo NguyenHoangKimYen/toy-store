@@ -7,6 +7,13 @@ import { useResponsive } from '../../hooks/useResponsive';
 import { mockProducts } from '../../data/mockProducts';
 import './HeroSection.css';
 import example from '../../../../assets/example.png';
+import example2 from '../../../../assets/example2.png';
+import example3 from '../../../../assets/example3.png';
+import example4 from '../../../../assets/example4.png';
+
+
+
+const images = [example, example2, example3, example4]
 
 const HeroSection = ({ featuredProducts }) => {
   const carouselRef = useRef(null);
@@ -66,11 +73,11 @@ const HeroSection = ({ featuredProducts }) => {
   return (
     <div className="hero-carousel" ref={carouselRef}>
       <div className="list" ref={listRef}>
-        {displayProducts.slice(0, 6).map((product) => (
+        {displayProducts.slice(0, 6).map((product, index) => ( // index parameter is for mock data, remove when backend is ready
           <HeroSlide 
             key={product._id} 
             product={product} 
-            image={example}
+            image={images[index % images.length]}
           />
         ))}
       </div>
