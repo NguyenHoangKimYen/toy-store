@@ -43,9 +43,9 @@
 }
 
 .hero-carousel .list .item img {
-    width: 75%;
+    width: 85%;
     position: absolute;
-    right: -30%;
+    right: -37%;
     top: 50%;
     transform: translateY(-50%);
     transition: right 1.5s;
