@@ -47,15 +47,22 @@ const getUserByUsername = async (username) => {
 };
 
 const createUser = async (userData) => {
-    const { password, ...rest } = userData;
+    const { password, role, ...rest } = userData;
+    const allowedRoles = ['customer', 'admin'];
+    const safeRole = allowedRoles.includes(role) ? role : 'customer';
 
     if (password) {
-        const saltRound = 10; //số vòng băm
-        const hashedPassword = await bcrypt.hash(password, saltRound); //băm mật khẩu
-        rest.password = hashedPassword; //gán mật khẩu đã băm vào dữ liệu người dùng
+        const saltRound = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRound);
+        rest.password = hashedPassword;
     }
 
-    const user = await userRepository.create(rest); //tạo người dùng mới
+    const newUserData = { //merge data
+        ...rest,
+        role: safeRole
+    };
+
+    const user = await userRepository.create(newUserData);
     return user;
 };
 

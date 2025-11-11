@@ -1,22 +1,22 @@
-const mongoose = require("mongoose");
-require("./address.model.js");
+const mongoose = require('mongoose');
+require('./address.model.js');
 
 const ROLE_ENUM = ["customer", "admin"];
 
-const userSchema = new mongoose.Schema(
-    {
-        fullName: {
-            type: String,
-            required: true,
-            trim: true,
-        },
+const userSchema = new mongoose.Schema({
+    //image url
+    fullName: {
+        type: String,
+        required: true,
+        trim: true
+    },
 
-        username: {
-            type: String,
-            required: true,
-            unique: true,
-            trim: true,
-        },
+    username: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true
+    },
 
         email: {
             type: String,
@@ -26,11 +26,14 @@ const userSchema = new mongoose.Schema(
             trim: true,
         },
 
-        phone: {
-            type: String,
-            required: true,
-            unique: true,
+    phone: {
+        type: String,
+        required: function () {
+            return !this.socialProvider; //đăng nhập mxh không bắt buộc phone
         },
+        sparse: true,
+        default: null,
+    },
 
         // Mật khẩu (dạng hashed) - Không bắt buộc nếu đăng nhập bằng mxh
         //Lưu hash
@@ -39,11 +42,11 @@ const userSchema = new mongoose.Schema(
             select: false, // Mặc định không trả về trường này khi truy vấn
         },
 
-        avatar: {
-            type: String,
-            trim: true,
-            default: null,
-        },
+    avatar: {
+        type: String,
+        trim: true,
+        default: process.env.DEFAULT_AVATAR_URL
+    },
 
         // reset token (link) – lưu dạng hash + hạn
         resetTokenHash: {
@@ -52,17 +55,17 @@ const userSchema = new mongoose.Schema(
             default: null,
         },
 
-        resetTokenExpiresAt: {
-            type: Date,
-            default: null,
-        },
+    resetTokenExpiresAt: {
+        type: Date,
+        default: null
+    },
 
-        //otp để đặt lại mật khẩu
-        resetOtpHash: {
-            type: String,
-            select: false,
-            default: null,
-        },
+    //otp để đặt lại mật khẩu 
+    resetOtpHash: {
+        type: String,
+        select: false,
+        default: null
+    },
 
         resetOtpExpiresAt: {
             type: Date,
@@ -94,11 +97,11 @@ const userSchema = new mongoose.Schema(
             default: null,
         },
 
-        socialProvider: {
-            type: String,
-            enum: ["google", "facebook", "github", null],
-            default: null,
-        },
+    socialProvider: {
+        type: String,
+        enum: ['google', 'facebook', 'github', 'apple', null],
+        default: null,
+    },
 
         socialId: {
             type: String,
@@ -126,4 +129,4 @@ const userSchema = new mongoose.Schema(
 
 userSchema.set("settersOnQuery", true); //cho phép sử dụng setter khi update
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.model('User', userSchema);
