@@ -7,7 +7,9 @@ const {
     getProductByRating,
     createProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    addProductImages,
+    removeProductImages
 } = require('../controllers/product.controller.js');
 const {
     uploadProductImages
@@ -20,10 +22,12 @@ router.get("/slug/:slug", getProductBySlug);
 router.get("/price/range", getProductByPrice);
 router.get("/:id", getProductById);
 router.post("/", uploadProductImages, createProduct);
-router.patch("/:id", uploadProductImages, updateProduct);
 router.delete("/:id", deleteProduct);
 
-// router.post('/', updateProductImages, createProduct);
-// router.patch('/:id/images', updateProductImages, updateProductImages);
+
+router.patch("/:id", updateProduct);
+router.post("/:id/images", uploadProductImages, addProductImages);
+router.delete("/:id/images", removeProductImages);
+
 
 module.exports = router;

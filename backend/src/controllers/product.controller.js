@@ -73,11 +73,10 @@ const createProduct = async (req, res) => {
 }
 
 /** Cập nhật thông tin sản phẩm */
-const updateProduct = async (req, res, next) => { // Thêm "next"
+const updateProduct = async (req, res, next) => {
     try {
         const { id } = req.params;
 
-        // 1. Kiểm tra ID hợp lệ (Controller làm là đúng)
         if (!mongo.ObjectId.isValid(id)) {
             return res.status(400).json({
                 success: false,
@@ -85,23 +84,18 @@ const updateProduct = async (req, res, next) => { // Thêm "next"
             });
         }
 
-        // 2. Gọi service và truyền "nguyên liệu"
-        // Service sẽ tự xử lý việc parsing req.body và req.files
+        // CHỈ TRUYỀN req.body, KHÔNG TRUYỀN req.files nữa
         const updatedProduct = await productService.updateProduct(
             id,
-            req.body,
-            req.files || [] // Gửi mảng rỗng nếu không có files
+            req.body 
         );
 
-        // 3. Gửi response
-        // Service sẽ throw error nếu không tìm thấy, nên không cần check !updatedProduct ở đây
         return res.status(200).json({
             success: true,
             data: updatedProduct,
         });
 
     } catch (error) {
-        // 4. Bất kỳ lỗi nào (parsing, not found, S3...) sẽ được đẩy ra middleware xử lý lỗi
         next(error);
     }
 };

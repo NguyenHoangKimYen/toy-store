@@ -26,6 +26,7 @@ const VariantSchema = new mongoose.Schema(
         price: {
             type: mongoose.Schema.Types.Decimal128,
             min: 0,
+            default: 0
         },
 
         stockQuantity: {
