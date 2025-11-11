@@ -45,7 +45,7 @@ const userSchema = new mongoose.Schema({
     avatar: {
         type: String,
         trim: true,
-        default: null
+        default: process.env.DEFAULT_AVATAR_URL
     },
 
     // reset token (link) – lưu dạng hash + hạn
