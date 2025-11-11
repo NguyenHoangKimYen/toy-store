@@ -87,23 +87,57 @@ const createProduct = async (productData, imgFiles) => {
  * Cập nhật thông tin sản phẩm (trừ ảnh)
  */
 
-const updateProduct = async (id, productData, addImages = [], removeImages = []) => {
+// TRONG product.service.js
+
+/**
+ * Cập nhật thông tin sản phẩm (trừ ảnh)
+ */
+// Sửa chữ ký hàm: nhận (id, body, files)
+const updateProduct = async (id, body, files = []) => {
+
+    // --- BƯỚC 1: XỬ LÝ LOGIC PARSING (Chuyển từ controller sang) ---
+    let productData = {};
+    let removeImages = [];
+    const addImages = files || []; // files đã được truyền vào
+
+    if (body.productData) {
+        try {
+            productData = JSON.parse(body.productData);
+        } catch (err) {
+            // Ném lỗi để controller có thể bắt và next()
+            throw new Error("Invalid JSON format in 'productData'");
+        }
+    } else {
+        // Nếu không có 'productData', dùng 'body' (trường hợp client gửi JSON thường)
+        productData = body;
+    }
+
+    if (body.removeImages) {
+        try {
+            removeImages = JSON.parse(body.removeImages);
+        } catch (err) {
+            throw new Error("Invalid JSON format in 'removeImages'");
+        }
+    }
+    // --- KẾT THÚC LOGIC CHUYỂN SANG ---
+
+
+    // --- BƯỚC 2: LOGIC CỦA SERVICE (Giữ nguyên) ---
     const existingProduct = await productRepository.findById(id);
     if (!existingProduct) throw new Error('Product not found');
 
     const updatePayload = {};
 
+    // Dùng productData đã được parse
     if (productData.name) {
         updatePayload.name = productData.name;
     }
     if (productData.description) {
         updatePayload.description = productData.description;
     }
-
     if (productData.isPublished !== undefined) {
         updatePayload.isPublished = productData.isPublished === 'true';
     }
-
     if (productData.attributes) {
         console.warn(`Attempted to update attributes on product ${id} via general update. This is not allowed.`);
     }
