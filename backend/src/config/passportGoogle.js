@@ -2,14 +2,14 @@ const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const User = require("../models/user.model");
 
-// 🧼 Hàm làm sạch chuỗi để tạo username an toàn
+//Hàm làm sạch chuỗi để tạo username an toàn
 const sanitize = (value = "") =>
   value
     .toLowerCase()
     .replace(/[^a-z0-9]/g, "")
     .replace(/_{2,}/g, "_");
 
-// 🔁 Hàm tạo username duy nhất
+//Tạo username duy nhất
 const generateUniqueUsername = async (profile) => {
   const email = profile.emails?.[0]?.value || "";
   const fromEmail = email.split("@")[0];
@@ -31,7 +31,7 @@ const generateUniqueUsername = async (profile) => {
   return candidate;
 };
 
-// 🧭 Cấu hình Google Strategy
+//Cấu hình Google Strategy
 passport.use(
   new GoogleStrategy(
     {
@@ -51,7 +51,12 @@ passport.use(
           socialId: profile.id,
         });
 
-        // 🆕 Nếu user chưa tồn tại → tạo mới
+        //Ảnh mặc định khi Google không có ảnh
+        const DEFAULT_AVATAR =
+          process.env.DEFAULT_AVATAR_URL ||
+          "https://toy-store-project-of-springwang.s3.ap-southeast-2.amazonaws.com/defaults/unknownAvatar.png";
+
+        //Nếu user chưa tồn tại → tạo mới
         if (!user) {
           const email = profile.emails?.[0]?.value;
           if (!email)
@@ -61,10 +66,16 @@ passport.use(
             );
 
           const username = await generateUniqueUsername(profile);
-          const nameFromProfile =
+          const fullName =
             profile.displayName ||
-            `${profile.name?.givenName || ""} ${profile.name?.familyName || ""}`.trim();
-          const fullName = nameFromProfile || email || username;
+            `${profile.name?.givenName || ""} ${profile.name?.familyName || ""}`.trim() ||
+            email ||
+            username;
+
+          //Lấy avatar từ Google profile (nếu có)
+          const avatar =
+            profile.photos?.[0]?.value?.replace("=s96-c", "=s400-c") ||
+            DEFAULT_AVATAR;
 
           user = await User.create({
             socialProvider: "google",
@@ -73,23 +84,33 @@ passport.use(
             fullName,
             username,
             phone: null,
+            avatar,
             isVerified: profile.emails?.[0]?.verified ?? true,
           });
+        } else {
+          //Nếu user đã tồn tại mà chưa có avatar → thêm ảnh mặc định
+          if (!user.avatar) {
+            user.avatar =
+              profile.photos?.[0]?.value?.replace("=s96-c", "=s400-c") ||
+              DEFAULT_AVATAR;
+            await user.save();
+          }
         }
 
         return done(null, user);
       } catch (err) {
-        console.error("❌ GOOGLE LOGIN ERROR:", err);
+        console.error("GOOGLE LOGIN ERROR:", err);
         return done(err, null);
       }
     }
   )
 );
 
-// 🧠 Serialize / Deserialize
+//Serialize / Deserialize
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
+
 passport.deserializeUser(async (id, done) => {
   try {
     const user = await User.findById(id);
