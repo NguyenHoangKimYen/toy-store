@@ -73,11 +73,11 @@ const createProduct = async (req, res) => {
 }
 
 /** Cập nhật thông tin sản phẩm */
-const updateProduct = async (req, res) => {
+const updateProduct = async (req, res, next) => { // Thêm "next"
     try {
         const { id } = req.params;
 
-        // Kiểm tra ID hợp lệ
+        // 1. Kiểm tra ID hợp lệ (Controller làm là đúng)
         if (!mongo.ObjectId.isValid(id)) {
             return res.status(400).json({
                 success: false,
@@ -85,58 +85,24 @@ const updateProduct = async (req, res) => {
             });
         }
 
-        let productData = {};
-        let removeImages = [];
-        let addImages = req.files || [];
-
-        if (req.body.productData) {
-            try {
-                productData = JSON.parse(req.body.productData);
-            } catch (err) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Invalid JSON format in 'productData'",
-                });
-            }
-        } else {
-            productData = req.body;
-        }
-
-        if (req.body.removeImages) {
-            try {
-                removeImages = JSON.parse(req.body.removeImages);
-            } catch (err) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Invalid JSON format in 'removeImages'",
-                });
-            }
-        }
-
+        // 2. Gọi service và truyền "nguyên liệu"
+        // Service sẽ tự xử lý việc parsing req.body và req.files
         const updatedProduct = await productService.updateProduct(
             id,
-            productData,
-            addImages,
-            removeImages
+            req.body,
+            req.files || [] // Gửi mảng rỗng nếu không có files
         );
 
-        if (!updatedProduct) {
-            return res.status(404).json({
-                success: false,
-                message: "Product not found",
-            });
-        }
-
+        // 3. Gửi response
+        // Service sẽ throw error nếu không tìm thấy, nên không cần check !updatedProduct ở đây
         return res.status(200).json({
             success: true,
             data: updatedProduct,
         });
+
     } catch (error) {
-        console.error("Update product error:", error);
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        // 4. Bất kỳ lỗi nào (parsing, not found, S3...) sẽ được đẩy ra middleware xử lý lỗi
+        next(error);
     }
 };
 
