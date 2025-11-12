@@ -1,5 +1,5 @@
-const { token } = require('morgan');
-const User = require('../models/user.model.js');
+const { token } = require("morgan");
+const User = require("../models/user.model.js");
 
 const findAll = async (filter = {}, options = {}) => {
     return User.find(filter)
@@ -65,11 +65,13 @@ const create = async (data) => { //lấy toàn bộ thông tin người dùng
 
 // Các trường không nên trả về công khai
 const PUBLIC_PROJECTION =
-    '-password -__v -resetTokenHash -resetTokenExpiresAt -resetOtpHash -resetOtpExpiresAt';
+    "-password -__v -resetTokenHash -resetTokenExpiresAt -resetOtpHash -resetOtpExpiresAt";
 
 // Đánh dấu người dùng đã được xác minh
 const setVerified = (id, isVerified = true) => {
-    return User.findByIdAndUpdate(id, { isVerified }, { new: true }).select(PUBLIC_PROJECTION);
+    return User.findByIdAndUpdate(id, { isVerified }, { new: true }).select(
+        PUBLIC_PROJECTION,
+    );
 };
 
 const setPassword = (id, hashValue) => { //cập nhật mật khẩu người dùng
@@ -77,7 +79,8 @@ const setPassword = (id, hashValue) => { //cập nhật mật khẩu người d�
         .select(PUBLIC_PROJECTION);
 };
 
-const setResetToken = (id, { tokenHash, expiresAt }) => { //đặt lại mật khẩu
+const setResetToken = (id, { tokenHash, expiresAt }) => {
+    //đặt lại mật khẩu
     return User.findByIdAndUpdate(
         id,
         {
@@ -90,13 +93,18 @@ const setResetToken = (id, { tokenHash, expiresAt }) => { //đặt lại mật k
     ).select(PUBLIC_PROJECTION);
 };
 
-const clearResetToken = (id) => { //xóa token sau khi đặt lại mật khẩu / hết hạn
-    return User.findByIdAndUpdate(id, {
-        resetTokenHash: null,
-        resetTokenExpiresAt: null,
-        resetOtpHash: null,
-        resetOtpExpiresAt: null,
-    }, { new: true }).select(PUBLIC_PROJECTION);
+const clearResetToken = (id) => {
+    //xóa token sau khi đặt lại mật khẩu / hết hạn
+    return User.findByIdAndUpdate(
+        id,
+        {
+            resetTokenHash: null,
+            resetTokenExpiresAt: null,
+            resetOtpHash: null,
+            resetOtpExpiresAt: null,
+        },
+        { new: true },
+    ).select(PUBLIC_PROJECTION);
 };
 
 const accountIsVerified = (id) => {
@@ -116,7 +124,8 @@ const accountIsVerified = (id) => {
     );
 };
 
-const findByIdWithSecrets = async (id) => { // Tìm người dùng theo ID bao gồm tất cả các trường bí mật
+const findByIdWithSecrets = async (id) => {
+    // Tìm người dùng theo ID bao gồm tất cả các trường bí mật
     return User.findById(id)
         .select('+password +resetTokenHash +resetTokenExpiresAt +resetOtpHash +resetOtpExpiresAt')
         .populate({
@@ -135,7 +144,8 @@ const incFailLogin = async (id) => {
     ).select('+password'); //so sánh mật khẩu
 };
 
-const resetFailLogin = async (id) => { //nếu người dùng đăng nhập thành công, số lần đăng nhập sai sẽ được reset
+const resetFailLogin = async (id) => {
+    //nếu người dùng đăng nhập thành công, số lần đăng nhập sai sẽ được reset
     return User.findByIdAndUpdate(
         id,
         { $set: { failLoginAttempts: 0 } },
@@ -153,11 +163,12 @@ const setLoginOtp = async (id, { otpHash, expiresAt }) => {
                 failLoginAttempts: 0,
             },
         },
-        { new: true }
+        { new: true },
     );
 };
 
-const clearLoginOtp = async (id) => { //xoá otp sau khi user xác minh thành công
+const clearLoginOtp = async (id) => {
+    //xoá otp sau khi user xác minh thành công
     return User.findByIdAndUpdate(
         id,
         {
@@ -166,7 +177,7 @@ const clearLoginOtp = async (id) => { //xoá otp sau khi user xác minh thành c
                 resetOtpExpiresAt: null,
             },
         },
-        { new: true }
+        { new: true },
     );
 };
 
@@ -209,5 +220,5 @@ module.exports = {
     resetFailLogin,
     setLoginOtp,
     clearLoginOtp,
-    accountIsVerified
+    accountIsVerified,
 };
