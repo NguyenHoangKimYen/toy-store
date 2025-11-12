@@ -21,29 +21,44 @@ const OTP_TTL_MINUTES = Number(process.env.LOGIN_OTP_TTL_MINUTES || 10);
 const userSchema = Joi.object({
     fullName: Joi.string().min(3).max(100).required(), // Họ và tên
     email: Joi.string().email().required(),
-    phone: Joi.string().pattern(/^[0-9]{10,15}$/).required(), // Số điện thoại từ 10-15 chữ số
+    phone: Joi.string()
+        .pattern(/^[0-9]{10,15}$/)
+        .required(), // Số điện thoại từ 10-15 chữ số
     username: Joi.string().alphanum().min(3).max(30).required(), // Tên đăng nhập
     password: Joi.string().min(8).max(32).required(),
 });
 
 const loginSchema = Joi.object({
-    emailOrPhoneOrUsername: Joi.alternatives().try(//một field có thể hợp lệ nhiều kiểu
-        Joi.string().email(),
-        Joi.string().pattern(/^[0-9]{10,15}$/), // Số điện thoại
-        Joi.string().alphanum().min(3).max(30) // Tên đăng nhập
-    ).required(),
+    emailOrPhoneOrUsername: Joi.alternatives()
+        .try(
+            //một field có thể hợp lệ nhiều kiểu
+            Joi.string().email(),
+            Joi.string().pattern(/^[0-9]{10,15}$/), // Số điện thoại
+            Joi.string().alphanum().min(3).max(30), // Tên đăng nhập
+        )
+        .required(),
     password: Joi.string().min(8).max(32).required(),
 })
 
-    .rename('username', 'emailOrPhoneOrUsername', { ignoreUndefined: true, override: true })
-    .rename('email', 'emailOrPhoneOrUsername', { ignoreUndefined: true, override: true })
-    .rename('phone', 'emailOrPhoneOrUsername', { ignoreUndefined: true, override: true });
+    .rename("username", "emailOrPhoneOrUsername", {
+        ignoreUndefined: true,
+        override: true,
+    })
+    .rename("email", "emailOrPhoneOrUsername", {
+        ignoreUndefined: true,
+        override: true,
+    })
+    .rename("phone", "emailOrPhoneOrUsername", {
+        ignoreUndefined: true,
+        override: true,
+    });
 
 // const generateRandomToken = (length = 6) => {
 //     return Math.random().toString().slice(2,8);
 // };
 
-const toPublicUser = (userDoc) => { //chuyển đổi đối tượng người dùng sang định dạng công khai
+const toPublicUser = (userDoc) => {
+    //chuyển đổi đối tượng người dùng sang định dạng công khai
     if (!userDoc) return null;
 
     const obj = userDoc.toObject ? userDoc.toObject() : { ...userDoc };
@@ -52,20 +67,26 @@ const toPublicUser = (userDoc) => { //chuyển đổi đối tượng người d
 };
 
 const detectIdentifierType = (s) => {
-    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return 'email';
-    if (/^[0-9]{10,15}$/.test(s)) return 'phone';
-    return 'username';
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return "email";
+    if (/^[0-9]{10,15}$/.test(s)) return "phone";
+    return "username";
 };
 
 const findUserByIdentifier = async (identifier, withPassword = false) => {
     const type = detectIdentifierType(identifier);
     switch (type) {
-        case 'email':
-            return userRepository.findByEmail(identifier.trim().toLowerCase(), withPassword);
-        case 'phone':
+        case "email":
+            return userRepository.findByEmail(
+                identifier.trim().toLowerCase(),
+                withPassword,
+            );
+        case "phone":
             return userRepository.findByPhone(identifier.trim(), withPassword);
         default:
-            return userRepository.findByUsername(identifier.trim(), withPassword);
+            return userRepository.findByUsername(
+                identifier.trim(),
+                withPassword,
+            );
     }
 };
 
@@ -73,7 +94,9 @@ const findUserByIdentifier = async (identifier, withPassword = false) => {
 const register = async (data) => {
     const { value, error } = userSchema.validate(data, { abortEarly: false }); //validate dữ liệu
     if (error) {
-        const message = error.details.map(detail => detail.message).join(', '); //gộp tất cả các lỗi
+        const message = error.details
+            .map((detail) => detail.message)
+            .join(", "); //gộp tất cả các lỗi
         throw new Error(message);
     }
 
@@ -83,7 +106,8 @@ const register = async (data) => {
     const username = value.username.trim();
     const plainPassword = value.password;
 
-    const [byEmail, byPhone, byUsername] = await Promise.all([ //truy vấn cùng lúc
+    const [byEmail, byPhone, byUsername] = await Promise.all([
+        //truy vấn cùng lúc
         userRepository.findByEmail(email),
         userRepository.findByPhone(phone),
         userRepository.findByUsername(username),
@@ -92,16 +116,17 @@ const register = async (data) => {
     const passwordHash = await bcrypt.hash(plainPassword, 10); //băm mật khẩu
 
     if (byEmail) {
-        throw new Error('Email already in use');
+        throw new Error("Email already in use");
     }
     if (byPhone) {
-        throw new Error('Phone number already in use');
+        throw new Error("Phone number already in use");
     }
     if (byUsername) {
-        throw new Error('Username already in use');
+        throw new Error("Username already in use");
     }
 
-    const user = await userRepository.create({ //tạo người dùng mới
+    const user = await userRepository.create({
+        //tạo người dùng mới
         fullName,
         email,
         phone,
@@ -111,7 +136,7 @@ const register = async (data) => {
     });
 
     const token = generateToken();
-    const tokenHash = sha256('verify:' + token);
+    const tokenHash = sha256("verify:" + token);
     const expiresAt = new Date(Date.now() + VERIFY_TTL_MINUTES * 60 * 1000);
 
     await userRepository.setResetToken(user._id, { tokenHash, expiresAt });
@@ -120,7 +145,7 @@ const register = async (data) => {
     try {
         await sendMail({
             to: email,
-            subject: 'Verify your email address',
+            subject: "Verify your email address",
             html: `
       <p>Xin chào ${fullName},</p>
       <p>Vui lòng xác thực email bằng cách nhấn vào liên kết sau (hạn ${VERIFY_TTL_MINUTES} phút):</p>
