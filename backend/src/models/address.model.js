@@ -8,7 +8,7 @@ const addressSchema = new mongoose.Schema({
         index: true //truy vấn nhanh hơn
     },
 
-    fullName: { //đổi thành fullNameofReceiver
+    fullNameOfReceiver: {
         type: String,
         required: true,
         trim: true
