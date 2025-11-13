@@ -22,6 +22,14 @@ const getVariantsByProduct = async (productId) => {
     return await variantRepository.findByProductId(productId);
 };
 
+const getVariantById = async (id) => {
+    const variant = await variantRepository.findById(id);
+    if (!variant) {
+        throw new Error("Variant not found");
+    }
+    return variant;
+};
+
 /** Tạo một biến thể mới và đảm bảo tính toàn vẹn dữ liệu */
 const createVariant = async (productId, variantData, imgFiles) => {
     const product = await productRepository.findById(productId);
@@ -85,7 +93,6 @@ const createVariant = async (productId, variantData, imgFiles) => {
 
 /** Cập nhật variant */
 const updateVariant = async (id, data) => {
-    delete data.imageUrls;
     const updated = await variantRepository.update(id, data);
     if (!updated) throw new Error("Variant not found");
 
@@ -142,6 +149,7 @@ const removeVariantImages = async (id, urlsToRemove) => {
 
 module.exports = {
     getVariantsByProduct,
+    getVariantById,
     createVariant,
     updateVariant,
     deleteVariant,
