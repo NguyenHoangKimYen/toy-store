@@ -1,9 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Plus } from 'lucide-react'
 import ProductGrid from './components/ProductGrid'
 import ProductStats from './components/ProductStats'
 import ProductDetailModal from './components/ProductDetailModal'
-import { useProducts } from './hooks/useProducts'
+import { useProducts } from '@/hooks'
 import { PageHeader, SearchBar, ScrollableContent } from '@/components/common'
 
 const Products = () => {
@@ -11,8 +11,20 @@ const Products = () => {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // Custom hook handles data fetching and filtering
-  const { products, stats, loading, error } = useProducts(searchQuery)
+  // Fetch all products
+  const { data: allProducts, loading, error } = useProducts({
+    params: { search: searchQuery }
+  })
+
+  // Calculate stats from products
+  const products = useMemo(() => Array.isArray(allProducts) ? allProducts : [], [allProducts])
+  
+  const stats = useMemo(() => ({
+    totalProducts: products.length,
+    totalStock: products.reduce((sum, p) => sum + (p.stockQuantity || 0), 0),
+    totalSold: products.reduce((sum, p) => sum + (p.soldCount || 0), 0),
+    outOfStock: products.filter(p => p.stockQuantity === 0).length,
+  }), [products])
 
   const handleViewDetails = (product) => {
     setSelectedProduct(product)
