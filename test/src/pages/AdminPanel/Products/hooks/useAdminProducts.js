@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getProducts } from '@/services/products.service'
 
-export const useProducts = (searchQuery = '') => {
+export const useAdminProducts = (searchQuery = '') => {
     const [products, setProducts] = useState([])
     const [stats, setStats] = useState({
         totalProducts: 0,

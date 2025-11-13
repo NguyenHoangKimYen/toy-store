@@ -2,12 +2,22 @@
 import { HeroSection } from './components/Hero';
 import { CategorySection, ProductCategoriesSection, NewArrivalsSection } from './components/Category';
 import { FeaturedBanner } from './components/Banner';
-import { useProductsByCategory } from './hooks/useProductsByCategory';
+import { useCategorizedProducts } from '@/hooks';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import './Home.css';
 
 const Home = () => {
-  const { categorizedProducts, loading, error } = useProductsByCategory();
+  const { categorizedProducts, loading, error } = useCategorizedProducts({
+    featured: { limit: 6 },
+    newProducts: { limit: 8 },
+    bestSellers: { limit: 12 },
+    categories: [
+      { key: 'keychains', category: 'keychains', limit: 12 },
+      { key: 'plushToys', category: 'plush', limit: 12 },
+      { key: 'figures', category: 'figures', limit: 12 },
+      { key: 'accessories', category: 'accessories', limit: 12 },
+    ],
+  });
 
   if (loading) {
     return (

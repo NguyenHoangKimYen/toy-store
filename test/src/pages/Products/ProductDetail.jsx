@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import { Button } from '@/components/ui/button';
-import { useProductDetail } from './hooks';
+import { useProductDetail } from '@/hooks';
 import ProductImageGallery from './components/ProductImageGallery';
 import ProductInfo from './components/ProductInfo';
 import ProductVariantSelector from './components/ProductVariantSelector';
@@ -22,16 +22,16 @@ const ProductDetail = () => {
     error,
     selectedVariant,
     quantity,
-    isFavorite,
     price,
     originalPrice,
     stock,
     inStock,
     discount,
-    setIsFavorite,
     handleQuantityChange,
     handleVariantChange,
   } = useProductDetail(id);
+
+  const [isFavorite, setIsFavorite] = React.useState(false);
 
   const handleAddToCart = () => {
     // TODO: Implement add to cart functionality

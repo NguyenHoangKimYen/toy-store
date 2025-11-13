@@ -298,6 +298,25 @@ export const deleteProductImage = async (productId, imageId) => {
  * @returns {Promise<Array>}
  */
 export const getProductCategories = async () => {
+
+// MOCK START
+  if (USE_MOCK_DATA) {
+    const products = await getMockProducts();
+    const categorySet = new Set();
+    
+    products.forEach(product => {
+      if (product.categoryId?.name) {
+        categorySet.add(product.categoryId.name);
+      }
+    });
+    
+    return Array.from(categorySet).map((name, index) => ({
+      _id: `cat-${index + 1}`,
+      name,
+    }));
+  }
+// MOCK END
+
   const response = await fetch(`${API_BASE_URL}${ENDPOINTS.PRODUCTS}/categories`, {
     method: 'GET',
     headers: {
