@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getProducts } from '../../../services/products.service';
+import { getProducts } from '@/services/products.service';
 
 export const useProductsByCategory = () => {
   const [loading, setLoading] = useState(true);
@@ -18,7 +18,7 @@ export const useProductsByCategory = () => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch each category from backend with proper filters
         const [featured, newProducts, bestSellers, keychains, plushToys, figures, accessories] = await Promise.all([
           getProducts({ isFeatured: true }).then(products => products.slice(0, 6)),

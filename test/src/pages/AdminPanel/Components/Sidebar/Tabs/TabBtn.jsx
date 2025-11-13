@@ -12,3 +12,4 @@ const TabBtn = ({ isSelected, icon, title, onClick }) => {
 }   
 
 export default TabBtn
+

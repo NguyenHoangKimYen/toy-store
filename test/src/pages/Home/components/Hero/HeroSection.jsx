@@ -1,9 +1,7 @@
 ﻿import React, { useEffect, useRef } from 'react';
 import HeroSlide from './HeroSlide';
 import HeroNavigation from './HeroNavigation';
-import { useCarouselAutoplay } from '../../hooks/useCarouselAutoplay';
-import { useCarouselNavigation } from '../../hooks/useCarouselNavigation';
-import { useResponsive } from '../../hooks/useResponsive';
+import { useCarouselAutoplay, useCarouselNavigation, useResponsive } from '@/hooks';
 import { mockProducts } from '../../data/mockProducts';
 import './HeroSection.css';
 import example from '../../../../assets/example.png';

@@ -1,5 +1,5 @@
 import React from 'react'
-import ProductCarousel from '@/components/ProductCarousel'
+import ProductCarousel from '@/components/shared/ProductCarousel'
 
 const CarouselDemo = () => {
   return (

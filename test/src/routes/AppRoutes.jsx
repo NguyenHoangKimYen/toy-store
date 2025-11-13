@@ -3,8 +3,7 @@ import { Route, Routes } from 'react-router-dom'
 import Layout from '../components/Layout'
 import Home from '../pages/Home'
 import Collection from '../pages/Collection'
-import Product from '../pages/Product'
-import ProductDetail from '../pages/Products/ProductDetail'
+import { Products, ProductDetail } from '../pages/Products'
 import About from '../pages/About'
 import Contact from '../pages/Contact'
 import Cart from '../pages/Cart'
@@ -15,7 +14,7 @@ import Orders from '../pages/Orders'
 import AdminPanel from '../pages/AdminPanel'
 import Dashboard from '../pages/AdminPanel/Components/Main'
 import Users from '../pages/AdminPanel/Users'
-import Products from '../pages/AdminPanel/Products'
+import AdminProducts from '../pages/AdminPanel/Products'
 import CarouselDemo from '../pages/CarouselDemo'
 import { ROUTES } from '../config/routes'
 
@@ -29,13 +28,13 @@ const AppRoutes = () => {
         <Route path={ROUTES.ADMIN} element={<AdminPanel />}>
           <Route index element={<Dashboard />} />
           <Route path='users' element={<Users />} />
-          <Route path='products' element={<Products />} />
+          <Route path='products' element={<AdminProducts />} />
         </Route>
 
         <Route element={<Layout />}>
             <Route path={ROUTES.HOME} element={<Home />}></Route>
             <Route path={ROUTES.COLLECTION} element={<Collection />}></Route>
-            <Route path={ROUTES.PRODUCTS} element={<Product />}></Route>
+            <Route path={ROUTES.PRODUCTS} element={<Products />}></Route>
             <Route path={ROUTES.PRODUCT_DETAIL} element={<ProductDetail />}></Route>
             <Route path={ROUTES.ABOUT} element={<About />}></Route>
             <Route path={ROUTES.CONTACT} element={<Contact />}></Route>

@@ -1,80 +1,97 @@
-﻿import React from 'react'
-import { Sparkles, TrendingUp, Heart, ShoppingBag } from 'lucide-react'
-import { HeroSection } from './components/Hero'
-import { ProductSection } from './components/Product'
-import { CTABanner } from './components/Banner'
-import { useHomeProducts } from './hooks/useHomeProducts'
+﻿import React from 'react';
+import { HeroSection } from './components/Hero';
+import { CategorySection, ProductCategoriesSection, NewArrivalsSection } from './components/Category';
+import { FeaturedBanner } from './components/Banner';
+import { useProductsByCategory } from './hooks/useProductsByCategory';
+import { LoadingSpinner, ErrorMessage } from '@/components/common';
+import './Home.css';
 
 const Home = () => {
-  const { loading, featuredProduct, products, categorizedProducts } = useHomeProducts()
+  const { categorizedProducts, loading, error } = useProductsByCategory();
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600"></div>
+      <div className="home-loading">
+        <LoadingSpinner/>
       </div>
-    )
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="home-error">
+        <ErrorMessage 
+          title="Oops! Something went wrong"
+          message={error}
+          onRetry={() => window.location.reload()}
+        />
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
-      {/* Hero Section */}
-      <HeroSection 
-        featuredProduct={featuredProduct} 
-        totalProducts={products.length} 
-      />
+    <div className="home-page">
+      {/* Hero Section with Featured Products Carousel */}
+      <HeroSection featuredProducts={categorizedProducts.featured} />
 
-      {/* New Products Section */}
-      <ProductSection
-        title="New Arrivals"
-        subtitle="Fresh drops you can't miss"
-        icon={<Sparkles className="w-6 h-6" />}
-        products={categorizedProducts.newProducts}
-        accentColor="blue"
-      />
+      {/* Featured Banner */}
+      <FeaturedBanner />
 
-      {/* Best Sellers Section */}
-      <ProductSection
+      {/* New Arrivals Section - Above Everything */}
+      <NewArrivalsSection newProducts={categorizedProducts.newProducts} />
+
+      {/* Best Sellers */}
+      <CategorySection
         title="Best Sellers"
-        subtitle="Customer favorites that keep selling out"
-        icon={<TrendingUp className="w-6 h-6" />}
+        subtitle="Customer favorites"
         products={categorizedProducts.bestSellers}
-        accentColor="purple"
-        isDark
+        viewAllLink="/products?filter=bestsellers"
       />
 
-      {/* Keychains Section */}
-      <ProductSection
-        title="Móc Khóa"
-        subtitle="Stylish keychains for your everyday carry"
-        icon={<Heart className="w-6 h-6" />}
-        products={categorizedProducts.keychains}
-        accentColor="pink"
-      />
+      {/* Product Categories Section with shadcn */}
+      <ProductCategoriesSection categorizedProducts={categorizedProducts} />
 
-      {/* Plushies Section */}
-      <ProductSection
-        title="Gấu Bông"
-        subtitle="Adorable plushies that bring joy"
-        icon={<Heart className="w-6 h-6" />}
-        products={categorizedProducts.plushies}
-        accentColor="rose"
-        isDark
-      />
+      {/* Keychains */}
+      {categorizedProducts.keychains.length > 0 && (
+        <CategorySection
+          title="Móc Khóa"
+          subtitle="Stylish keychains for every style"
+          products={categorizedProducts.keychains}
+          viewAllLink="/products?category=keychains"
+        />
+      )}
 
-      {/* Accessories Section */}
-      <ProductSection
-        title="Accessories"
-        subtitle="Complete your look with premium accessories"
-        icon={<ShoppingBag className="w-6 h-6" />}
-        products={categorizedProducts.accessories}
-        accentColor="indigo"
-      />
+      {/* Plush Toys */}
+      {categorizedProducts.plushToys.length > 0 && (
+        <CategorySection
+          title="Gấu Bông"
+          subtitle="Soft and cuddly companions"
+          products={categorizedProducts.plushToys}
+          viewAllLink="/products?category=plush"
+        />
+      )}
 
-      {/* CTA Banner */}
-      <CTABanner />
+      {/* Figures */}
+      {categorizedProducts.figures.length > 0 && (
+        <CategorySection
+          title="Figures & Collectibles"
+          subtitle="Premium collectible figures"
+          products={categorizedProducts.figures}
+          viewAllLink="/products?category=figures"
+        />
+      )}
+
+      {/* Accessories */}
+      {categorizedProducts.accessories.length > 0 && (
+        <CategorySection
+          title="Phụ Kiện"
+          subtitle="Complete your collection"
+          products={categorizedProducts.accessories}
+          viewAllLink="/products?category=accessories"
+        />
+      )}
     </div>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;
