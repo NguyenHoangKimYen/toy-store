@@ -14,7 +14,6 @@ const ProductCategoriesSection = () => {
 
   // Debug logging
   console.log('ProductCategoriesSection - Using MOCK data');
-  console.log('ProductCategoriesSection - productsData:', productsData);
 
   const categories = [
     {
@@ -59,11 +58,6 @@ const ProductCategoriesSection = () => {
     },
   ];
 
-  console.log('Categories data:', categories.map(c => ({ 
-    id: c.id, 
-    count: c.products.length,
-    products: c.products 
-  })));
 
   const handleViewAll = (link) => {
     navigate(link);

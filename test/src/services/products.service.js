@@ -2,6 +2,66 @@ import { API_BASE_URL, ENDPOINTS } from './config';
 import { handleResponse, createUrl } from './utils/apiHelpers';
 import { getAuthHeaders } from './utils/authHelpers';
 
+
+// MOCK START
+// Mock data import
+const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
+let mockProducts = null;
+
+// Lazy load mock data only when needed
+const getMockProducts = async () => {
+  if (!mockProducts) {
+    const module = await import('../pages/Home/data/mockProducts');
+    mockProducts = module.mockProducts;
+  }
+  return mockProducts;
+};
+
+// Helper to filter mock products based on params
+const filterMockProducts = (products, params = {}) => {
+  let filtered = [...products];
+
+  // Apply category filter
+  if (params.category) {
+    filtered = filtered.filter(p => 
+      p.categoryId?.name?.toLowerCase().includes(params.category.toLowerCase())
+    );
+  }
+
+  // Apply featured filter
+  if (params.isFeatured !== undefined) {
+    filtered = filtered.filter(p => p.isFeatured === params.isFeatured);
+  }
+
+  // Apply new filter
+  if (params.isNew !== undefined) {
+    filtered = filtered.filter(p => p.isNew === params.isNew);
+  }
+
+  // Apply best seller filter
+  if (params.isBestSeller !== undefined) {
+    filtered = filtered.filter(p => p.isBestSeller === params.isBestSeller);
+  }
+
+  // Apply search filter
+  if (params.search) {
+    const searchLower = params.search.toLowerCase();
+    filtered = filtered.filter(p => 
+      p.name.toLowerCase().includes(searchLower) ||
+      p.description?.toLowerCase().includes(searchLower)
+    );
+  }
+
+  // Apply limit
+  if (params.limit) {
+    filtered = filtered.slice(0, parseInt(params.limit));
+  }
+
+  return filtered;
+};
+
+// MOCK END
+
 /**
  * Optional filters
  * @param {Object} params - Query parameters
@@ -15,6 +75,36 @@ import { getAuthHeaders } from './utils/authHelpers';
  * @returns {Promise<{products: Array, stats: Object, pagination: Object}>}
  */
 export const getProducts = async (params = {}) => {
+
+  // MOCK START
+  if (USE_MOCK_DATA) {
+    console.log('🔧 Using mock data (VITE_USE_MOCK_DATA=true)');
+    const mockData = await getMockProducts();
+    
+    // Combine all mock products
+    const allProducts = [
+      ...mockData.featured,
+      ...mockData.newProducts,
+      ...mockData.bestSellers,
+      ...mockData.keychains,
+      ...mockData.plushToys,
+      ...mockData.accessories,
+    ];
+
+    // Remove duplicates by _id
+    const uniqueProducts = Array.from(
+      new Map(allProducts.map(p => [p._id, p])).values()
+    );
+
+    const filtered = filterMockProducts(uniqueProducts, params);
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    return filtered;
+  }
+
+  // MOCK END
   const url = createUrl(`${API_BASE_URL}${ENDPOINTS.PRODUCTS}`, params);
   
   const response = await fetch(url, {
@@ -34,6 +124,36 @@ export const getProducts = async (params = {}) => {
  * @returns {Promise<Object>}
  */
 export const getProductById = async (id) => {
+
+// MOCK START
+  if (USE_MOCK_DATA) {
+    console.log('🔧 Using mock data (VITE_USE_MOCK_DATA=true)');
+    const mockData = await getMockProducts();
+    
+    // Combine all mock products
+    const allProducts = [
+      ...mockData.featured,
+      ...mockData.newProducts,
+      ...mockData.bestSellers,
+      ...mockData.keychains,
+      ...mockData.plushToys,
+      ...mockData.accessories,
+    ];
+
+    const product = allProducts.find(p => p._id === id);
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    if (!product) {
+      throw new Error('Product not found');
+    }
+    
+    return product;
+  }
+
+// MOCK END
+
   const response = await fetch(`${API_BASE_URL}${ENDPOINTS.PRODUCTS}/${id}`, {
     method: 'GET',
     headers: {
