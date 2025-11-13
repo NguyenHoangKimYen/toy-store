@@ -1,10 +1,27 @@
 const variantService = require("../services/variant.service");
+const { mongo } = require("mongoose");
 
 /** Lấy danh sách variant theo product */
 const getVariantsByProduct = async (req, res, next) => {
     try {
         const variants = await variantService.getVariantsByProduct(req.params.productId);
         res.json({ success: true, data: variants });
+    } catch (err) {
+        next(err);
+    }
+};
+
+const getVariantById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        if (!mongo.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: "Invalid ID format" });
+        }
+
+        const variant = await variantService.getVariantById(id);
+    
+        res.json({ success: true, data: variant });
     } catch (err) {
         next(err);
     }
@@ -83,6 +100,7 @@ const removeVariantImages = async (req, res, next) => {
 
 module.exports = {
     getVariantsByProduct,
+    getVariantById,
     createVariant,
     updateVariant,
     deleteVariant,
