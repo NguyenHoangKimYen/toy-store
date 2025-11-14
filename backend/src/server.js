@@ -1,6 +1,8 @@
 // Khai báo thư viện cần sử dụng
 const dotenv = require('dotenv'); // Thư viện dotenv để quản lý biến môi trường
-dotenv.config();
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
 const cors = require('cors');
 const express = require('express'); //Thư viện express là framework của NodeJS để xây dựng web
 const session = require("express-session");
@@ -61,6 +63,7 @@ const userRoutes = require('./routes/user.route.js');
 const authRoutes = require('./routes/auth.route.js');
 const addressRoutes = require('./routes/address.route.js');
 const shippingRoutes = require('./routes/shipping.route.js');
+const paymentRoutes = require('./routes/payment.route.js');
 
 // Gán các routes vào đường dẫn
 app.use(passportGoogle.initialize());
@@ -69,6 +72,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/shipping', shippingRoutes); // có thể rút ngắn lại
+app.use('/api/payments', paymentRoutes);
 
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'MilkyBloom backend is running on AWS 🚀' });
