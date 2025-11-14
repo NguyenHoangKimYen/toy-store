@@ -1,59 +1,37 @@
-const OrderService = require("../services/order.service");
-
-const createOrder = async (req, res) => {
-    try {
-        const order = await OrderService.createOrderFromCart(req.body);
-        res.status(201).json(order);
-    } catch (error) {
-        console.error("❌ Lỗi tạo đơn hàng:", error);
-        res.status(400).json({ message: error.message });
-    }
-};
-
-const getUserOrders = async (req, res) => {
-    try {
-        const orders = await OrderService.getOrdersByUser(req.params.userId);
-        res.json(orders);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-const getOrderById = async (req, res) => {
-    try {
-        const order = await OrderService.getOrderById(req.params.id);
-        res.json(order);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-const updateStatus = async (req, res) => {
-    try {
-        const { status } = req.body;
-        const updated = await OrderService.updateOrderStatus(
-            req.params.id,
-            status,
-        );
-        res.json(updated);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-const getAllOrders = async (req, res) => {
-    try {
-        const orders = await OrderService.getAllOrders();
-        res.json(orders);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
+const orderService = require('../services/order.service');
 
 module.exports = {
-    createOrder,
-    getUserOrders,
-    getOrderById,
-    updateStatus,
-    getAllOrders,
+    async create(req, res) {
+        try {
+            const result = await orderService.createOrder(req.body);
+            return res.json({ success: true, order: result });
+        } catch (err) {
+            console.error(err);
+            return res.status(500).json({ success: false, message: err.message });
+        }
+    },
+
+    async getDetail(req, res) {
+        const order = await orderService.getOrderDetail(req.params.id);
+        if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+        return res.json({ success: true, order });
+    },
+
+    async getMyOrders(req, res) {
+        const orders = await orderService.getOrdersByUser(req.user._id);
+        return res.json({ success: true, orders });
+    },
+
+    async adminGetAll(req, res) {
+        const orders = await orderService.getAll(req.query, req.query);
+        return res.json({ success: true, orders });
+    },
+
+    async updateStatus(req, res) {
+        const updated = await orderService.updateStatus(req.params.id, req.body.status);
+        if (!updated) return res.status(404).json({ success: false, message: 'Order not found' });
+
+        return res.json({ success: true, order: updated });
+    }
 };

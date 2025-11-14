@@ -1,11 +1,16 @@
-const express = require("express");
-const router = express.Router();
-const orderController = require("../controllers/order.controller");
+const router = require('express').Router();
+const ctrl = require('../controllers/order.controller');
+const auth = require('../middlewares/auth.middleware');
 
-router.post("/", orderController.createOrder);
-router.get("/user/:userId", orderController.getUserOrders);
-router.get("/:id", orderController.getOrderById);
-router.put("/:id/status", orderController.updateStatus);
-router.get("/", orderController.getAllOrders);
+// Customer
+router.post('/', auth, ctrl.create);
+router.get('/me', auth, ctrl.getMyOrders);
+
+// Admin
+router.get('/', auth, ctrl.adminGetAll);
+router.patch('/:id/status', auth, ctrl.updateStatus);
+
+// Detail
+router.get('/:id', auth, ctrl.getDetail);
 
 module.exports = router;
