@@ -1,0 +1,104 @@
+/* Cart Summary */
+.cart-summary-card {
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+}
+
+.cart-summary-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: #1a1a1a;
+}
+
+/* Summary Details */
+.summary-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.summary-row span:first-child {
+  color: #666;
+}
+
+.summary-row span:last-child {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.summary-total {
+  border-top: 2px solid #e5e5e5;
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.free-shipping-notice {
+  font-size: 0.875rem;
+  color: #10b981;
+  margin: 0.5rem 0;
+  font-weight: 500;
+}
+
+/* Promo Code */
+.promo-code-section {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.promo-input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.promo-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+/* Action Buttons */
+.summary-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.checkout-btn {
+  width: 100%;
+  padding: 1.25rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  transition: transform 0.2s;
+}
+
+.checkout-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+}
+
+.continue-btn {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+}

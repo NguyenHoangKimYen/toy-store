@@ -6,6 +6,7 @@ export const ENDPOINTS = {
   USERS: '/api/users',
   AUTH: '/api/auth',
   ORDERS: '/api/orders',
+  CART: '/api/cart',
   CATEGORIES: '/api/categories',
 };
 
