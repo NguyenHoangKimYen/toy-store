@@ -121,7 +121,7 @@ const ProductCarousel = () => {
               <div className="specifications">
                 <div>
                   <p>Price</p>
-                  <p>${product.price?.$numberDecimal || product.price}</p>
+                  <p>${product.minPrice || product.price?.$numberDecimal || product.price}</p>
                 </div>
                 <div>
                   <p>Stock</p>

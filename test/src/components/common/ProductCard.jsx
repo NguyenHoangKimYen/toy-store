@@ -23,10 +23,10 @@ const ProductCard = ({
 }) => {
   if (!product) return null;
 
-  const price = product.price?.$numberDecimal || product.price;
-  const originalPrice = product.originalPrice?.$numberDecimal || product.originalPrice;
+  const price = product.minPrice || product.price?.$numberDecimal || product.price;
+  const originalPrice = product.maxPrice || product.originalPrice?.$numberDecimal || product.originalPrice;
   const imageUrl = product.imageUrls?.[0] || '/placeholder.png';
-  const categoryName = product.categoryId?.name || 'Uncategorized';
+  const categoryName = product.categoryId?.[0]?.name || product.categoryId?.name || 'Uncategorized';
 
   const handleCardClick = () => {
     onClick?.(product);

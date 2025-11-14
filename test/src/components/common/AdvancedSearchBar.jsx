@@ -274,9 +274,9 @@ const AdvancedSearchBar = ({
                           <div className="result-info">
                             <h5 className="result-name">{product.name}</h5>
                             <p className="result-category">
-                              {product.categoryId?.name || 'Uncategorized'}
+                              {product.categoryId?.[0]?.name || product.categoryId?.name || 'Uncategorized'}
                             </p>
-                            <p className="result-price">{formatPrice(product.price)}</p>
+                            <p className="result-price">{formatPrice(product.minPrice || product.price)}</p>
                           </div>
                         </button>
                       ))}
