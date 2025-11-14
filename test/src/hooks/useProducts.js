@@ -119,11 +119,11 @@ export const useCategorizedProducts = (options = {}) => {
           );
         }
 
-        // Best sellers
+        // Best sellers - sort by totalUnitsSold descending
         if (bestSellers) {
           keys.push('bestSellers');
           requests.push(
-            getProducts({ isBestSeller: true, ...bestSellers })
+            getProducts({ sort: 'totalUnitsSold:desc', ...bestSellers })
               .then(products => Array.isArray(products) ? products : [])
           );
         }

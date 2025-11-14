@@ -52,6 +52,20 @@ const filterMockProducts = (products, params = {}) => {
     );
   }
 
+  // Apply sorting
+  if (params.sort) {
+    const [field, order = 'asc'] = params.sort.split(':');
+    filtered.sort((a, b) => {
+      const aVal = a[field] || 0;
+      const bVal = b[field] || 0;
+      
+      if (order === 'desc') {
+        return bVal - aVal;
+      }
+      return aVal - bVal;
+    });
+  }
+
   // Apply limit
   if (params.limit) {
     filtered = filtered.slice(0, parseInt(params.limit));
