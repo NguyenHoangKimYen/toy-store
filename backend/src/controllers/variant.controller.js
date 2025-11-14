@@ -44,7 +44,7 @@ const createVariant = async (req, res, next) => {
 
         res.status(201).json(newVariant);
     } catch (error) {
-        next(error); // Chuyển lỗi cho middleware xử lý
+        next(error);
     }
 };
 
