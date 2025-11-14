@@ -1,4 +1,4 @@
-const CartService = require('../services/cart.service');
+const CartService = require("../services/cart.service");
 
 const getAllCarts = async (req, res) => {
     try {
@@ -11,8 +11,11 @@ const getAllCarts = async (req, res) => {
 
 const getCartByUser = async (req, res) => {
     try {
-        const cart = await CartService.getCartByUserOrSession({ userId: req.params.userId });
-        if (!cart) return res.status(404).json({ message: 'Không tìm thấy giỏ hàng' });
+        const cart = await CartService.getCartByUserOrSession({
+            userId: req.params.userId,
+        });
+        if (!cart)
+            return res.status(404).json({ message: "Không tìm thấy giỏ hàng" });
         res.status(200).json(cart);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -21,8 +24,11 @@ const getCartByUser = async (req, res) => {
 
 const getCartBySession = async (req, res) => {
     try {
-        const cart = await CartService.getCartByUserOrSession({ sessionId: req.params.sessionId });
-        if (!cart) return res.status(404).json({ message: 'Không tìm thấy giỏ hàng' });
+        const cart = await CartService.getCartByUserOrSession({
+            sessionId: req.params.sessionId,
+        });
+        if (!cart)
+            return res.status(404).json({ message: "Không tìm thấy giỏ hàng" });
         res.status(200).json(cart);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -42,7 +48,11 @@ const addItem = async (req, res) => {
     try {
         const { cartId } = req.params;
         const { cartItemId, itemPrice } = req.body;
-        const updated = await CartService.addItem(cartId, cartItemId, itemPrice);
+        const updated = await CartService.addItem(
+            cartId,
+            cartItemId,
+            itemPrice,
+        );
         res.status(200).json(updated);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -53,7 +63,11 @@ const removeItem = async (req, res) => {
     try {
         const { cartId } = req.params;
         const { cartItemId, itemPrice } = req.body;
-        const updated = await CartService.removeItem(cartId, cartItemId, itemPrice);
+        const updated = await CartService.removeItem(
+            cartId,
+            cartItemId,
+            itemPrice,
+        );
         res.status(200).json(updated);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -72,8 +86,9 @@ const clearCart = async (req, res) => {
 const deleteCart = async (req, res) => {
     try {
         const deleted = await CartService.deleteCart(req.params.cartId);
-        if (!deleted) return res.status(404).json({ message: 'Không tìm thấy giỏ hàng' });
-        res.status(200).json({ message: 'Đã xóa giỏ hàng thành công' });
+        if (!deleted)
+            return res.status(404).json({ message: "Không tìm thấy giỏ hàng" });
+        res.status(200).json({ message: "Đã xóa giỏ hàng thành công" });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
