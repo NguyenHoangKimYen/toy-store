@@ -8,7 +8,8 @@ export const useCart = () => {
 
   // Calculate subtotal
   const subtotal = cartItems.reduce((sum, item) => {
-    const price = item.product.price?.$numberDecimal || item.product.price;
+    if (!item.product) return sum;
+    const price = item.product.price?.$numberDecimal || item.product.price || 0;
     return sum + price * item.quantity;
   }, 0);
 
