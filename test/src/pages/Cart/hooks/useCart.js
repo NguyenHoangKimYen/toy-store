@@ -43,6 +43,9 @@ export const useCart = () => {
       );
 
       await updateCartItem(itemId, newQuantity);
+      
+      // Dispatch event to update navbar cart count
+      window.dispatchEvent(new Event('cartUpdated'));
     } catch (err) {
       console.error('Error updating quantity:', err);
       setError(err.message || 'Failed to update quantity');
@@ -59,6 +62,9 @@ export const useCart = () => {
       setCartItems((prev) => prev.filter((item) => item._id !== itemId));
 
       await removeFromCart(itemId);
+      
+      // Dispatch event to update navbar cart count
+      window.dispatchEvent(new Event('cartUpdated'));
     } catch (err) {
       console.error('Error removing item:', err);
       setError(err.message || 'Failed to remove item');
@@ -79,6 +85,9 @@ export const useCart = () => {
       setCartItems([]);
 
       await clearCart();
+      
+      // Dispatch event to update navbar cart count
+      window.dispatchEvent(new Event('cartUpdated'));
     } catch (err) {
       console.error('Error clearing cart:', err);
       setError(err.message || 'Failed to clear cart');

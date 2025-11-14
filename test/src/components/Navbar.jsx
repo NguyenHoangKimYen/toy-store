@@ -1,8 +1,28 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Search, ShoppingCart, User } from 'lucide-react'
 import { Link, NavLink } from 'react-router-dom'
 
 const Navbar = () => {
+    const [cartCount, setCartCount] = useState(0);
+
+    const updateCartCount = () => {
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+        setCartCount(totalItems);
+    };
+
+    useEffect(() => {
+        // Initial load
+        updateCartCount();
+
+        // Listen for cart updates
+        window.addEventListener('cartUpdated', updateCartCount);
+
+        return () => {
+            window.removeEventListener('cartUpdated', updateCartCount);
+        };
+    }, []);
+
     return (
         <div className='flex items-center justify-between py-5 font-medium'>
             <Link to='/' className='text-4xl'>LOGO</Link>
@@ -44,7 +64,11 @@ const Navbar = () => {
                 </div>
                 <Link to='/cart' className='relative'>
                     <ShoppingCart className='w-5 cursor-pointer' />
-                    <p className='absolute right-[-5px] bottom-[-5px] w-4 text-center leading-4 bg-black text-white aspect-square rounded-full text-[8px]'>3</p>
+                    {cartCount > 0 && (
+                        <p className='absolute right-[-5px] bottom-[-5px] w-4 text-center leading-4 bg-black text-white aspect-square rounded-full text-[8px]'>
+                            {cartCount}
+                        </p>
+                    )}
                 </Link>
             </div>
 

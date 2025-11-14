@@ -4,6 +4,8 @@ import { ChevronLeft } from 'lucide-react';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { useProductDetail } from '@/hooks';
+import { addToCart } from '@/services/cart.service';
+import { ROUTES } from '@/config/routes';
 import ProductImageGallery from './components/ProductImageGallery';
 import ProductInfo from './components/ProductInfo';
 import ProductVariantSelector from './components/ProductVariantSelector';
@@ -32,15 +34,36 @@ const ProductDetail = () => {
   } = useProductDetail(id);
 
   const [isFavorite, setIsFavorite] = React.useState(false);
+  const [addingToCart, setAddingToCart] = React.useState(false);
 
-  const handleAddToCart = () => {
-    // TODO: Implement add to cart functionality
-    console.log('Add to cart:', { product, variant: selectedVariant, quantity });
+  const handleAddToCart = async () => {
+    try {
+      setAddingToCart(true);
+      await addToCart(product._id, quantity);
+      
+      // Show success message
+      alert(`${product.name} added to cart!`);
+      
+      // Dispatch custom event to update cart count
+      window.dispatchEvent(new Event('cartUpdated'));
+    } catch (err) {
+      console.error('Error adding to cart:', err);
+      alert('Failed to add to cart. Please try again.');
+    } finally {
+      setAddingToCart(false);
+    }
   };
 
-  const handleBuyNow = () => {
-    // TODO: Implement buy now functionality
-    console.log('Buy now:', { product, variant: selectedVariant, quantity });
+  const handleBuyNow = async () => {
+    try {
+      setAddingToCart(true);
+      await addToCart(product._id, quantity);
+      navigate(ROUTES.CHECKOUT);
+    } catch (err) {
+      console.error('Error adding to cart:', err);
+      alert('Failed to add to cart. Please try again.');
+      setAddingToCart(false);
+    }
   };
 
   const handleShare = async () => {
@@ -135,6 +158,7 @@ const ProductDetail = () => {
               isFavorite={isFavorite}
               onToggleFavorite={() => setIsFavorite(!isFavorite)}
               onShare={handleShare}
+              loading={addingToCart}
             />
           </div>
         </div>
