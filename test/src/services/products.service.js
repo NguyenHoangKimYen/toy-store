@@ -301,14 +301,27 @@ export const getProductCategories = async () => {
 
 // MOCK START
   if (USE_MOCK_DATA) {
-    const products = await getMockProducts();
+    const mockData = await getMockProducts();
     const categorySet = new Set();
     
-    products.forEach(product => {
+    // Combine all mock products
+    const allProducts = [
+      ...mockData.featured,
+      ...mockData.newProducts,
+      ...mockData.bestSellers,
+      ...mockData.keychains,
+      ...mockData.plushToys,
+      ...mockData.accessories,
+    ];
+    
+    allProducts.forEach(product => {
       if (product.categoryId?.name) {
         categorySet.add(product.categoryId.name);
       }
     });
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
     
     return Array.from(categorySet).map((name, index) => ({
       _id: `cat-${index + 1}`,
