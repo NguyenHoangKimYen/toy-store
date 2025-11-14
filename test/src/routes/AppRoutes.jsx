@@ -7,6 +7,7 @@ import { Products, ProductDetail } from '../pages/Products'
 import About from '../pages/About'
 import Contact from '../pages/Contact'
 import Cart from '../pages/Cart'
+import Checkout from '../pages/Checkout'
 import Login from '../pages/Login'
 import Signup from '../pages/Signup'
 import PlaceOrder from '../pages/PlaceOrder'
@@ -39,6 +40,7 @@ const AppRoutes = () => {
             <Route path={ROUTES.ABOUT} element={<About />}></Route>
             <Route path={ROUTES.CONTACT} element={<Contact />}></Route>
             <Route path={ROUTES.CART} element={<Cart />}></Route>
+            <Route path={ROUTES.CHECKOUT} element={<Checkout />}></Route>
             <Route path={ROUTES.PLACE_ORDER} element={<PlaceOrder />}></Route>
             <Route path={ROUTES.ORDERS} element={<Orders />}></Route>
             <Route path='/carousel-demo' element={<CarouselDemo />}></Route>

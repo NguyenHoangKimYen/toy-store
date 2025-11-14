@@ -9,6 +9,7 @@ export const PUBLIC_ROUTES = {
   ABOUT: '/about',
   CONTACT: '/contact',
   CART: '/cart',
+  CHECKOUT: '/checkout',
   PLACE_ORDER: '/place-order',
   ORDERS: '/orders',
 };
