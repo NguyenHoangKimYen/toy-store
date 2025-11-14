@@ -40,10 +40,14 @@ export const getCart = async () => {
     
     // Get cart from localStorage
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    console.log('📦 Raw cart from localStorage:', cart);
     
     // Fetch product details for each cart item
     const productIds = cart.map(item => item.productId);
+    console.log('🔍 Looking for products with IDs:', productIds);
+    
     const products = await getMockProductsByIds(productIds);
+    console.log('✅ Found products:', products);
     
     // Combine cart items with product details
     const cartWithProducts = cart.map(item => {
@@ -56,6 +60,7 @@ export const getCart = async () => {
       };
     }).filter(item => item.product !== null); // Remove items with missing products
     
+    console.log('🛒 Cart with products:', cartWithProducts);
     return cartWithProducts;
   }
   // MOCK END

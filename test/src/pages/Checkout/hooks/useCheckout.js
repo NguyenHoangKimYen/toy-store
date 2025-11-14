@@ -28,7 +28,11 @@ export const useCheckout = () => {
 
   // Calculate totals
   const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
+    (sum, item) => {
+      if (!item.product) return sum;
+      const price = item.product.price?.$numberDecimal || item.product.price || 0;
+      return sum + price * item.quantity;
+    },
     0
   );
   const shipping = subtotal > 100 ? 0 : 10; // Free shipping over $100
@@ -40,10 +44,10 @@ export const useCheckout = () => {
     const loadCartItems = async () => {
       try {
         setLoading(true);
-        // TODO: Replace with actual cart service
-        // For now, using mock data
-        const mockCart = JSON.parse(localStorage.getItem('cart') || '[]');
-        setCartItems(mockCart);
+        // Use cart service to get cart with product details
+        const { getCart } = await import('@/services/cart.service');
+        const cartData = await getCart();
+        setCartItems(cartData);
       } catch (err) {
         console.error('Error loading cart:', err);
         setError('Failed to load cart items');
@@ -90,7 +94,7 @@ export const useCheckout = () => {
         items: cartItems.map((item) => ({
           productId: item.product._id,
           quantity: item.quantity,
-          price: item.product.price,
+          price: item.product.price?.$numberDecimal || item.product.price,
         })),
         shippingInfo,
         paymentMethod,
