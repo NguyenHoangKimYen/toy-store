@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 require('./address.model.js');
 
-const ROLE_ENUM = ['customer', 'admin'];
+const ROLE_ENUM = ["customer", "admin"];
 
 const userSchema = new mongoose.Schema({
     //image url
@@ -18,13 +18,13 @@ const userSchema = new mongoose.Schema({
         trim: true
     },
 
-    email: {
-        type: String,
-        required: true,
-        unique: true,
-        lowercase: true,
-        trim: true
-    },
+        email: {
+            type: String,
+            required: true,
+            unique: true,
+            lowercase: true,
+            trim: true,
+        },
 
     phone: {
         type: String,
@@ -35,12 +35,12 @@ const userSchema = new mongoose.Schema({
         default: null,
     },
 
-    // Mật khẩu (dạng hashed) - Không bắt buộc nếu đăng nhập bằng mxh
-    //Lưu hash
-    password: {
-        type: String,
-        select: false, // Mặc định không trả về trường này khi truy vấn
-    },
+        // Mật khẩu (dạng hashed) - Không bắt buộc nếu đăng nhập bằng mxh
+        //Lưu hash
+        password: {
+            type: String,
+            select: false, // Mặc định không trả về trường này khi truy vấn
+        },
 
     avatar: {
         type: String,
@@ -48,12 +48,12 @@ const userSchema = new mongoose.Schema({
         default: process.env.DEFAULT_AVATAR_URL
     },
 
-    // reset token (link) – lưu dạng hash + hạn
-    resetTokenHash: {
-        type: String,
-        select: false,
-        default: null
-    },
+        // reset token (link) – lưu dạng hash + hạn
+        resetTokenHash: {
+            type: String,
+            select: false,
+            default: null,
+        },
 
     resetTokenExpiresAt: {
         type: Date,
@@ -67,35 +67,35 @@ const userSchema = new mongoose.Schema({
         default: null
     },
 
-    resetOtpExpiresAt: {
-        type: Date,
-        default: null
-    },
+        resetOtpExpiresAt: {
+            type: Date,
+            default: null,
+        },
 
-    role: {
-        type: String,
-        enum: ROLE_ENUM,
-        default: 'customer',
-        required: true,
-        set: (value) => {
-            const allowedRoles = ROLE_ENUM;
-            if (allowedRoles.includes(value)) {
-                return value;
-            }
-            return 'customer'; // Mặc định là 'customer' nếu giá trị không hợp lệ
-        }
-    },
+        role: {
+            type: String,
+            enum: ROLE_ENUM,
+            default: "customer",
+            required: true,
+            set: (value) => {
+                const allowedRoles = ROLE_ENUM;
+                if (allowedRoles.includes(value)) {
+                    return value;
+                }
+                return "customer"; // Mặc định là 'customer' nếu giá trị không hợp lệ
+            },
+        },
 
-    isVerified: {
-        type: Boolean,
-        default: false
-    },
+        isVerified: {
+            type: Boolean,
+            default: false,
+        },
 
-    defaultAddressId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Address',
-        default: null
-    },
+        defaultAddressId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Address",
+            default: null,
+        },
 
     socialProvider: {
         type: String,
@@ -103,28 +103,30 @@ const userSchema = new mongoose.Schema({
         default: null,
     },
 
-    socialId: {
-        type: String,
-        default: null,
-        index: true,
-    },
+        socialId: {
+            type: String,
+            default: null,
+            index: true,
+        },
 
-    // Điểm thưởng hiện tại
-    loyaltyPoints: {
-        type: Number,
-        default: 0,
-        min: 0,
+        // Điểm thưởng hiện tại
+        loyaltyPoints: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+        // đăng nhập thất bại
+        failLoginAttempts: {
+            type: Number,
+            default: 0,
+        },
     },
-    // đăng nhập thất bại
-    failLoginAttempts: {
-        type: Number,
-        default: 0,
+    {
+        timestamps: true,
+        collection: "users",
     },
-}, {
-    timestamps: true,
-    collection: 'users'
-});
+);
 
-userSchema.set('settersOnQuery', true); //cho phép sử dụng setter khi update
+userSchema.set("settersOnQuery", true); //cho phép sử dụng setter khi update
 
 module.exports = mongoose.model('User', userSchema);

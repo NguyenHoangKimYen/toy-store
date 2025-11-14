@@ -1,5 +1,5 @@
 // const { Result } = require('pg');
-const authService = require('../services/auth.service.js');
+const authService = require("../services/auth.service.js");
 // const { expression } = require('joi');
 const { generateToken, sha256 } = require('../utils/token.js');
 const userRepository = require('../repositories/user.repository.js');
@@ -11,117 +11,128 @@ const register = async (req, res, next) => {
         const { user, token } = await authService.register(req.body); //gọi service đăng ký
         res.status(201).json({
             success: true,
-            message: 'Register Successfully',
-            data: { user, token } });
-
-    }catch (error) {
+            message: "Register Successfully",
+            data: { user, token },
+        });
+    } catch (error) {
         next(error);
     }
 };
 
 const verifyEmail = async (req, res, next) => {
-    try{
+    try {
         const { uid, token } = req.query;
-        if ( !uid || !token){
+        if (!uid || !token) {
             return res.status(400).json({
                 success: false,
-                message: 'Missing token or user id'
+                message: "Missing token or user id",
             });
         }
 
-        if (!mongo.ObjectId.isValid(uid)){
+        if (!mongo.ObjectId.isValid(uid)) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid user id' 
+                message: "Invalid user id",
             });
         }
 
         const user = await userRepository.findByIdWithSecrets(uid);
-        if (!user){
+        if (!user) {
             return res.status(404).json({
                 success: false,
-                message: 'User not found'
+                message: "User not found",
             });
         }
 
-        if (!user.resetTokenHash || !user.resetTokenExpiresAt){
+        if (!user.resetTokenHash || !user.resetTokenExpiresAt) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid or already verified'
+                message: "Invalid or already verified",
             });
         }
 
-        if (user.resetTokenExpiresAt < new Date()){
+        if (user.resetTokenExpiresAt < new Date()) {
             return res.status(400).json({
                 success: false,
-                message: 'Token expired'
+                message: "Token expired",
             });
         }
 
-    const expected = sha256('verify:' + token);
-        if (expected !== user.resetTokenHash){
+        const expected = sha256("verify:" + token);
+        if (expected !== user.resetTokenHash) {
             return res.status(400).json({
                 success: false,
-                message: 'Token invalid'
+                message: "Token invalid",
             });
         }
 
         await userRepository.accountIsVerified(uid);
         return res.json({
             success: true,
-            message: 'Email verified successfully! You can now login.'
+            message: "Email verified successfully! You can now login.",
         });
-    } catch (err){
+    } catch (err) {
         next(err);
     }
 };
 
-const login = async (req, res, next) => {    
+const login = async (req, res, next) => {
     //Yêu cầu OTP nếu đăng nhập sai 5 lần
     try {
-        const { user, token, needOtp, message} = await authService.login(req.body);
+        const { user, token, needOtp, message } = await authService.login(
+            req.body,
+        );
 
-        if (needOtp){
+        if (needOtp) {
             return res.status(403).json({
                 success: false,
                 needOtp: true,
-                message: message || 'Account need OTP Verification before Login',
+                message:
+                    message || "Account need OTP Verification before Login",
             });
         }
 
-        return res.json ({ //Valid Login
-            success: true,
-            message: 'Login Successfully',
-            data: { user, token },    
-        });
-    } catch(error){
-        return next(error);
-    }
-};
-
-const verifyLoginOtp = async (req, res, next) => { //Xác thực OTP
-    try {
-        const { emailOrPhoneOrUsername, otp } = req.body;
-        const { message } = await authService.verifyLoginOtp({ emailOrPhoneOrUsername, otp});
         return res.json({
-            success: true, 
-            message 
+            //Valid Login
+            success: true,
+            message: "Login Successfully",
+            data: { user, token },
         });
     } catch (error) {
         return next(error);
     }
 };
 
-const resendLoginOtp = async (req, res, next) => { //gửi otp
+const verifyLoginOtp = async (req, res, next) => {
+    //Xác thực OTP
     try {
-        const { emailOrPhoneOrUsername } = req.body;
-        const { message, expireAt } = await authService.resendLoginOtp({ emailOrPhoneOrUsername });
+        const { emailOrPhoneOrUsername, otp } = req.body;
+        const { message } = await authService.verifyLoginOtp({
+            emailOrPhoneOrUsername,
+            otp,
+        });
         return res.json({
             success: true,
             message,
-            data: { expireAt }
         });
-    } catch (error){
+    } catch (error) {
+        return next(error);
+    }
+};
+
+const resendLoginOtp = async (req, res, next) => {
+    //gửi otp
+    try {
+        const { emailOrPhoneOrUsername } = req.body;
+        const { message, expireAt } = await authService.resendLoginOtp({
+            emailOrPhoneOrUsername,
+        });
+        return res.json({
+            success: true,
+            message,
+            data: { expireAt },
+        });
+    } catch (error) {
         return next(error);
     }
 };
@@ -139,11 +150,12 @@ const googleCallback = (req, res) => {
 const profile = async (req, res, next) => {
     try {
         const userProfile = await authService.profile(req.user.id); //gọi service lấy thông tin người dùng
-        res.json({ 
-            success: true, 
-            message: 'Lấy thông tin người dùng thành công',
-            data: userProfile });
-    }catch (error) {
+        res.json({
+            success: true,
+            message: "Lấy thông tin người dùng thành công",
+            data: userProfile,
+        });
+    } catch (error) {
         next(error);
     }
 };
