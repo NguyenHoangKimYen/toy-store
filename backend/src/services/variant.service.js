@@ -125,7 +125,7 @@ const deleteVariant = async (id) => {
 
 /** Thêm ảnh mới cho variant */
 const addVariantImages = async (id, files) => {
-    const uploadedUrls = await uploadToS3(files);
+    const uploadedUrls = await uploadToS3(files, "variantImages");
 
     const updated = await variantRepository.update(id, {
         $push: { imageUrls: { $each: uploadedUrls } },
