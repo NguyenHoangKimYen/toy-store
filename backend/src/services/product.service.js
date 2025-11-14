@@ -1,6 +1,7 @@
 const productRepository = require("../repositories/product.repository.js");
 const variantRepository = require("../repositories/variant.repository.js");
 const { uploadToS3, deleteFromS3 } = require("../utils/s3.helper.js");
+const { default: slugify } = require("slugify");
 
 /**
  * Lấy danh sách sản phẩm (có lọc + phân trang)
@@ -121,6 +122,19 @@ const getProductByPrice = (min, max) => {
  */
 const createProduct = async (productData, imgFiles) => {
 
+    if (!productData.name) {
+        throw new Error("Product name is required.");
+    }
+    
+    const slugToCreate = productData.slug 
+        ? slugify(productData.slug, { lower: true, strict: true })
+        : slugify(productData.name, { lower: true, strict: true });
+
+    const existingProduct = await productRepository.findBySlug(slugToCreate);
+    if (existingProduct) {
+        throw new Error(`Slug '${slugToCreate}' already exists. Please use a different name or provide a unique slug.`);
+    }
+    
     let imageUrls = [];
 
     if (imgFiles && imgFiles.length > 0) {
@@ -129,8 +143,11 @@ const createProduct = async (productData, imgFiles) => {
 
     const product = {
         ...productData,
+        slug: slugToCreate,
         imageUrls: imageUrls,
     };
+    
+    delete product.attributes;
 
     return await productRepository.create(product);
 };
@@ -206,7 +223,7 @@ const updateProduct = async (id, updateData) => {
  * Thêm ảnh mới vào product (upload lên S3)
  */
 const addImagesToProduct = async (id, files) => {
-    const uploadedUrls = await uploadToS3(files);
+    const uploadedUrls = await uploadToS3(files, "productImages");
 
     const updated = await productRepository.update(id, {
         $push: { imageUrls: { $each: uploadedUrls } },
