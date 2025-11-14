@@ -5,6 +5,9 @@ export const useCart = () => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [itemToRemove, setItemToRemove] = useState(null);
 
   // Calculate subtotal
   const subtotal = cartItems.reduce((sum, item) => {
@@ -56,13 +59,20 @@ export const useCart = () => {
   };
 
   const handleRemoveItem = async (itemId) => {
+    setItemToRemove(itemId);
+    setShowRemoveConfirm(true);
+  };
+
+  const confirmRemoveItem = async () => {
+    if (!itemToRemove) return;
+    
     try {
       setError(null);
 
       // Optimistic update
-      setCartItems((prev) => prev.filter((item) => item._id !== itemId));
+      setCartItems((prev) => prev.filter((item) => item._id !== itemToRemove));
 
-      await removeFromCart(itemId);
+      await removeFromCart(itemToRemove);
       
       // Dispatch event to update navbar cart count
       window.dispatchEvent(new Event('cartUpdated'));
@@ -71,14 +81,17 @@ export const useCart = () => {
       setError(err.message || 'Failed to remove item');
       // Revert on error
       loadCart();
+    } finally {
+      setShowRemoveConfirm(false);
+      setItemToRemove(null);
     }
   };
 
-  const handleClearCart = async () => {
-    if (!window.confirm('Are you sure you want to clear your cart?')) {
-      return;
-    }
+  const handleClearCart = () => {
+    setShowClearConfirm(true);
+  };
 
+  const confirmClearCart = async () => {
     try {
       setError(null);
 
@@ -94,6 +107,8 @@ export const useCart = () => {
       setError(err.message || 'Failed to clear cart');
       // Revert on error
       loadCart();
+    } finally {
+      setShowClearConfirm(false);
     }
   };
 
@@ -106,5 +121,12 @@ export const useCart = () => {
     handleRemoveItem,
     handleClearCart,
     refreshCart: loadCart,
+    // Confirmation dialog state
+    showClearConfirm,
+    setShowClearConfirm,
+    showRemoveConfirm,
+    setShowRemoveConfirm,
+    confirmClearCart,
+    confirmRemoveItem,
   };
 };

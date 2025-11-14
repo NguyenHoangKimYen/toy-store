@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
+import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { ROUTES } from '@/config/routes';
 import CartItem from './components/CartItem';
 import CartSummary from './components/CartSummary';
@@ -20,6 +21,12 @@ const Cart = () => {
     handleUpdateQuantity,
     handleRemoveItem,
     handleClearCart,
+    showClearConfirm,
+    setShowClearConfirm,
+    showRemoveConfirm,
+    setShowRemoveConfirm,
+    confirmClearCart,
+    confirmRemoveItem,
   } = useCart();
 
   if (loading) {
@@ -82,6 +89,29 @@ const Cart = () => {
           />
         </div>
       </div>
+
+      {/* Confirmation Dialogs */}
+      <ConfirmDialog
+        open={showClearConfirm}
+        onOpenChange={setShowClearConfirm}
+        onConfirm={confirmClearCart}
+        title="Clear Cart"
+        description="Are you sure you want to clear your cart? This action cannot be undone."
+        confirmText="Clear Cart"
+        cancelText="Cancel"
+        variant="destructive"
+      />
+
+      <ConfirmDialog
+        open={showRemoveConfirm}
+        onOpenChange={setShowRemoveConfirm}
+        onConfirm={confirmRemoveItem}
+        title="Remove Item"
+        description="Are you sure you want to remove this item from your cart?"
+        confirmText="Remove"
+        cancelText="Cancel"
+        variant="destructive"
+      />
     </div>
   );
 };
