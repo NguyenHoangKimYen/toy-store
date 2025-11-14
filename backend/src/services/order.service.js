@@ -1,86 +1,62 @@
-const OrderRepository = require("../repositories/order.repository");
-const CartService = require("./cart.service");
-const CartItemService = require("./cart-item.service");
-const mongoose = require("mongoose");
-
-const createOrderFromCart = async ({
-    userId,
-    addressId,
-    discountCodeId,
-    pointsUsed = 0,
-}) => {
-    // Lấy giỏ hàng của user
-    const cart = await CartService.getCartByUserId(userId);
-    if (!cart || cart.items.length === 0) {
-        throw new Error("Giỏ hàng trống, không thể tạo đơn hàng");
-    }
-
-    // Tính tổng tiền
-    let totalAmount = 0;
-    for (const item of cart.items) {
-        const populatedItem = await CartItemService.getItemById(
-            item._id || item,
-        );
-        totalAmount += parseFloat(populatedItem.price.toString());
-    }
-
-    // Giảm giá (nếu có)
-    // 👉 bạn có thể sau này thêm logic discountCodeService.apply()
-    // hoặc điểm thưởng
-    const discount = 0; // tạm bỏ qua
-    const finalAmount = totalAmount - discount;
-
-    // Tạo dữ liệu order
-    const orderData = {
-        userId,
-        addressId,
-        discountCodeId: discountCodeId || null,
-        totalAmount: finalAmount,
-        pointsUsed,
-        pointsEarned: Math.floor(finalAmount / 100000), // ví dụ: 1 điểm/100k
-        status: "pending",
-    };
-
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
-    try {
-        const order = await OrderRepository.create(orderData);
-
-        // ✅ Sau khi tạo đơn hàng, xóa giỏ hàng
-        await CartService.clearCart(cart._id);
-
-        await session.commitTransaction();
-        session.endSession();
-
-        return order;
-    } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
-        throw error;
-    }
-};
-
-const getOrdersByUser = async (userId) => {
-    return await OrderRepository.findAllByUserId(userId);
-};
-
-const getOrderById = async (orderId) => {
-    return await OrderRepository.findById(orderId);
-};
-
-const updateOrderStatus = async (orderId, status) => {
-    return await OrderRepository.update(orderId, { status });
-};
-
-const getAllOrders = async () => {
-    return await OrderRepository.getAll();
-};
+const orderRepo = require('../repositories/order.repository');
+const itemRepo = require('../repositories/order-item.repository');
+const historyRepo = require('../repositories/order-status-history.repository');
 
 module.exports = {
-    createOrderFromCart,
-    getOrdersByUser,
-    getOrderById,
-    updateOrderStatus,
-    getAllOrders,
+    // Tạo đơn hàng
+    async createOrder({ userId, addressId, items, totalAmount, discountCodeId }) {
+
+        const order = await orderRepo.create({
+            userId,
+            addressId,
+            discountCodeId: discountCodeId || null,
+            totalAmount,
+            pointsUsed: 0,
+            pointsEarned: 0,
+        });
+
+        const orderItems = items.map((it) => ({
+            orderId: order._id,
+            productId: it.productId,
+            quantity: it.quantity,
+            unitPrice: it.unitPrice,
+            subtotal: it.subtotal,
+        }));
+
+        await itemRepo.createMany(orderItems);
+
+        await historyRepo.add(order._id, 'pending');
+
+        return order;
+    },
+
+    // Lấy chi tiết đơn hàng
+    async getOrderDetail(orderId) {
+        const order = await orderRepo.findById(orderId);
+        if (!order) return null;
+
+        const items = await itemRepo.findByOrder(orderId);
+        const history = await historyRepo.getHistory(orderId);
+
+        return { ...order, items, history };
+    },
+
+    // Lấy toàn bộ đơn của user
+    getOrdersByUser(userId) {
+        return orderRepo.findByUser(userId);
+    },
+
+    // Admin: lấy tất cả
+    getAll(filter, options) {
+        return orderRepo.findAll(filter, options);
+    },
+
+    // Update trạng thái
+    async updateStatus(orderId, newStatus) {
+        const updated = await orderRepo.updateStatus(orderId, newStatus);
+        if (!updated) return null;
+
+        await historyRepo.add(orderId, newStatus);
+        return updated;
+    }
 };

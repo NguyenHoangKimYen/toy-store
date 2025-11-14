@@ -1,13 +1,15 @@
 // Khai báo thư viện cần sử dụng
-const dotenv = require("dotenv"); // Thư viện dotenv để quản lý biến môi trường
-dotenv.config();
+const dotenv = require('dotenv'); // Thư viện dotenv để quản lý biến môi trường
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
 const cors = require('cors');
 const express = require('express'); //Thư viện express là framework của NodeJS để xây dựng web
 const session = require("express-session");
 const connectDB = require('./config/db.js');
 const passportGoogle = require("./config/passportGoogle.js");
 
-const app = express(); // Tạo app
+const app = express();  // Tạo app
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -61,11 +63,7 @@ const userRoutes = require('./routes/user.route.js');
 const authRoutes = require('./routes/auth.route.js');
 const addressRoutes = require('./routes/address.route.js');
 const shippingRoutes = require('./routes/shipping.route.js');
-const variantRoutes = require('./routes/variant.route.js');
-const categoryRoutes = require('./routes/category.route.js');
-const cartRoutes = require('./routes/cart.route.js');
-const cartItemRoutes = require('./routes/cart-item.route.js');
-
+const paymentRoutes = require('./routes/payment.route.js');
 
 // Gán các routes vào đường dẫn
 app.use(passportGoogle.initialize());
@@ -73,25 +71,19 @@ app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/addresses', addressRoutes);
-app.use('/api/shipping', shippingRoutes);
-app.use('/api/variants', variantRoutes);
-app.use("/api/categories", categoryRoutes);
-app.use("/api/carts", cartRoutes);
-app.use("/api/cart-items", cartItemRoutes);
-
+app.use('/api/shipping', shippingRoutes); // có thể rút ngắn lại
+app.use('/api/payments', paymentRoutes);
 
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'MilkyBloom backend is running on AWS 🚀' });
 });
 
-
-app.use((err, req, res, _next) => {
-    // xử lý lỗi tổng quát
-    const status = err.status || 500;
-    res.status(status).json({
-        success: false,
-        message: err.message || "Internal Server Error",
-    });
+app.use((err, req, res, _next) => { // xử lý lỗi tổng quát
+  const status = err.status || 500;
+  res.status(status).json({
+    success: false,
+    message: err.message || 'Internal Server Error',
+  });
 });
 
 app.get('/privacy', (req, res) => {

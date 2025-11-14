@@ -116,9 +116,32 @@ async function calculateShippingFee(
         notes.push(`Trạng thái Thời tiết: ${weather.description}`);
     }
 
+    const matchedIsland = [
+        { name: 'Phú Quốc', province: 'Kiên Giang' },
+        { name: 'Côn Đảo', province: 'Bà Rịa - Vũng Tàu' },
+        { name: 'Cát Bà', province: 'Hải Phòng' }
+    ].find(
+        area =>
+            normalizeVN(address.province) === normalizeVN(area.province) &&
+            normalizeVN(address.addressLine || '').includes(normalizeVN(area.name))
+    );
+
+    //Tạm thời không hỗ trợ giao hàng ở đảo
+    if (matchedIsland) {
+        return {
+            success: false,
+            region: 'dao',
+            fee: 0,
+            deliveryType,
+            isExpressAllowed: false,
+            notes: [`Hiện không hỗ trợ giao hàng đến khu vực đảo: ${matchedIsland.name}`],
+        };
+    }
+
     //Hoả tốc: phụ phí theo giờ
     if (deliveryType === 'express') {
-        const hour = new Date().getHours();
+        const hour = new Date().getHours() + 7; // UTC+7 cho Việt Nam
+        if (hour >= 24) hour -= 24;
 
         // Ban đêm (20h–6h)
         if (hour >= 20 || hour < 6) {
