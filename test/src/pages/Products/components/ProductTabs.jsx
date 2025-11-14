@@ -70,10 +70,10 @@ const ProductTabs = ({ product }) => {
                     <span className="spec-value">{product.brand}</span>
                   </div>
                 )}
-                {product.categoryId?.name && (
+                {product.categoryId?.[0]?.name && (
                   <div className="spec-item">
                     <span className="spec-label">Category</span>
-                    <span className="spec-value">{product.categoryId.name}</span>
+                    <span className="spec-value">{product.categoryId[0].name}</span>
                   </div>
                 )}
                 {product.sku && (

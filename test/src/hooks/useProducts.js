@@ -201,8 +201,8 @@ export const useProductDetail = (productId) => {
   }, [quantity, selectedVariant, product]);
 
   // Calculated values
-  const price = selectedVariant?.price || product?.price?.$numberDecimal || product?.price;
-  const originalPrice = selectedVariant?.originalPrice || product?.originalPrice?.$numberDecimal || product?.originalPrice;
+  const price = selectedVariant?.price || product?.minPrice || product?.price?.$numberDecimal || product?.price;
+  const originalPrice = selectedVariant?.originalPrice || product?.maxPrice || product?.originalPrice?.$numberDecimal || product?.originalPrice;
   const stock = selectedVariant?.stock || product?.stockQuantity || 0;
   const inStock = stock > 0;
   const discount = originalPrice && price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;

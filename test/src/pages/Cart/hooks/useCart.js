@@ -13,7 +13,7 @@ export const useCart = () => {
   // Calculate subtotal
   const subtotal = cartItems.reduce((sum, item) => {
     if (!item.product) return sum;
-    const price = item.product.price?.$numberDecimal || item.product.price || 0;
+    const price = item.product.minPrice || item.product.price?.$numberDecimal || item.product.price || 0;
     return sum + price * item.quantity;
   }, 0);
 

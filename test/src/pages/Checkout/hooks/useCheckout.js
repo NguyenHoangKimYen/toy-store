@@ -31,7 +31,7 @@ export const useCheckout = () => {
   const subtotal = cartItems.reduce(
     (sum, item) => {
       if (!item.product) return sum;
-      const price = item.product.price?.$numberDecimal || item.product.price || 0;
+      const price = item.product.minPrice || item.product.price?.$numberDecimal || item.product.price || 0;
       return sum + price * item.quantity;
     },
     0
@@ -95,7 +95,7 @@ export const useCheckout = () => {
         items: cartItems.map((item) => ({
           productId: item.product._id,
           quantity: item.quantity,
-          price: item.product.price?.$numberDecimal || item.product.price,
+          price: item.product.minPrice || item.product.price?.$numberDecimal || item.product.price,
         })),
         shippingInfo,
         paymentMethod,

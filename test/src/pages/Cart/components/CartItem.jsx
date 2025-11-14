@@ -5,7 +5,8 @@ import './CartItem.css';
 
 const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
   const product = item.product;
-  const price = product.price?.$numberDecimal || product.price;
+  // Use minPrice as the display price (in real app, would use variant price if available)
+  const price = product.minPrice || product.price?.$numberDecimal || product.price || 0;
   const imageUrl = product.imageUrls?.[0] || '/placeholder.png';
   const total = (price * item.quantity).toFixed(2);
 
@@ -36,8 +37,8 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
       {/* Product Info */}
       <div className="cart-item-info">
         <h3 className="cart-item-name">{product.name}</h3>
-        {product.categoryId?.name && (
-          <p className="cart-item-category">{product.categoryId.name}</p>
+        {product.categoryId?.[0]?.name && (
+          <p className="cart-item-category">{product.categoryId[0].name}</p>
         )}
         <p className="cart-item-price">${price}</p>
         
