@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { createOrder } from '@/services/orders.service';
 import { ROUTES } from '@/config/routes';
 
@@ -110,13 +111,22 @@ export const useCheckout = () => {
       // Clear cart
       localStorage.removeItem('cart');
 
+      // Show success toast
+      toast.success('Order placed successfully!', {
+        description: `Order #${order._id.slice(-8)}`,
+      });
+
       // Redirect to success page
       navigate(`${ROUTES.ORDERS}/${order._id}`, {
         state: { orderSuccess: true },
       });
     } catch (err) {
       console.error('Error submitting order:', err);
-      setError(err.message || 'Failed to submit order. Please try again.');
+      const errorMessage = err.message || 'Failed to submit order. Please try again.';
+      setError(errorMessage);
+      toast.error('Order failed', {
+        description: errorMessage,
+      });
     } finally {
       setSubmitting(false);
     }

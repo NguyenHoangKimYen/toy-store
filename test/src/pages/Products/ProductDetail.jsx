@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
+import { toast } from 'sonner';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { useProductDetail } from '@/hooks';
@@ -42,13 +43,17 @@ const ProductDetail = () => {
       await addToCart(product._id, quantity);
       
       // Show success message
-      alert(`${product.name} added to cart!`);
+      toast.success(`${product.name} added to cart!`, {
+        description: `Quantity: ${quantity}`,
+      });
       
       // Dispatch custom event to update cart count
       window.dispatchEvent(new Event('cartUpdated'));
     } catch (err) {
       console.error('Error adding to cart:', err);
-      alert('Failed to add to cart. Please try again.');
+      toast.error('Failed to add to cart', {
+        description: 'Please try again.',
+      });
     } finally {
       setAddingToCart(false);
     }
@@ -61,7 +66,9 @@ const ProductDetail = () => {
       navigate(ROUTES.CHECKOUT);
     } catch (err) {
       console.error('Error adding to cart:', err);
-      alert('Failed to add to cart. Please try again.');
+      toast.error('Failed to add to cart', {
+        description: 'Please try again.',
+      });
       setAddingToCart(false);
     }
   };
@@ -79,7 +86,7 @@ const ProductDetail = () => {
       }
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert('Link copied to clipboard!');
+      toast.success('Link copied to clipboard!');
     }
   };
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { getCart, updateCartItem, removeFromCart, clearCart } from '@/services/cart.service';
 
 export const useCart = () => {
@@ -52,7 +53,11 @@ export const useCart = () => {
       window.dispatchEvent(new Event('cartUpdated'));
     } catch (err) {
       console.error('Error updating quantity:', err);
-      setError(err.message || 'Failed to update quantity');
+      const errorMessage = err.message || 'Failed to update quantity';
+      setError(errorMessage);
+      toast.error('Update failed', {
+        description: errorMessage,
+      });
       // Revert on error
       loadCart();
     }
@@ -74,11 +79,17 @@ export const useCart = () => {
 
       await removeFromCart(itemToRemove);
       
+      toast.success('Item removed from cart');
+      
       // Dispatch event to update navbar cart count
       window.dispatchEvent(new Event('cartUpdated'));
     } catch (err) {
       console.error('Error removing item:', err);
-      setError(err.message || 'Failed to remove item');
+      const errorMessage = err.message || 'Failed to remove item';
+      setError(errorMessage);
+      toast.error('Remove failed', {
+        description: errorMessage,
+      });
       // Revert on error
       loadCart();
     } finally {
@@ -100,11 +111,17 @@ export const useCart = () => {
 
       await clearCart();
       
+      toast.success('Cart cleared');
+      
       // Dispatch event to update navbar cart count
       window.dispatchEvent(new Event('cartUpdated'));
     } catch (err) {
       console.error('Error clearing cart:', err);
-      setError(err.message || 'Failed to clear cart');
+      const errorMessage = err.message || 'Failed to clear cart';
+      setError(errorMessage);
+      toast.error('Clear failed', {
+        description: errorMessage,
+      });
       // Revert on error
       loadCart();
     } finally {
