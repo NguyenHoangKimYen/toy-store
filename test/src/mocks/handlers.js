@@ -9,11 +9,16 @@ export const handlers = [
   http.get(`${API_BASE_URL}/api/products`, ({ request }) => {
     const url = new URL(request.url);
     const isFeatured = url.searchParams.get('isFeatured');
+    const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '20');
     const search = url.searchParams.get('search');
-    const sortBy = url.searchParams.get('sortBy');
+    const category = url.searchParams.get('category');
+    const brand = url.searchParams.get('brand');
+    const sortBy = url.searchParams.get('sortBy') || 'createdAt';
+    const sortOrder = url.searchParams.get('sortOrder') || 'desc';
     const minPrice = parseFloat(url.searchParams.get('minPrice') || '0');
     const maxPrice = parseFloat(url.searchParams.get('maxPrice') || 'Infinity');
+    const minRating = parseFloat(url.searchParams.get('rating') || '0');
     const daysAgo = parseInt(url.searchParams.get('daysAgo') || '0');
     const startDate = url.searchParams.get('startDate');
     const endDate = url.searchParams.get('endDate');
@@ -27,24 +32,59 @@ export const handlers = [
       ...mockProducts.newProducts,
     ];
 
+    // Remove duplicates by _id
+    const uniqueProducts = Array.from(
+      new Map(products.map(p => [p._id, p])).values()
+    );
+    products = uniqueProducts;
+
     // Apply filters
     if (isFeatured === 'true') {
       products = products.filter(p => p.isFeatured);
     }
 
     if (search) {
+      const searchLower = search.toLowerCase();
       products = products.filter(p =>
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.description.toLowerCase().includes(search.toLowerCase())
+        p.name.toLowerCase().includes(searchLower) ||
+        p.description.toLowerCase().includes(searchLower) ||
+        (p.brand && p.brand.toLowerCase().includes(searchLower))
       );
     }
 
-    // Price range filter
+    // Category filter
+    if (category) {
+      products = products.filter(p => {
+        if (Array.isArray(p.categoryId)) {
+          return p.categoryId.some(cat => 
+            (cat._id || cat).toLowerCase() === category.toLowerCase() ||
+            (cat.name || cat).toLowerCase().includes(category.toLowerCase())
+          );
+        }
+        return false;
+      });
+    }
+
+    // Brand filter
+    if (brand) {
+      products = products.filter(p => 
+        p.brand && p.brand.toLowerCase() === brand.toLowerCase()
+      );
+    }
+
+    // Price range filter (using minPrice/maxPrice from product)
     if (minPrice > 0 || maxPrice !== Infinity) {
       products = products.filter(p => {
-        const price = p.salePrice || p.price;
+        const price = p.minPrice || p.price || 0;
         return price >= minPrice && price <= maxPrice;
       });
+    }
+
+    // Rating filter (minimum rating)
+    if (minRating > 0) {
+      products = products.filter(p => 
+        (p.averageRating || p.rating || 0) >= minRating
+      );
     }
 
     // Date filters
@@ -67,22 +107,57 @@ export const handlers = [
     }
 
     // Sorting
-    if (sortBy === 'totalUnitsSold:desc') {
-      products.sort((a, b) => (b.totalUnitsSold || 0) - (a.totalUnitsSold || 0));
-    } else if (sortBy === 'price:asc') {
-      products.sort((a, b) => (a.salePrice || a.price) - (b.salePrice || b.price));
-    } else if (sortBy === 'price:desc') {
-      products.sort((a, b) => (b.salePrice || b.price) - (a.salePrice || a.price));
-    } else if (sortBy === 'createdAt:desc') {
-      products.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-    } else if (sortBy === 'rating:desc') {
-      products.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    }
+    products.sort((a, b) => {
+      let compareA, compareB;
 
-    // Apply limit
-    products = products.slice(0, limit);
+      switch (sortBy) {
+        case 'name':
+          compareA = a.name.toLowerCase();
+          compareB = b.name.toLowerCase();
+          break;
+        case 'price':
+          compareA = a.minPrice || a.price || 0;
+          compareB = b.minPrice || b.price || 0;
+          break;
+        case 'rating':
+          compareA = a.averageRating || a.rating || 0;
+          compareB = b.averageRating || b.rating || 0;
+          break;
+        case 'totalUnitsSold':
+          compareA = a.totalUnitsSold || 0;
+          compareB = b.totalUnitsSold || 0;
+          break;
+        case 'createdAt':
+        default:
+          compareA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          compareB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          break;
+      }
 
-    return HttpResponse.json(products);
+      if (sortOrder === 'asc') {
+        return compareA > compareB ? 1 : compareA < compareB ? -1 : 0;
+      } else {
+        return compareA < compareB ? 1 : compareA > compareB ? -1 : 0;
+      }
+    });
+
+    // Pagination
+    const total = products.length;
+    const totalPages = Math.ceil(total / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedProducts = products.slice(startIndex, endIndex);
+
+    return HttpResponse.json({
+      products: paginatedProducts,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasMore: page < totalPages,
+      },
+    });
   }),
 
   http.get(`${API_BASE_URL}/api/products/categories`, () => {

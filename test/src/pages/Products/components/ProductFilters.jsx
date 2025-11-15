@@ -135,7 +135,7 @@ const ProductFilters = ({
             <Separator className="my-3" />
             <div className="space-y-3">
               <div className="space-y-2">
-                <Label htmlFor="minPrice" className="text-xs">Minimum ($)</Label>
+                <Label htmlFor="minPrice" className="text-xs">Minimum (VND)</Label>
                 <Input
                   type="number"
                   id="minPrice"
@@ -144,18 +144,20 @@ const ProductFilters = ({
                   value={minPrice}
                   onChange={handlePriceChange}
                   min="0"
+                  step="10000"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="maxPrice" className="text-xs">Maximum ($)</Label>
+                <Label htmlFor="maxPrice" className="text-xs">Maximum (VND)</Label>
                 <Input
                   type="number"
                   id="maxPrice"
                   name="maxPrice"
-                  placeholder="999"
+                  placeholder="10000000"
                   value={maxPrice}
                   onChange={handlePriceChange}
                   min="0"
+                  step="10000"
                 />
               </div>
             </div>

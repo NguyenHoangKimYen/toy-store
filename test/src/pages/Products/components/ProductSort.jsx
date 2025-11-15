@@ -11,14 +11,15 @@ const ProductSort = ({ sortBy, sortOrder, onSortChange }) => {
   const sortValue = `${sortBy}-${sortOrder}`;
 
   const sortOptions = [
+    { value: 'createdAt-desc', label: 'Newest First' },
+    { value: 'createdAt-asc', label: 'Oldest First' },
     { value: 'name-asc', label: 'Name: A-Z' },
     { value: 'name-desc', label: 'Name: Z-A' },
     { value: 'price-asc', label: 'Price: Low to High' },
     { value: 'price-desc', label: 'Price: High to Low' },
-    { value: 'createdAt-desc', label: 'Newest First' },
-    { value: 'createdAt-asc', label: 'Oldest First' },
     { value: 'rating-desc', label: 'Highest Rated' },
     { value: 'rating-asc', label: 'Lowest Rated' },
+    { value: 'totalUnitsSold-desc', label: 'Best Selling' },
   ];
 
   const handleSortChange = (value) => {
