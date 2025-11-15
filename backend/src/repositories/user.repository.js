@@ -127,7 +127,7 @@ const accountIsVerified = (id) => {
 const findByIdWithSecrets = async (id) => {
     // Tìm người dùng theo ID bao gồm tất cả các trường bí mật
     return User.findById(id)
-        .select('+password +resetTokenHash +resetTokenExpiresAt +resetOtpHash +resetOtpExpiresAt +changeEmailOtpHash +changeEmailOtpExpiresAt +changePhoneOtpHash +changePhoneOtpExpiresAt')
+        .select('+password +resetTokenHash +resetTokenExpiresAt +resetOtpHash +resetOtpExpiresAt +changeEmailOldOtpHash +changeEmailOldOtpExpiresAt +verifyNewEmailTokenHash +verifyNewEmailExpiresAt +changePhoneOtpHash +changePhoneOtpExpiresAt')
         .populate({
             path: 'defaultAddressId',
             select: 'fullName phone addressLine city postalCode isDefault',
@@ -181,13 +181,36 @@ const clearLoginOtp = async (id) => {
     );
 };
 
-const setChangeEmailOtp = (id, { otpHash, expiresAt, pendingEmail }) => {
+const setOldEmailOtp = (userId, otpHash, expiresAt) => {
+    return User.findByIdAndUpdate(
+        userId,
+        {
+            changeEmailOldOtpHash: otpHash,
+            changeEmailOldOtpExpiresAt: expiresAt
+        },
+        { new: true }
+    );
+};
+
+const setPendingNewEmail = (userId, newEmail, tokenHash, expiresAt) => {
+    return User.findByIdAndUpdate(
+        userId,
+        {
+            pendingNewEmail: newEmail,
+            verifyNewEmailTokenHash: tokenHash,
+            verifyNewEmailExpiresAt: expiresAt
+        },
+        { new: true }
+    );
+};
+
+const setChangeEmailOtp = (id, { otpHash, expiresAt, pendingNewEmail }) => {
     return User.findByIdAndUpdate(
         id,
         {
-            changeEmailOtpHash: otpHash,
-            changeEmailOtpExpiresAt: expiresAt,
-            pendingEmail
+            changeEmailOldOtpHash: otpHash,
+            changeEmailOldOtpExpiresAt: expiresAt,
+            pendingNewEmail
         },
         { new: true }
     );
@@ -198,9 +221,11 @@ const applyNewEmail = (id, newEmail) => {
         id,
         {
             email: newEmail,
-            pendingEmail: null,
-            changeEmailOtpHash: null,
-            changeEmailOtpExpiresAt: null
+            pendingNewEmail: null,
+            verifyNewEmailTokenHash: null,
+            verifyNewEmailExpiresAt: null,
+            changeEmailOldOtpHash: null,
+            changeEmailOldOtpExpiresAt: null,
         },
         { new: true }
     );
@@ -271,6 +296,8 @@ module.exports = {
     setLoginOtp,
     clearLoginOtp,
     accountIsVerified,
+    setOldEmailOtp,
+    setPendingNewEmail,
     setChangeEmailOtp,
     applyNewEmail,
     setChangePhoneOtp,

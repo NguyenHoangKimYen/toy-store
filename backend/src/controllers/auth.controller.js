@@ -6,6 +6,8 @@ const userRepository = require('../repositories/user.repository.js');
 const { mongo } = require('mongoose');
 const { message } = require('statuses');
 
+const resolveUserId = (req) => req.user?.id || req.params?.id || req.body?.userId;
+
 const register = async (req, res, next) => {
     try {
         const { user, token } = await authService.register(req.body); //gọi service đăng ký
@@ -200,6 +202,66 @@ const verifyChangePhoneController = async (req, res, next) => {
     }
 };
 
+const requestOldEmailOtpController = async (req, res, next) => {
+    try {
+        const userId = resolveUserId(req);
+        if (!userId) {
+            return res.status(400).json({ success: false, message: "User id is required" });
+        }
+        const result = await authService.requestChangeEmailOldOtp(userId);
+        res.json({ success: true, ...result });
+    } catch (err) {
+        next(err);
+    }
+};
+
+const verifyOldEmailOtpController = async (req, res, next) => {
+    try {
+        const userId = resolveUserId(req);
+        const { otp } = req.body;
+        if (!userId) {
+            return res.status(400).json({ success: false, message: "User id is required" });
+        }
+        if (!otp) {
+            return res.status(400).json({ success: false, message: "OTP is required" });
+        }
+        const result = await authService.verifyChangeEmailOldOtp(userId, otp);
+        res.json({ success: true, ...result });
+    } catch (err) {
+        next(err);
+    }
+};
+
+const requestNewEmailVerifyLinkController = async (req, res, next) => {
+    try {
+        const userId = resolveUserId(req);
+        const { newEmail } = req.body;
+        if (!userId) {
+            return res.status(400).json({ success: false, message: "User id is required" });
+        }
+        if (!newEmail) {
+            return res.status(400).json({ success: false, message: "New email is required" });
+        }
+        const result = await authService.requestNewEmailVerifyLink(userId, newEmail);
+        res.json({ success: true, ...result });
+    } catch (err) {
+        next(err);
+    }
+};
+
+const confirmNewEmailController = async (req, res, next) => {
+    try {
+        const { uid, token } = req.query;
+        if (!uid || !token) {
+            return res.status(400).json({ success: false, message: "Missing uid or token" });
+        }
+        const result = await authService.confirmNewEmail(uid, token);
+        res.json({ success: true, ...result });
+    } catch (err) {
+        next(err);
+    }
+};
+
 module.exports = {
     register,
     login,
@@ -212,4 +274,8 @@ module.exports = {
     verifyChangeEmailController,
     requestChangePhoneController,
     verifyChangePhoneController,
+    requestOldEmailOtpController,
+    verifyOldEmailOtpController,
+    requestNewEmailVerifyLinkController,
+    confirmNewEmailController,
 };
