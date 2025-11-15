@@ -3,7 +3,23 @@ const jwt = require('jsonwebtoken');
 const passport = require("passport");
 const passportGoogle = require("../config/passportGoogle.js");
 const setupFacebookPassport = require("../config/passportFacebook.js");
-const { register, login, verifyLoginOtp, resendLoginOtp, verifyEmail, googleCallback } = require('../controllers/auth.controller.js');
+const {
+    register,
+    login,
+    verifyLoginOtp,
+    resendLoginOtp,
+    verifyEmail,
+    googleCallback,
+    profile,
+    requestChangeEmailController,
+    verifyChangeEmailController,
+    requestChangePhoneController,
+    verifyChangePhoneController,
+    requestOldEmailOtpController,
+    verifyOldEmailOtpController,
+    requestNewEmailVerifyLinkController,
+    confirmNewEmailController,
+} = require('../controllers/auth.controller.js');
 const { forgotPassword, resetPassword } = require('../controllers/password.controller.js');
 
 setupFacebookPassport();
@@ -109,5 +125,14 @@ router.post("/reset-password", resetPassword); //đặt lại mật khẩu
 
 router.post("/login/verify-otp", verifyLoginOtp);
 router.post("/login/resend-otp", resendLoginOtp);
+router.get("/profile/:id", profile ); //lấy thông tin người dùng hiện tại
+router.post("/change-email/request-old-otp", requestOldEmailOtpController);
+router.post("/change-email/verify-old-otp", verifyOldEmailOtpController);
+router.post("/change-email/request-new-email", requestNewEmailVerifyLinkController);
+router.get("/change-email/confirm", confirmNewEmailController);
+router.post("/change-email/:id/request", requestChangeEmailController);
+router.post("/change-email/:id/verify", verifyChangeEmailController);
+router.post("/change-phone/:id/request", requestChangePhoneController);
+router.post("/change-phone/:id/verify", verifyChangePhoneController);
 
 module.exports = router;
