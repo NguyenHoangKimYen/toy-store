@@ -69,6 +69,9 @@
     height: 280px;
     aspect-ratio: unset;
     flex-shrink: 0;
+    background: #ee9ca7;
+    background: -webkit-linear-gradient(to right, #ffdde1, #ee9ca7);
+    background: linear-gradient(to right, #ffdde1, #ee9ca7);
 }
 
 .category-section .product-info {
