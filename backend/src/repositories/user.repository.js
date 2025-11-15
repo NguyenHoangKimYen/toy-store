@@ -127,7 +127,7 @@ const accountIsVerified = (id) => {
 const findByIdWithSecrets = async (id) => {
     // Tìm người dùng theo ID bao gồm tất cả các trường bí mật
     return User.findById(id)
-        .select('+password +resetTokenHash +resetTokenExpiresAt +resetOtpHash +resetOtpExpiresAt')
+        .select('+password +resetTokenHash +resetTokenExpiresAt +resetOtpHash +resetOtpExpiresAt +changeEmailOldOtpHash +changeEmailOldOtpExpiresAt +verifyNewEmailTokenHash +verifyNewEmailExpiresAt +changePhoneOtpHash +changePhoneOtpExpiresAt')
         .populate({
             path: 'defaultAddressId',
             select: 'fullName phone addressLine city postalCode isDefault',
@@ -181,6 +181,81 @@ const clearLoginOtp = async (id) => {
     );
 };
 
+const setOldEmailOtp = (userId, otpHash, expiresAt) => {
+    return User.findByIdAndUpdate(
+        userId,
+        {
+            changeEmailOldOtpHash: otpHash,
+            changeEmailOldOtpExpiresAt: expiresAt
+        },
+        { new: true }
+    );
+};
+
+const setPendingNewEmail = (userId, newEmail, tokenHash, expiresAt) => {
+    return User.findByIdAndUpdate(
+        userId,
+        {
+            pendingNewEmail: newEmail,
+            verifyNewEmailTokenHash: tokenHash,
+            verifyNewEmailExpiresAt: expiresAt
+        },
+        { new: true }
+    );
+};
+
+const setChangeEmailOtp = (id, { otpHash, expiresAt, pendingNewEmail }) => {
+    return User.findByIdAndUpdate(
+        id,
+        {
+            changeEmailOldOtpHash: otpHash,
+            changeEmailOldOtpExpiresAt: expiresAt,
+            pendingNewEmail
+        },
+        { new: true }
+    );
+};
+
+const applyNewEmail = (id, newEmail) => {
+    return User.findByIdAndUpdate(
+        id,
+        {
+            email: newEmail,
+            pendingNewEmail: null,
+            verifyNewEmailTokenHash: null,
+            verifyNewEmailExpiresAt: null,
+            changeEmailOldOtpHash: null,
+            changeEmailOldOtpExpiresAt: null,
+        },
+        { new: true }
+    );
+};
+
+const setChangePhoneOtp = (id, { otpHash, expiresAt, pendingPhone }) => {
+    return User.findByIdAndUpdate(
+        id,
+        {
+            changePhoneOtpHash: otpHash,
+            changePhoneOtpExpiresAt: expiresAt,
+            pendingPhone
+        },
+        { new: true }
+    );
+};
+
+const applyNewPhone = (id, newPhone) => {
+    return User.findByIdAndUpdate(
+        id,
+        {
+            phone: newPhone,
+            pendingPhone: null,
+            changePhoneOtpHash: null,
+            changePhoneOtpExpiresAt: null
+        },
+        { new: true }
+    );
+};
+
 const update = async (id, data) => {
     return User.findByIdAndUpdate(
         id,
@@ -221,4 +296,10 @@ module.exports = {
     setLoginOtp,
     clearLoginOtp,
     accountIsVerified,
+    setOldEmailOtp,
+    setPendingNewEmail,
+    setChangeEmailOtp,
+    applyNewEmail,
+    setChangePhoneOtp,
+    applyNewPhone,
 };
