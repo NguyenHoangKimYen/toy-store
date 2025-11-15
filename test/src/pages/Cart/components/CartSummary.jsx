@@ -2,10 +2,11 @@ import React from 'react';
 import { ShoppingCart, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { formatPrice } from '@/utils/formatPrice';
 import './CartSummary.css';
 
 const CartSummary = ({ subtotal, onCheckout, onContinueShopping }) => {
-  const shipping = subtotal > 100 ? 0 : 10;
+  const shipping = subtotal > 1000000 ? 0 : 50000; // Free shipping over 1,000,000 VND
   const tax = subtotal * 0.1;
   const total = subtotal + shipping + tax;
 
@@ -17,29 +18,29 @@ const CartSummary = ({ subtotal, onCheckout, onContinueShopping }) => {
       <div className="summary-details">
         <div className="summary-row">
           <span>Subtotal</span>
-          <span>${subtotal.toFixed(2)}</span>
+          <span>{formatPrice(subtotal)}</span>
         </div>
         <div className="summary-row">
           <span>Shipping</span>
-          <span>{shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}</span>
+          <span>{shipping === 0 ? 'FREE' : formatPrice(shipping)}</span>
         </div>
         {shipping === 0 && (
           <p className="free-shipping-notice">
             🎉 You got free shipping!
           </p>
         )}
-        {shipping > 0 && subtotal < 100 && (
+        {shipping > 0 && subtotal < 1000000 && (
           <p className="free-shipping-notice">
-            Add ${(100 - subtotal).toFixed(2)} more for free shipping
+            Add {formatPrice(1000000 - subtotal)} more for free shipping
           </p>
         )}
         <div className="summary-row">
           <span>Tax (10%)</span>
-          <span>${tax.toFixed(2)}</span>
+          <span>{formatPrice(tax)}</span>
         </div>
         <div className="summary-row summary-total">
           <span>Total</span>
-          <span>${total.toFixed(2)}</span>
+          <span>{formatPrice(total)}</span>
         </div>
       </div>
 

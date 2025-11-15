@@ -2,6 +2,7 @@ import React from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { formatPrice } from '@/utils/formatPrice';
 
 const ProductVariantSelector = ({ variants, selectedVariant, onVariantChange }) => {
   if (!variants || variants.length === 0) return null;
@@ -30,7 +31,7 @@ const ProductVariantSelector = ({ variants, selectedVariant, onVariantChange }) 
                   ))}
                 </div>
                 <div className="variant-price">
-                  ${Number(variant.price).toLocaleString()}
+                  {formatPrice(variant.price)}
                 </div>
                 {variant.stock <= 0 && (
                   <Badge variant="destructive" className="variant-stock">Out</Badge>

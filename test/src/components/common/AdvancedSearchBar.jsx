@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { searchProducts } from '@/services/products.service';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { formatPrice } from '@/utils/formatPrice';
 import './AdvancedSearchBar.css';
 
 /**
@@ -125,13 +126,6 @@ const AdvancedSearchBar = ({
   const clearRecentSearches = () => {
     setRecentSearches([]);
     localStorage.removeItem('recentSearches');
-  };
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(price);
   };
 
   return (

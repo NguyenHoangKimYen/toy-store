@@ -36,7 +36,7 @@ export const useCheckout = () => {
     },
     0
   );
-  const shipping = subtotal > 100 ? 0 : 10; // Free shipping over $100
+  const shipping = subtotal > 1000000 ? 0 : 50000; // Free shipping over 1,000,000 VND
   const tax = subtotal * 0.1; // 10% tax
   const total = subtotal + shipping + tax;
 

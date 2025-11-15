@@ -1,5 +1,6 @@
 import React from 'react';
 import { ShoppingCart } from 'lucide-react';
+import { formatPrice } from '@/utils/formatPrice';
 import './ProductCard.css';
 
 /**
@@ -65,11 +66,11 @@ const ProductCard = ({
             <p className="product-card-category">{categoryName}</p>
           )}
           <p className="product-card-price">
-            ${price?.toLocaleString()}
+            {formatPrice(price)}
           </p>
           {originalPrice && (
             <p className="product-card-original-price">
-              ${originalPrice?.toLocaleString()}
+              {formatPrice(originalPrice)}
             </p>
           )}
         </div>
@@ -89,7 +90,7 @@ const ProductCard = ({
         </div>
         <div className="product-card-content">
           <h4 className="product-card-name">{product.name}</h4>
-          <p className="product-card-price">${price?.toLocaleString()}</p>
+          <p className="product-card-price">{formatPrice(price)}</p>
         </div>
       </div>
     );
@@ -129,11 +130,11 @@ const ProductCard = ({
         <div className="product-footer">
           <div className="product-price">
             <span className="current-price">
-              ${price?.toLocaleString()}
+              {formatPrice(price)}
             </span>
             {originalPrice && (
               <span className="original-price">
-                ${originalPrice?.toLocaleString()}
+                {formatPrice(originalPrice)}
               </span>
             )}
           </div>

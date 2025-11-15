@@ -12,7 +12,7 @@ import ProductInfo from './components/ProductInfo';
 import ProductVariantSelector from './components/ProductVariantSelector';
 import ProductActions from './components/ProductActions';
 import ProductTabs from './components/ProductTabs';
-import ProductReviews from './components/ProductReviews';
+import ReviewSection from './components/ReviewSection';
 import './ProductDetail.css';
 
 const ProductDetail = () => {
@@ -174,11 +174,7 @@ const ProductDetail = () => {
         <ProductTabs product={product} />
 
         {/* Reviews Section */}
-        <ProductReviews 
-          productId={id} 
-          rating={product.rating || 0} 
-          reviewCount={product.reviewCount || 0} 
-        />
+        <ReviewSection productId={id} />
       </div>
     </div>
   );

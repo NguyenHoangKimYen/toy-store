@@ -12,6 +12,8 @@ export const PUBLIC_ROUTES = {
   CHECKOUT: '/checkout',
   PLACE_ORDER: '/place-order',
   ORDERS: '/orders',
+  ORDER_HISTORY: '/order-history',
+  PROFILE: '/profile',
 };
 
 // Admin routes

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { formatPrice } from '@/utils/formatPrice';
 import './OrderSummary.css';
 
 const OrderSummary = ({
@@ -30,7 +31,7 @@ const OrderSummary = ({
               <p className="order-item-quantity">Qty: {item.quantity}</p>
             </div>
             <div className="order-item-price">
-              ${(item.product.price * item.quantity).toFixed(2)}
+              {formatPrice(item.product.price * item.quantity)}
             </div>
           </div>
         ))}
@@ -40,19 +41,19 @@ const OrderSummary = ({
       <div className="order-totals">
         <div className="order-total-row">
           <span>Subtotal</span>
-          <span>${subtotal.toFixed(2)}</span>
+          <span>{formatPrice(subtotal)}</span>
         </div>
         <div className="order-total-row">
           <span>Shipping</span>
-          <span>${shipping.toFixed(2)}</span>
+          <span>{formatPrice(shipping)}</span>
         </div>
         <div className="order-total-row">
           <span>Tax</span>
-          <span>${tax.toFixed(2)}</span>
+          <span>{formatPrice(tax)}</span>
         </div>
         <div className="order-total-row order-total-final">
           <span>Total</span>
-          <span>${total.toFixed(2)}</span>
+          <span>{formatPrice(total)}</span>
         </div>
       </div>
 

@@ -2,7 +2,7 @@
 import HeroSlide from './HeroSlide';
 import HeroNavigation from './HeroNavigation';
 import { useCarouselAutoplay, useCarouselNavigation, useResponsive } from '@/hooks';
-import { mockProducts } from '../../data/mockProducts';
+import { mockProducts } from '@/mocks';
 import './HeroSection.css';
 import example from '../../../../assets/example.png';
 import example2 from '../../../../assets/example2.png';

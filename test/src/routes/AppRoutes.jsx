@@ -12,6 +12,8 @@ import Login from '../pages/Login'
 import Signup from '../pages/Signup'
 import PlaceOrder from '../pages/PlaceOrder'
 import Orders from '../pages/Orders'
+import OrderHistory from '../pages/OrderHistory'
+import Profile from '../pages/Profile'
 import AdminPanel from '../pages/AdminPanel'
 import Dashboard from '../pages/AdminPanel/Components/Main'
 import Users from '../pages/AdminPanel/Users'
@@ -43,6 +45,8 @@ const AppRoutes = () => {
             <Route path={ROUTES.CHECKOUT} element={<Checkout />}></Route>
             <Route path={ROUTES.PLACE_ORDER} element={<PlaceOrder />}></Route>
             <Route path={ROUTES.ORDERS} element={<Orders />}></Route>
+            <Route path={ROUTES.ORDER_HISTORY} element={<OrderHistory />}></Route>
+            <Route path={ROUTES.PROFILE} element={<Profile />}></Route>
             <Route path='/carousel-demo' element={<CarouselDemo />}></Route>
         </Route>
     </Routes>

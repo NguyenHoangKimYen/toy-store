@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/common';
 import { ArrowRight, Tag, Sparkles, Package } from 'lucide-react';
-import { mockProducts } from '../../data/mockProducts';
+import { mockProducts } from '@/mocks';
 import './ProductCategoriesSection.css';
 
 const ProductCategoriesSection = () => {

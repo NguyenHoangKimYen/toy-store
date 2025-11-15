@@ -146,7 +146,7 @@ const ProductTabs = ({ product }) => {
                 <div className="info-block">
                   <h4 className="font-medium mb-2">Free Shipping</h4>
                   <p className="text-sm text-muted-foreground">
-                    Free standard shipping on orders over $50. Estimated delivery time: 5-7 business days.
+                    Free standard shipping on orders over 1,000,000₫. Estimated delivery time: 5-7 business days.
                   </p>
                 </div>
 

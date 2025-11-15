@@ -3,6 +3,7 @@ import { Check, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ProductBadges } from '@/components/common';
+import { formatPrice } from '@/utils/formatPrice';
 
 const ProductInfo = ({ product, rating, reviewCount, price, originalPrice, inStock, stock, discount }) => {
   return (
@@ -38,9 +39,9 @@ const ProductInfo = ({ product, rating, reviewCount, price, originalPrice, inSto
       {/* Price */}
       <div className="product-pricing">
         <div className="price-main">
-          <span className="current-price">${Number(price).toLocaleString()}</span>
+          <span className="current-price">{formatPrice(price)}</span>
           {originalPrice && originalPrice > price && (
-            <span className="original-price">${Number(originalPrice).toLocaleString()}</span>
+            <span className="original-price">{formatPrice(originalPrice)}</span>
           )}
         </div>
         {inStock ? (

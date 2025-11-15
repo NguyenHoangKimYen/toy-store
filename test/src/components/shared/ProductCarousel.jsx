@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getProducts } from '@/services/products.service';
+import { formatPrice } from '@/utils/formatPrice';
 import './ProductCarousel.css';
 
 const ProductCarousel = () => {
@@ -121,7 +122,7 @@ const ProductCarousel = () => {
               <div className="specifications">
                 <div>
                   <p>Price</p>
-                  <p>${product.minPrice || product.price?.$numberDecimal || product.price}</p>
+                  <p>{formatPrice(product.minPrice || product.price?.$numberDecimal || product.price)}</p>
                 </div>
                 <div>
                   <p>Stock</p>

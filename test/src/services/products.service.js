@@ -92,7 +92,7 @@ export const getProducts = async (params = {}) => {
 
   // MOCK START
   if (USE_MOCK_DATA) {
-    console.log('🔧 Using mock data (VITE_USE_MOCK_DATA=true)');
+    console.log('Using mock data (VITE_USE_MOCK_DATA=true)');
     const mockData = await getMockProducts();
     
     // Combine all mock products
@@ -141,7 +141,7 @@ export const getProductById = async (id) => {
 
 // MOCK START
   if (USE_MOCK_DATA) {
-    console.log('🔧 Using mock data (VITE_USE_MOCK_DATA=true)');
+    console.log('Using mock data (VITE_USE_MOCK_DATA=true)');
     const mockData = await getMockProducts();
     
     // Combine all mock products

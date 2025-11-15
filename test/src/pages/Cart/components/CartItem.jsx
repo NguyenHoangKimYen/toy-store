@@ -1,6 +1,7 @@
 import React from 'react';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { formatPrice } from '@/utils/formatPrice';
 import './CartItem.css';
 
 const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
@@ -8,7 +9,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
   // Use minPrice as the display price (in real app, would use variant price if available)
   const price = product.minPrice || product.price?.$numberDecimal || product.price || 0;
   const imageUrl = product.imageUrls?.[0] || '/placeholder.png';
-  const total = (price * item.quantity).toFixed(2);
+  const total = price * item.quantity;
 
   const handleDecrement = () => {
     if (item.quantity > 1) {
@@ -40,7 +41,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
         {product.categoryId?.[0]?.name && (
           <p className="cart-item-category">{product.categoryId[0].name}</p>
         )}
-        <p className="cart-item-price">${price}</p>
+        <p className="cart-item-price">{formatPrice(price)}</p>
         
         {/* Stock Status */}
         {product.stockQuantity < 10 && product.stockQuantity > 0 && (
@@ -79,7 +80,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
       {/* Total Price */}
       <div className="cart-item-total">
         <span className="total-label">Total:</span>
-        <span className="total-price">${total}</span>
+        <span className="total-price">{formatPrice(total)}</span>
       </div>
 
       {/* Remove Button */}

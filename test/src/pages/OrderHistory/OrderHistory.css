@@ -1,0 +1,73 @@
+.order-history-page {
+  min-height: calc(100vh - 80px);
+  padding: 2rem 1rem;
+  background-color: #f8f9fa;
+}
+
+.order-history-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.order-history-header {
+  margin-bottom: 2rem;
+}
+
+.order-history-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.order-count {
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.order-history-loading,
+.order-history-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.no-orders {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.no-orders p {
+  font-size: 1.1rem;
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+
+.shop-now-link {
+  display: inline-block;
+  padding: 0.75rem 2rem;
+  background-color: #000;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: background-color 0.3s;
+}
+
+.shop-now-link:hover {
+  background-color: #333;
+}
+
+@media (max-width: 768px) {
+  .order-history-page {
+    padding: 1rem 0.5rem;
+  }
+
+  .order-history-header h1 {
+    font-size: 1.5rem;
+  }
+}

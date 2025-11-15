@@ -33,21 +33,21 @@ const getMockProductsByIds = async (productIds) => {
 export const getCart = async () => {
   // MOCK START
   if (USE_MOCK_DATA) {
-    console.log('🔧 Using mock data for cart');
+    console.log('Using mock data for cart');
     
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 300));
     
     // Get cart from localStorage
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    console.log('📦 Raw cart from localStorage:', cart);
+    console.log('Raw cart from localStorage:', cart);
     
     // Fetch product details for each cart item
     const productIds = cart.map(item => item.productId);
-    console.log('🔍 Looking for products with IDs:', productIds);
+    console.log('Looking for products with IDs:', productIds);
     
     const products = await getMockProductsByIds(productIds);
-    console.log('✅ Found products:', products);
+    console.log('Found products:', products);
     
     // Combine cart items with product details
     const cartWithProducts = cart.map(item => {
@@ -85,7 +85,7 @@ export const getCart = async () => {
 export const addToCart = async (productId, quantity = 1) => {
   // MOCK START
   if (USE_MOCK_DATA) {
-    console.log('🔧 Using mock data for add to cart');
+    console.log('Using mock data for add to cart');
     
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 300));
@@ -134,7 +134,7 @@ export const addToCart = async (productId, quantity = 1) => {
 export const updateCartItem = async (itemId, quantity) => {
   // MOCK START
   if (USE_MOCK_DATA) {
-    console.log('🔧 Using mock data for update cart item');
+    console.log('Using mock data for update cart item');
     
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 200));
@@ -173,7 +173,7 @@ export const updateCartItem = async (itemId, quantity) => {
 export const removeFromCart = async (itemId) => {
   // MOCK START
   if (USE_MOCK_DATA) {
-    console.log('🔧 Using mock data for remove from cart');
+    console.log('Using mock data for remove from cart');
     
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 200));
@@ -204,7 +204,7 @@ export const removeFromCart = async (itemId) => {
 export const clearCart = async () => {
   // MOCK START
   if (USE_MOCK_DATA) {
-    console.log('🔧 Using mock data for clear cart');
+    console.log('Using mock data for clear cart');
     
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 200));

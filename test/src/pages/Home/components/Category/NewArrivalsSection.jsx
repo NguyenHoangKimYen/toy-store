@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { ProductCard } from '@/components/common';
 import { ArrowRight, Sparkles, Tag } from 'lucide-react';
-import { mockProducts } from '../../data/mockProducts';
+import { mockProducts } from '@/mocks';
 import './NewArrivalsSection.css';
 
 const NewArrivalsSection = ({ newProducts }) => {
