@@ -412,65 +412,6 @@ const confirmNewEmail = async (userId, token) => {
     return { message: "Email changed successfully" };
 };
 
-// Legacy change-email OTP flow (to be removed once new flow fully adopted)
-const requestChangeEmail = async (userId, newEmail) => {
-    const user = await userRepository.findByIdWithSecrets(userId);
-    if (!user) throw Object.assign(new Error("User not found"), { status: 404 });
-
-    const exists = await userRepository.findByEmail(newEmail);
-    if (exists) throw Object.assign(new Error("Email already in use"), { status: 400 });
-
-    const otp = genOtp6();
-    const otpHash = sha256(otp);
-    const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
-
-    await userRepository.setChangeEmailOtp(userId, {
-        otpHash,
-        expiresAt,
-        pendingNewEmail: newEmail.toLowerCase()
-    });
-
-    try {
-        await sendMail({
-            to: newEmail,
-            subject: "Email Change Verification",
-            html: `
-                <p>Xin chào ${user.fullName},</p>
-                <p>Mã OTP để đổi email của bạn:</p>
-                <h2>${otp}</h2>
-                <p>Hạn sử dụng: ${OTP_TTL_MINUTES} phút.</p>
-            `
-        });
-    } catch (err) {
-        console.error("[MAIL ERROR] Change Email OTP", err);
-    }
-
-    return { message: "OTP sent to new email", expiresAt };
-};
-
-const verifyChangeEmail = async (userId, otp) => {
-    const user = await userRepository.findByIdWithSecrets(userId);
-
-    if (!user?.pendingNewEmail) {
-        throw Object.assign(new Error("No pending email"), { status: 400 });
-    }
-    if (!user?.changeEmailOldOtpHash || !user?.changeEmailOldOtpExpiresAt) {
-        throw Object.assign(new Error("OTP not requested"), { status: 400 });
-    }
-    if (user.changeEmailOldOtpExpiresAt < new Date()) {
-        throw Object.assign(new Error("OTP expired"), { status: 400 });
-    }
-
-    const normalizedOtp = String(otp ?? '').trim();
-    if (!normalizedOtp || sha256(normalizedOtp) !== user.changeEmailOldOtpHash) {
-        throw Object.assign(new Error("OTP incorrect"), { status: 400 });
-    }
-
-    await userRepository.applyNewEmail(userId, user.pendingNewEmail);
-
-    return { message: "Email updated successfully" };
-};
-
 //request đổi sđt
 const requestChangePhone = async (userId, newPhone) => {
     const user = await userRepository.findByIdWithSecrets(userId);
@@ -541,8 +482,6 @@ module.exports = {
     verifyChangeEmailOldOtp,
     requestNewEmailVerifyLink,
     confirmNewEmail,
-    requestChangeEmail,
-    verifyChangeEmail,
     requestChangePhone,
     verifyChangePhone,
 };

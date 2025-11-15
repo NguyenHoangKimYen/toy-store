@@ -130,8 +130,6 @@ router.post("/change-email/request-old-otp", requestOldEmailOtpController);
 router.post("/change-email/verify-old-otp", verifyOldEmailOtpController);
 router.post("/change-email/request-new-email", requestNewEmailVerifyLinkController);
 router.get("/change-email/confirm", confirmNewEmailController);
-router.post("/change-email/:id/request", requestChangeEmailController);
-router.post("/change-email/:id/verify", verifyChangeEmailController);
 router.post("/change-phone/:id/request", requestChangePhoneController);
 router.post("/change-phone/:id/verify", verifyChangePhoneController);
 
