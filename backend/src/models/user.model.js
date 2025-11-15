@@ -116,19 +116,30 @@ const userSchema = new mongoose.Schema({
         min: 0,
     },
 
-    changeEmailOtpHash: {
+    changeEmailOldOtpHash: {
         type: String,
         select: false,
         default: null
     },
 
-    changeEmailOtpExpiresAt: {
+    changeEmailOldOtpExpiresAt: {
         type: Date,
         default: null
     },
 
-    pendingEmail: {
+    pendingNewEmail: {
         type: String,
+        default: null
+    },
+
+    verifyNewEmailTokenHash: {
+        type: String,
+        select: false,
+        default: null
+    },
+
+    verifyNewEmailExpiresAt: {
+        type: Date,
         default: null
     },
 
