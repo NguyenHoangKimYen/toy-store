@@ -160,6 +160,46 @@ const profile = async (req, res, next) => {
     }
 };
 
+const requestChangeEmailController = async (req, res, next) => {
+    try {
+        const { newEmail } = req.body;
+        const result = await authService.requestChangeEmail(req.params.id, newEmail);
+        res.json({ success: true, ...result });
+    } catch (err) {
+        next(err);
+    }
+};
+
+const verifyChangeEmailController = async (req, res, next) => {
+    try {
+        const { otp } = req.body;
+        const result = await authService.verifyChangeEmail(req.params.id, otp);
+        res.json({ success: true, ...result });
+    } catch (err) {
+        next(err);
+    }
+};
+
+const requestChangePhoneController = async (req, res, next) => {
+    try {
+        const { newPhone } = req.body;
+        const result = await authService.requestChangePhone(req.params.id, newPhone);
+        res.json({ success: true, ...result });
+    } catch (err) {
+        next(err);
+    }
+};
+
+const verifyChangePhoneController = async (req, res, next) => {
+    try {
+        const { otp } = req.body;
+        const result = await authService.verifyChangePhone(req.params.id, otp);
+        res.json({ success: true, ...result });
+    } catch (err) {
+        next(err);
+    }
+};
+
 module.exports = {
     register,
     login,
@@ -168,4 +208,8 @@ module.exports = {
     profile,
     verifyEmail,
     googleCallback,
+    requestChangeEmailController,
+    verifyChangeEmailController,
+    requestChangePhoneController,
+    verifyChangePhoneController,
 };
