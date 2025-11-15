@@ -123,7 +123,7 @@ export const useCategorizedProducts = (options = {}) => {
         if (bestSellers) {
           keys.push('bestSellers');
           requests.push(
-            getProducts({ sort: 'totalUnitsSold:desc', ...bestSellers })
+            getProducts({ sortBy: 'totalUnitsSold:desc', ...bestSellers })
               .then(products => Array.isArray(products) ? products : [])
           );
         }

@@ -10,7 +10,7 @@ const Home = () => {
   const { categorizedProducts, loading, error } = useCategorizedProducts({
     featured: { limit: 6 },
     newProducts: { limit: 8 },
-    bestSellers: { limit: 12 },
+    bestSellers: { limit: 8 },
     categories: [
       { key: 'keychains', category: 'keychains', limit: 12 },
       { key: 'plushToys', category: 'plush', limit: 12 },

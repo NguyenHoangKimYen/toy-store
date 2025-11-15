@@ -2,123 +2,12 @@ import { API_BASE_URL, ENDPOINTS } from './config';
 import { handleResponse, createUrl } from '../utils/apiHelpers';
 import { getAuthHeaders } from '../utils/authHelpers';
 
-
-// MOCK START
-// Mock data import
-const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
-let mockProducts = null;
-
-// Lazy load mock data only when needed
-const getMockProducts = async () => {
-  if (!mockProducts) {
-    const module = await import('../pages/Home/data/mockProducts');
-    mockProducts = module.mockProducts;
-  }
-  return mockProducts;
-};
-
-// Helper to filter mock products based on params
-const filterMockProducts = (products, params = {}) => {
-  let filtered = [...products];
-
-  // Apply category filter
-  if (params.category) {
-    filtered = filtered.filter(p => 
-      p.categoryId?.name?.toLowerCase().includes(params.category.toLowerCase())
-    );
-  }
-
-  // Apply featured filter
-  if (params.isFeatured !== undefined) {
-    filtered = filtered.filter(p => p.isFeatured === params.isFeatured);
-  }
-
-  // Apply new filter
-  if (params.isNew !== undefined) {
-    filtered = filtered.filter(p => p.isNew === params.isNew);
-  }
-
-  // Apply best seller filter
-  if (params.isBestSeller !== undefined) {
-    filtered = filtered.filter(p => p.isBestSeller === params.isBestSeller);
-  }
-
-  // Apply search filter
-  if (params.search) {
-    const searchLower = params.search.toLowerCase();
-    filtered = filtered.filter(p => 
-      p.name.toLowerCase().includes(searchLower) ||
-      p.description?.toLowerCase().includes(searchLower)
-    );
-  }
-
-  // Apply sorting
-  if (params.sort) {
-    const [field, order = 'asc'] = params.sort.split(':');
-    filtered.sort((a, b) => {
-      const aVal = a[field] || 0;
-      const bVal = b[field] || 0;
-      
-      if (order === 'desc') {
-        return bVal - aVal;
-      }
-      return aVal - bVal;
-    });
-  }
-
-  // Apply limit
-  if (params.limit) {
-    filtered = filtered.slice(0, parseInt(params.limit));
-  }
-
-  return filtered;
-};
-
-// MOCK END
-
 /**
- * Optional filters
+ * Get all products with optional filters
  * @param {Object} params - Query parameters
- * @param {string} params.search - Search query
- * @param {string} params.categoryId - Filter by category
- * @param {string} params.status - Filter by status (active/draft/archived)
- * @param {string} params.sortBy - Sort field
- * @param {string} params.sortOrder - Sort order (asc/desc)
- * @param {number} params.page - Page number
- * @param {number} params.limit - Items per page
- * @returns {Promise<{products: Array, stats: Object, pagination: Object}>}
+ * @returns {Promise<Array|Object>}
  */
 export const getProducts = async (params = {}) => {
-
-  // MOCK START
-  if (USE_MOCK_DATA) {
-    console.log('Using mock data (VITE_USE_MOCK_DATA=true)');
-    const mockData = await getMockProducts();
-    
-    // Combine all mock products
-    const allProducts = [
-      ...mockData.featured,
-      ...mockData.newProducts,
-      ...mockData.bestSellers,
-      ...mockData.keychains,
-      ...mockData.plushToys,
-      ...mockData.accessories,
-    ];
-
-    // Remove duplicates by _id
-    const uniqueProducts = Array.from(
-      new Map(allProducts.map(p => [p._id, p])).values()
-    );
-
-    const filtered = filterMockProducts(uniqueProducts, params);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    return filtered;
-  }
-
-  // MOCK END
   const url = createUrl(`${API_BASE_URL}${ENDPOINTS.PRODUCTS}`, params);
   
   const response = await fetch(url, {
@@ -133,41 +22,11 @@ export const getProducts = async (params = {}) => {
 };
 
 /**
- * Get
- * @param {string} id
+ * Get a single product by ID
+ * @param {string} id - Product ID
  * @returns {Promise<Object>}
  */
 export const getProductById = async (id) => {
-
-// MOCK START
-  if (USE_MOCK_DATA) {
-    console.log('Using mock data (VITE_USE_MOCK_DATA=true)');
-    const mockData = await getMockProducts();
-    
-    // Combine all mock products
-    const allProducts = [
-      ...mockData.featured,
-      ...mockData.newProducts,
-      ...mockData.bestSellers,
-      ...mockData.keychains,
-      ...mockData.plushToys,
-      ...mockData.accessories,
-    ];
-
-    const product = allProducts.find(p => p._id === id);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    if (!product) {
-      throw new Error('Product not found');
-    }
-    
-    return product;
-  }
-
-// MOCK END
-
   const response = await fetch(`${API_BASE_URL}${ENDPOINTS.PRODUCTS}/${id}`, {
     method: 'GET',
     headers: {
@@ -180,8 +39,8 @@ export const getProductById = async (id) => {
 };
 
 /**
- * Create
- * @param {Object} productData
+ * Create a new product
+ * @param {Object} productData - Product data
  * @returns {Promise<Object>}
  */
 export const createProduct = async (productData) => {
@@ -198,9 +57,9 @@ export const createProduct = async (productData) => {
 };
 
 /**
- * Update
- * @param {string} id
- * @param {Object} productData
+ * Update a product (full update)
+ * @param {string} id - Product ID
+ * @param {Object} productData - Product data
  * @returns {Promise<Object>}
  */
 export const updateProduct = async (id, productData) => {
@@ -217,9 +76,9 @@ export const updateProduct = async (id, productData) => {
 };
 
 /**
- * Patch
- * @param {string} id
- * @param {Object} productData
+ * Partially update a product
+ * @param {string} id - Product ID
+ * @param {Object} productData - Partial product data
  * @returns {Promise<Object>}
  */
 export const patchProduct = async (id, productData) => {
@@ -236,8 +95,8 @@ export const patchProduct = async (id, productData) => {
 };
 
 /**
- * Delete
- * @param {string} id
+ * Delete a product
+ * @param {string} id - Product ID
  * @returns {Promise<Object>}
  */
 export const deleteProduct = async (id) => {
@@ -253,8 +112,8 @@ export const deleteProduct = async (id) => {
 };
 
 /**
- * Delete many
- * @param {Array<string>} ids
+ * Delete multiple products
+ * @param {Array<string>} ids - Array of product IDs
  * @returns {Promise<Object>}
  */
 export const bulkDeleteProducts = async (ids) => {
@@ -272,15 +131,14 @@ export const bulkDeleteProducts = async (ids) => {
 
 /**
  * Upload product images
- * @param {string} productId
- * @param {FormData} formData
+ * @param {string} productId - Product ID
+ * @param {FormData} formData - Form data containing images
  * @returns {Promise<Object>}
  */
 export const uploadProductImages = async (productId, formData) => {
   const response = await fetch(`${API_BASE_URL}${ENDPOINTS.PRODUCTS}/${productId}/images`, {
     method: 'POST',
     headers: {
-      // Don't set Content-Type for FormData, browser will set it with boundary
       ...getAuthHeaders(),
     },
     body: formData,
@@ -291,8 +149,8 @@ export const uploadProductImages = async (productId, formData) => {
 
 /**
  * Delete a product image
- * @param {string} productId
- * @param {string} imageId
+ * @param {string} productId - Product ID
+ * @param {string} imageId - Image ID
  * @returns {Promise<Object>}
  */
 export const deleteProductImage = async (productId, imageId) => {
@@ -308,42 +166,10 @@ export const deleteProductImage = async (productId, imageId) => {
 };
 
 /**
- * Get categories
+ * Get product categories
  * @returns {Promise<Array>}
  */
 export const getProductCategories = async () => {
-
-// MOCK START
-  if (USE_MOCK_DATA) {
-    const mockData = await getMockProducts();
-    const categorySet = new Set();
-    
-    // Combine all mock products
-    const allProducts = [
-      ...mockData.featured,
-      ...mockData.newProducts,
-      ...mockData.bestSellers,
-      ...mockData.keychains,
-      ...mockData.plushToys,
-      ...mockData.accessories,
-    ];
-    
-    allProducts.forEach(product => {
-      if (product.categoryId?.name) {
-        categorySet.add(product.categoryId.name);
-      }
-    });
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    return Array.from(categorySet).map((name, index) => ({
-      _id: `cat-${index + 1}`,
-      name,
-    }));
-  }
-// MOCK END
-
   const response = await fetch(`${API_BASE_URL}${ENDPOINTS.PRODUCTS}/categories`, {
     method: 'GET',
     headers: {
@@ -358,6 +184,6 @@ export const getProductCategories = async () => {
 /**
  * Search products (alias for getProducts with search parameter)
  * @param {Object} params - Search parameters
- * @returns {Promise<{products: Array, pagination: Object}>}
+ * @returns {Promise<Array|Object>}
  */
 export const searchProducts = getProducts;

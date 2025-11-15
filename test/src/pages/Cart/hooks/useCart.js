@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { getCart, updateCartItem, removeFromCart, clearCart } from '@/services/cart.service';
+import { getCart, updateCartItemQuantity, removeFromCart, clearCart } from '@/services/cart.service';
 
 export const useCart = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -47,7 +47,7 @@ export const useCart = () => {
         )
       );
 
-      await updateCartItem(itemId, newQuantity);
+      await updateCartItemQuantity(itemId, newQuantity);
       
       // Dispatch event to update navbar cart count
       window.dispatchEvent(new Event('cartUpdated'));
