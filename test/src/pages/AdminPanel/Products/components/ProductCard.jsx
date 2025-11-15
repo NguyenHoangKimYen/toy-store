@@ -1,7 +1,7 @@
 import React from 'react'
 import { Eye, Edit, Trash2, Package } from 'lucide-react'
-import { formatPrice } from '../utils/formatters'
-import ProductBadges from './ProductBadges'
+import { formatPrice } from '@/utils/formatPrice'
+import { ProductBadges } from '@/components/common'
 
 const ProductCard = ({ product, onViewDetails }) => {
   return (

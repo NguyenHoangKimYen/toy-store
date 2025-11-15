@@ -1,6 +1,6 @@
 import React from 'react'
 import { Star } from 'lucide-react'
-import { formatPrice } from '../utils/formatters'
+import { formatPrice } from '@/utils/formatPrice'
 
 const ProductInfo = ({ product }) => {
   return (

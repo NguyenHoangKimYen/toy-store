@@ -1,11 +1,7 @@
-export const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
-}
+// Re-export central utilities
+export { formatDate } from '@/utils/formatDate';
 
+// Domain-specific utilities for Users
 export const formatDateTime = (dateString) => {
   return new Date(dateString).toLocaleString('en-US', {
     year: 'numeric',

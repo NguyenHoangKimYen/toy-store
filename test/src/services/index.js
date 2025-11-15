@@ -5,7 +5,7 @@ export * from './cart.service';
 export * from './reviews.service';
 export * from './config';
 export * from '../utils/apiHelpers';
-export * from './utils/authHelpers';
+export * from '../utils/authHelpers';
 
 // Organize by module
 import * as productsService from './products.service';

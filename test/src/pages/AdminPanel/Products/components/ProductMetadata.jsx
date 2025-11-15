@@ -1,6 +1,6 @@
 import React from 'react'
 import { Calendar } from 'lucide-react'
-import { formatDate } from '../utils/formatters'
+import { formatDate } from '@/utils/formatDate'
 
 const ProductMetadata = ({ createdAt, updatedAt }) => {
   return (

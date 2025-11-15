@@ -1,6 +1,7 @@
 import React from 'react'
 import { Eye, Edit, Trash2, CheckCircle, XCircle } from 'lucide-react'
-import { formatDate, formatPhone, getRoleBadgeColor } from '../utils/formatters'
+import { formatDate } from '@/utils/formatDate'
+import { formatPhone, getRoleBadgeColor } from '../utils/formatters'
 
 const UserTableRow = ({ user, onViewDetails }) => {
   return (
