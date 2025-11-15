@@ -290,6 +290,126 @@ const profile = async (userId) => { //lấy thông tin hồ sơ người dùng
     return toPublicUser(user); //trả về user công khai
 };
 
+//đổi email (gửi OTP)
+const requestChangeEmail = async (userId, newEmail) => {
+    const user = await userRepository.findByIdWithSecrets(userId);
+    if (!user) throw Object.assign(new Error("User not found"), { status: 404 });
+
+    const exists = await userRepository.findByEmail(newEmail);
+    if (exists) throw Object.assign(new Error("Email already in use"), { status: 400 });
+
+    const otp = genOtp6();
+    const otpHash = sha256(otp);
+    const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
+
+    await userRepository.setChangeEmailOtp(userId, {
+        otpHash,
+        expiresAt,
+        pendingEmail: newEmail.toLowerCase()
+    });
+
+    try {
+        await sendMail({
+            to: newEmail,
+            subject: "Email Change Verification",
+            html: `
+                <p>Xin chào ${user.fullName},</p>
+                <p>Mã OTP để đổi email của bạn:</p>
+                <h2>${otp}</h2>
+                <p>Hạn sử dụng: ${OTP_TTL_MINUTES} phút.</p>
+            `
+        });
+    } catch (err) {
+        console.error("[MAIL ERROR] Change Email OTP", err);
+    }
+
+    return { message: "OTP sent to new email", expiresAt };
+};
+
+//verify đổi email
+
+const verifyChangeEmail = async (userId, otp) => {
+    const user = await userRepository.findByIdWithSecrets(userId);
+
+    if (!user?.pendingEmail) {
+        throw Object.assign(new Error("No pending email"), { status: 400 });
+    }
+    if (!user?.changeEmailOtpHash || !user?.changeEmailOtpExpiresAt) {
+        throw Object.assign(new Error("OTP not requested"), { status: 400 });
+    }
+    if (user.changeEmailOtpExpiresAt < new Date()) {
+        throw Object.assign(new Error("OTP expired"), { status: 400 });
+    }
+
+    const normalizedOtp = String(otp ?? '').trim();
+    if (!normalizedOtp || sha256(normalizedOtp) !== user.changeEmailOtpHash) {
+        throw Object.assign(new Error("OTP incorrect"), { status: 400 });
+    }
+
+    await userRepository.applyNewEmail(userId, user.pendingEmail);
+
+    return { message: "Email updated successfully" };
+};
+
+//request đổi sđt
+const requestChangePhone = async (userId, newPhone) => {
+    const user = await userRepository.findByIdWithSecrets(userId);
+    if (!user) throw Object.assign(new Error("User not found"), { status: 404 });
+
+    const exists = await userRepository.findByPhone(newPhone);
+    if (exists) throw Object.assign(new Error("Phone already in use"), { status: 400 });
+
+    const otp = genOtp6();
+    const otpHash = sha256(otp);
+    const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
+
+    await userRepository.setChangePhoneOtp(userId, {
+        otpHash,
+        expiresAt,
+        pendingPhone: newPhone
+    });
+
+    try {
+        await sendMail({
+            to: user.email,
+            subject: "Phone Change Verification",
+            html: `
+                <p>Xin chào ${user.fullName},</p>
+                <p>Mã OTP để đổi số điện thoại:</p>
+                <h2>${otp}</h2>
+                <p>Hạn sử dụng: ${OTP_TTL_MINUTES} phút.</p>
+            `
+        });
+    } catch (err) {
+        console.error("[MAIL ERROR] Change Phone OTP", err);
+    }
+
+    return { message: "OTP sent to your email", expiresAt };
+};
+
+//verify đổi số điện thoại
+
+const verifyChangePhone = async (userId, otp) => {
+    const user = await userRepository.findByIdWithSecrets(userId);
+
+    if (!user?.pendingPhone) throw Object.assign(new Error("No pending phone"), { status: 400 });
+
+    if (!user?.changePhoneOtpHash || !user?.changePhoneOtpExpiresAt)
+        throw Object.assign(new Error("OTP not requested"), { status: 400 });
+
+    if (user.changePhoneOtpExpiresAt < new Date())
+        throw Object.assign(new Error("OTP expired"), { status: 400 });
+
+    const normalizedOtp = String(otp ?? '').trim();
+    if (!normalizedOtp || sha256(normalizedOtp) !== user.changePhoneOtpHash)
+        throw Object.assign(new Error("OTP incorrect"), { status: 400 });
+
+    await userRepository.applyNewPhone(userId, user.pendingPhone);
+
+    return { message: "Phone updated successfully" };
+};
+
+
 
 module.exports = {
     register,
@@ -297,4 +417,8 @@ module.exports = {
     createLoginOtp,
     verifyLoginOtp,
     profile,
+    requestChangeEmail,
+    verifyChangeEmail,
+    requestChangePhone,
+    verifyChangePhone,
 };

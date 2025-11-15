@@ -127,7 +127,7 @@ const accountIsVerified = (id) => {
 const findByIdWithSecrets = async (id) => {
     // Tìm người dùng theo ID bao gồm tất cả các trường bí mật
     return User.findById(id)
-        .select('+password +resetTokenHash +resetTokenExpiresAt +resetOtpHash +resetOtpExpiresAt')
+        .select('+password +resetTokenHash +resetTokenExpiresAt +resetOtpHash +resetOtpExpiresAt +changeEmailOtpHash +changeEmailOtpExpiresAt +changePhoneOtpHash +changePhoneOtpExpiresAt')
         .populate({
             path: 'defaultAddressId',
             select: 'fullName phone addressLine city postalCode isDefault',
@@ -181,6 +181,56 @@ const clearLoginOtp = async (id) => {
     );
 };
 
+const setChangeEmailOtp = (id, { otpHash, expiresAt, pendingEmail }) => {
+    return User.findByIdAndUpdate(
+        id,
+        {
+            changeEmailOtpHash: otpHash,
+            changeEmailOtpExpiresAt: expiresAt,
+            pendingEmail
+        },
+        { new: true }
+    );
+};
+
+const applyNewEmail = (id, newEmail) => {
+    return User.findByIdAndUpdate(
+        id,
+        {
+            email: newEmail,
+            pendingEmail: null,
+            changeEmailOtpHash: null,
+            changeEmailOtpExpiresAt: null
+        },
+        { new: true }
+    );
+};
+
+const setChangePhoneOtp = (id, { otpHash, expiresAt, pendingPhone }) => {
+    return User.findByIdAndUpdate(
+        id,
+        {
+            changePhoneOtpHash: otpHash,
+            changePhoneOtpExpiresAt: expiresAt,
+            pendingPhone
+        },
+        { new: true }
+    );
+};
+
+const applyNewPhone = (id, newPhone) => {
+    return User.findByIdAndUpdate(
+        id,
+        {
+            phone: newPhone,
+            pendingPhone: null,
+            changePhoneOtpHash: null,
+            changePhoneOtpExpiresAt: null
+        },
+        { new: true }
+    );
+};
+
 const update = async (id, data) => {
     return User.findByIdAndUpdate(
         id,
@@ -221,4 +271,8 @@ module.exports = {
     setLoginOtp,
     clearLoginOtp,
     accountIsVerified,
+    setChangeEmailOtp,
+    applyNewEmail,
+    setChangePhoneOtp,
+    applyNewPhone,
 };

@@ -1,6 +1,6 @@
 module.exports = [
   { code: "HNI", name: "UBND Thành phố Hà Nội", province: "Hà Nội", lat: 21.028511, lng: 105.804817 },
-  { code: "HCM", name: "UBND Thành phố Hồ Chí Minh", province: "TP.HCM", lat: 10.776530, lng: 106.700981 },
+  { code: "HCM", name: "UBND Thành phố Hồ Chí Minh", province: "Thành phố Hồ Chí Minh", lat: 10.776530, lng: 106.700981 },
   { code: "DNH", name: "UBND Thành phố Đà Nẵng", province: "Đà Nẵng", lat: 16.067789, lng: 108.220741 },
   { code: "CTO", name: "UBND Thành phố Cần Thơ", province: "Cần Thơ", lat: 10.045162, lng: 105.746857 },
   { code: "HPG", name: "UBND Thành phố Hải Phòng", province: "Hải Phòng", lat: 20.844911, lng: 106.688084 },
