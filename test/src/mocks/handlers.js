@@ -412,6 +412,8 @@ export const handlers = [
     const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get('limit') || '10');
     const skip = parseInt(url.searchParams.get('skip') || '0');
+    const sortBy = url.searchParams.get('sortBy') || 'createdAt'; // createdAt, helpful
+    const sortOrder = url.searchParams.get('sortOrder') || 'desc'; // asc, desc
 
     // Get reviews from mock data
     let productReviews = mockReviews.filter(r => r.productId === productId);
@@ -420,10 +422,276 @@ export const handlers = [
     const localReviews = JSON.parse(localStorage.getItem('reviews') || '[]');
     const productLocalReviews = localReviews.filter(r => r.productId === productId);
 
+    // Merge reviews
+    let allReviews = [...productReviews, ...productLocalReviews];
+
+    // Populate user data for each review
+    allReviews = allReviews.map(review => {
+      if (review.userId) {
+        const user = findUserById(review.userId);
+        if (user) {
+          return {
+            ...review,
+            user: {
+              _id: user._id,
+              fullname: user.fullname,
+              email: user.email,
+            },
+          };
+        }
+      }
+      return {
+        ...review,
+        user: null,
+      };
+    });
+
+    // Sort reviews
+    allReviews.sort((a, b) => {
+      let compareA, compareB;
+      if (sortBy === 'helpful') {
+        compareA = a.helpful || 0;
+        compareB = b.helpful || 0;
+      } else {
+        compareA = new Date(a.createdAt).getTime();
+        compareB = new Date(b.createdAt).getTime();
+      }
+
+      if (sortOrder === 'asc') {
+        return compareA > compareB ? 1 : compareA < compareB ? -1 : 0;
+      } else {
+        return compareA < compareB ? 1 : compareA > compareB ? -1 : 0;
+      }
+    });
+
+    // Apply pagination
+    const paginatedReviews = allReviews.slice(skip, skip + limit);
+
+    return HttpResponse.json({
+      reviews: paginatedReviews,
+      total: allReviews.length,
+      hasMore: skip + limit < allReviews.length,
+      skip,
+      limit,
+    });
+  }),
+
+  http.get(`${API_BASE_URL}/api/reviews/:reviewId`, ({ params }) => {
+    const { reviewId } = params;
+
+    // Check mock reviews
+    let review = mockReviews.find(r => r._id === reviewId);
+
+    // Check localStorage reviews
+    if (!review) {
+      const localReviews = JSON.parse(localStorage.getItem('reviews') || '[]');
+      review = localReviews.find(r => r._id === reviewId);
+    }
+
+    if (!review) {
+      return HttpResponse.json(
+        { success: false, message: 'Review not found' },
+        { status: 404 }
+      );
+    }
+
+    // Populate user data
+    if (review.userId) {
+      const user = findUserById(review.userId);
+      if (user) {
+        review = {
+          ...review,
+          user: {
+            _id: user._id,
+            fullname: user.fullname,
+            email: user.email,
+          },
+        };
+      }
+    }
+
+    return HttpResponse.json(review);
+  }),
+
+  http.post(`${API_BASE_URL}/api/products/:productId/reviews`, async ({ params, request }) => {
+    const { productId } = params;
+    const reviewData = await request.json();
+
+    // Validate required fields
+    if (!reviewData.content || reviewData.content.trim().length === 0) {
+      return HttpResponse.json(
+        { success: false, message: 'Review content is required' },
+        { status: 400 }
+      );
+    }
+
+    // Check if product exists
+    const allProducts = [
+      ...mockProducts.featured,
+      ...mockProducts.bestSellers,
+      ...mockProducts.keychains,
+      ...mockProducts.plushToys,
+      ...mockProducts.accessories,
+      ...mockProducts.newProducts,
+    ];
+    const product = allProducts.find(p => p._id === productId);
+
+    if (!product) {
+      return HttpResponse.json(
+        { success: false, message: 'Product not found' },
+        { status: 404 }
+      );
+    }
+
+    // Create new review object following MongoDB schema
+    const newReview = {
+      _id: `673a${Date.now().toString(16)}`, // MongoDB-style ObjectId
+      productId,
+      userId: reviewData.userId || null,
+      content: reviewData.content.trim(),
+      createdAt: new Date().toISOString(),
+    };
+
+    // Save to localStorage
+    const localReviews = JSON.parse(localStorage.getItem('reviews') || '[]');
+    localReviews.push(newReview);
+    localStorage.setItem('reviews', JSON.stringify(localReviews));
+
+    // Populate user data for response
+    let responseReview = { ...newReview };
+    if (newReview.userId) {
+      const user = findUserById(newReview.userId);
+      if (user) {
+        responseReview.user = {
+          _id: user._id,
+          fullname: user.fullname,
+          email: user.email,
+        };
+      }
+    }
+
+    return HttpResponse.json({
+      success: true,
+      message: 'Review created successfully',
+      review: responseReview,
+    }, { status: 201 });
+  }),
+
+  http.patch(`${API_BASE_URL}/api/reviews/:reviewId`, async ({ params, request }) => {
+    const { reviewId } = params;
+    const updateData = await request.json();
+
+    // Get reviews from localStorage (only localStorage reviews can be updated)
+    const localReviews = JSON.parse(localStorage.getItem('reviews') || '[]');
+    const reviewIndex = localReviews.findIndex(r => r._id === reviewId);
+
+    if (reviewIndex === -1) {
+      return HttpResponse.json(
+        { success: false, message: 'Review not found or cannot be updated' },
+        { status: 404 }
+      );
+    }
+
+    // Validate content if provided
+    if (updateData.content !== undefined && updateData.content.trim().length === 0) {
+      return HttpResponse.json(
+        { success: false, message: 'Review content cannot be empty' },
+        { status: 400 }
+      );
+    }
+
+    // Update review (only content can be updated in this schema)
+    if (updateData.content) {
+      localReviews[reviewIndex].content = updateData.content.trim();
+    }
+
+    localStorage.setItem('reviews', JSON.stringify(localReviews));
+
+    // Populate user data for response
+    let updatedReview = { ...localReviews[reviewIndex] };
+    if (updatedReview.userId) {
+      const user = findUserById(updatedReview.userId);
+      if (user) {
+        updatedReview.user = {
+          _id: user._id,
+          fullname: user.fullname,
+          email: user.email,
+        };
+      }
+    }
+
+    return HttpResponse.json({
+      success: true,
+      message: 'Review updated successfully',
+      review: updatedReview,
+    });
+  }),
+
+  http.delete(`${API_BASE_URL}/api/reviews/:reviewId`, ({ params }) => {
+    const { reviewId } = params;
+
+    // Get reviews from localStorage (only localStorage reviews can be deleted)
+    const localReviews = JSON.parse(localStorage.getItem('reviews') || '[]');
+    const reviewIndex = localReviews.findIndex(r => r._id === reviewId);
+
+    if (reviewIndex === -1) {
+      return HttpResponse.json(
+        { success: false, message: 'Review not found or cannot be deleted' },
+        { status: 404 }
+      );
+    }
+
+    // Remove review
+    localReviews.splice(reviewIndex, 1);
+    localStorage.setItem('reviews', JSON.stringify(localReviews));
+
+    return HttpResponse.json({
+      success: true,
+      message: 'Review deleted successfully',
+    });
+  }),
+
+  // Get all reviews by a specific user
+  http.get(`${API_BASE_URL}/api/users/:userId/reviews`, ({ params, request }) => {
+    const { userId } = params;
+    const url = new URL(request.url);
+    const limit = parseInt(url.searchParams.get('limit') || '10');
+    const skip = parseInt(url.searchParams.get('skip') || '0');
+
+    // Get reviews from mock data
+    let userReviews = mockReviews.filter(r => r.userId === userId);
+
+    // Get reviews from localStorage
+    const localReviews = JSON.parse(localStorage.getItem('reviews') || '[]');
+    const userLocalReviews = localReviews.filter(r => r.userId === userId);
+
     // Merge and sort by date
-    let allReviews = [...productReviews, ...productLocalReviews].sort(
+    let allReviews = [...userReviews, ...userLocalReviews].sort(
       (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
     );
+
+    // Populate product data for each review
+    const allProducts = [
+      ...mockProducts.featured,
+      ...mockProducts.bestSellers,
+      ...mockProducts.keychains,
+      ...mockProducts.plushToys,
+      ...mockProducts.accessories,
+      ...mockProducts.newProducts,
+    ];
+
+    allReviews = allReviews.map(review => {
+      const product = allProducts.find(p => p._id === review.productId);
+      return {
+        ...review,
+        product: product ? {
+          _id: product._id,
+          name: product.name,
+          slug: product.slug,
+          imageUrls: product.imageUrls,
+        } : null,
+      };
+    });
 
     // Apply pagination
     const paginatedReviews = allReviews.slice(skip, skip + limit);
@@ -433,65 +701,6 @@ export const handlers = [
       total: allReviews.length,
       hasMore: skip + limit < allReviews.length,
     });
-  }),
-
-  http.get(`${API_BASE_URL}/api/products/:productId/reviews/stats`, ({ params }) => {
-    const { productId } = params;
-
-    // Get all reviews for this product
-    const productReviews = mockReviews.filter(r => r.productId === productId);
-    const localReviews = JSON.parse(localStorage.getItem('reviews') || '[]');
-    const productLocalReviews = localReviews.filter(r => r.productId === productId);
-    const allReviews = [...productReviews, ...productLocalReviews];
-
-    if (allReviews.length === 0) {
-      return HttpResponse.json({
-        averageRating: 0,
-        totalReviews: 0,
-        distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
-      });
-    }
-
-    // Calculate stats
-    const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-    let totalRating = 0;
-
-    allReviews.forEach(review => {
-      distribution[review.rating]++;
-      totalRating += review.rating;
-    });
-
-    return HttpResponse.json({
-      averageRating: totalRating / allReviews.length,
-      totalReviews: allReviews.length,
-      distribution,
-    });
-  }),
-
-  http.post(`${API_BASE_URL}/api/products/:productId/reviews`, async ({ params, request }) => {
-    const { productId } = params;
-    const reviewData = await request.json();
-
-    // Create new review object
-    const newReview = {
-      _id: `review-${Date.now()}`,
-      productId,
-      userId: reviewData.userId || null,
-      userName: reviewData.userName || 'Anonymous',
-      userAvatar: reviewData.userAvatar || null,
-      rating: reviewData.rating,
-      content: reviewData.content,
-      createdAt: new Date().toISOString(),
-      helpful: 0,
-      verified: !!reviewData.userId,
-    };
-
-    // Save to localStorage
-    const localReviews = JSON.parse(localStorage.getItem('reviews') || '[]');
-    localReviews.push(newReview);
-    localStorage.setItem('reviews', JSON.stringify(localReviews));
-
-    return HttpResponse.json(newReview, { status: 201 });
   }),
 
   // Cart endpoints
