@@ -15,6 +15,10 @@ const ProductCategoriesSection = () => {
   // Debug logging
   console.log('ProductCategoriesSection - Using MOCK data');
 
+  const handleProductClick = (product) => {
+    navigate(`/products/${product._id}`);
+  };
+
   const categories = [
     {
       id: 'sales',
@@ -127,6 +131,7 @@ const ProductCategoriesSection = () => {
                     showBadges={false}
                     showCategory={false}
                     showQuickView={false}
+                    onClick={handleProductClick}
                   />
                 ))}
               </div>

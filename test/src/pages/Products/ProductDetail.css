@@ -102,6 +102,18 @@
   align-items: center;
 }
 
+.stock-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.product-sku {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-family: 'Courier New', monospace;
+}
+
 .in-stock {
   color: #16a34a;
   border-color: #16a34a;

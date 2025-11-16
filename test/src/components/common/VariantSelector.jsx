@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { formatPrice } from '@/utils/formatPrice';
 import './VariantSelector.css';
 
 /**
- * VariantSelector Component
+ * VariantSelector Component - Shopee Style
  * Displays attribute options for product variants and allows user to select
- * Shows price, stock, and SKU for selected variant
+ * Updates product image and price when variant changes
  * 
  * @param {Array} variants - Array of variant objects for the product
  * @param {Array} attributes - Array of attribute definitions from product (name, values)
@@ -19,12 +18,12 @@ const VariantSelector = ({
   selectedVariant: controlledVariant
 }) => {
   const [selectedAttributes, setSelectedAttributes] = useState({});
-  const [selectedVariant, setSelectedVariant] = useState(null);
+
+  console.log('VariantSelector render:', { variants, attributes, controlledVariant });
 
   // Initialize with first variant or controlled variant
   useEffect(() => {
     if (controlledVariant) {
-      setSelectedVariant(controlledVariant);
       // Extract attributes from controlled variant
       const attrs = {};
       controlledVariant.attributes?.forEach(attr => {
@@ -34,7 +33,6 @@ const VariantSelector = ({
     } else if (variants.length > 0) {
       // Select first available variant
       const firstVariant = variants[0];
-      setSelectedVariant(firstVariant);
       const attrs = {};
       firstVariant.attributes?.forEach(attr => {
         attrs[attr.name] = attr.value;
@@ -68,7 +66,6 @@ const VariantSelector = ({
     // Find matching variant
     const matchingVariant = findMatchingVariant(newAttrs);
     if (matchingVariant) {
-      setSelectedVariant(matchingVariant);
       onVariantChange?.(matchingVariant);
     }
   };
@@ -89,17 +86,14 @@ const VariantSelector = ({
     return null;
   }
 
-  const price = selectedVariant?.price?.$numberDecimal || selectedVariant?.price;
-  const stock = selectedVariant?.stockQuantity || 0;
-  const sku = selectedVariant?.sku || '';
-  const isInStock = stock > 0 && selectedVariant?.isActive;
-
   return (
     <div className="variant-selector">
-      {/* Attribute Selection */}
+      {/* Attribute Selection - Shopee Style */}
       {attributes.map(attribute => (
         <div key={attribute.name} className="attribute-group">
-          <label className="attribute-label">{attribute.name}</label>
+          <label className="attribute-label">
+            {attribute.name}: <span className="selected-value">{selectedAttributes[attribute.name]}</span>
+          </label>
           <div className="attribute-options">
             {attribute.values.map(value => {
               const isSelected = selectedAttributes[attribute.name] === value;
@@ -114,39 +108,12 @@ const VariantSelector = ({
                   aria-label={`Select ${attribute.name}: ${value}`}
                 >
                   {value}
-                  {!isAvailable && (
-                    <span className="out-of-stock-indicator">✕</span>
-                  )}
                 </button>
               );
             })}
           </div>
         </div>
       ))}
-
-      {/* Selected Variant Info */}
-      {selectedVariant && (
-        <div className="variant-info">
-          <div className="variant-price">
-            <span className="price-label">Price:</span>
-            <span className="price-value">{formatPrice(price)}</span>
-          </div>
-          
-          <div className="variant-stock">
-            <span className="stock-label">Availability:</span>
-            <span className={`stock-value ${isInStock ? 'in-stock' : 'out-of-stock'}`}>
-              {isInStock ? `${stock} in stock` : 'Out of stock'}
-            </span>
-          </div>
-
-          {sku && (
-            <div className="variant-sku">
-              <span className="sku-label">SKU:</span>
-              <span className="sku-value">{sku}</span>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 };

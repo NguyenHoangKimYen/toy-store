@@ -55,17 +55,13 @@ const ProductGrid = ({
     <div className="products-grid-container">
       <div className={`products-grid ${loading ? 'loading' : ''}`}>
         {products.map((product) => (
-          <div
+          <ProductCard
             key={product._id}
-            onClick={() => handleProductClick(product)}
-            style={{ cursor: 'pointer' }}
-          >
-            <ProductCard
-              product={product}
-              variant="default"
-              showQuickView={false}
-            />
-          </div>
+            product={product}
+            variant="default"
+            showQuickView={false}
+            onClick={handleProductClick}
+          />
         ))}
       </div>
 

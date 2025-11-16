@@ -6,10 +6,21 @@ import './CartItem.css';
 
 const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
   const product = item.product;
-  // Use minPrice as the display price (in real app, would use variant price if available)
-  const price = product.minPrice || product.price?.$numberDecimal || product.price || 0;
-  const imageUrl = product.imageUrls?.[0] || '/placeholder.png';
+  const variant = item.variant;
+  
+  if (!product) {
+    console.error('Cart item missing product data:', item);
+    return null;
+  }
+  
+  // Use variant price if available, otherwise use product price
+  const price = variant?.price?.$numberDecimal || variant?.price || product.minPrice || product.price?.$numberDecimal || product.price || 0;
+  const imageUrl = variant?.imageUrls?.[0] || product.imageUrls?.[0] || '/placeholder.png';
+  const stock = variant?.stockQuantity || product.stockQuantity || 999;
   const total = price * item.quantity;
+  
+  // Get variant attributes for display
+  const variantAttributes = variant?.attributes?.map(attr => `${attr.name}: ${attr.value}`).join(', ') || '';
 
   const handleDecrement = () => {
     if (item.quantity > 1) {
@@ -18,8 +29,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
   };
 
   const handleIncrement = () => {
-    const maxStock = product.stockQuantity || 999;
-    if (item.quantity < maxStock) {
+    if (item.quantity < stock) {
       onUpdateQuantity(item._id, item.quantity + 1);
     }
   };
@@ -41,15 +51,21 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
         {product.categoryId?.[0]?.name && (
           <p className="cart-item-category">{product.categoryId[0].name}</p>
         )}
+        {variantAttributes && (
+          <p className="cart-item-variant">{variantAttributes}</p>
+        )}
+        {variant?.sku && (
+          <p className="cart-item-sku">SKU: {variant.sku}</p>
+        )}
         <p className="cart-item-price">{formatPrice(price)}</p>
         
         {/* Stock Status */}
-        {product.stockQuantity < 10 && product.stockQuantity > 0 && (
+        {stock < 10 && stock > 0 && (
           <span className="cart-item-stock-warning">
-            Only {product.stockQuantity} left in stock
+            Only {stock} left in stock
           </span>
         )}
-        {product.stockQuantity === 0 && (
+        {stock === 0 && (
           <span className="cart-item-out-of-stock">Out of stock</span>
         )}
       </div>
@@ -70,7 +86,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
           variant="outline"
           size="sm"
           onClick={handleIncrement}
-          disabled={item.quantity >= (product.stockQuantity || 999)}
+          disabled={item.quantity >= stock}
           className="quantity-btn"
         >
           <Plus size={16} />

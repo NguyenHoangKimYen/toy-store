@@ -185,13 +185,20 @@ export const useProductDetail = (productId) => {
       
       try {
         setVariantsLoading(true);
-        const response = await fetch(`/api/products/${product._id}/variants`);
+        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const url = `${API_BASE_URL}/api/products/${product._id}/variants`;
+        console.log('Fetching variants from:', url);
+        
+        const response = await fetch(url);
         const data = await response.json();
+        console.log('Variants fetched:', data);
+        
         setVariants(data.variants || []);
         
         // Set first available variant as default
         if (data.variants?.length > 0) {
           const firstAvailable = data.variants.find(v => v.stockQuantity > 0 && v.isActive) || data.variants[0];
+          console.log('Selected variant:', firstAvailable);
           setSelectedVariant(firstAvailable);
         }
       } catch (err) {

@@ -162,7 +162,7 @@ const ProductDetail = () => {
           {/* Image Gallery */}
           <div className="product-gallery-section">
             <ProductImageGallery 
-              images={product.imageUrls || []} 
+              images={selectedVariant?.imageUrls || product.imageUrls || []} 
               productName={product.name} 
             />
           </div>
@@ -178,6 +178,7 @@ const ProductDetail = () => {
               inStock={inStock}
               stock={stock}
               discount={discount}
+              selectedVariant={selectedVariant}
             />
 
             {/* Variants */}

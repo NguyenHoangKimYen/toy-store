@@ -332,7 +332,29 @@ export const handlers = [
   // Cart endpoints
   http.get(`${API_BASE_URL}/api/cart`, () => {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    return HttpResponse.json(cart);
+    
+    // Populate product and variant data
+    const populatedCart = cart.map(item => {
+      const allProducts = [
+        ...mockProducts.featured,
+        ...mockProducts.bestSellers,
+        ...mockProducts.keychains,
+        ...mockProducts.plushToys,
+        ...mockProducts.accessories,
+        ...mockProducts.newProducts,
+      ];
+      
+      const product = allProducts.find(p => p._id === item.productId);
+      const variant = item.variantId ? getVariantById(item.variantId) : null;
+      
+      return {
+        ...item,
+        product: product || null,
+        variant: variant || null,
+      };
+    });
+    
+    return HttpResponse.json(populatedCart);
   }),
 
   http.post(`${API_BASE_URL}/api/cart`, async ({ request }) => {
@@ -375,6 +397,70 @@ export const handlers = [
 
     localStorage.setItem('cart', JSON.stringify(cart));
     return HttpResponse.json(cart[existingItemIndex] || cart[cart.length - 1], { status: 201 });
+  }),
+
+  // Update cart item quantity
+  http.patch(`${API_BASE_URL}/api/cart/:itemId`, async ({ params, request }) => {
+    const { itemId } = params;
+    const updates = await request.json();
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    
+    const itemIndex = cart.findIndex(item => item._id === itemId);
+    
+    if (itemIndex === -1) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    
+    // Update the item
+    cart[itemIndex] = {
+      ...cart[itemIndex],
+      ...updates,
+    };
+    
+    localStorage.setItem('cart', JSON.stringify(cart));
+    
+    // Return populated item
+    const item = cart[itemIndex];
+    const allProducts = [
+      ...mockProducts.featured,
+      ...mockProducts.bestSellers,
+      ...mockProducts.keychains,
+      ...mockProducts.plushToys,
+      ...mockProducts.accessories,
+      ...mockProducts.newProducts,
+    ];
+    
+    const product = allProducts.find(p => p._id === item.productId);
+    const variant = item.variantId ? getVariantById(item.variantId) : null;
+    
+    return HttpResponse.json({
+      ...item,
+      product: product || null,
+      variant: variant || null,
+    });
+  }),
+
+  // Delete cart item
+  http.delete(`${API_BASE_URL}/api/cart/:itemId`, ({ params }) => {
+    const { itemId } = params;
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    
+    const itemIndex = cart.findIndex(item => item._id === itemId);
+    
+    if (itemIndex === -1) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    
+    cart.splice(itemIndex, 1);
+    localStorage.setItem('cart', JSON.stringify(cart));
+    
+    return HttpResponse.json({ message: 'Item removed from cart' });
+  }),
+
+  // Clear cart
+  http.delete(`${API_BASE_URL}/api/cart`, () => {
+    localStorage.setItem('cart', JSON.stringify([]));
+    return HttpResponse.json({ message: 'Cart cleared' });
   }),
 
   // Orders endpoints

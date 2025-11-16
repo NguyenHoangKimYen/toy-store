@@ -50,6 +50,19 @@
   margin: 0;
 }
 
+.cart-item-variant {
+  font-size: 0.875rem;
+  color: #ee4d2d;
+  font-weight: 500;
+  margin: 0;
+}
+
+.cart-item-sku {
+  font-size: 0.75rem;
+  color: #999;
+  margin: 0;
+}
+
 .cart-item-price {
   font-size: 1rem;
   font-weight: 600;

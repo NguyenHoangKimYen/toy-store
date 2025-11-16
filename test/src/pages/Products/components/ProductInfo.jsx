@@ -5,7 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import { ProductBadges } from '@/components/common';
 import { formatPrice } from '@/utils/formatPrice';
 
-const ProductInfo = ({ product, rating, reviewCount, price, originalPrice, inStock, stock, discount }) => {
+const ProductInfo = ({ product, rating, reviewCount, price, originalPrice, inStock, stock, discount, selectedVariant }) => {
   return (
     <div className="product-info-section">
       {/* Badges */}
@@ -44,16 +44,21 @@ const ProductInfo = ({ product, rating, reviewCount, price, originalPrice, inSto
             <span className="original-price">{formatPrice(originalPrice)}</span>
           )}
         </div>
-        {inStock ? (
-          <Badge variant="outline" className="stock-badge in-stock">
-            <Check size={14} className="mr-1" />
-            In Stock ({stock} available)
-          </Badge>
-        ) : (
-          <Badge variant="destructive" className="stock-badge">
-            Out of Stock
-          </Badge>
-        )}
+        <div className="stock-info">
+          {inStock ? (
+            <Badge variant="outline" className="stock-badge in-stock">
+              <Check size={14} className="mr-1" />
+              In Stock ({stock} available)
+            </Badge>
+          ) : (
+            <Badge variant="destructive" className="stock-badge">
+              Out of Stock
+            </Badge>
+          )}
+          {selectedVariant?.sku && (
+            <span className="product-sku">SKU: {selectedVariant.sku}</span>
+          )}
+        </div>
       </div>
 
       {/* Short Description */}

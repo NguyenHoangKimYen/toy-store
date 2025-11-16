@@ -6,10 +6,20 @@ import { VariantSelector } from '@/components/common';
  * Adapts product data structure for the generic VariantSelector
  */
 const ProductVariantSelector = ({ product, variants, selectedVariant, onVariantChange }) => {
-  if (!variants || variants.length === 0) return null;
+  console.log('ProductVariantSelector:', { product, variants, selectedVariant });
+  
+  if (!variants || variants.length === 0) {
+    console.log('No variants to display');
+    return null;
+  }
 
   // Get attributes definition from product
   const attributes = product?.attributes || [];
+  
+  if (attributes.length === 0) {
+    console.warn('Product has no attributes defined');
+    return null;
+  }
 
   return (
     <div className="product-variants-wrapper">
