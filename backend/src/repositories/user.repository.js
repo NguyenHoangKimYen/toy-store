@@ -31,6 +31,17 @@ const findByEmail = async (email, includePassword = false) => {
         .select(includePassword ? '+password' : '-password'); //hiển thị hoặc không hiển thị password
 };
 
+const findByEmailOrPhone = async (email, phone) => {
+    return User.findOne({
+        $or: [{ email }, { phone }]
+    })
+        .populate({
+            path: 'defaultAddressId',
+            select: 'fullName phone addressLine city postalCode isDefault'
+        })
+        .select('-password');
+};
+
 const findByPhone = async (phone, includePassword = false) => {
     return User.findOne({ phone })
         .populate({
@@ -283,6 +294,7 @@ module.exports = {
     findByPhone,
     findByUsername,
     findByIdWithPassword,
+    findByEmailOrPhone,
     create,
     setVerified,
     setPassword,
