@@ -12,8 +12,15 @@ export const handleResponse = async (response) => {
     throw new Error(error.message || `HTTP error! status: ${response.status}`);
   }
   const json = await response.json();
+  
+  // Handle different response formats
   if (json.success && json.data !== undefined) {
     return json.data;
+  }
+  
+  // Handle paginated response format {products: [...], pagination: {...}}
+  if (json.products !== undefined) {
+    return json.products;
   }
 
   return json;

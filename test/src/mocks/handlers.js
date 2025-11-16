@@ -2,10 +2,153 @@ import { http, HttpResponse } from 'msw';
 import { mockProducts } from './mockProducts';
 import { mockReviews } from './mockReviews';
 import { getVariantsByProductId, getVariantById, getTotalStockForProduct } from './mockVariants';
+import { validateCredentials, emailExists, addUser, findUserById } from './mockUsers';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
+// Helper to generate JWT token (mock)
+const generateToken = (user) => {
+  return btoa(JSON.stringify({ userId: user._id, email: user.email, role: user.role, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 }));
+};
+
+// Helper to verify token
+const verifyToken = (token) => {
+  try {
+    const decoded = JSON.parse(atob(token));
+    if (decoded.exp < Date.now()) {
+      return { valid: false, error: 'Token expired' };
+    }
+    return { valid: true, decoded };
+  } catch {
+    return { valid: false, error: 'Invalid token' };
+  }
+};
+
 export const handlers = [
+  // Auth endpoints
+  http.post(`${API_BASE_URL}/api/auth/login`, async ({ request }) => {
+    const { email, password } = await request.json();
+
+    // Validate input
+    if (!email || !password) {
+      return HttpResponse.json(
+        { success: false, message: 'Email and password are required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate credentials
+    const result = validateCredentials(email, password);
+    if (!result.valid) {
+      return HttpResponse.json(
+        { success: false, message: result.error },
+        { status: 401 }
+      );
+    }
+
+    // Generate token
+    const token = generateToken(result.user);
+
+    // Return user data without password
+    const { password: _, ...userWithoutPassword } = result.user;
+
+    return HttpResponse.json({
+      success: true,
+      message: 'Login successful',
+      token,
+      user: userWithoutPassword,
+    });
+  }),
+
+  http.post(`${API_BASE_URL}/api/auth/signup`, async ({ request }) => {
+    const { fullname, email, phone, password } = await request.json();
+
+    // Validate input
+    if (!fullname || !email || !phone || !password) {
+      return HttpResponse.json(
+        { success: false, message: 'All fields are required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return HttpResponse.json(
+        { success: false, message: 'Invalid email format' },
+        { status: 400 }
+      );
+    }
+
+    // Check if email exists
+    if (emailExists(email)) {
+      return HttpResponse.json(
+        { success: false, message: 'Email already registered' },
+        { status: 409 }
+      );
+    }
+
+    // Create new user
+    const newUser = addUser({ fullname, email, phone, password });
+
+    // Generate token
+    const token = generateToken(newUser);
+
+    // Return user data without password
+    const { password: _, ...userWithoutPassword } = newUser;
+
+    return HttpResponse.json({
+      success: true,
+      message: 'Account created successfully',
+      token,
+      user: userWithoutPassword,
+    });
+  }),
+
+  http.get(`${API_BASE_URL}/api/auth/me`, ({ request }) => {
+    const authHeader = request.headers.get('Authorization');
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return HttpResponse.json(
+        { success: false, message: 'No token provided' },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.substring(7);
+    const result = verifyToken(token);
+
+    if (!result.valid) {
+      return HttpResponse.json(
+        { success: false, message: result.error },
+        { status: 401 }
+      );
+    }
+
+    const user = findUserById(result.decoded.userId);
+    if (!user) {
+      return HttpResponse.json(
+        { success: false, message: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    const { password: _, ...userWithoutPassword } = user;
+
+    return HttpResponse.json({
+      success: true,
+      user: userWithoutPassword,
+    });
+  }),
+
+  http.post(`${API_BASE_URL}/api/auth/logout`, () => {
+    return HttpResponse.json({
+      success: true,
+      message: 'Logged out successfully',
+    });
+  }),
+
+  // Products endpoints
   // Products endpoints
   http.get(`${API_BASE_URL}/api/products`, ({ request }) => {
     const url = new URL(request.url);
@@ -15,8 +158,19 @@ export const handlers = [
     const search = url.searchParams.get('search');
     const category = url.searchParams.get('category');
     const brand = url.searchParams.get('brand');
-    const sortBy = url.searchParams.get('sortBy') || 'createdAt';
-    const sortOrder = url.searchParams.get('sortOrder') || 'desc';
+    
+    // Support both 'sortBy=field:order' and separate 'sortBy' and 'sortOrder' params
+    const sortByParam = url.searchParams.get('sortBy') || 'createdAt';
+    let sortBy = sortByParam;
+    let sortOrder = url.searchParams.get('sortOrder') || 'desc';
+    
+    // Parse 'sortBy:order' format (e.g., 'totalUnitsSold:desc')
+    if (sortByParam.includes(':')) {
+      const [field, order] = sortByParam.split(':');
+      sortBy = field;
+      sortOrder = order || 'desc';
+    }
+    
     const minPrice = parseFloat(url.searchParams.get('minPrice') || '0');
     const maxPrice = parseFloat(url.searchParams.get('maxPrice') || 'Infinity');
     const minRating = parseFloat(url.searchParams.get('rating') || '0');
@@ -34,11 +188,10 @@ export const handlers = [
       ...mockProducts.newProducts,
     ];
 
-    // Remove duplicates by _id
-    const uniqueProducts = Array.from(
+    // Always remove duplicates first
+    products = Array.from(
       new Map(products.map(p => [p._id, p])).values()
     );
-    products = uniqueProducts;
 
     // Filter products with active variants (at least one variant must be active and have stock)
     if (inStock === 'true') {
@@ -51,6 +204,18 @@ export const handlers = [
     // Apply filters
     if (isFeatured === 'true') {
       products = products.filter(p => p.isFeatured);
+    }
+
+    // New products filter
+    const isNew = url.searchParams.get('isNew');
+    if (isNew === 'true') {
+      // Filter products created in the last 30 days or marked as new
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      products = products.filter(p => {
+        const createdDate = new Date(p.createdAt);
+        return createdDate >= thirtyDaysAgo || p.isNew === true;
+      });
     }
 
     if (search) {

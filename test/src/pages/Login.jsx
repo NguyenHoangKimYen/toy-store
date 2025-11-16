@@ -1,17 +1,23 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from '../components/ui/button'
 import { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 const Login = () => {
-
-
-
-
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
+  // Redirect if already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      navigate('/')
+    }
+  }, [navigate])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -21,7 +27,7 @@ const Login = () => {
     const password = e.target.password.value
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
@@ -29,21 +35,27 @@ const Login = () => {
 
       const data = await res.json()
 
-      if (!res.ok) throw new Error(data.message || "Unexpected error occurred")
+      if (!res.ok) throw new Error(data.message || "Login failed")
 
-      console.log("User:", data)
-      /////////////////////////////// localStorage.setItem("token", data.token) 
-      toast("OK!", {
+      // Store token and user data
+      localStorage.setItem("token", data.token)
+      localStorage.setItem("user", JSON.stringify(data.user))
+      
+      // Dispatch event to update navbar
+      window.dispatchEvent(new Event('userLoggedIn'))
+      
+      toast("Login successful!", {
         position: "top-center",
-        className: "!bg-green-600 !text-white border border-red-700",
-
+        className: "!bg-green-600 !text-white border border-green-700",
       })
+
+      // Navigate to home after short delay
+      setTimeout(() => navigate("/"), 500)
 
     } catch (err) {
       toast(err.message, {
         position: "top-center",
         className: "!bg-red-600 !text-white border border-red-700",
-
       })
     } finally {
       setLoading(false)
@@ -65,7 +77,7 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className='flex flex-col gap-1'>
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="nigga@mail.com" required />
+              <Input id="email" type="email" placeholder="random123@mail.com" required />
             </div>
 
             <div className='flex flex-col gap-1'>

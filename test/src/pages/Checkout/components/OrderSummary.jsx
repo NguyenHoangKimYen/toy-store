@@ -20,7 +20,22 @@ const OrderSummary = ({
       {/* Cart Items */}
       <div className="order-items">
         {cartItems.map((item) => {
-          const price = item.variant?.price || item.product?.minPrice || item.product?.price?.$numberDecimal || item.product?.price || 0;
+          // Extract price, handling $numberDecimal format
+          let price = 0;
+          if (item.variant?.price) {
+            price = typeof item.variant.price === 'object' 
+              ? parseFloat(item.variant.price.$numberDecimal || item.variant.price) 
+              : parseFloat(item.variant.price);
+          } else if (item.product?.minPrice) {
+            price = typeof item.product.minPrice === 'object'
+              ? parseFloat(item.product.minPrice.$numberDecimal || item.product.minPrice)
+              : parseFloat(item.product.minPrice);
+          } else if (item.product?.price) {
+            price = typeof item.product.price === 'object'
+              ? parseFloat(item.product.price.$numberDecimal || item.product.price)
+              : parseFloat(item.product.price);
+          }
+          
           const imageUrl = item.variant?.imageUrls?.[0] || item.product?.imageUrls?.[0] || '/placeholder.png';
           const variantInfo = item.variant?.attributes?.map(attr => `${attr.name}: ${attr.value}`).join(', ');
           

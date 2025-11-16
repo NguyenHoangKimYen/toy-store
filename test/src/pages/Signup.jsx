@@ -1,17 +1,23 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { Button } from '../components/ui/button'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { useNavigate } from 'react-router-dom'
-
 
 const Signup = () => {
-
     const [loading, setLoading] = useState(false)
     const navigate = useNavigate()
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
+    // Redirect if already logged in
+    useEffect(() => {
+        const token = localStorage.getItem('token')
+        if (token) {
+            navigate('/')
+        }
+    }, [navigate])
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -23,7 +29,7 @@ const Signup = () => {
         const password = e.target.password.value.trim()
 
         try {
-            const res = await fetch("http://localhost:5000/api/auth/signup", {
+            const res = await fetch(`${API_BASE_URL}/api/auth/signup`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ fullname, email, phone, password })
@@ -33,12 +39,24 @@ const Signup = () => {
 
             if (!res.ok) throw new Error(data.message || "Signup failed")
 
+            // Store token and user data
+            localStorage.setItem("token", data.token)
+            localStorage.setItem("user", JSON.stringify(data.user))
 
-            toast("Account created successfully!", "success")
-            setTimeout(() => navigate("/login"), 500)
+            // Dispatch event to update navbar
+            window.dispatchEvent(new Event('userLoggedIn'))
+
+            toast("Account created successfully!", {
+                position: "top-center",
+                className: "!bg-green-600 !text-white border border-green-700",
+            })
+            setTimeout(() => navigate("/"), 500)
 
         } catch (err) {
-            toast(err.message || "Something went wrong", "error")
+            toast(err.message || "Something went wrong", {
+                position: "top-center",
+                className: "!bg-red-600 !text-white border border-red-700",
+            })
         } finally {
             setLoading(false)
         }
@@ -65,7 +83,7 @@ const Signup = () => {
 
                         <div className='flex flex-col gap-1'>
                             <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" placeholder="nigga@mail.com" required />
+                            <Input id="email" type="email" placeholder="random123@mail.com" required />
                         </div>
 
                         <div className="flex flex-col gap-1">
