@@ -207,32 +207,48 @@ function EditableReview({ review, currentUserId }) {
 // Example 6: Using Service Functions Directly
 // ============================================================================
 
-async function exampleServiceUsage() {
-  // Get reviews for a product
-  const { reviews, total } = await getProductReviews('product123', {
-    limit: 10,
-    skip: 0,
-    sortBy: 'createdAt',
-    sortOrder: 'desc'
-  });
-  console.log(`Found ${total} reviews`, reviews);
+/**
+ * Example of using service functions directly (not a component)
+ * Call this function from your code to test the review services
+ */
+function ServiceUsageExample() {
+  const handleTestServices = async () => {
+    // Get reviews for a product
+    const { reviews, total } = await getProductReviews('product123', {
+      limit: 10,
+      skip: 0,
+      sortBy: 'createdAt',
+      sortOrder: 'desc'
+    });
+    console.log(`Found ${total} reviews`, reviews);
 
-  // Create a new review
-  const newReview = await createReview('product123', {
-    content: 'This product is amazing!',
-    userId: 'user1' // or null for guest
-  });
-  console.log('Created review:', newReview);
+    // Create a new review
+    const newReview = await createReview('product123', {
+      content: 'This product is amazing!',
+      userId: 'user1' // or null for guest
+    });
+    console.log('Created review:', newReview);
 
-  // Update a review
-  const updated = await updateReview('review123', {
-    content: 'Updated review content'
-  });
-  console.log('Updated review:', updated);
+    // Update a review
+    const updated = await updateReview('review123', {
+      content: 'Updated review content'
+    });
+    console.log('Updated review:', updated);
 
-  // Delete a review
-  await deleteReview('review123');
-  console.log('Review deleted');
+    // Delete a review
+    await deleteReview('review123');
+    console.log('Review deleted');
+  };
+
+  return (
+    <div>
+      <h3>Service Function Examples</h3>
+      <button onClick={handleTestServices}>
+        Test Review Services
+      </button>
+      <p>Check the console for results</p>
+    </div>
+  );
 }
 
 // ============================================================================
@@ -293,7 +309,7 @@ export {
   CreateReviewForm,
   UserReviewsPage,
   EditableReview,
-  exampleServiceUsage,
+  ServiceUsageExample,
   ProductDetailPage,
   ReviewPrompt,
 };
