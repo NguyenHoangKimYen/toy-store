@@ -171,51 +171,78 @@ export const useCategorizedProducts = (options = {}) => {
  * @returns {Object} Product detail with variant utilities
  */
 export const useProductDetail = (productId) => {
-  const { data: product, loading, error, refetch } = useProducts({ productId });
+  const { data: product, loading: productLoading, error, refetch } = useProducts({ productId });
   
+  const [variants, setVariants] = useState([]);
+  const [variantsLoading, setVariantsLoading] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [quantity, setQuantity] = useState(1);
 
-  // Set default variant when product loads
+  // Fetch variants when product loads
   useEffect(() => {
-    if (product?.variants?.length > 0) {
-      setSelectedVariant(product.variants[0]);
-    }
+    const fetchVariants = async () => {
+      if (!product?._id) return;
+      
+      try {
+        setVariantsLoading(true);
+        const response = await fetch(`/api/products/${product._id}/variants`);
+        const data = await response.json();
+        setVariants(data.variants || []);
+        
+        // Set first available variant as default
+        if (data.variants?.length > 0) {
+          const firstAvailable = data.variants.find(v => v.stockQuantity > 0 && v.isActive) || data.variants[0];
+          setSelectedVariant(firstAvailable);
+        }
+      } catch (err) {
+        console.error('Error fetching variants:', err);
+      } finally {
+        setVariantsLoading(false);
+      }
+    };
+
+    fetchVariants();
   }, [product]);
 
-  const handleVariantChange = useCallback((variantId) => {
-    const variant = product?.variants?.find(v => v._id === variantId);
+  const handleVariantChange = useCallback((variant) => {
     if (variant) {
       setSelectedVariant(variant);
       setQuantity(1);
     }
-  }, [product]);
+  }, []);
 
   const handleQuantityChange = useCallback((delta) => {
     const newQuantity = quantity + delta;
-    const maxStock = selectedVariant?.stock || product?.stockQuantity || 0;
+    const maxStock = selectedVariant?.stockQuantity || 0;
     
     if (newQuantity >= 1 && newQuantity <= maxStock) {
       setQuantity(newQuantity);
     }
-  }, [quantity, selectedVariant, product]);
+  }, [quantity, selectedVariant]);
 
   // Calculated values
-  const price = selectedVariant?.price || product?.minPrice || product?.price?.$numberDecimal || product?.price;
-  const originalPrice = selectedVariant?.originalPrice || product?.maxPrice || product?.originalPrice?.$numberDecimal || product?.originalPrice;
-  const stock = selectedVariant?.stock || product?.stockQuantity || 0;
-  const inStock = stock > 0;
-  const discount = originalPrice && price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
+  const price = selectedVariant?.price?.$numberDecimal || selectedVariant?.price || 0;
+  const stock = selectedVariant?.stockQuantity || 0;
+  const inStock = stock > 0 && selectedVariant?.isActive;
+  
+  // For discount calculation, compare to highest price variant if multiple exist
+  const maxVariantPrice = variants.length > 0 
+    ? Math.max(...variants.map(v => parseFloat(v.price?.$numberDecimal || v.price || 0)))
+    : price;
+  const discount = maxVariantPrice && price && maxVariantPrice > price 
+    ? Math.round(((maxVariantPrice - price) / maxVariantPrice) * 100) 
+    : 0;
 
   return {
     product,
-    loading,
+    loading: productLoading || variantsLoading,
     error,
     refetch,
+    variants,
     selectedVariant,
     quantity,
     price,
-    originalPrice,
+    originalPrice: discount > 0 ? maxVariantPrice : null,
     stock,
     inStock,
     discount,

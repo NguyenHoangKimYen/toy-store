@@ -24,8 +24,27 @@ const ProductCard = ({
 }) => {
   if (!product) return null;
 
-  const price = product.minPrice || product.price?.$numberDecimal || product.price;
-  const originalPrice = product.maxPrice || product.originalPrice?.$numberDecimal || product.originalPrice;
+  // Handle price display for variant-based products
+  const hasVariants = product.variants && product.variants.length > 0;
+  const minPrice = product.minPrice?.$numberDecimal || product.minPrice;
+  const maxPrice = product.maxPrice?.$numberDecimal || product.maxPrice;
+  
+  // For products without variants (legacy), use single price
+  const singlePrice = product.price?.$numberDecimal || product.price;
+  
+  // Determine display price
+  let priceDisplay;
+  if (hasVariants && minPrice && maxPrice) {
+    // Show range if prices differ
+    if (minPrice !== maxPrice) {
+      priceDisplay = `${formatPrice(minPrice)} - ${formatPrice(maxPrice)}`;
+    } else {
+      priceDisplay = formatPrice(minPrice);
+    }
+  } else {
+    priceDisplay = formatPrice(singlePrice);
+  }
+
   const imageUrl = product.imageUrls?.[0] || '/placeholder.png';
   const categoryName = product.categoryId?.[0]?.name || product.categoryId?.name || 'Uncategorized';
 
@@ -66,13 +85,8 @@ const ProductCard = ({
             <p className="product-card-category">{categoryName}</p>
           )}
           <p className="product-card-price">
-            {formatPrice(price)}
+            {priceDisplay}
           </p>
-          {originalPrice && (
-            <p className="product-card-original-price">
-              {formatPrice(originalPrice)}
-            </p>
-          )}
         </div>
       </div>
     );
@@ -90,7 +104,7 @@ const ProductCard = ({
         </div>
         <div className="product-card-content">
           <h4 className="product-card-name">{product.name}</h4>
-          <p className="product-card-price">{formatPrice(price)}</p>
+          <p className="product-card-price">{priceDisplay}</p>
         </div>
       </div>
     );
@@ -130,13 +144,8 @@ const ProductCard = ({
         <div className="product-footer">
           <div className="product-price">
             <span className="current-price">
-              {formatPrice(price)}
+              {priceDisplay}
             </span>
-            {originalPrice && (
-              <span className="original-price">
-                {formatPrice(originalPrice)}
-              </span>
-            )}
           </div>
           
           {onAddToCart && (

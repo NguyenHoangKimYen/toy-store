@@ -1,0 +1,170 @@
+.variant-selector {
+  padding: 1.5rem;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+/* Attribute Groups */
+.attribute-group {
+  margin-bottom: 1.5rem;
+}
+
+.attribute-label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #333;
+  margin-bottom: 0.75rem;
+}
+
+.attribute-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* Attribute Option Buttons */
+.attribute-option {
+  position: relative;
+  padding: 0.6rem 1.25rem;
+  border: 2px solid #ddd;
+  background: white;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+  text-align: center;
+}
+
+.attribute-option:hover:not(.disabled) {
+  border-color: #ff6b9d;
+  color: #ff6b9d;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 107, 157, 0.15);
+}
+
+.attribute-option.selected {
+  border-color: #ff6b9d;
+  background: linear-gradient(135deg, #ff6b9d 0%, #c06c84 100%);
+  color: white;
+  font-weight: 600;
+}
+
+.attribute-option.disabled {
+  border-color: #e0e0e0;
+  background: #f5f5f5;
+  color: #aaa;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.out-of-stock-indicator {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ff4444;
+  color: white;
+  font-size: 0.7rem;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+/* Variant Info Section */
+.variant-info {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.variant-price,
+.variant-stock,
+.variant-sku {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.price-label,
+.stock-label,
+.sku-label {
+  font-weight: 500;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.price-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ff6b9d;
+}
+
+.stock-value {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.stock-value.in-stock {
+  color: #4caf50;
+}
+
+.stock-value.out-of-stock {
+  color: #f44336;
+}
+
+.sku-value {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: #888;
+  background: #f5f5f5;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .variant-selector {
+    padding: 1rem;
+  }
+
+  .attribute-option {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    min-width: 70px;
+  }
+
+  .price-value {
+    font-size: 1.25rem;
+  }
+
+  .variant-info {
+    gap: 0.5rem;
+  }
+}
+
+/* Loading State */
+.variant-selector.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Error State */
+.variant-selector-error {
+  padding: 1rem;
+  background: #ffebee;
+  color: #c62828;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0.9rem;
+}

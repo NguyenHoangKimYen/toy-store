@@ -23,6 +23,7 @@ const ProductDetail = () => {
     product,
     loading,
     error,
+    variants,
     selectedVariant,
     quantity,
     price,
@@ -38,13 +39,31 @@ const ProductDetail = () => {
   const [addingToCart, setAddingToCart] = React.useState(false);
 
   const handleAddToCart = async () => {
+    if (!selectedVariant) {
+      toast.error('Please select a variant');
+      return;
+    }
+
+    if (!inStock) {
+      toast.error('This variant is out of stock');
+      return;
+    }
+
     try {
       setAddingToCart(true);
-      await addToCart(product._id, quantity);
+      await addToCart({
+        productId: product._id,
+        variantId: selectedVariant._id,
+        quantity,
+      });
       
-      // Show success message
+      // Show success message with variant details
+      const variantInfo = selectedVariant.attributes
+        ?.map(attr => `${attr.name}: ${attr.value}`)
+        .join(', ');
+      
       toast.success(`${product.name} added to cart!`, {
-        description: `Quantity: ${quantity}`,
+        description: `${variantInfo} • Quantity: ${quantity}`,
       });
       
       // Dispatch custom event to update cart count
@@ -60,9 +79,23 @@ const ProductDetail = () => {
   };
 
   const handleBuyNow = async () => {
+    if (!selectedVariant) {
+      toast.error('Please select a variant');
+      return;
+    }
+
+    if (!inStock) {
+      toast.error('This variant is out of stock');
+      return;
+    }
+
     try {
       setAddingToCart(true);
-      await addToCart(product._id, quantity);
+      await addToCart({
+        productId: product._id,
+        variantId: selectedVariant._id,
+        quantity,
+      });
       navigate(ROUTES.CHECKOUT);
     } catch (err) {
       console.error('Error adding to cart:', err);
@@ -149,7 +182,8 @@ const ProductDetail = () => {
 
             {/* Variants */}
             <ProductVariantSelector
-              variants={product.variants}
+              product={product}
+              variants={variants}
               selectedVariant={selectedVariant}
               onVariantChange={handleVariantChange}
             />

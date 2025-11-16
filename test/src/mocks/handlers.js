@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import { mockProducts } from './mockProducts';
 import { mockReviews } from './mockReviews';
+import { getVariantsByProductId, getVariantById, getTotalStockForProduct } from './mockVariants';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -22,6 +23,7 @@ export const handlers = [
     const daysAgo = parseInt(url.searchParams.get('daysAgo') || '0');
     const startDate = url.searchParams.get('startDate');
     const endDate = url.searchParams.get('endDate');
+    const inStock = url.searchParams.get('inStock'); // New filter for stock availability
 
     let products = [
       ...mockProducts.featured,
@@ -37,6 +39,14 @@ export const handlers = [
       new Map(products.map(p => [p._id, p])).values()
     );
     products = uniqueProducts;
+
+    // Filter products with active variants (at least one variant must be active and have stock)
+    if (inStock === 'true') {
+      products = products.filter(p => {
+        const totalStock = getTotalStockForProduct(p._id);
+        return totalStock > 0;
+      });
+    }
 
     // Apply filters
     if (isFeatured === 'true') {
@@ -72,11 +82,13 @@ export const handlers = [
       );
     }
 
-    // Price range filter (using minPrice/maxPrice from product)
+    // Price range filter (using minPrice from product)
     if (minPrice > 0 || maxPrice !== Infinity) {
       products = products.filter(p => {
-        const price = p.minPrice || p.price || 0;
-        return price >= minPrice && price <= maxPrice;
+        const productMinPrice = p.minPrice || 0;
+        const productMaxPrice = p.maxPrice || p.minPrice || 0;
+        // Product overlaps with filter range
+        return productMinPrice <= maxPrice && productMaxPrice >= minPrice;
       });
     }
 
@@ -207,6 +219,28 @@ export const handlers = [
     return HttpResponse.json(product);
   }),
 
+  // Variant endpoints
+  http.get(`${API_BASE_URL}/api/products/:productId/variants`, ({ params }) => {
+    const { productId } = params;
+    const variants = getVariantsByProductId(productId);
+    
+    return HttpResponse.json({
+      variants: variants,
+      total: variants.length,
+    });
+  }),
+
+  http.get(`${API_BASE_URL}/api/variants/:variantId`, ({ params }) => {
+    const { variantId } = params;
+    const variant = getVariantById(variantId);
+    
+    if (!variant) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    
+    return HttpResponse.json(variant);
+  }),
+
   // Reviews endpoints
   http.get(`${API_BASE_URL}/api/products/:productId/reviews`, ({ params, request }) => {
     const { productId } = params;
@@ -305,17 +339,38 @@ export const handlers = [
     const cartItem = await request.json();
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
     
-    const existingItemIndex = cart.findIndex(
-      item => item.product._id === cartItem.product._id
-    );
+    // Support both old format (productId) and new format (productId + variantId)
+    const productId = cartItem.productId || cartItem.product?._id;
+    const variantId = cartItem.variantId;
+    
+    // Find existing cart item with same product and variant
+    const existingItemIndex = cart.findIndex(item => {
+      const itemProductId = item.productId || item.product?._id;
+      const itemVariantId = item.variantId;
+      
+      if (variantId) {
+        // New variant-based system: match both product and variant
+        return itemProductId === productId && itemVariantId === variantId;
+      } else {
+        // Legacy system: match only product
+        return itemProductId === productId && !itemVariantId;
+      }
+    });
 
     if (existingItemIndex > -1) {
+      // Update existing item quantity
       cart[existingItemIndex].quantity += cartItem.quantity;
     } else {
-      cart.push({
+      // Add new item
+      const newCartItem = {
         _id: `cart-${Date.now()}`,
-        ...cartItem,
-      });
+        productId,
+        variantId,
+        quantity: cartItem.quantity,
+        // For backward compatibility, include product object if provided
+        ...(cartItem.product && { product: cartItem.product }),
+      };
+      cart.push(newCartItem);
     }
 
     localStorage.setItem('cart', JSON.stringify(cart));

@@ -187,3 +187,92 @@ export const getProductCategories = async () => {
  * @returns {Promise<Array|Object>}
  */
 export const searchProducts = getProducts;
+
+/**
+ * Get all variants for a product
+ * @param {string} productId - Product ID
+ * @returns {Promise<Object>} - Object with variants array and total count
+ */
+export const getProductVariants = async (productId) => {
+  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.PRODUCTS}/${productId}/variants`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+  });
+  
+  return handleResponse(response);
+};
+
+/**
+ * Get a single variant by ID
+ * @param {string} variantId - Variant ID
+ * @returns {Promise<Object>}
+ */
+export const getVariantById = async (variantId) => {
+  const response = await fetch(`${API_BASE_URL}/api/variants/${variantId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+  });
+  
+  return handleResponse(response);
+};
+
+/**
+ * Create a new variant for a product
+ * @param {string} productId - Product ID
+ * @param {Object} variantData - Variant data
+ * @returns {Promise<Object>}
+ */
+export const createVariant = async (productId, variantData) => {
+  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.PRODUCTS}/${productId}/variants`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(variantData),
+  });
+  
+  return handleResponse(response);
+};
+
+/**
+ * Update a variant
+ * @param {string} variantId - Variant ID
+ * @param {Object} variantData - Variant data
+ * @returns {Promise<Object>}
+ */
+export const updateVariant = async (variantId, variantData) => {
+  const response = await fetch(`${API_BASE_URL}/api/variants/${variantId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(variantData),
+  });
+  
+  return handleResponse(response);
+};
+
+/**
+ * Delete a variant
+ * @param {string} variantId - Variant ID
+ * @returns {Promise<Object>}
+ */
+export const deleteVariant = async (variantId) => {
+  const response = await fetch(`${API_BASE_URL}/api/variants/${variantId}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+  });
+  
+  return handleResponse(response);
+};
