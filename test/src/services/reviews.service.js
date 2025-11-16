@@ -141,3 +141,46 @@ export const hasUserReviewedProduct = async (productId, userId) => {
   }
 };
 
+/**
+ * Get review statistics for a product
+ * @param {string} productId - Product ID
+ * @returns {Promise<Object>} - Review statistics (total, averageRating if applicable)
+ */
+export const getReviewStats = async (productId) => {
+  try {
+    const result = await getProductReviews(productId, { limit: 1000 });
+    const reviews = result.reviews || [];
+    
+    // Calculate rating distribution (if reviews have ratings)
+    const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    let totalRating = 0;
+    let ratedReviewsCount = 0;
+    
+    reviews.forEach(review => {
+      if (review.rating && review.rating >= 1 && review.rating <= 5) {
+        distribution[review.rating]++;
+        totalRating += review.rating;
+        ratedReviewsCount++;
+      }
+    });
+    
+    const averageRating = ratedReviewsCount > 0 ? (totalRating / ratedReviewsCount).toFixed(1) : 0;
+    
+    return {
+      total: result.total || reviews.length,
+      count: reviews.length,
+      averageRating: parseFloat(averageRating),
+      distribution,
+      ratedReviewsCount,
+    };
+  } catch (error) {
+    console.error('Error getting review stats:', error);
+    return {
+      total: 0,
+      count: 0,
+      averageRating: 0,
+      distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      ratedReviewsCount: 0,
+    };
+  }
+};

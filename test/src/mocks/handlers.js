@@ -3,6 +3,13 @@ import { mockProducts } from './mockProducts';
 import { mockReviews } from './mockReviews';
 import { getVariantsByProductId, getVariantById, getTotalStockForProduct } from './mockVariants';
 import { validateCredentials, emailExists, addUser, findUserById } from './mockUsers';
+import { 
+  validateDiscountCode, 
+  calculateDiscountAmount, 
+  getAvailableDiscountCodes,
+  getDiscountCodeByCode,
+  MOCK_DISCOUNT_CODES 
+} from './mockDiscountCodes';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -886,5 +893,163 @@ export const handlers = [
     localStorage.setItem('orders', JSON.stringify(orders));
 
     return HttpResponse.json(newOrder, { status: 201 });
+  }),
+
+  // Discount Code endpoints
+  http.post(`${API_BASE_URL}/api/discount-codes/validate`, async ({ request }) => {
+    const { code, orderTotal } = await request.json();
+
+    // Validate input
+    if (!code) {
+      return HttpResponse.json(
+        { 
+          success: false, 
+          valid: false,
+          message: 'Discount code is required' 
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate discount code
+    const validation = validateDiscountCode(code);
+
+    if (!validation.valid) {
+      return HttpResponse.json({
+        success: false,
+        valid: false,
+        message: validation.message,
+        discountCode: null,
+      });
+    }
+
+    // Calculate discount amount if orderTotal provided
+    let discountAmount = 0;
+    if (orderTotal && validation.discountCode) {
+      discountAmount = calculateDiscountAmount(validation.discountCode, orderTotal);
+    }
+
+    return HttpResponse.json({
+      success: true,
+      valid: true,
+      message: validation.message,
+      discountCode: {
+        _id: validation.discountCode._id,
+        code: validation.discountCode.code,
+        value: validation.discountCode.value,
+        remainingUses: validation.discountCode.usageLimit - validation.discountCode.usedCount,
+        usageLimit: validation.discountCode.usageLimit,
+        usedCount: validation.discountCode.usedCount,
+      },
+      discountAmount,
+    });
+  }),
+
+  http.get(`${API_BASE_URL}/api/discount-codes`, ({ request }) => {
+    const url = new URL(request.url);
+    const available = url.searchParams.get('available') === 'true';
+
+    let codes = [...MOCK_DISCOUNT_CODES];
+
+    // Filter for available codes only
+    if (available) {
+      codes = getAvailableDiscountCodes();
+    }
+
+    // Add computed fields
+    codes = codes.map(code => ({
+      ...code,
+      remainingUses: code.usageLimit - code.usedCount,
+      isActive: code.usedCount < code.usageLimit,
+    }));
+
+    return HttpResponse.json({
+      success: true,
+      discountCodes: codes,
+      total: codes.length,
+    });
+  }),
+
+  http.get(`${API_BASE_URL}/api/discount-codes/:code`, ({ params }) => {
+    const { code } = params;
+
+    const discountCode = getDiscountCodeByCode(code);
+
+    if (!discountCode) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Discount code not found',
+        },
+        { status: 404 }
+      );
+    }
+
+    return HttpResponse.json({
+      success: true,
+      discountCode: {
+        ...discountCode,
+        remainingUses: discountCode.usageLimit - discountCode.usedCount,
+        isActive: discountCode.usedCount < discountCode.usageLimit,
+      },
+    });
+  }),
+
+  http.post(`${API_BASE_URL}/api/discount-codes/:codeId/use`, async ({ params }) => {
+    const { codeId } = params;
+
+    // Get discount codes from localStorage (to track usage)
+    const localCodes = JSON.parse(localStorage.getItem('discountCodes') || '[]');
+    
+    // Find in mock data
+    let discountCode = MOCK_DISCOUNT_CODES.find(dc => dc._id === codeId);
+    
+    if (!discountCode) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Discount code not found',
+        },
+        { status: 404 }
+      );
+    }
+
+    // Check if already tracked in localStorage
+    let localCode = localCodes.find(lc => lc._id === codeId);
+    
+    if (localCode) {
+      // Check if exhausted
+      if (localCode.usedCount >= localCode.usageLimit) {
+        return HttpResponse.json(
+          {
+            success: false,
+            message: 'This discount code has reached its usage limit',
+          },
+          { status: 400 }
+        );
+      }
+      
+      // Increment usage
+      localCode.usedCount += 1;
+    } else {
+      // Create new entry in localStorage
+      localCode = {
+        ...discountCode,
+        usedCount: discountCode.usedCount + 1,
+      };
+      localCodes.push(localCode);
+    }
+
+    // Save updated codes
+    localStorage.setItem('discountCodes', JSON.stringify(localCodes));
+
+    return HttpResponse.json({
+      success: true,
+      message: 'Discount code applied successfully',
+      discountCode: {
+        ...localCode,
+        remainingUses: localCode.usageLimit - localCode.usedCount,
+      },
+    });
   }),
 ];

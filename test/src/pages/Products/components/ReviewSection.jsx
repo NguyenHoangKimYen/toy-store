@@ -78,17 +78,25 @@ const ReviewSection = ({ productId }) => {
         <div className="review-stats">
           <div className="stats-summary">
             <div className="average-rating">
-              <span className="rating-number">{stats.averageRating}</span>
-              <div className="stars-display">{renderStars(Math.round(stats.averageRating))}</div>
+              {stats.averageRating > 0 ? (
+                <>
+                  <span className="rating-number">{stats.averageRating}</span>
+                  <div className="stars-display">{renderStars(Math.round(stats.averageRating))}</div>
+                </>
+              ) : (
+                <span className="rating-number">No ratings yet</span>
+              )}
               <span className="total-reviews">{stats.total} reviews</span>
             </div>
           </div>
 
-          <div className="rating-distribution">
-            {[5, 4, 3, 2, 1].map((rating) => 
-              renderRatingBar(rating, stats.distribution[rating] || 0, stats.total)
-            )}
-          </div>
+          {stats.averageRating > 0 && (
+            <div className="rating-distribution">
+              {[5, 4, 3, 2, 1].map((rating) => 
+                renderRatingBar(rating, stats.distribution[rating] || 0, stats.total)
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -117,7 +125,9 @@ const ReviewSection = ({ productId }) => {
                       <p className="review-date">{formatDate(review.createdAt)}</p>
                     </div>
                   </div>
-                  <div className="review-rating">{renderStars(review.rating)}</div>
+                  {review.rating && (
+                    <div className="review-rating">{renderStars(review.rating)}</div>
+                  )}
                 </div>
 
                 <p className="review-content">{review.content}</p>
