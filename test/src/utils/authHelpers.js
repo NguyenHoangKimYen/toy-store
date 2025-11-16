@@ -31,9 +31,17 @@ export const isAuthenticated = () => {
 
 /**
  * Get authorization headers
- * @returns {Object} Headers with authorization
+ * @returns {Object} Headers with authorization and content type
  */
 export const getAuthHeaders = () => {
   const token = getAuthToken();
-  return token ? { 'Authorization': `Bearer ${token}` } : {};
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return headers;
 };

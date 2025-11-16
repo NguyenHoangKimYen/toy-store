@@ -9,7 +9,10 @@ import { getAuthHeaders } from '../utils/authHelpers';
 export const getCart = async () => {
   const response = await fetch(`${API_BASE_URL}${ENDPOINTS.CART}`, {
     method: 'GET',
-    headers: getAuthHeaders(),
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
   });
   return handleResponse(response);
 };

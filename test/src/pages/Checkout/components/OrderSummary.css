@@ -51,6 +51,12 @@
   white-space: nowrap;
 }
 
+.order-item-variant {
+  font-size: 0.8rem;
+  color: #ee4d2d;
+  margin-bottom: 0.25rem;
+}
+
 .order-item-quantity {
   font-size: 0.85rem;
   color: #666;

@@ -19,22 +19,29 @@ const OrderSummary = ({
 
       {/* Cart Items */}
       <div className="order-items">
-        {cartItems.map((item) => (
-          <div key={item._id} className="order-item">
-            <img
-              src={item.product.imageUrls?.[0] || '/placeholder.png'}
-              alt={item.product.name}
-              className="order-item-image"
-            />
-            <div className="order-item-details">
-              <h3 className="order-item-name">{item.product.name}</h3>
-              <p className="order-item-quantity">Qty: {item.quantity}</p>
+        {cartItems.map((item) => {
+          const price = item.variant?.price || item.product?.minPrice || item.product?.price?.$numberDecimal || item.product?.price || 0;
+          const imageUrl = item.variant?.imageUrls?.[0] || item.product?.imageUrls?.[0] || '/placeholder.png';
+          const variantInfo = item.variant?.attributes?.map(attr => `${attr.name}: ${attr.value}`).join(', ');
+          
+          return (
+            <div key={item._id} className="order-item">
+              <img
+                src={imageUrl}
+                alt={item.product?.name || 'Product'}
+                className="order-item-image"
+              />
+              <div className="order-item-details">
+                <h3 className="order-item-name">{item.product?.name || 'Product'}</h3>
+                {variantInfo && <p className="order-item-variant">{variantInfo}</p>}
+                <p className="order-item-quantity">Qty: {item.quantity || 0}</p>
+              </div>
+              <div className="order-item-price">
+                {formatPrice(price * (item.quantity || 0))}
+              </div>
             </div>
-            <div className="order-item-price">
-              {formatPrice(item.product.price * item.quantity)}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Price Breakdown */}

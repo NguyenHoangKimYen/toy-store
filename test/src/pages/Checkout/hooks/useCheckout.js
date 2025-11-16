@@ -31,8 +31,9 @@ export const useCheckout = () => {
   const subtotal = cartItems.reduce(
     (sum, item) => {
       if (!item.product) return sum;
-      const price = item.product.minPrice || item.product.price?.$numberDecimal || item.product.price || 0;
-      return sum + price * item.quantity;
+      // Use variant price if available, otherwise use product price
+      const price = item.variant?.price || item.product.minPrice || item.product.price?.$numberDecimal || item.product.price || 0;
+      return sum + price * (item.quantity || 0);
     },
     0
   );
@@ -92,11 +93,15 @@ export const useCheckout = () => {
 
       // Prepare order data
       const orderData = {
-        items: cartItems.map((item) => ({
-          productId: item.product._id,
-          quantity: item.quantity,
-          price: item.product.minPrice || item.product.price?.$numberDecimal || item.product.price,
-        })),
+        items: cartItems.map((item) => {
+          const price = item.variant?.price || item.product.minPrice || item.product.price?.$numberDecimal || item.product.price || 0;
+          return {
+            productId: item.product._id,
+            variantId: item.variantId,
+            quantity: item.quantity || 0,
+            price: price,
+          };
+        }),
         shippingInfo,
         paymentMethod,
         subtotal,
