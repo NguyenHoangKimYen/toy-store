@@ -26,6 +26,11 @@ export const useCheckout = () => {
   });
 
   const [paymentMethod, setPaymentMethod] = useState('cod');
+  const [discountInfo, setDiscountInfo] = useState({
+    appliedCode: null,
+    discountAmount: 0,
+    isApplied: false,
+  });
 
   // Calculate totals
   const subtotal = cartItems.reduce(
@@ -61,7 +66,8 @@ export const useCheckout = () => {
   );
   const shipping = subtotal > 1000000 ? 0 : 50000; // Free shipping over 1,000,000 VND
   const tax = subtotal * 0.1; // 10% tax
-  const total = subtotal + shipping + tax;
+  const discount = discountInfo.discountAmount || 0;
+  const total = subtotal + shipping + tax - discount;
 
   console.log('Checkout totals:', { subtotal, shipping, tax, total, cartItemsCount: cartItems.length });
 
@@ -145,11 +151,24 @@ export const useCheckout = () => {
         subtotal,
         shipping,
         tax,
+        discount: discountInfo.discountAmount || 0,
+        discountCode: discountInfo.appliedCode?.code || null,
         total,
       };
 
       // Submit order
       const order = await createOrder(orderData);
+
+      // Mark discount code as used if applicable
+      if (discountInfo.appliedCode && discountInfo.appliedCode._id) {
+        try {
+          const { useDiscountCode: applyDiscountCode } = await import('@/services/discountCodes.service');
+          await applyDiscountCode(discountInfo.appliedCode._id);
+        } catch (err) {
+          console.error('Error marking discount code as used:', err);
+          // Don't fail the order if marking fails
+        }
+      }
 
       // Clear cart
       localStorage.removeItem('cart');
@@ -175,6 +194,10 @@ export const useCheckout = () => {
     }
   };
 
+  const handleDiscountApplied = (info) => {
+    setDiscountInfo(info);
+  };
+
   return {
     cartItems,
     shippingInfo,
@@ -182,6 +205,7 @@ export const useCheckout = () => {
     subtotal,
     shipping,
     tax,
+    discount: discountInfo.discountAmount || 0,
     total,
     loading,
     error,
@@ -189,5 +213,6 @@ export const useCheckout = () => {
     handleShippingChange,
     handlePaymentMethodChange,
     handleSubmitOrder,
+    handleDiscountApplied,
   };
 };

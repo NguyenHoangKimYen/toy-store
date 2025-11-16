@@ -19,6 +19,7 @@ const Checkout = () => {
     subtotal,
     shipping,
     tax,
+    discount,
     total,
     loading,
     error,
@@ -26,6 +27,7 @@ const Checkout = () => {
     handleShippingChange,
     handlePaymentMethodChange,
     handleSubmitOrder,
+    handleDiscountApplied,
   } = useCheckout();
 
   if (loading) {
@@ -94,9 +96,11 @@ const Checkout = () => {
             subtotal={subtotal}
             shipping={shipping}
             tax={tax}
+            discount={discount}
             total={total}
             onSubmit={handleSubmitOrder}
             submitting={submitting}
+            onDiscountApplied={handleDiscountApplied}
           />
         </div>
       </div>

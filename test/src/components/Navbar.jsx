@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Search, ShoppingCart, User, UserCircle, Package, LogOut, Settings } from 'lucide-react'
+import { Search, ShoppingCart, User, UserCircle, Package, LogOut, Settings, X } from 'lucide-react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -7,6 +7,8 @@ const Navbar = () => {
     const navigate = useNavigate()
     const [cartCount, setCartCount] = useState(0)
     const [user, setUser] = useState(null)
+    const [showSearch, setShowSearch] = useState(false)
+    const [searchQuery, setSearchQuery] = useState('')
 
     const updateCartCount = () => {
         const cart = JSON.parse(localStorage.getItem('cart') || '[]');
@@ -37,6 +39,26 @@ const Navbar = () => {
             className: "!bg-green-600 !text-white border border-green-700",
         })
         navigate('/')
+    }
+
+    const handleSearchClick = () => {
+        setShowSearch(!showSearch)
+        if (showSearch) {
+            setSearchQuery('')
+        }
+    }
+
+    const handleSearchSubmit = (e) => {
+        e.preventDefault()
+        if (searchQuery.trim()) {
+            navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
+            setShowSearch(false)
+            setSearchQuery('')
+        }
+    }
+
+    const handleSearchChange = (e) => {
+        setSearchQuery(e.target.value)
     }
 
     useEffect(() => {
@@ -82,7 +104,25 @@ const Navbar = () => {
             </ul>
 
             <div className='flex items-center gap-6'>
-                <Search className='w-5 cursor-pointer' />
+                {showSearch ? (
+                    <form onSubmit={handleSearchSubmit} className='flex items-center gap-2 border border-gray-300 rounded-full px-4 py-1.5 bg-white shadow-sm'>
+                        <Search className='w-4 text-gray-500' />
+                        <input
+                            type='text'
+                            value={searchQuery}
+                            onChange={handleSearchChange}
+                            placeholder='Search products...'
+                            className='outline-none text-sm w-48 bg-transparent'
+                            autoFocus
+                        />
+                        <X 
+                            className='w-4 cursor-pointer text-gray-500 hover:text-gray-700' 
+                            onClick={handleSearchClick}
+                        />
+                    </form>
+                ) : (
+                    <Search className='w-5 cursor-pointer' onClick={handleSearchClick} />
+                )}
                 <div className='group relative'>
                     <User className='w-5 cursor-pointer hover:text-gray-900 transition-colors' />
                     <div className='group-hover:block z-10 hidden absolute dropdown-menu right-0 pt-4'>

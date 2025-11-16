@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { formatPrice } from '@/utils/formatPrice';
+import DiscountCodeInput from '@/components/common/DiscountCodeInput';
 import './OrderSummary.css';
 
 const OrderSummary = ({
@@ -9,9 +10,11 @@ const OrderSummary = ({
   subtotal,
   shipping,
   tax,
+  discount,
   total,
   onSubmit,
   submitting,
+  onDiscountApplied,
 }) => {
   return (
     <Card className="order-summary-card">
@@ -59,6 +62,12 @@ const OrderSummary = ({
         })}
       </div>
 
+      {/* Discount Code Input */}
+      <DiscountCodeInput
+        orderTotal={subtotal}
+        onDiscountApplied={onDiscountApplied}
+      />
+
       {/* Price Breakdown */}
       <div className="order-totals">
         <div className="order-total-row">
@@ -73,6 +82,12 @@ const OrderSummary = ({
           <span>Tax</span>
           <span>{formatPrice(tax)}</span>
         </div>
+        {discount > 0 && (
+          <div className="order-total-row order-discount">
+            <span>Discount</span>
+            <span className="discount-value">-{formatPrice(discount)}</span>
+          </div>
+        )}
         <div className="order-total-row order-total-final">
           <span>Total</span>
           <span>{formatPrice(total)}</span>

@@ -82,6 +82,16 @@
   font-size: 0.95rem;
 }
 
+.order-discount {
+  color: hsl(142, 76%, 36%);
+  font-weight: 600;
+}
+
+.discount-value {
+  color: hsl(142, 76%, 36%);
+  font-weight: 700;
+}
+
 .order-total-final {
   border-top: 1px solid #e5e5e5;
   margin-top: 0.5rem;
