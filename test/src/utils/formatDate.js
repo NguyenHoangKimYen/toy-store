@@ -1,5 +1,12 @@
 export function formatDate(date = new Date(), locale = navigator.language) {
-if (!(date instanceof Date)) throw new Error("Invalid Date object");
+  // Convert string dates to Date objects
+  if (typeof date === 'string') {
+    date = new Date(date);
+  }
+  
+  if (!(date instanceof Date) || isNaN(date.getTime())) {
+    return 'Invalid Date';
+  }
 
   const options = { weekday: "long", month: "short", day: "numeric", year: "numeric" };
   let formattedDate = date.toLocaleDateString(locale, options);

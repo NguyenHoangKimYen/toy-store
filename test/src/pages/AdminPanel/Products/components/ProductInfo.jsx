@@ -3,12 +3,21 @@ import { Star } from 'lucide-react'
 import { formatPrice } from '@/utils/formatPrice'
 
 const ProductInfo = ({ product }) => {
+  // Extract category names safely
+  const getCategoryNames = () => {
+    if (!product.categoryId) return 'Uncategorized';
+    if (Array.isArray(product.categoryId)) {
+      return product.categoryId.map(cat => cat.name || cat).join(', ');
+    }
+    return product.categoryId.name || product.categoryId;
+  };
+
   return (
     <div>
       {/* Category & Badges */}
       <div className='flex items-center gap-2 mb-3'>
         <span className='px-3 py-1 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded-full text-sm font-medium'>
-          {product.categoryId}
+          {getCategoryNames()}
         </span>
         {product.isNew && (
           <span className='px-3 py-1 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200 rounded-full text-sm font-semibold'>
@@ -68,11 +77,11 @@ const ProductInfo = ({ product }) => {
         <div className='p-3 bg-gray-50 dark:bg-gray-700 rounded-lg'>
           <p className='text-sm text-gray-600 dark:text-gray-400'>Stock Quantity</p>
           <p className={`text-2xl font-bold ${
-            product.stockQuantity === 0 
+            (product.variants?.reduce((sum, v) => sum + (v.stock || 0), 0) || 0) === 0 
               ? 'text-red-600' 
               : 'text-green-600'
           }`}>
-            {product.stockQuantity}
+            {product.variants?.reduce((sum, v) => sum + (v.stock || 0), 0) || 0}
           </p>
         </div>
         <div className='p-3 bg-gray-50 dark:bg-gray-700 rounded-lg'>
@@ -122,7 +131,7 @@ const ProductInfo = ({ product }) => {
                   </div>
                   <div className='flex justify-between items-center text-sm'>
                     <span className='font-semibold text-gray-900 dark:text-white'>
-                      ${variant.price?.$numberDecimal || variant.price}
+                      {formatPrice(variant.price?.$numberDecimal || variant.price)}
                     </span>
                     <span className={`${variant.stock > 0 || variant.stockQuantity > 0 ? 'text-green-600' : 'text-red-600'} font-medium`}>
                       Stock: {variant.stock || variant.stockQuantity || 0}
