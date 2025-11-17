@@ -4,6 +4,7 @@ export * from './orders.service';
 export * from './cart.service';
 export * from './reviews.service';
 export * from './discountCodes.service';
+export * from './categories.service';
 export * from './config';
 export * from '../utils/apiHelpers';
 export * from '../utils/authHelpers';
@@ -15,6 +16,7 @@ import * as ordersService from './orders.service';
 import * as cartService from './cart.service';
 import * as reviewsService from './reviews.service';
 import * as discountCodesService from './discountCodes.service';
+import * as categoriesService from './categories.service';
 
 export default {
   products: productsService,
@@ -23,4 +25,5 @@ export default {
   cart: cartService,
   reviews: reviewsService,
   discountCodes: discountCodesService,
+  categories: categoriesService,
 };

@@ -1,13 +1,13 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://milkybloom.us-east-1.elasticbeanstalk.com';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://milkybloomtoystore.id.vn/api';
 
 // API Endpoints
 export const ENDPOINTS = {
-  PRODUCTS: '/api/products',
-  USERS: '/api/users',
-  AUTH: '/api/auth',
-  ORDERS: '/api/orders',
-  CART: '/api/cart',
-  CATEGORIES: '/api/categories',
+  PRODUCTS: '/products',
+  USERS: '/users',
+  AUTH: '/auth',
+  ORDERS: '/orders',
+  CART: '/cart',
+  CATEGORIES: '/categories',
 };
 
 // Default

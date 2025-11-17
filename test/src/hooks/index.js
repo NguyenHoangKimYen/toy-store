@@ -15,5 +15,8 @@ export { useDiscountCode, useDiscountCodes, useDiscountCodeDetails } from './use
 // Cart hooks - Add products to cart
 export { useAddToCart } from './useAddToCart';
 
+// Category hooks - Manage categories
+export { useCategories } from './useCategories';
+
 // Admin hooks - Admin panel functionality
 export { useAdminProducts } from './useAdminProducts';

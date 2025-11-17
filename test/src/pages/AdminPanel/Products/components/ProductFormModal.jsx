@@ -87,14 +87,10 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
     setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
-  const addCategory = (categoryName) => {
-    const categoryObj = {
-      _id: `cat_${Date.now()}`,
-      name: categoryName,
-    };
+  const addCategory = (categoryId) => {
     setFormData(prev => ({
       ...prev,
-      categoryId: [...prev.categoryId, categoryObj],
+      categoryId: [...prev.categoryId, categoryId],
     }));
   };
 
@@ -230,6 +226,7 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
 
     setSaving(true);
     try {
+      // Don't transform here - let useAdminProducts handle the transformation
       await onSave(formData);
       toast.success(`Product ${mode === 'create' ? 'created' : 'updated'} successfully`);
       onClose();

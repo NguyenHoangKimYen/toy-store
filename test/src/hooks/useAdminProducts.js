@@ -85,7 +85,51 @@ export const useAdminProducts = () => {
         toast.success('Product created successfully');
         return newProduct;
       } else {
-        const newProduct = await productsService.createProduct(productData);
+        // Step 1: Create product without variants (just references will be added later)
+        const { variants, ...productWithoutVariants } = productData;
+        
+        // Transform product data to match backend schema
+        const productPayload = {
+          ...productWithoutVariants,
+          // categoryId should be array of actual category ObjectIds from backend
+          // For now, we'll send empty array and let admin select from existing categories
+          categoryId: Array.isArray(productData.categoryId) ? productData.categoryId : [],
+          variants: [], // Will be populated after creating variants
+        };
+
+        const newProduct = await productsService.createProduct(productPayload);
+        
+        // Step 2: Create variants for this product
+        if (variants && variants.length > 0) {
+          const variantIds = [];
+          for (const variant of variants) {
+            try {
+              // Transform variant data to match backend schema
+              const variantPayload = {
+                // Convert attributes object {color: 'Red', size: 'M'} to array [{name: 'color', value: 'Red'}]
+                attributes: Object.entries(variant.attributes || {}).map(([name, value]) => ({
+                  name,
+                  value: String(value),
+                })),
+                price: variant.price,
+                stockQuantity: variant.stock || 0,
+                sku: variant.sku || '',
+                isActive: variant.isActive !== false,
+              };
+              
+              const createdVariant = await productsService.createVariant(newProduct._id, variantPayload);
+              variantIds.push(createdVariant._id);
+            } catch (variantErr) {
+              console.error('Error creating variant:', variantErr);
+            }
+          }
+          
+          // Step 3: Update product with variant IDs
+          if (variantIds.length > 0) {
+            await productsService.patchProduct(newProduct._id, { variants: variantIds });
+          }
+        }
+        
         await loadProducts();
         toast.success('Product created successfully');
         return newProduct;
@@ -173,7 +217,8 @@ export const useAdminProducts = () => {
         
         toast.success(`${productIds.length} products deleted successfully`);
       } else {
-        await productsService.bulkDeleteProducts(productIds);
+        // Delete products one by one since backend doesn't have bulk delete
+        await Promise.all(productIds.map(id => productsService.deleteProduct(id)));
         await loadProducts();
         toast.success(`${productIds.length} products deleted successfully`);
       }

@@ -211,7 +211,7 @@ export const getProductVariants = async (productId) => {
  * @returns {Promise<Object>}
  */
 export const getVariantById = async (variantId) => {
-  const response = await fetch(`${API_BASE_URL}/api/variants/${variantId}`, {
+  const response = await fetch(`${API_BASE_URL}/api/variant/${variantId}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -229,7 +229,7 @@ export const getVariantById = async (variantId) => {
  * @returns {Promise<Object>}
  */
 export const createVariant = async (productId, variantData) => {
-  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.PRODUCTS}/${productId}/variants`, {
+  const response = await fetch(`${API_BASE_URL}/api/variant/${productId}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -248,8 +248,8 @@ export const createVariant = async (productId, variantData) => {
  * @returns {Promise<Object>}
  */
 export const updateVariant = async (variantId, variantData) => {
-  const response = await fetch(`${API_BASE_URL}/api/variants/${variantId}`, {
-    method: 'PUT',
+  const response = await fetch(`${API_BASE_URL}/api/variant/${variantId}`, {
+    method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
       ...getAuthHeaders(),
@@ -266,7 +266,7 @@ export const updateVariant = async (variantId, variantData) => {
  * @returns {Promise<Object>}
  */
 export const deleteVariant = async (variantId) => {
-  const response = await fetch(`${API_BASE_URL}/api/variants/${variantId}`, {
+  const response = await fetch(`${API_BASE_URL}/api/variant/${variantId}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
