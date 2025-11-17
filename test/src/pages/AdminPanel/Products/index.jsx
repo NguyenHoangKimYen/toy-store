@@ -3,36 +3,79 @@ import { Plus } from 'lucide-react'
 import ProductGrid from './components/ProductGrid'
 import ProductStats from './components/ProductStats'
 import ProductDetailModal from './components/ProductDetailModal'
-import { useProducts } from '@/hooks'
+import ProductFormModal from './components/ProductFormModal'
+import { useAdminProducts } from '@/hooks'
 import { PageHeader, SearchBar, ScrollableContent } from '@/components/common'
 
 const Products = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedProduct, setSelectedProduct] = useState(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false)
+  const [formMode, setFormMode] = useState('create')
 
-  // Fetch all products
-  const { data: allProducts, loading, error } = useProducts({
-    params: { search: searchQuery }
-  })
+  // Use admin products hook with mock/real API toggle
+  const { 
+    products: allProducts, 
+    loading, 
+    error,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    useMockData
+  } = useAdminProducts()
 
-  // Calculate stats from products
-  const products = useMemo(() => Array.isArray(allProducts) ? allProducts : [], [allProducts])
+  // Filter products based on search
+  const products = useMemo(() => {
+    if (!searchQuery.trim()) return allProducts;
+    
+    const searchLower = searchQuery.toLowerCase();
+    return allProducts.filter(p =>
+      p.name.toLowerCase().includes(searchLower) ||
+      p.description?.toLowerCase().includes(searchLower) ||
+      p.brand?.toLowerCase().includes(searchLower)
+    );
+  }, [allProducts, searchQuery])
   
+  // Calculate stats from products
   const stats = useMemo(() => ({
-    totalProducts: products.length,
-    totalStock: products.reduce((sum, p) => sum + (p.stockQuantity || 0), 0),
-    totalSold: products.reduce((sum, p) => sum + (p.soldCount || 0), 0),
-    outOfStock: products.filter(p => p.stockQuantity === 0).length,
-  }), [products])
+    totalProducts: allProducts.length,
+    totalStock: allProducts.reduce((sum, p) => sum + (p.stockQuantity || 0), 0),
+    totalSold: allProducts.reduce((sum, p) => sum + (p.soldCount || 0), 0),
+    outOfStock: allProducts.filter(p => p.stockQuantity === 0).length,
+  }), [allProducts])
 
   const handleViewDetails = (product) => {
     setSelectedProduct(product)
-    setIsModalOpen(true)
+    setIsDetailModalOpen(true)
   }
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false)
+  const handleCloseDetailModal = () => {
+    setIsDetailModalOpen(false)
+    setSelectedProduct(null)
+  }
+
+  const handleAddProduct = () => {
+    setFormMode('create')
+    setSelectedProduct(null)
+    setIsFormModalOpen(true)
+  }
+
+  const handleEditProduct = async (productId, updatedData) => {
+    await updateProduct(productId, updatedData)
+  }
+
+  const handleDeleteProduct = async (productId) => {
+    await deleteProduct(productId)
+  }
+
+  const handleSaveProduct = async (productData) => {
+    if (formMode === 'create') {
+      await createProduct(productData)
+    } else {
+      await updateProduct(selectedProduct._id, productData)
+    }
+    setIsFormModalOpen(false)
     setSelectedProduct(null)
   }
 
@@ -41,9 +84,12 @@ const Products = () => {
       {/* Header */}
       <PageHeader
         title='Product Management'
-        description='Manage product inventory and listings'
+        description={`Manage product inventory and listings ${useMockData ? '(Using Mock Data)' : '(Connected to API)'}`}
         actionButton={
-          <button className='flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'>
+          <button 
+            onClick={handleAddProduct}
+            className='flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
+          >
             <Plus className='w-4 h-4' />
             Add Product
           </button>
@@ -73,16 +119,36 @@ const Products = () => {
         <ProductGrid 
           products={products} 
           onViewDetails={handleViewDetails}
+          onEdit={(product) => {
+            setSelectedProduct(product);
+            setFormMode('edit');
+            setIsFormModalOpen(true);
+          }}
+          onDelete={handleDeleteProduct}
         />
       </ScrollableContent>
 
       {/* Product Detail Modal */}
-      {isModalOpen && selectedProduct && (
+      {isDetailModalOpen && selectedProduct && (
         <ProductDetailModal 
           product={selectedProduct} 
-          onClose={handleCloseModal} 
+          onClose={handleCloseDetailModal}
+          onEdit={handleEditProduct}
+          onDelete={handleDeleteProduct}
         />
       )}
+
+      {/* Product Form Modal (Add/Edit) */}
+      <ProductFormModal
+        product={selectedProduct}
+        isOpen={isFormModalOpen}
+        onClose={() => {
+          setIsFormModalOpen(false);
+          setSelectedProduct(null);
+        }}
+        onSave={handleSaveProduct}
+        mode={formMode}
+      />
     </div>
   )
 }

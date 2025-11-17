@@ -64,7 +64,6 @@ const NewArrivalsSection = ({ newProducts }) => {
               showCategory={false}
               showQuickView={false}
               onClick={handleProductClick}
-              onAddToCart={(product) => console.log('Add to cart:', product)}
             />
           </div>
         ))}

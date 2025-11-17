@@ -52,53 +52,11 @@
 }
 
 /* Products Grid */
+/* Remove custom ProductCard overrides - let the unified component handle its own styling */
 .products-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 2rem;
-}
-
-/* Override ProductCard styles for better text sizes */
-.category-section .product-card {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-.category-section .product-image-wrapper {
-    height: 280px;
-    aspect-ratio: unset;
-    flex-shrink: 0;
-    background: #ee9ca7;
-    background: -webkit-linear-gradient(to right, #ffdde1, #ee9ca7);
-    background: linear-gradient(to right, #ffdde1, #ee9ca7);
-}
-
-.category-section .product-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.category-section .product-name {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    white-space: normal;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-height: 44px;
-    line-height: 1.5;
-    font-size: 15px;
-    font-weight: 500;
-}
-
-.category-section .product-footer {
-    margin-top: auto;
-}
-
-.category-section .original-price {
-    font-size: 13px;
 }
 
 /* Responsive */

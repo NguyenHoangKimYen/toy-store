@@ -84,7 +84,7 @@ const ProductInfo = ({ product }) => {
       </div>
 
       {/* Tags */}
-      {product.tags.length > 0 && (
+      {product.tags && product.tags.length > 0 && (
         <div className='mb-4'>
           <p className='text-sm text-gray-600 dark:text-gray-400 mb-2'>Tags</p>
           <div className='flex flex-wrap gap-2'>
@@ -96,6 +96,41 @@ const ProductInfo = ({ product }) => {
                 {tag.name}
               </span>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Variants */}
+      {product.variants && product.variants.length > 0 && (
+        <div className='mb-4'>
+          <p className='text-sm text-gray-600 dark:text-gray-400 mb-2 font-semibold'>Product Variants ({product.variants.length})</p>
+          <div className='space-y-2 max-h-64 overflow-y-auto'>
+            {product.variants.map((variant, index) => {
+              // Handle both object and array format for attributes
+              const attributes = Array.isArray(variant.attributes)
+                ? variant.attributes.reduce((acc, attr) => ({ ...acc, [attr.name]: attr.value }), {})
+                : variant.attributes || {};
+              
+              return (
+                <div key={variant._id || index} className='p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600'>
+                  <div className='flex flex-wrap gap-2 mb-2'>
+                    {Object.entries(attributes).map(([key, value]) => (
+                      <span key={key} className='px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded text-xs font-medium'>
+                        <span className='font-semibold'>{key}:</span> {value}
+                      </span>
+                    ))}
+                  </div>
+                  <div className='flex justify-between items-center text-sm'>
+                    <span className='font-semibold text-gray-900 dark:text-white'>
+                      ${variant.price?.$numberDecimal || variant.price}
+                    </span>
+                    <span className={`${variant.stock > 0 || variant.stockQuantity > 0 ? 'text-green-600' : 'text-red-600'} font-medium`}>
+                      Stock: {variant.stock || variant.stockQuantity || 0}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

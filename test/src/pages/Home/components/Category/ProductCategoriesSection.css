@@ -112,6 +112,7 @@
 }
 
 /* Horizontal scrolling products */
+/* Remove custom ProductCard overrides - component handles its own styling */
 .products-horizontal-scroll {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -125,99 +126,16 @@
   grid-auto-columns: minmax(200px, 1fr);
 }
 
-.products-horizontal-scroll::-webkit-scrollbar {
-  height: 8px;
-}
-
-.products-horizontal-scroll::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 4px;
-}
-
-.products-horizontal-scroll::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-
-.products-horizontal-scroll::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-.product-card-horizontal {
-  min-width: 200px;
-  border: none;
-  border-radius: 12px;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  background: #f8fafc;
-}
-
-.product-card-horizontal:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-}
-
-.product-card-image {
-  width: 100%;
-  aspect-ratio: 1;
-  overflow: hidden;
-  background: #ee9ca7;
-  background: -webkit-linear-gradient(to right, #ffdde1, #ee9ca7);
-  background: linear-gradient(to right, #ffdde1, #ee9ca7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.product-card-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  transition: transform 0.3s ease;
-}
-
-.product-card-horizontal:hover .product-card-image img {
-  transform: scale(1.1);
-}
-
-.product-card-content {
-  padding: 12px;
-}
-
-.product-card-name {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #1e293b;
-  margin: 0 0 8px 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-height: 1.4;
-  min-height: 2.8em;
-}
-
-/* Price styles now managed in ProductCard.css */
-
 /* Responsive Design */
 @media screen and (max-width: 1400px) {
   .products-horizontal-scroll {
     grid-auto-columns: minmax(180px, 1fr);
-  }
-  
-  .product-card-horizontal {
-    min-width: 180px;
   }
 }
 
 @media screen and (max-width: 1200px) {
   .products-horizontal-scroll {
     grid-auto-columns: minmax(170px, 1fr);
-  }
-  
-  .product-card-horizontal {
-    min-width: 170px;
   }
 }
 
@@ -241,10 +159,6 @@
   .products-horizontal-scroll {
     grid-auto-columns: minmax(160px, 1fr);
     gap: 16px;
-  }
-  
-  .product-card-horizontal {
-    min-width: 160px;
   }
 }
 
@@ -270,10 +184,6 @@
   .products-horizontal-scroll {
     grid-auto-columns: minmax(150px, 1fr);
     gap: 12px;
-  }
-
-  .product-card-horizontal {
-    min-width: 150px;
   }
 }
 
@@ -306,9 +216,5 @@
   .products-horizontal-scroll {
     grid-auto-columns: minmax(140px, 1fr);
     gap: 10px;
-  }
-
-  .product-card-content {
-    padding: 10px;
   }
 }

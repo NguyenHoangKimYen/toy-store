@@ -1,8 +1,8 @@
 import React from 'react'
 import { Package } from 'lucide-react'
-import ProductCard from './ProductCard'
+import ProductCard from '@/components/common/ProductCard'
 
-const ProductGrid = ({ products, onViewDetails }) => {
+const ProductGrid = ({ products, onViewDetails, onEdit, onDelete }) => {
   if (products.length === 0) {
     return (
       <div className='text-center py-12'>
@@ -21,9 +21,17 @@ const ProductGrid = ({ products, onViewDetails }) => {
     <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
       {products.map((product) => (
         <ProductCard 
-          key={crypto.randomUUID()} 
+          key={product._id || crypto.randomUUID()} 
           product={product}
-          onViewDetails={onViewDetails}
+          variant="admin"
+          size="medium"
+          showBadges={true}
+          showStock={true}
+          showRating={true}
+          showCategory={true}
+          onClick={onViewDetails}
+          onEdit={onEdit}
+          onDelete={onDelete}
         />
       ))}
     </div>

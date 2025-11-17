@@ -42,7 +42,6 @@ const CategorySection = ({ title, subtitle, products, viewAllLink }) => {
             showCategory={true}
             showQuickView={false}
             onClick={handleProductClick}
-            onAddToCart={(product) => console.log('Add to cart:', product)}
           />
         ))}
       </div>

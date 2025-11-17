@@ -96,193 +96,16 @@
 /* Grid Layout */
 .new-arrivals-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 20px;
-  grid-auto-rows: 1fr;
 }
 
-/* Wrapper for featured overlay positioning */
-.new-arrival-wrapper {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-/* Override ProductCard styles for consistent heights */
-.new-arrival-wrapper .product-card {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.new-arrival-wrapper .product-image-wrapper {
-  height: 280px;
-  aspect-ratio: unset;
-  flex-shrink: 0;
-  background: #ee9ca7;
-  background: -webkit-linear-gradient(to right, #ffdde1, #ee9ca7);
-  background: linear-gradient(to right, #ffdde1, #ee9ca7);
-}
-
-.new-arrival-wrapper .product-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 16px;
-}
-
-.new-arrival-wrapper .product-name {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  white-space: normal;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-height: 44px;
-  line-height: 1.5;
-  margin-bottom: 8px;
-  font-size: 15px;
-  font-weight: 500;
-}
-
-.new-arrival-wrapper .product-footer {
-  margin-top: auto;
-}
-
-.new-arrival-wrapper .original-price {
-  font-size: 13px;
-}
-
-/* Product Card Styling */
-.new-arrival-card {
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid #e5e7eb;
-  overflow: hidden;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.new-arrival-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
-  border-color: #f59e0b;
-}
-
-.product-image-wrapper {
-  position: relative;
-  width: 100%;
-  padding-bottom: 100%;
-  overflow: hidden;
-  background: #ee9ca7;
-  background: -webkit-linear-gradient(to right, #ffdde1, #ee9ca7);
-  background: linear-gradient(to right, #ffdde1, #ee9ca7);
-  flex-shrink: 0;
-}
-
-.product-image-wrapper img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  transition: transform 0.5s ease;
-}
-
-.new-arrival-card:hover .product-image-wrapper img {
-  transform: scale(1.1);
-}
-
-/* New Badge */
-.new-badge {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
-  color: white;
-  font-size: 11px;
-  font-weight: 700;
-  border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
-  letter-spacing: 0.5px;
-  z-index: 10;
-}
-
-/* Featured Overlay */
-.featured-overlay {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: rgba(245, 158, 11, 0.95);
-  color: white;
-  font-size: 12px;
-  font-weight: 600;
-  border-radius: 20px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
-  z-index: 10;
-}
-
-/* Card Content */
-.product-card-content {
-  padding: 16px !important;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.product-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: #1f2937;
-  margin: 0 0 8px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.product-footer {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: auto;
-}
-
-.product-price {
-  font-size: 16px;
-  font-weight: 700;
-  color: #f59e0b;
-  margin: 0;
-}
-
-.original-price {
-  font-size: 13px;
-  color: #9ca3af;
-  text-decoration: line-through;
-}
+/* Remove custom ProductCard overrides - let the unified component handle its own styling */
 
 /* ===== Responsive Design ===== */
-@media (max-width: 1400px) {
-  .new-arrivals-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
 @media (max-width: 1200px) {
   .new-arrivals-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   }
 }
 
@@ -303,7 +126,7 @@
 
 @media (max-width: 768px) {
   .new-arrivals-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   }
   
   .new-arrivals-header {
@@ -368,17 +191,6 @@
   
   .new-arrivals-grid {
     gap: 12px;
-  }
-  
-  .product-card-content {
-    padding: 12px !important;
-  }
-  
-  .product-name {
-    font-size: 13px;
-  }
-  
-  .product-price {
-    font-size: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
 }

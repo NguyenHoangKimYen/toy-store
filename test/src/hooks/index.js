@@ -11,3 +11,9 @@ export { useReviews, useReview, useUserReviews } from './useReviews';
 
 // Discount code hooks - Validate and manage discount codes
 export { useDiscountCode, useDiscountCodes, useDiscountCodeDetails } from './useDiscountCode';
+
+// Cart hooks - Add products to cart
+export { useAddToCart } from './useAddToCart';
+
+// Admin hooks - Admin panel functionality
+export { useAdminProducts } from './useAdminProducts';

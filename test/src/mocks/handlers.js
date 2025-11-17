@@ -1052,4 +1052,72 @@ export const handlers = [
       },
     });
   }),
+
+  // ===== ADMIN PRODUCT CRUD OPERATIONS =====
+  // Create product
+  http.post(`${API_BASE_URL}/api/products`, async ({ request }) => {
+    const productData = await request.json();
+    
+    const newProduct = {
+      ...productData,
+      _id: `product_${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      soldCount: 0,
+      averageRating: 0,
+      totalReviews: 0,
+    };
+
+    return HttpResponse.json(newProduct, { status: 201 });
+  }),
+
+  // Update product (PUT)
+  http.put(`${API_BASE_URL}/api/products/:id`, async ({ params, request }) => {
+    const { id } = params;
+    const productData = await request.json();
+    
+    const updatedProduct = {
+      ...productData,
+      _id: id,
+      updatedAt: new Date().toISOString(),
+    };
+
+    return HttpResponse.json(updatedProduct);
+  }),
+
+  // Partial update product (PATCH)
+  http.patch(`${API_BASE_URL}/api/products/:id`, async ({ params, request }) => {
+    const { id } = params;
+    const productData = await request.json();
+    
+    const updatedProduct = {
+      ...productData,
+      _id: id,
+      updatedAt: new Date().toISOString(),
+    };
+
+    return HttpResponse.json(updatedProduct);
+  }),
+
+  // Delete product
+  http.delete(`${API_BASE_URL}/api/products/:id`, ({ params }) => {
+    const { id } = params;
+    
+    return HttpResponse.json({
+      success: true,
+      message: 'Product deleted successfully',
+      productId: id,
+    });
+  }),
+
+  // Bulk delete products
+  http.post(`${API_BASE_URL}/api/products/bulk-delete`, async ({ request }) => {
+    const { ids } = await request.json();
+    
+    return HttpResponse.json({
+      success: true,
+      message: `${ids.length} products deleted successfully`,
+      deletedIds: ids,
+    });
+  }),
 ];
