@@ -67,6 +67,7 @@ const paymentRoutes = require('./routes/payment.route.js');
 const variantRouter = require('./routes/variant.route.js');
 const cartRouter = require('./routes/cart.route.js');
 const cartItemRouter = require('./routes/cart-item.route.js');
+const categoryRoutes = require('./routes/category.route.js');
 
 // Gán các routes vào đường dẫn
 app.use(passportGoogle.initialize());
@@ -79,6 +80,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/variants', variantRouter);
 app.use('/api/carts', cartRouter);
 app.use('/api/cart-items', cartItemRouter);
+app.use('/api/categories', categoryRoutes);
 
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'MilkyBloom backend is running on AWS 🚀' });
