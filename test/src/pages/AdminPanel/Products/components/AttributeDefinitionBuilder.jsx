@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X, Zap } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -63,7 +63,6 @@ const AttributeDefinitionBuilder = ({
           disabled={!canGenerateVariants}
           className='bg-green-600 hover:bg-green-700'
         >
-          <Zap className='w-4 h-4 mr-2' />
           Generate Variants
         </Button>
       </div>

@@ -6,6 +6,16 @@ import ProductDetailModal from './components/ProductDetailModal'
 import ProductFormModal from './components/ProductFormModal'
 import { useAdminProducts } from '@/hooks'
 import { PageHeader, SearchBar, ScrollableContent } from '@/components/common'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 const Products = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -13,6 +23,8 @@ const Products = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isFormModalOpen, setIsFormModalOpen] = useState(false)
   const [formMode, setFormMode] = useState('create')
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [productToDelete, setProductToDelete] = useState(null)
 
   // Use admin products hook with mock/real API toggle
   const { 
@@ -66,8 +78,18 @@ const Products = () => {
   }
 
   const handleDeleteProduct = async (productId) => {
-    await deleteProduct(productId)
-  }
+    const product = allProducts.find(p => p._id === productId);
+    setProductToDelete(product);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    if (productToDelete) {
+      await deleteProduct(productToDelete._id);
+      setShowDeleteDialog(false);
+      setProductToDelete(null);
+    }
+  };
 
   const handleSaveProduct = async (productData) => {
     if (formMode === 'create') {
@@ -149,6 +171,24 @@ const Products = () => {
         onSave={handleSaveProduct}
         mode={formMode}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Product</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{productToDelete?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className='bg-red-600 hover:bg-red-700'>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

@@ -83,7 +83,7 @@ const ProductCard = ({
 
   const handleDelete = (e) => {
     e.stopPropagation();
-    onDelete?.(product);
+    onDelete?.(product._id);
   };
 
   // Admin variant (for admin panel)
