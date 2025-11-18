@@ -4,6 +4,7 @@ const auth = require('../middlewares/auth.middleware');
 
 // Customer
 router.post('/', auth, ctrl.create);
+router.post('/guest', ctrl.create);
 router.get('/me', auth, ctrl.getMyOrders);
 
 // Admin

@@ -18,7 +18,7 @@ const getAllProducts = async (query) => {
     const limit = Math.max(1, parseInt(params.get("limit") || "20", 10));
     
     // Sắp xếp
-    const sortParam = params.get("sort") || null; // Ví dụ: "minPrice:asc", "totalUnitsSold:desc"
+    const sortParam = params.get("sort") || null; 
 
     // 2. Xây dựng đối tượng 'filter' (bộ lọc)
     const filter = {};
@@ -35,14 +35,10 @@ const getAllProducts = async (query) => {
     // --- Lọc theo Category ---
     const categoryId = params.get("categoryId") || null;
     if (categoryId) {
-        // Model của bạn dùng mảng categoryId, nên ta tìm sản phẩm
-        // có chứa categoryId này trong mảng của nó
         filter.categoryId = categoryId;
     }
 
     // --- Lọc theo Khoảng giá (Price Range) ---
-    // Logic: (Product.minPrice <= Filter.maxPrice) AND (Product.maxPrice >= Filter.minPrice)
-    // Điều này tìm các sản phẩm có dải giá *chồng lấn* với dải giá người dùng tìm.
     const minPrice = parseFloat(params.get("minPrice") || "0");
     const maxPrice = parseFloat(params.get("maxPrice") || "0");
     
@@ -50,7 +46,6 @@ const getAllProducts = async (query) => {
         filter.maxPrice = { $gte: minPrice };
     }
     if (maxPrice > 0) {
-        // Nối vào điều kiện minPrice nếu có
         filter.minPrice = { ...filter.minPrice, $lte: maxPrice };
     }
 
@@ -65,6 +60,51 @@ const getAllProducts = async (query) => {
         filter.isFeatured = true;
     }
 
+    // ================================================================
+    // --- [MỚI] Lọc theo Ngày tạo (Date Range) ---
+    // ================================================================
+    
+    // (Lưu ý: filter.createdAt có thể được xây dựng từng phần)
+    filter.createdAt = {};
+
+    // Lọc theo 'daysAgo' (ví dụ: ?daysAgo=7)
+    // Ưu tiên hơn startDate nếu cả hai đều được cung cấp
+    const daysAgo = parseInt(params.get("daysAgo") || "0", 10);
+    if (daysAgo > 0) {
+        const pastDate = new Date();
+        pastDate.setDate(new Date().getDate() - daysAgo);
+        pastDate.setHours(0, 0, 0, 0); // Đặt về đầu ngày
+        
+        filter.createdAt.$gte = pastDate;
+    
+    } else {
+        // Nếu không có daysAgo, kiểm tra startDate
+        const startDate = params.get("startDate") || null; // Dạng "YYYY-MM-DD"
+        if (startDate) {
+            // $gte: Lớn hơn hoặc bằng (từ 00:00:00 của ngày bắt đầu)
+            filter.createdAt.$gte = new Date(startDate);
+        }
+    }
+
+    // Lọc theo endDate (ví dụ: ?endDate=2025-11-15)
+    const endDate = params.get("endDate") || null; // Dạng "YYYY-MM-DD"
+    if (endDate) {
+        // $lte: Nhỏ hơn hoặc bằng (đến 23:59:59 của ngày kết thúc)
+        const endOfDay = new Date(endDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        
+        filter.createdAt.$lte = endOfDay;
+    }
+
+    // Nếu không có điều kiện ngày nào được thêm, xóa object rỗng
+    if (Object.keys(filter.createdAt).length === 0) {
+        delete filter.createdAt;
+    }
+
+    // ================================================================
+    // --- Kết thúc phần lọc ngày ---
+    // ================================================================
+
     // 3. Xây dựng đối tượng 'options' (phân trang & sắp xếp)
     const options = {
         skip: (page - 1) * limit,
@@ -72,8 +112,7 @@ const getAllProducts = async (query) => {
         sort: {},
     };
 
-    // Logic sắp xếp (Đã sửa lỗi, giờ hỗ trợ cả 'asc' và 'desc')
-    const defaultSort = { createdAt: -1 }; // Mặc định là sản phẩm mới nhất
+    const defaultSort = { createdAt: -1 }; 
     if (sortParam) {
         const [key, order] = sortParam.split(":");
         options.sort[key] = order === "desc" ? -1 : 1;

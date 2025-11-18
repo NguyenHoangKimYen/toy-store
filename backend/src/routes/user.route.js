@@ -30,8 +30,6 @@ router.patch("/:id/verify", verifyUser);
 router.patch("/:id/set-password", setUserPassword);
 router.put("/:id", updateUser);
 router.delete("/:id", deleteUser);
-router.get("/profile/:id", auth); //lấy thông tin người dùng hiện tại
-
 router.post("/:id/avatar", uploadAvatarMiddleware, uploadAvatarController);
 router.patch("/:id/avatar", uploadAvatarMiddleware, updateAvatarController);
 
