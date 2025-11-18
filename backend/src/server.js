@@ -59,29 +59,27 @@ app.get('/verify-email', (req, res) => {
 // Import routes
 // Cần bao nhiêu routes thì import bấy nhiêu
 const productRoutes = require('./routes/product.route.js');
+const variantRoutes = require('./routes/variant.route.js');
 const userRoutes = require('./routes/user.route.js');
 const authRoutes = require('./routes/auth.route.js');
 const addressRoutes = require('./routes/address.route.js');
 const shippingRoutes = require('./routes/shipping.route.js');
 const paymentRoutes = require('./routes/payment.route.js');
-const orderRoutes = require('./routes/order.route.js');
-const variantRouter = require('./routes/variant.route.js');
-const cartRouter = require('./routes/cart.route.js');
-const cartItemRouter = require('./routes/cart-item.route.js');
+const cartItemRoutes = require('./routes/cart-item.route.js');
+const cartRoutes = require('./routes/cart.route.js');
 const categoryRoutes = require('./routes/category.route.js');
 
 // Gán các routes vào đường dẫn
 app.use(passportGoogle.initialize());
 app.use('/api/products', productRoutes);
+app.use('/api/variants', variantRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/shipping', shippingRoutes); // có thể rút ngắn lại
 app.use('/api/payments', paymentRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/variants', variantRouter);
-app.use('/api/carts', cartRouter);
-app.use('/api/cart-items', cartItemRouter);
+app.use('/api/cart-items', cartItemRoutes);
+app.use('/api/carts', cartRoutes);
 app.use('/api/categories', categoryRoutes);
 
 app.get('/', (req, res) => {
