@@ -16,7 +16,7 @@ const update = async (id, data) => {
 };
 
 const remove = async (id) => {
-    return await CartItem.findByIdAndDelete(id);
+    return await CartItem.findOneAndDelete({ _id: id });
 };
 
 const getAllByCartId = async (cartId) => {
