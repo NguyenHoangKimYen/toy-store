@@ -1,12 +1,13 @@
 const CartItemService = require("../services/cart-item.service");
 
-const createCartItem = async (req, res, next) => {
+const createCartItem = async (req, res, next) => { // Thêm next
     try {
+        // [SỬA] Đổi productId thành variantId
         const { cartId, variantId, quantity } = req.body; 
 
         const item = await CartItemService.createCartItem(
             cartId,
-            variantId,
+            variantId, // [SỬA]
             quantity,
         );
         res.status(201).json(item);
@@ -18,6 +19,7 @@ const createCartItem = async (req, res, next) => {
 const updateCartItem = async (req, res, next) => { // Thêm next
     try {
         const { id } = req.params;
+        // Chỉ cho phép cập nhật quantity
         const { quantity } = req.body; 
 
         const item = await CartItemService.updateCartItem(id, { quantity });
