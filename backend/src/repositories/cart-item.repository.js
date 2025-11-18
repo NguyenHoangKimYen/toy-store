@@ -6,12 +6,12 @@ const create = async (data) => {
 };
 
 const findById = async (id) => {
-    return await CartItem.findById(id).populate("productId");
+    return await CartItem.findById(id).populate("variantId");
 };
 
 const update = async (id, data) => {
     return await CartItem.findByIdAndUpdate(id, data, { new: true }).populate(
-        "productId",
+        "variantId",
     );
 };
 
@@ -20,7 +20,7 @@ const remove = async (id) => {
 };
 
 const getAllByCartId = async (cartId) => {
-    return await CartItem.find({ cartId }).populate("productId");
+    return await CartItem.find({ cartId }).populate("variantId");
 };
 
 module.exports = {
