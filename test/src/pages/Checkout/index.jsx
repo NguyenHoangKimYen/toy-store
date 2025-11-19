@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,9 +12,10 @@ import './Checkout.css';
 
 const Checkout = () => {
   const navigate = useNavigate();
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  
   const {
     cartItems,
-    shippingInfo,
     paymentMethod,
     subtotal,
     shipping,
@@ -24,7 +25,6 @@ const Checkout = () => {
     loading,
     error,
     submitting,
-    handleShippingChange,
     handlePaymentMethodChange,
     handleSubmitOrder,
     handleDiscountApplied,
@@ -57,6 +57,10 @@ const Checkout = () => {
     );
   }
 
+  const handleCheckout = () => {
+    handleSubmitOrder(selectedAddressId);
+  };
+
   return (
     <div className="checkout-container">
       {/* Header */}
@@ -78,8 +82,8 @@ const Checkout = () => {
         <div className="checkout-forms">
           {/* Shipping Information */}
           <ShippingForm
-            shippingInfo={shippingInfo}
-            onChange={handleShippingChange}
+            selectedAddressId={selectedAddressId}
+            onAddressSelect={setSelectedAddressId}
           />
 
           {/* Payment Method */}
@@ -98,9 +102,10 @@ const Checkout = () => {
             tax={tax}
             discount={discount}
             total={total}
-            onSubmit={handleSubmitOrder}
+            onSubmit={handleCheckout}
             submitting={submitting}
             onDiscountApplied={handleDiscountApplied}
+            disabled={!selectedAddressId}
           />
         </div>
       </div>

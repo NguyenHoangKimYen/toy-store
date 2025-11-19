@@ -11,3 +11,5 @@ export { default as Pagination } from './Pagination'
 export { default as ProductBadges } from './ProductBadges'
 export { default as VariantSelector } from './VariantSelector'
 export { default as DiscountCodeInput } from './DiscountCodeInput'
+export { default as AddressAutocomplete } from './AddressAutocomplete'
+

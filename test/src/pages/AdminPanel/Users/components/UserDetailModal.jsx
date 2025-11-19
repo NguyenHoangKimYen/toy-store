@@ -2,7 +2,15 @@ import React from 'react'
 import { X, Mail, Phone, Calendar, Award, Shield, CheckCircle, XCircle } from 'lucide-react'
 import { formatDateTime, formatPhone, getRoleBadgeColor } from '../utils/formatters'
 
-const UserDetailModal = ({ user, onClose }) => {
+const UserDetailModal = ({ user, onClose, onEdit, onDelete }) => {
+  const handleEdit = () => {
+    onEdit(user)
+  }
+
+  const handleDelete = () => {
+    onDelete(user._id)
+  }
+
   return (
     <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
       <div className='bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto'>
@@ -139,10 +147,16 @@ const UserDetailModal = ({ user, onClose }) => {
 
           {/* Action Buttons */}
           <div className='flex gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700'>
-            <button className='flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium'>
+            <button 
+              onClick={handleEdit}
+              className='flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium'
+            >
               Edit User
             </button>
-            <button className='flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium'>
+            <button 
+              onClick={handleDelete}
+              className='flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium'
+            >
               Delete User
             </button>
             <button 
