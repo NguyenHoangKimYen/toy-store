@@ -44,20 +44,24 @@ const createCart = async (req, res) => {
     }
 };
 
-// const addItem = async (req, res) => {
-//     try {
-//         const { cartId } = req.params;
-//         const { cartItemId, itemPrice } = req.body;
-//         const updated = await CartService.addItem(
-//             cartId,
-//             cartItemId,
-//             itemPrice,
-//         );
-//         res.status(200).json(updated);
-//     } catch (err) {
-//         res.status(500).json({ message: err.message });
-//     }
-// };
+const addItem = async (req, res) => {
+    try {
+        const { cartId } = req.params;
+        const { productId, variantId, quantity, price } = req.body;
+
+        if (!productId || !quantity || !price) {
+            return res.status(400).json({ message: "Missing required fields" });
+        }
+
+        const updated = await CartService.addItem(cartId, {
+            productId, variantId, quantity, price
+        });
+
+        res.status(200).json(updated);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
 
 // const removeItem = async (req, res) => {
 //     try {

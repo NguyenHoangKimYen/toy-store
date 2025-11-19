@@ -1,125 +1,188 @@
-const orderRepository = require('../repositories/order.repository');
-const { createVnpayUrl, verifyVnpayChecksum } = require('../utils/vnpay.helper');
-const Joi = require('joi');
-
-// CONFIG
-const VNPAY_CONFIG = {
-    vnp_TmnCode: process.env.VNP_TMNCODE,
-    vnp_HashSecret: process.env.VNP_HASHSECRET,
-    vnp_Url: process.env.VNP_URL,
-    vnp_ReturnUrl: process.env.VNP_RETURNURL,
-    vnp_IpnUrl: process.env.VNP_IPNURL,
-};
-
-// VALIDATION
-const createPaymentSchema = Joi.object({
-    orderId: Joi.string().required(),
-    method: Joi.string().valid('vnpay', 'cash', 'momo').required(),
+const path = require('path');
+require('dotenv').config({
+    path: path.resolve(__dirname, '../../.env'),
 });
 
-// FIX IP — dùng IP hợp lệ theo VNPAY
-function getClientIp(req) {
-    let ip =
-        req.headers["x-forwarded-for"] ||
-        req.connection.remoteAddress ||
-        req.socket.remoteAddress ||
-        req.ip ||
-        "";
+const axios = require('axios');
+const qs = require('qs');
 
-    if (ip.includes(",")) ip = ip.split(",")[0].trim();
-    if (ip.startsWith("::ffff:")) ip = ip.replace("::ffff:", "");
-    if (ip === "::1" || ip === "127.0.0.1" || ip === "::") ip = "42.112.31.12";
+const orderRepository = require('../repositories/order.repository');
+const { buildRawSignature, generateSignature } = require('../utils/momo.helper');
+const { hmacSHA256 } = require('../utils/zalopay.helper');
 
-    return ip;
-}
+const MOMO_CONFIG = {
+    partnerCode: process.env.MOMO_PARTNER_CODE,
+    accessKey: process.env.MOMO_ACCESS_KEY,
+    secretKey: process.env.MOMO_SECRET_KEY,
+    endpoint: process.env.MOMO_ENDPOINT,
+    redirectUrl: process.env.MOMO_REDIRECT_URL,
+    ipnUrl: process.env.MOMO_IPN_URL,
+};
 
-// ================================
-// 1. CREATE PAYMENT
-// ================================
-async function createVnpayPayment(req) {
-    const { orderId } = req.body;
+const ZALOPAY_CONFIG = {
+    appId: process.env.ZALOPAY_APP_ID,
+    key1: process.env.ZALOPAY_KEY1,
+    key2: process.env.ZALOPAY_KEY2,
+    endpoint: process.env.ZALOPAY_ENDPOINT,
+    redirectUrl: process.env.ZALOPAY_REDIRECT_URL,
+    callbackUrl: process.env.ZALOPAY_CALLBACK_URL,
+};
 
+// ======================== MOMO PAYMENT ==========================
+
+async function createMomoPayment(orderId) {
     const order = await orderRepository.findById(orderId);
     if (!order) throw new Error("Order not found");
 
-    const ipAddr = getClientIp(req);
+    const amount = Number(order.totalAmount);
+    if (!amount || amount < 1000) throw new Error("Invalid MoMo amount");
 
-    const paymentUrl = createVnpayUrl(
-        order._id.toString(),
-        Number(order.totalAmount),
-        ipAddr,
-        VNPAY_CONFIG
-    );
+    const requestId = Date.now().toString();
+    const momoOrderId = order._id.toString();
+    const requestType = "payWithMethod";
+    const orderInfo = `Thanh toan don hang ${momoOrderId}`;
 
-    return { paymentUrl };
+    const signatureObj = {
+        accessKey: MOMO_CONFIG.accessKey,
+        amount,
+        extraData: "",
+        ipnUrl: MOMO_CONFIG.ipnUrl,
+        orderId: momoOrderId,
+        orderInfo,
+        partnerCode: MOMO_CONFIG.partnerCode,
+        redirectUrl: MOMO_CONFIG.redirectUrl,
+        requestId,
+        requestType,
+    };
+
+    const rawSignature = buildRawSignature(signatureObj);
+    const signature = generateSignature(rawSignature, MOMO_CONFIG.secretKey);
+
+    console.log("🔎 RAW SIGNATURE USED:", rawSignature);
+    console.log("🔑 SECRET KEY USED:", MOMO_CONFIG.secretKey);
+
+    const payload = {
+        ...signatureObj,
+        signature,
+        lang: "vi",
+    };
+
+    console.log("🧩 SIGNATURE:", signature);
+    console.log("📦 PAYLOAD:", payload);
+
+    const res = await axios.post(MOMO_CONFIG.endpoint, payload);
+    const data = res.data;
+
+    if (!data || data.resultCode !== 0) {
+        throw new Error(`MoMo payment failed: ${data.message || "Unknown error"}`);
+    }
+
+    return {
+        payUrl: data.payUrl,
+        qrCode: data.qrCodeUrl || null,
+        deeplink: data.deeplink || null,
+        orderId: momoOrderId,
+    };
 }
 
-// ================================
-// 2. RETURN URL
-// ================================
-async function handleVnpayReturn(query) {
-    const copyParams = { ...query };
-    const isValid = verifyVnpayChecksum(copyParams, VNPAY_CONFIG.vnp_HashSecret);
+async function handleMomoIpn(body) {
+    const { orderId, resultCode } = body;
+    if (!orderId) return { success: false, message: "Missing orderId" };
 
-    if (!isValid) throw new Error("Invalid checksum");
-
-    const orderId = query.vnp_TxnRef;
-    const rspCode = query.vnp_ResponseCode;
-
-    const order = await orderRepository.findById(orderId);
-    if (!order) throw new Error("Order not found");
-
-    if (rspCode === "00") {
+    if (resultCode === 0) {
         await orderRepository.updatePaymentStatus(orderId, {
             paymentStatus: "paid",
             status: "processing",
-            paymentMethod: "vnpay",
         });
-    } else {
-        await orderRepository.updatePaymentStatus(orderId, {
-            paymentStatus: "failed",
-            status: "cancelled",
-        });
+        return { success: true, message: "Payment success" };
     }
 
-    return { orderId, rspCode };
+    await orderRepository.updatePaymentStatus(orderId, {
+        paymentStatus: "failed",
+        status: "cancelled",
+    });
+
+    return { success: false, message: "Payment failed" };
 }
 
-// ================================
-// 3. IPN URL
-// ================================
-async function handleVnpayIpn(query) {
-    const copyParams = { ...query };
-    const isValid = verifyVnpayChecksum(copyParams, VNPAY_CONFIG.vnp_HashSecret);
+async function handleMomoReturn(query) {
+    const { resultCode, orderId } = query;
 
-    if (!isValid)
-        return { RspCode: "97", Message: "Invalid Checksum" };
+    return {
+        success: resultCode === "0",
+        orderId,
+        message: resultCode === "0" ? "Payment success" : "Payment failed",
+    };
+}
 
-    const orderId = query.vnp_TxnRef;
-    const rspCode = query.vnp_ResponseCode;
+// ======================== ZALOPAY PAYMENT ==========================
 
-    const order = await orderRepository.findById(orderId);
-    if (!order)
-        return { RspCode: "01", Message: "Order not found" };
+async function createZaloPayOrderService(order) {
+    const { appId, key1, endpoint, redirectUrl, callbackUrl } = ZALOPAY_CONFIG;
+    if (!appId || !key1 || !endpoint) throw new Error("ZaloPay config missing");
 
-    if (order.paymentStatus === "paid")
-        return { RspCode: "02", Message: "Order already confirmed" };
+    const date = new Date();
+    const yyMMdd = date.toISOString().slice(2, 10).replace(/-/g, "");
+    const random = String(Math.floor(Math.random() * 999999)).padStart(6, "0");
+    const apptransid = `${yyMMdd}_${random}`;
 
-    if (rspCode === "00") {
-        await orderRepository.updatePaymentStatus(orderId, {
-            paymentStatus: "paid",
-            status: "processing",
-            paymentMethod: "vnpay",
-        });
-        return { RspCode: "00", Message: "Confirm Success" };
-    }
+    const amount = parseInt(order.totalAmount?.toString() || "0", 10);
+    const apptime = Date.now();
+    const appuser = (order.userId || "guest_user").toString();
+    const embeddata = JSON.stringify({
+        redirecturl: redirectUrl,
+        orderId: order._id.toString()
+    });
 
-    return { RspCode: "00", Message: "Confirm Failure" };
+    const item = JSON.stringify([]);
+
+    const data = [
+        appId,
+        apptransid,
+        appuser,
+        amount,
+        apptime,
+        embeddata,
+        item,
+    ].join("|");
+
+    const mac = hmacSHA256(data, key1);
+
+    const payload = {
+        appid: appId,
+        appuser,
+        apptime,
+        amount,
+        apptransid,
+        embeddata,
+        item,
+        description: `MilkyBloom - Thanh toán đơn #${order._id}`,
+        bankcode: "zalopayapp",
+        callbackurl: callbackUrl,
+        mac,
+    };
+
+    const zaloRes = await axios.post(endpoint, qs.stringify(payload), {
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+
+    return zaloRes.data;
+}
+
+function verifyZaloPayCallback(params) {
+    const reqMac = params.mac;
+    const dataStr = typeof params.data === "string"
+        ? params.data
+        : JSON.stringify(params.data); // 👈 ép object thành string
+
+    const mac = hmacSHA256(dataStr, ZALOPAY_CONFIG.key2);
+    return mac === reqMac;
 }
 
 module.exports = {
-    createVnpayPayment,
-    handleVnpayReturn,
-    handleVnpayIpn,
-    createPaymentSchema,
+    createMomoPayment,
+    handleMomoIpn,
+    handleMomoReturn,
+    createZaloPayOrderService,
+    verifyZaloPayCallback,
 };

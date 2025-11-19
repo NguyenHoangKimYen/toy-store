@@ -22,13 +22,26 @@ const createCart = async ({ userId, sessionId }) => {
     return await CartRepository.create(newCart);
 };
 
-// const addItem = async (cartId, cartItemId, itemPrice) => {
-//     const cart = await CartRepository.update(cartId, {
-//         $push: { items: cartItemId },
-//         $inc: { totalPrice: itemPrice },
-//     });
-//     return cart;
-// };
+const addItem = async (cartId, itemData) => {
+    const { productId, variantId, quantity, price } = itemData;
+
+    // 1. Tạo CartItem mới
+    const cartItem = await CartItem.create({
+        productId,
+        variantId,
+        quantity,
+        price,
+        subtotal: quantity * price
+    });
+
+    // 2. Cập nhật giỏ
+    const updatedCart = await CartRepository.update(cartId, {
+        $push: { items: cartItem._id },
+        $inc: { totalPrice: cartItem.subtotal }
+    });
+
+    return updatedCart;
+};
 
 // const removeItem = async (cartId, cartItemId, itemPrice) => {
 //     const cart = await CartRepository.update(cartId, {

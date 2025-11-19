@@ -23,6 +23,41 @@ module.exports = {
         return res.json({ success: true, orders });
     },
 
+    //Checkout từ cart cho user đã đăng nhập
+    async checkoutFromCartForUser(req, res, next) {
+        try {
+            const userId = req.user.id;
+            const { addressId, discountCodeId } = req.body;
+
+            const detail = await orderService.createOrderFromCart({
+                userId,
+                addressId,
+                discountCodeId: discountCodeId || null,
+            });
+
+            res.status(201).json({ success: true, data: detail });
+        } catch (err) {
+            next(err);
+        }
+    },
+
+    //Checkout từ cart cho guest (dùng sessionId)
+    async checkoutFromCartForGuest(req, res, next) {
+        try {
+            const { sessionId, guestInfo, discountCodeId } = req.body;
+
+            const detail = await orderService.createOrderFromCart({
+                sessionId,
+                guestInfo,
+                discountCodeId: discountCodeId || null,
+            });
+
+            res.status(201).json({ success: true, data: detail });
+        } catch (err) {
+            next(err);
+        }
+    },
+
     async adminGetAll(req, res) {
         const orders = await orderService.getAll(req.query, req.query);
         return res.json({ success: true, orders });
