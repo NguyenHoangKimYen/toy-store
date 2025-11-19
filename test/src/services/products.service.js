@@ -170,7 +170,7 @@ export const deleteProductImage = async (productId, imageId) => {
  * @returns {Promise<Array>}
  */
 export const getProductCategories = async () => {
-  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.PRODUCTS}/categories`, {
+  const response = await fetch(`${API_BASE_URL}/categories`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

@@ -57,8 +57,8 @@ export const useCart = () => {
         setCartItems(items);
       }
     } catch (err) {
-      // If cart doesn't exist, that's okay
-      if (err.response?.status === 404) {
+      // If cart doesn't exist, that's okay - it will be created when items are added
+      if (err.response?.status === 404 || err.message?.includes('Không tìm thấy') || err.message?.includes('not found')) {
         setCart(null);
         setCartItems([]);
       } else {
