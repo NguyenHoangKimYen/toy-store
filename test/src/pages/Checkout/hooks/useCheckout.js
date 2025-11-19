@@ -65,10 +65,16 @@ export const useCheckout = () => {
         description: `Order #${order.id}`,
       });
 
-      // Redirect to order detail page
-      navigate(`${ROUTES.ORDERS}/${order.id}`, {
-        state: { orderSuccess: true },
-      });
+      // Redirect based on payment method
+      if (paymentMethod === 'cod') {
+        // COD - go to order detail
+        navigate(`/orders/${order.id}`, {
+          state: { orderSuccess: true },
+        });
+      } else {
+        // Online payment - go to payment page
+        navigate(`/payment/${order.id}`);
+      }
     } catch (err) {
       console.error('Error submitting order:', err);
       const errorMessage = err.message || 'Failed to submit order. Please try again.';

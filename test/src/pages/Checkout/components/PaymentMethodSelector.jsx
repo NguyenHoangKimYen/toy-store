@@ -1,15 +1,15 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { RadioGroup } from '@/components/ui/radio-group';
-import { CreditCard, Wallet, Truck } from 'lucide-react';
+import { CreditCard, Wallet, Truck, QrCode } from 'lucide-react';
 import './PaymentMethodSelector.css';
 
 const PAYMENT_METHODS = [
   {
-    id: 'credit_card',
-    name: 'Credit Card',
-    icon: CreditCard,
-    description: 'Pay with Visa, Mastercard, or American Express',
+    id: 'vietqr',
+    name: 'VietQR',
+    icon: QrCode,
+    description: 'Pay via bank transfer using QR code',
   },
   {
     id: 'momo',
