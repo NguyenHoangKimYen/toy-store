@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.jsx'
 import { BrowserRouter } from 'react-router-dom'
 import AppRoutes from './routes/AppRoutes'
+import { AuthProvider } from './hooks/useAuth'
 
 // Start MSW when in development with mock data enabled
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
@@ -25,7 +26,9 @@ async function enableMocking() {
 enableMocking().then(() => {
   createRoot(document.getElementById('root')).render(
     <BrowserRouter>
-      <App></App>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </BrowserRouter>
   );
 });
