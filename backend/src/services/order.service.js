@@ -1,4 +1,4 @@
-const orderRepo = require('../repositories/order.repository');
+const orderRepository = require('../repositories/order.repository');
 const itemRepo = require('../repositories/order-item.repository');
 const historyRepo = require('../repositories/order-status-history.repository');
 const bcrypt = require('bcrypt');
@@ -8,6 +8,8 @@ const paymentRepo = require('../repositories/payment.repository');
 const { sendMail } = require('../libs/mailer.js');
 const { calculateShippingFee } = require('../services/shipping.service');
 const { getWeatherCondition } = require('../services/weather.service');
+const cartRepository = require('../repositories/cart.repository');
+const cartItemRepository = require('../repositories/cart-item.repository');
 
 module.exports = {
     async createOrGetUserForGuest({ fullName, email, phone }) {
@@ -54,6 +56,69 @@ module.exports = {
     },
     async createOrGetUserForGuestCheckout(payload) {
         return this.createOrGetUserForGuest(payload);
+    },
+
+    async createOrderFromCart(payload) {
+        const { userId, sessionId, addressId, discountCodeId, guestInfo } = payload;
+
+        // 1. Lấy cart theo user hoặc session
+        let cart = null;
+        if (userId) {
+            cart = await cartRepository.findCartByUserId(userId);
+        } else if (sessionId) {
+            cart = await cartRepository.findCartBySessionId(sessionId);
+        }
+
+        if (!cart) {
+            throw new Error('Cart not found');
+        }
+
+        // 2. Lấy danh sách CartItem của cart
+        const cartItems = await cartItemRepository.getAllByCartId(cart._id);
+        if (!cartItems || cartItems.length === 0) {
+            throw new Error('Cart is empty');
+        }
+
+        // 3. Convert CartItem -> items cho createOrder()
+        let totalAmount = 0;
+        const items = cartItems.map((ci) => {
+            const subtotal = parseFloat(ci.price.toString()); // price hiện đang là tổng dòng
+            const quantity = ci.quantity;
+            const unitPrice = subtotal / quantity;
+
+            totalAmount += subtotal;
+
+            return {
+                productId: ci.productId._id || ci.productId,
+                quantity,
+                unitPrice,
+                subtotal,
+            };
+        });
+
+        // 4. Gọi lại createOrder() hiện có để tái dùng logic guest / email / history
+        const order = await this.createOrder({
+            userId: userId || null,
+            guestInfo: guestInfo || null,
+            addressId: addressId || null,
+            items,
+            discountCodeId: discountCodeId || cart.discountCodeId || null,
+            totalAmount,
+        });
+
+        // 5. Clear cart sau khi tạo đơn
+        for (const ci of cartItems) {
+            await cartItemRepository.remove(ci._id);
+        }
+        await cartRepository.update(cart._id, {
+            items: [],
+            totalPrice: 0,
+            discountCodeId: null,
+        });
+
+        // 6. Trả về detail đầy đủ của order
+        const detail = await this.getOrderDetail(order._id);
+        return detail;
     },
 
     // Tạo đơn hàng
@@ -106,7 +171,7 @@ module.exports = {
 
         // 3) Create order
         const totalAmount = data.totalAmount;
-        const order = await orderRepo.create({
+        const order = await orderRepository.create({
             userId,
             addressId,
             discountCodeId: discountCodeId || null,
@@ -148,7 +213,7 @@ module.exports = {
 
     // ⭐⭐⭐ Lấy chi tiết đơn hàng — FULL SHIP + PAYMENT + WEATHER
     async getOrderDetail(orderId) {
-        const order = await orderRepo.findById(orderId);
+        const order = await orderRepository.findById(orderId);
         if (!order) return null;
 
         // Items
@@ -194,16 +259,16 @@ module.exports = {
 
     // Lấy toàn bộ đơn của user
     getOrdersByUser(userId) {
-        return orderRepo.findByUser(userId);
+        return orderRepository.findByUser(userId);
     },
 
     // Admin: lấy tất cả
     getAll(filter, options) {
-        return orderRepo.findAll(filter, options);
+        return orderRepository.findAll(filter, options);
     },
 
     async updateStatus(orderId, newStatus) {
-        const updated = await orderRepo.updateStatus(orderId, newStatus);
+        const updated = await orderRepository.updateStatus(orderId, newStatus);
         if (!updated) return null;
 
         await historyRepo.add(orderId, newStatus);
