@@ -22,7 +22,9 @@ const AttributeDefinitionBuilder = ({
     }
   };
 
-  const removeAttributeDefinition = (index) => {
+  const removeAttributeDefinition = (e, index) => {
+    e.preventDefault();
+    e.stopPropagation();
     setAttributeDefinitions(prev => prev.filter((_, i) => i !== index));
     // Clean up input state
     setAttributeValueInputs(prev => {
@@ -44,7 +46,9 @@ const AttributeDefinitionBuilder = ({
     }
   };
 
-  const removeValueFromAttribute = (attrIndex, valueIndex) => {
+  const removeValueFromAttribute = (e, attrIndex, valueIndex) => {
+    e.preventDefault();
+    e.stopPropagation();
     setAttributeDefinitions(prev => prev.map((attr, i) =>
       i === attrIndex
         ? { ...attr, values: attr.values.filter((_, vi) => vi !== valueIndex) }
@@ -112,7 +116,7 @@ const AttributeDefinitionBuilder = ({
                 type='button'
                 variant='ghost'
                 size='sm'
-                onClick={() => removeAttributeDefinition(attrIndex)}
+                onClick={(e) => removeAttributeDefinition(e, attrIndex)}
                 className='text-red-600 hover:text-red-700 h-7'
               >
                 <X className='w-4 h-4' />
@@ -146,10 +150,13 @@ const AttributeDefinitionBuilder = ({
               {attr.values.map((value, valueIndex) => (
                 <Badge key={valueIndex} variant='secondary' className='flex items-center gap-1 text-sm'>
                   {value}
-                  <X
-                    className='w-3 h-3 cursor-pointer hover:text-red-600'
-                    onClick={() => removeValueFromAttribute(attrIndex, valueIndex)}
-                  />
+                  <button
+                    type='button'
+                    className='ml-1 hover:text-red-600 focus:outline-none pointer-events-auto'
+                    onClick={(e) => removeValueFromAttribute(e, attrIndex, valueIndex)}
+                  >
+                    <X className='w-3 h-3' />
+                  </button>
                 </Badge>
               ))}
             </div>
