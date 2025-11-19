@@ -70,6 +70,7 @@ const cartRoutes = require('./routes/cart.route.js');
 const categoryRoutes = require('./routes/category.route.js');
 const reviewRoutes = require('./routes/review.route.js');
 
+
 // Gán các routes vào đường dẫn
 app.use(passportGoogle.initialize());
 app.use('/api/products', productRoutes);
