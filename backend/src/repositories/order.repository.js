@@ -24,5 +24,19 @@ module.exports = {
 
   updateStatus(orderId, status) {
     return Order.findByIdAndUpdate(orderId, { status }, { new: true });
-  }
+  },
+
+  // 🔹 update generic theo id
+  updateById(orderId, update) {
+    return Order.findByIdAndUpdate(orderId, update, { new: true });
+  },
+
+  // 🔹 update riêng paymentStatus (cho tiện nếu muốn dùng)
+  updatePaymentStatus(orderId, paymentStatus) {
+    return Order.findByIdAndUpdate(
+      orderId,
+      { paymentStatus },
+      { new: true }
+    );
+  },
 };
