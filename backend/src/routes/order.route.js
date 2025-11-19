@@ -11,6 +11,10 @@ router.get('/me', auth, ctrl.getMyOrders);
 router.get('/', auth, ctrl.adminGetAll);
 router.patch('/:id/status', auth, ctrl.updateStatus);
 
+// Checkout từ cart
+router.post('/checkout/cart', auth, ctrl.checkoutFromCartForUser);
+router.post('/guest/checkout/cart', ctrl.checkoutFromCartForGuest);
+
 // Detail
 router.get('/:id', auth, ctrl.getDetail);
 

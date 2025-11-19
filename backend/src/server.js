@@ -69,6 +69,7 @@ const variantRouter = require('./routes/variant.route.js');
 const cartRouter = require('./routes/cart.route.js');
 const cartItemRouter = require('./routes/cart-item.route.js');
 
+
 // Gán các routes vào đường dẫn
 app.use(passportGoogle.initialize());
 app.use('/api/products', productRoutes);
