@@ -1,11 +1,2 @@
-import React from 'react'
-
-const Orders = () => {
-  return (
-    <div>
-      
-    </div>
-  )
-}
-
-export default Orders
+// Re-export OrderDetail as Orders for route compatibility
+export { default } from './Orders/OrderDetail';

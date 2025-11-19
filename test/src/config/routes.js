@@ -11,7 +11,7 @@ export const PUBLIC_ROUTES = {
   CART: '/cart',
   CHECKOUT: '/checkout',
   PLACE_ORDER: '/place-order',
-  ORDERS: '/orders',
+  ORDERS: '/orders/:id',
   ORDER_HISTORY: '/order-history',
   PROFILE: '/profile',
 };
