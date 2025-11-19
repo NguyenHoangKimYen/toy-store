@@ -1,23 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-
-// Mock user data
-const MOCK_USER = {
-  _id: 'user123',
-  fullName: 'John Doe',
-  username: 'johndoe',
-  email: 'john.doe@example.com',
-  phone: '+1234567890',
-  avatar: 'https://via.placeholder.com/120/3b82f6/ffffff?text=JD',
-  role: 'customer',
-  isVerified: true,
-  socialProvider: null,
-  socialId: null,
-  loyaltyPoints: 250,
-  defaultAddressId: null,
-  createdAt: new Date('2024-01-15'),
-  updatedAt: new Date(),
-};
+import * as usersService from '@/services/users.service';
 
 export const useProfile = () => {
   const [user, setUser] = useState(null);
@@ -33,14 +16,15 @@ export const useProfile = () => {
       setLoading(true);
       setError(null);
 
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/users/profile');
-      // const data = await response.json();
-
-      // Mock delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Get current user ID from auth context/localStorage
+      const currentUserId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
       
-      setUser(MOCK_USER);
+      if (!currentUserId) {
+        throw new Error('No user session found');
+      }
+
+      const userData = await usersService.getUserById(currentUserId);
+      setUser(userData);
     } catch (err) {
       console.error('Error loading profile:', err);
       setError(err.message || 'Failed to load profile');
@@ -54,20 +38,17 @@ export const useProfile = () => {
     try {
       setError(null);
 
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/users/profile', {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(updates),
-      // });
-      // const data = await response.json();
+      if (!user?._id) {
+        throw new Error('No user ID found');
+      }
 
-      // Mock delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Use PUT for full update
+      const updatedUser = await usersService.updateUser(user._id, {
+        ...user,
+        ...updates,
+      });
 
-      // Update local state
-      setUser(prev => ({ ...prev, ...updates, updatedAt: new Date() }));
-      
+      setUser(updatedUser);
       toast.success('Profile updated successfully');
       return true;
     } catch (err) {
@@ -82,23 +63,16 @@ export const useProfile = () => {
     try {
       setError(null);
 
-      // TODO: Replace with actual API call
-      // const formData = new FormData();
-      // formData.append('avatar', file);
-      // const response = await fetch('/api/users/avatar', {
-      //   method: 'POST',
-      //   body: formData,
-      // });
-      // const data = await response.json();
+      if (!user?._id) {
+        throw new Error('No user ID found');
+      }
 
-      // Mock: Create object URL for preview
-      const avatarUrl = URL.createObjectURL(file);
-      
-      // Mock delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Check if user has existing avatar
+      const result = user.avatar 
+        ? await usersService.updateAvatar(user._id, file)
+        : await usersService.uploadAvatar(user._id, file);
 
-      setUser(prev => ({ ...prev, avatar: avatarUrl, updatedAt: new Date() }));
-      
+      setUser(prev => ({ ...prev, avatar: result.avatar || result.data?.avatar }));
       toast.success('Avatar updated successfully');
       return true;
     } catch (err) {
@@ -113,15 +87,11 @@ export const useProfile = () => {
     try {
       setError(null);
 
-      // TODO: Replace with actual API call
-      // When implemented, these parameters will be used:
-      const passwordData = { currentPassword, newPassword };
-      
-      // Mock delay and validation
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      console.log('Password change requested:', passwordData);
+      if (!user?._id) {
+        throw new Error('No user ID found');
+      }
 
+      await usersService.setUserPassword(user._id, newPassword, newPassword);
       toast.success('Password changed successfully');
       return true;
     } catch (err) {

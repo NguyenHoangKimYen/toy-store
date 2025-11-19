@@ -46,7 +46,12 @@ export const useAdminProducts = () => {
         }
       } else {
         // Admin should see ALL products regardless of status
-        const data = await productsService.getProducts({ ...params, status: 'all' });
+        // Set high limit to get all products (or implement pagination later)
+        const data = await productsService.getProducts({ 
+          ...params, 
+          status: 'all',
+          limit: 1000  // High limit to get all products for admin
+        });
         setProducts(Array.isArray(data) ? data : data.products || []);
       }
     } catch (err) {
@@ -163,9 +168,22 @@ export const useAdminProducts = () => {
         toast.success('Product updated successfully');
         return updatedProducts.find(p => p._id === productId);
       } else {
-        const updated = await productsService.updateProduct(productId, productData);
+        // Backend only allows updating specific fields via PATCH
+        // Variants, attributes, and images must be updated via dedicated endpoints
+        const allowedFields = ['name', 'slug', 'description', 'status', 'isFeatured', 'categoryId', 'brand'];
+        const updatePayload = {};
+        
+        // Only include fields that are actually provided (partial update)
+        allowedFields.forEach(field => {
+          if (productData[field] !== undefined) {
+            updatePayload[field] = productData[field];
+          }
+        });
+
+        // Use PATCH instead of PUT for partial updates
+        const updated = await productsService.patchProduct(productId, updatePayload);
         await loadProducts();
-        toast.success('Product updated successfully');
+        // toast.success('Product updated successfully'); // Removed - handled by caller
         return updated;
       }
     } catch (err) {

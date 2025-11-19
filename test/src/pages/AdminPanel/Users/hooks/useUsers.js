@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getUsers } from '@/services/users.service'
+import * as usersService from '@/services/users.service'
 
 export const useUsers = (searchQuery = '') => {
   const [users, setUsers] = useState([])
@@ -21,20 +21,20 @@ export const useUsers = (searchQuery = '') => {
           setError(null)
           
           // Fetch from backend
-          const data = await getUsers({ 
+          const data = await usersService.getUsers({ 
             search: searchQuery,
             // Add other filters as needed
             // role: 'customer',
-            // verified: true,
-            // hasSocialLogin: false,
+            // isVerified: true,
+            // socialProvider: 'google',
             // sortBy: 'createdAt',
             // sortOrder: 'desc',
             // page: 1,
             // limit: 50
           })
           
-          // Backend can return array or object with users property
-          const usersArray = Array.isArray(data) ? data : data.users || []
+          // Backend returns { success: true, data: [...users] }
+          const usersArray = Array.isArray(data) ? data : (data.data || [])
           
           // Calculate stats from users
           const calculatedStats = {
@@ -45,7 +45,7 @@ export const useUsers = (searchQuery = '') => {
           }
           
           setUsers(usersArray)
-          setStats(data.stats || calculatedStats)
+          setStats(calculatedStats)
           
         } catch (err) {
           setError(err.message)

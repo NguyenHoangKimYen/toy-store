@@ -3,16 +3,17 @@ import { handleResponse, createUrl } from '../utils/apiHelpers';
 import { getAuthHeaders } from '../utils/authHelpers';
 
 /**
- * Optional filters
+ * Get all users with optional filters
  * @param {Object} params - Query parameters
  * @param {string} params.search - Search query
- * @param {string} params.role - Filter by role (admin/user)
- * @param {string} params.verified - Filter by verification status
+ * @param {string} params.role - Filter by role (admin/customer)
+ * @param {string} params.isVerified - Filter by verification status
+ * @param {string} params.socialProvider - Filter by social login provider
  * @param {string} params.sortBy - Sort field
  * @param {string} params.sortOrder - Sort order (asc/desc)
  * @param {number} params.page - Page number
  * @param {number} params.limit - Items per page
- * @returns {Promise<{users: Array, stats: Object, pagination: Object}>}
+ * @returns {Promise<Array>}
  */
 export const getUsers = async (params = {}) => {
   const url = createUrl(`${API_BASE_URL}${ENDPOINTS.USERS}`, params);
@@ -29,12 +30,63 @@ export const getUsers = async (params = {}) => {
 };
 
 /**
- * Get
- * @param {string} id
+ * Get user by ID
+ * @param {string} id - User ID
  * @returns {Promise<Object>}
  */
 export const getUserById = async (id) => {
   const response = await fetch(`${API_BASE_URL}${ENDPOINTS.USERS}/${id}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+  });
+  
+  return handleResponse(response);
+};
+
+/**
+ * Get user by email
+ * @param {string} email - User email
+ * @returns {Promise<Object>}
+ */
+export const getUserByEmail = async (email) => {
+  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.USERS}/email/${email}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+  });
+  
+  return handleResponse(response);
+};
+
+/**
+ * Get user by phone
+ * @param {string} phone - User phone number
+ * @returns {Promise<Object>}
+ */
+export const getUserByPhone = async (phone) => {
+  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.USERS}/phone/${encodeURIComponent(phone)}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+  });
+  
+  return handleResponse(response);
+};
+
+/**
+ * Get user by username
+ * @param {string} username - Username
+ * @returns {Promise<Object>}
+ */
+export const getUserByUsername = async (username) => {
+  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.USERS}/username/${username}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -119,95 +171,81 @@ export const deleteUser = async (id) => {
 };
 
 /**
- * Delete many
- * @param {Array<string>} ids
+ * Verify user account
+ * @param {string} id - User ID
+ * @param {string} token - Verification token
  * @returns {Promise<Object>}
  */
-export const bulkDeleteUsers = async (ids) => {
-  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.USERS}/bulk-delete`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-    },
-    body: JSON.stringify({ ids }),
-  });
-  
-  return handleResponse(response);
-};
-
-/**
- * Update verification status
- * @param {string}
- * @param {boolean} verified
- * @returns {Promise<Object>}
- */
-export const updateUserVerification = async (id, verified) => {
+export const verifyUser = async (id, token) => {
   const response = await fetch(`${API_BASE_URL}${ENDPOINTS.USERS}/${id}/verify`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
       ...getAuthHeaders(),
     },
-    body: JSON.stringify({ verified }),
+    body: JSON.stringify({ token }),
   });
   
   return handleResponse(response);
 };
 
 /**
- * Update role
- * @param {string} id
- * @param {string} role
+ * Set user password
+ * @param {string} id - User ID
+ * @param {string} password - New password
+ * @param {string} confirmPassword - Password confirmation
  * @returns {Promise<Object>}
  */
-export const updateUserRole = async (id, role) => {
-  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.USERS}/${id}/role`, {
+export const setUserPassword = async (id, password, confirmPassword) => {
+  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.USERS}/${id}/set-password`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
       ...getAuthHeaders(),
     },
-    body: JSON.stringify({ role }),
+    body: JSON.stringify({ password, confirmPassword }),
   });
   
   return handleResponse(response);
 };
 
 /**
- * Update loyalty points
- * @param {string} id
- * @param {number} points
- * @returns {Promise<Object>} 
+ * Upload user avatar
+ * @param {string} id - User ID
+ * @param {File} file - Avatar image file
+ * @returns {Promise<Object>}
  */
-export const updateUserPoints = async (id, points) => {
-  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.USERS}/${id}/points`, {
-    method: 'PATCH',
+export const uploadAvatar = async (id, file) => {
+  const formData = new FormData();
+  formData.append('avatar', file);
+  
+  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.USERS}/${id}/avatar`, {
+    method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
       ...getAuthHeaders(),
     },
-    body: JSON.stringify({ points }),
+    body: formData,
   });
   
   return handleResponse(response);
 };
 
 /**
- * Get activity history
- * @param {string} id
- * @param {Object} params
- * @returns {Promise<Array>}
+ * Update user avatar
+ * @param {string} id - User ID
+ * @param {File} file - New avatar image file
+ * @returns {Promise<Object>}
  */
-export const getUserActivity = async (id, params = {}) => {
-  const url = createUrl(`${API_BASE_URL}${ENDPOINTS.USERS}/${id}/activity`, params);
+export const updateAvatar = async (id, file) => {
+  const formData = new FormData();
+  formData.append('avatar', file);
   
-  const response = await fetch(url, {
-    method: 'GET',
+  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.USERS}/${id}/avatar`, {
+    method: 'PATCH',
     headers: {
-      'Content-Type': 'application/json',
       ...getAuthHeaders(),
     },
+    body: formData,
   });
   
   return handleResponse(response);
