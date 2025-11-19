@@ -1,51 +1,57 @@
-import { useState, useEffect } from 'react';
-import { getOrders } from '@/services/orders.service';
+import { useState, useEffect, useMemo } from 'react';
+import { useOrders } from '@/hooks';
 import { toast } from 'sonner';
 
 export const useOrderHistory = () => {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { orders: allOrders, loading, error, fetchMyOrders } = useOrders();
+  
   const [filters, setFilters] = useState({
     status: 'all',
     search: '',
     sortBy: 'date-desc'
   });
 
-  const loadOrders = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const params = {};
-      
-      if (filters.status !== 'all') {
-        params.status = filters.status;
-      }
-      
-      if (filters.search) {
-        params.search = filters.search;
-      }
+  // Apply filters and sorting to orders
+  const orders = useMemo(() => {
+    let filtered = [...allOrders];
 
-      // Parse sortBy
-      const [field, order] = filters.sortBy.split('-');
-      params.sort = `${field}:${order}`;
-
-      const data = await getOrders(params);
-      setOrders(data);
-    } catch (err) {
-      console.error('Error loading orders:', err);
-      setError(err.message || 'Failed to load orders');
-      toast.error('Failed to load orders');
-    } finally {
-      setLoading(false);
+    // Filter by status
+    if (filters.status !== 'all') {
+      filtered = filtered.filter(order => order.status === filters.status);
     }
-  };
+
+    // Filter by search term (search in order ID or items)
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(order => {
+        const orderId = order.id?.toString().toLowerCase() || '';
+        const orderNumber = order.orderNumber?.toLowerCase() || '';
+        return orderId.includes(searchLower) || orderNumber.includes(searchLower);
+      });
+    }
+
+    // Sort orders
+    const [field, order] = filters.sortBy.split('-');
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      
+      if (field === 'date') {
+        comparison = new Date(b.createdAt) - new Date(a.createdAt);
+      } else if (field === 'total') {
+        comparison = (b.totalAmount || 0) - (a.totalAmount || 0);
+      }
+      
+      return order === 'desc' ? comparison : -comparison;
+    });
+
+    return filtered;
+  }, [allOrders, filters]);
 
   useEffect(() => {
-    loadOrders();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
+    if (error) {
+      toast.error('Failed to load orders');
+    }
+  }, [error]);
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({
@@ -62,7 +68,7 @@ export const useOrderHistory = () => {
   };
 
   const refetch = () => {
-    loadOrders();
+    fetchMyOrders();
   };
 
   return {
