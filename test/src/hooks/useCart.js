@@ -133,6 +133,29 @@ export const useCart = () => {
     [ensureCart, cartItems, fetchCart]
   );
 
+  // Remove item from cart
+  const removeItem = useCallback(
+    async (itemId) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        await deleteCartItem(itemId);
+        setCartItems((prev) => prev.filter((item) => item.id !== itemId));
+
+        // Refresh cart to get updated totals
+        await fetchCart();
+      } catch (err) {
+        setError(err.message || 'Failed to remove item from cart');
+        console.error('Error removing item from cart:', err);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchCart]
+  );
+
   // Update item quantity
   const updateItemQuantity = useCallback(
     async (itemId, quantity) => {
@@ -158,30 +181,7 @@ export const useCart = () => {
         setLoading(false);
       }
     },
-    [fetchCart]
-  );
-
-  // Remove item from cart
-  const removeItem = useCallback(
-    async (itemId) => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        await deleteCartItem(itemId);
-        setCartItems((prev) => prev.filter((item) => item.id !== itemId));
-
-        // Refresh cart to get updated totals
-        await fetchCart();
-      } catch (err) {
-        setError(err.message || 'Failed to remove item from cart');
-        console.error('Error removing item from cart:', err);
-        throw err;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [fetchCart]
+    [fetchCart, removeItem]
   );
 
   // Clear all items from cart
