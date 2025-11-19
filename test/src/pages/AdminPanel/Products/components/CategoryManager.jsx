@@ -61,10 +61,17 @@ const CategoryManager = ({ categories, onAdd, onRemove }) => {
           {categories.map((categoryId, index) => (
             <Badge key={index} variant='secondary' className='flex items-center gap-1'>
               {getCategoryName(categoryId)}
-              <X
-                className='w-3 h-3 cursor-pointer hover:text-red-600'
-                onClick={() => onRemove(index)}
-              />
+              <button
+                type='button'
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onRemove(index);
+                }}
+                className='ml-1 hover:bg-red-100 dark:hover:bg-red-900 rounded-full p-0.5 transition-colors'
+              >
+                <X className='w-3 h-3 text-gray-500 hover:text-red-600' />
+              </button>
             </Badge>
           ))}
         </div>

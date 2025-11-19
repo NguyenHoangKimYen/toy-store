@@ -211,7 +211,7 @@ export const getProductVariants = async (productId) => {
  * @returns {Promise<Object>}
  */
 export const getVariantById = async (variantId) => {
-  const response = await fetch(`${API_BASE_URL}/variant/${variantId}`, {
+  const response = await fetch(`${API_BASE_URL}/variants/${variantId}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

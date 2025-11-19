@@ -49,13 +49,12 @@ export const useCategories = () => {
       
       if (existingCategory) {
         setLoading(false);
-        const errorMsg = `Category "${existingCategory.name}" already exists. Please select it from the dropdown instead.`;
-        setError(errorMsg);
-        toast.error('Duplicate Category', { 
-          description: errorMsg,
-          duration: 5000,
+        toast.success('Category already exists', { 
+          description: `Using existing category "${existingCategory.name}"`,
+          duration: 3000,
         });
-        throw new Error(errorMsg);
+        // Return the existing category instead of creating a new one
+        return existingCategory;
       }
       
       // Generate slug from name if not provided

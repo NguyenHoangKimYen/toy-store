@@ -199,7 +199,7 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
     e.preventDefault();
     
     if (!validateForm()) {
-      toast.error('Please fix the validation errors');
+      toast.error('Please fill in all required fields');
       return;
     }
 
