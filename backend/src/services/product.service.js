@@ -156,9 +156,6 @@ const getProductByPrice = (min, max) => {
     return productRepository.findByPrice(min, max);
 }
 
-/**
- * Tạo sản phẩm mới (chưa bao gồm ảnh)
- */
 const createProduct = async (productData, imgFiles) => {
 
     if (!productData.name) {
@@ -191,9 +188,6 @@ const createProduct = async (productData, imgFiles) => {
     return await productRepository.create(product);
 };
 
-/**
- * Xóa sản phẩm + ảnh trên S3 + các biến thể liên quan
- */
 const deleteProduct = async (id) => {
     const product = await productRepository.findById(id);
     if (!product) throw new Error("Product not found");
