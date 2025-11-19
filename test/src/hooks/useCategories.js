@@ -41,6 +41,23 @@ export const useCategories = () => {
       setLoading(true);
       setError(null);
       
+      // Check if category with similar name already exists
+      const normalizedName = categoryData.name.toLowerCase().trim();
+      const existingCategory = categories.find(
+        cat => cat.name.toLowerCase().trim() === normalizedName
+      );
+      
+      if (existingCategory) {
+        setLoading(false);
+        const errorMsg = `Category "${existingCategory.name}" already exists. Please select it from the dropdown instead.`;
+        setError(errorMsg);
+        toast.error('Duplicate Category', { 
+          description: errorMsg,
+          duration: 5000,
+        });
+        throw new Error(errorMsg);
+      }
+      
       // Generate slug from name if not provided
       const slug = categoryData.slug || 
         categoryData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
@@ -56,12 +73,14 @@ export const useCategories = () => {
     } catch (err) {
       console.error('Error creating category:', err);
       setError(err.message || 'Failed to create category');
-      toast.error('Failed to create category', { description: err.message });
+      if (!err.message.includes('already exists')) {
+        toast.error('Failed to create category', { description: err.message });
+      }
       throw err;
     } finally {
       setLoading(false);
     }
-  }, [loadCategories]);
+  }, [categories, loadCategories]);
 
   // Update category
   const updateCategory = useCallback(async (categoryId, categoryData) => {

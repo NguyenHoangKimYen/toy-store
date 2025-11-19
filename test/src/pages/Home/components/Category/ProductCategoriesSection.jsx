@@ -1,67 +1,96 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/common';
 import { ArrowRight, Tag, Sparkles, Package } from 'lucide-react';
-import { mockProducts } from '@/mocks';
+import { getProducts } from '@/services/products.service';
+import { getCategories } from '@/services/categories.service';
 import './ProductCategoriesSection.css';
 
 const ProductCategoriesSection = () => {
   const navigate = useNavigate();
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // TEMPORARILY: Always use mock data for testing
-  const productsData = mockProducts;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch both products and categories
+        const [productsResponse, categoriesResponse] = await Promise.all([
+          getProducts(),
+          getCategories()
+        ]);
+        
+        const allProducts = Array.isArray(productsResponse) 
+          ? productsResponse 
+          : (productsResponse.products || productsResponse.data || []);
+          
+        const allCategories = Array.isArray(categoriesResponse)
+          ? categoriesResponse
+          : (categoriesResponse.categories || categoriesResponse.data || []);
+        
+        console.log('Fetched:', allProducts.length, 'products,', allCategories.length, 'categories');
+        
+        // Create category sections with their products
+        const categoryData = allCategories.slice(0, 4).map((category, index) => {
+          const categoryProducts = allProducts.filter(p => 
+            Array.isArray(p.categoryId) 
+              ? p.categoryId.some(catId => catId === category._id || catId._id === category._id)
+              : p.categoryId === category._id || p.categoryId?._id === category._id
+          ).slice(0, 12);
+          
+          // Icon rotation for visual variety
+          const icons = [
+            { icon: <Tag className="w-6 h-6" />, gradient: 'from-red-500 to-orange-500', bgColor: 'bg-red-50' },
+            { icon: <Sparkles className="w-6 h-6" />, gradient: 'from-blue-500 to-cyan-500', bgColor: 'bg-blue-50' },
+            { icon: <Package className="w-6 h-6" />, gradient: 'from-pink-500 to-rose-500', bgColor: 'bg-pink-50' },
+            { icon: <Package className="w-6 h-6" />, gradient: 'from-purple-500 to-pink-500', bgColor: 'bg-purple-50' },
+          ];
+          
+          const iconData = icons[index % icons.length];
+          
+          return {
+            id: category._id,
+            title: category.name,
+            subtitle: category.description || 'Discover our collection',
+            icon: iconData.icon,
+            products: categoryProducts,
+            link: `/products?category=${category._id}`,
+            gradient: iconData.gradient,
+            bgColor: iconData.bgColor,
+          };
+        }).filter(cat => cat.products.length > 0);
+        
+        // If no categories have products, add a featured section
+        if (categoryData.length === 0 && allProducts.length > 0) {
+          categoryData.push({
+            id: 'featured',
+            title: 'Featured Products',
+            subtitle: 'Check out our popular items',
+            icon: <Tag className="w-6 h-6" />,
+            products: allProducts.slice(0, 12),
+            link: '/products',
+            gradient: 'from-red-500 to-orange-500',
+            bgColor: 'bg-red-50',
+          });
+        }
+        
+        setCategories(categoryData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Debug logging
-  console.log('ProductCategoriesSection - Using MOCK data');
+    fetchData();
+  }, []);
 
   const handleProductClick = (product) => {
     navigate(`/products/${product._id}`);
   };
-
-  const categories = [
-    {
-      id: 'sales',
-      title: 'Sales & Deals',
-      subtitle: 'Hot deals you don\'t want to miss',
-      icon: <Tag className="w-6 h-6" />,
-      products: productsData.bestSellers,
-      link: '/products?filter=bestsellers',
-      gradient: 'from-red-500 to-orange-500',
-      bgColor: 'bg-red-50',
-    },
-    {
-      id: 'keychains',
-      title: 'Móc Khóa',
-      subtitle: 'Stylish keychains for everyday carry',
-      icon: <Sparkles className="w-6 h-6" />,
-      products: productsData.keychains,
-      link: '/products?category=keychains',
-      gradient: 'from-blue-500 to-cyan-500',
-      bgColor: 'bg-blue-50',
-    },
-    {
-      id: 'plushies',
-      title: 'Gấu Bông',
-      subtitle: 'Soft and cuddly companions',
-      icon: <Package className="w-6 h-6" />,
-      products: productsData.plushToys,
-      link: '/products?category=plush',
-      gradient: 'from-pink-500 to-rose-500',
-      bgColor: 'bg-pink-50',
-    },
-    {
-      id: 'accessories',
-      title: 'Accessories',
-      subtitle: 'Complete your collection',
-      icon: <Package className="w-6 h-6" />,
-      products: productsData.accessories,
-      link: '/products?category=accessories',
-      gradient: 'from-purple-500 to-pink-500',
-      bgColor: 'bg-purple-50',
-    },
-  ];
-
 
   const handleViewAll = (link) => {
     navigate(link);
@@ -69,6 +98,20 @@ const ProductCategoriesSection = () => {
 
   // If all categories are empty, show a message
   const hasAnyProducts = categories.some(cat => cat.products && cat.products.length > 0);
+  
+  if (loading) {
+    return (
+      <section className="product-categories-section">
+        <div className="section-header">
+          <h2 className="section-title">Shop by Category</h2>
+          <p className="section-subtitle">Discover our curated collections</p>
+        </div>
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <p>Loading products...</p>
+        </div>
+      </section>
+    );
+  }
   
   if (!hasAnyProducts) {
     console.log('No products in any category!');
@@ -79,7 +122,7 @@ const ProductCategoriesSection = () => {
           <p className="section-subtitle">Discover our curated collections</p>
         </div>
         <div style={{ textAlign: 'center', padding: '40px' }}>
-          <p>No products available. Using fallback data...</p>
+          <p>No products available.</p>
         </div>
       </section>
     );

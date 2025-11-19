@@ -5,16 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { ProductCard } from '@/components/common';
 import { ArrowRight, Sparkles, Tag } from 'lucide-react';
-import { mockProducts } from '@/mocks';
 import './NewArrivalsSection.css';
 
 const NewArrivalsSection = ({ newProducts }) => {
   const navigate = useNavigate();
-
-  // TEMPORARILY: Use mock data
-  const displayProducts = newProducts && newProducts.length > 0 
-    ? newProducts 
-    : mockProducts.newProducts;
 
   const handleViewAll = () => {
     navigate('/products?filter=new');
@@ -24,7 +18,7 @@ const NewArrivalsSection = ({ newProducts }) => {
     navigate(`/products/${product._id}`);
   };
 
-  if (!displayProducts || displayProducts.length === 0) return null;
+  if (!newProducts || newProducts.length === 0) return null;
 
   return (
     <section className="new-arrivals-section">
@@ -52,7 +46,7 @@ const NewArrivalsSection = ({ newProducts }) => {
       </div>
 
       <div className="new-arrivals-grid">
-        {displayProducts.slice(0, 8).map((product) => (
+        {newProducts.slice(0, 8).map((product) => (
           <div 
             key={product._id}
             className="new-arrival-wrapper"

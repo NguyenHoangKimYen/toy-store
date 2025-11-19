@@ -78,15 +78,6 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
     setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
-  const handleNumberChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value === '' ? 0 : parseInt(value) || 0,
-    }));
-    setErrors(prev => ({ ...prev, [name]: '' }));
-  };
-
   const addCategory = (categoryId) => {
     setFormData(prev => ({
       ...prev,
@@ -193,24 +184,12 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
       newErrors.description = 'Description is required';
     }
     
-    if (formData.imageUrls.length === 0) {
-      newErrors.imageUrls = 'At least one image is required';
-    }
-    
     if (formData.categoryId.length === 0) {
       newErrors.categoryId = 'At least one category is required';
     }
     
-    if (formData.variants.length === 0) {
-      newErrors.variants = 'At least one variant is required';
-    } else {
-      const hasInvalidVariant = formData.variants.some(
-        v => !v.price.$numberDecimal || parseFloat(v.price.$numberDecimal) <= 0
-      );
-      if (hasInvalidVariant) {
-        newErrors.variants = 'All variants must have valid prices';
-      }
-    }
+    // Images and variants are optional for skeleton creation
+    // User can add them later
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -318,12 +297,18 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
               onRemoveImage={removeImage}
               onImageUrlChange={(e) => setNewImageUrl(e.target.value)}
             />
-            {errors.imageUrls && <p className='text-red-500 text-sm mt-1'>{errors.imageUrls}</p>}
           </div>
 
           {/* Variants */}
           <div className='space-y-4'>
-            <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>Product Variants *</h3>
+            <div className='flex items-center justify-between'>
+              <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>Product Variants (optional)</h3>
+              <span className='text-sm text-gray-500 dark:text-gray-400'>(Optional - can be added later)</span>
+            </div>
+            
+            <p className='text-sm text-gray-600 dark:text-gray-400'>
+              You can create the product skeleton first and add variants later from the product details page.
+            </p>
             
             <AttributeDefinitionBuilder
               attributeDefinitions={attributeDefinitions}
@@ -339,6 +324,7 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
               onUpdateStock={updateVariantStock}
               onRemove={removeVariant}
             />
+
           </div>
 
           {/* Action Buttons */}

@@ -17,6 +17,7 @@ import ProductInfo from './ProductInfo'
 import ProductDescription from './ProductDescription'
 import ProductMetadata from './ProductMetadata'
 import ProductFormModal from './ProductFormModal'
+import VariantManager from './VariantManager'
 
 const ProductDetailModal = ({ product, onClose, onEdit, onDelete }) => {
   const [showEditModal, setShowEditModal] = useState(false);
@@ -92,6 +93,18 @@ const ProductDetailModal = ({ product, onClose, onEdit, onDelete }) => {
 
             {/* Description */}
             <ProductDescription description={product.description} />
+
+            {/* Variants Section */}
+            <div className='mt-6'>
+              <VariantManager
+                productId={product._id}
+                variants={product.variants || []}
+                onUpdate={() => {
+                  // Optionally refresh product data
+                  console.log('Variants updated');
+                }}
+              />
+            </div>
 
             {/* Metadata */}
             <ProductMetadata createdAt={product.createdAt} updatedAt={product.updatedAt} />

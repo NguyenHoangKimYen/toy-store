@@ -38,6 +38,15 @@ export const useProducts = (options = {}) => {
       } else {
         // Fetch multiple products
         result = await getProducts(params);
+        
+        // Extract products array if response is wrapped
+        if (result && typeof result === 'object' && !Array.isArray(result)) {
+          // Backend returns: { products: [...], pagination: {...} }
+          // handleResponse already extracted 'data', so we get the products array
+          if (result.products && Array.isArray(result.products)) {
+            result = result.products;
+          }
+        }
       }
 
       setData(result);
@@ -101,21 +110,28 @@ export const useCategorizedProducts = (options = {}) => {
         const requests = [];
         const keys = [];
 
-        // Featured products
+        // Featured products - filter by isFeatured
         if (featured) {
           keys.push('featured');
           requests.push(
-            getProducts({ isFeatured: true, ...featured })
-              .then(products => Array.isArray(products) ? products : [])
+            getProducts({ isFeatured: 'true', ...featured })
+              .then(response => {
+                // Handle response from backend (might be wrapped in data object)
+                const products = response?.data?.products || response?.products || response?.data || response;
+                return Array.isArray(products) ? products : [];
+              })
           );
         }
 
-        // New products
+        // New products - sort by createdAt descending (most recent first)
         if (newProducts) {
           keys.push('newProducts');
           requests.push(
-            getProducts({ isNew: true, ...newProducts })
-              .then(products => Array.isArray(products) ? products : [])
+            getProducts({ sort: 'createdAt:desc', ...newProducts })
+              .then(response => {
+                const products = response?.data?.products || response?.products || response?.data || response;
+                return Array.isArray(products) ? products : [];
+              })
           );
         }
 
@@ -123,19 +139,29 @@ export const useCategorizedProducts = (options = {}) => {
         if (bestSellers) {
           keys.push('bestSellers');
           requests.push(
-            getProducts({ sortBy: 'totalUnitsSold:desc', ...bestSellers })
-              .then(products => Array.isArray(products) ? products : [])
+            getProducts({ sort: 'totalUnitsSold:desc', ...bestSellers })
+              .then(response => {
+                const products = response?.data?.products || response?.products || response?.data || response;
+                return Array.isArray(products) ? products : [];
+              })
           );
         }
 
-        // Category-based products
-        categories.forEach(({ key, category, ...params }) => {
-          keys.push(key);
-          requests.push(
-            getProducts({ category, ...params })
-              .then(products => Array.isArray(products) ? products : [])
-          );
-        });
+        // Category-based products - only if categories are provided
+        if (categories && categories.length > 0) {
+          categories.forEach(({ key, categoryId, category, ...params }) => {
+            keys.push(key);
+            // Support both categoryId and category params for backwards compatibility
+            const catParam = categoryId || category;
+            requests.push(
+              getProducts({ categoryId: catParam, ...params })
+                .then(response => {
+                  const products = response?.data?.products || response?.products || response?.data || response;
+                  return Array.isArray(products) ? products : [];
+                })
+            );
+          });
+        }
 
         const results = await Promise.all(requests);
 

@@ -1,25 +1,37 @@
-﻿import React from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { HeroSection } from './components/Hero';
 import { CategorySection, ProductCategoriesSection, NewArrivalsSection } from './components/Category';
 import { FeaturedBanner } from './components/Banner';
-import { useCategorizedProducts } from '@/hooks';
+import { useCategorizedProducts, useCategories } from '@/hooks';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import './Home.css';
 
 const Home = () => {
+  const { categories, loading: categoriesLoading } = useCategories();
+  const [categoryConfig, setCategoryConfig] = useState([]);
+
+  // Build category config once categories are loaded
+  useEffect(() => {
+    if (categories && categories.length > 0) {
+      // Map categories to config format using ObjectId
+      const config = categories.slice(0, 4).map(cat => ({
+        key: cat.slug, // Use slug as key for React
+        categoryId: cat._id, // Use ObjectId for API query
+        name: cat.name, // Store name for display
+        limit: 12
+      }));
+      setCategoryConfig(config);
+    }
+  }, [categories]);
+
   const { categorizedProducts, loading, error } = useCategorizedProducts({
     featured: { limit: 6 },
     newProducts: { limit: 8 },
     bestSellers: { limit: 8 },
-    categories: [
-      { key: 'keychains', category: 'keychains', limit: 12 },
-      { key: 'plushToys', category: 'plush', limit: 12 },
-      { key: 'figures', category: 'figures', limit: 12 },
-      { key: 'accessories', category: 'accessories', limit: 12 },
-    ],
+    categories: categoryConfig,
   });
 
-  if (loading) {
+  if (loading || categoriesLoading) {
     return (
       <div className="home-loading">
         <LoadingSpinner/>
@@ -42,7 +54,9 @@ const Home = () => {
   return (
     <div className="home-page">
       {/* Hero Section with Featured Products Carousel */}
-      <HeroSection featuredProducts={categorizedProducts.featured} />
+      {categorizedProducts.featured && categorizedProducts.featured.length > 0 && (
+        <HeroSection featuredProducts={categorizedProducts.featured} />
+      )}
 
       {/* Featured Banner */}
       <FeaturedBanner />
@@ -61,45 +75,21 @@ const Home = () => {
       {/* Product Categories Section with shadcn */}
       <ProductCategoriesSection categorizedProducts={categorizedProducts} />
 
-      {/* Keychains */}
-      {categorizedProducts.keychains.length > 0 && (
-        <CategorySection
-          title="Móc Khóa"
-          subtitle="Stylish keychains for every style"
-          products={categorizedProducts.keychains}
-          viewAllLink="/products?category=keychains"
-        />
-      )}
-
-      {/* Plush Toys */}
-      {categorizedProducts.plushToys.length > 0 && (
-        <CategorySection
-          title="Gấu Bông"
-          subtitle="Soft and cuddly companions"
-          products={categorizedProducts.plushToys}
-          viewAllLink="/products?category=plush"
-        />
-      )}
-
-      {/* Figures */}
-      {categorizedProducts.figures.length > 0 && (
-        <CategorySection
-          title="Figures & Collectibles"
-          subtitle="Premium collectible figures"
-          products={categorizedProducts.figures}
-          viewAllLink="/products?category=figures"
-        />
-      )}
-
-      {/* Accessories */}
-      {categorizedProducts.accessories.length > 0 && (
-        <CategorySection
-          title="Phụ Kiện"
-          subtitle="Complete your collection"
-          products={categorizedProducts.accessories}
-          viewAllLink="/products?category=accessories"
-        />
-      )}
+      {/* Dynamic Category Sections - Based on fetched categories */}
+      {categoryConfig.map(({ key, name, categoryId }) => {
+        const products = categorizedProducts[key];
+        if (!products || products.length === 0) return null;
+        
+        return (
+          <CategorySection
+            key={key}
+            title={name}
+            subtitle={`Explore our ${name.toLowerCase()} collection`}
+            products={products}
+            viewAllLink={`/products?categoryId=${categoryId}`}
+          />
+        );
+      })}
     </div>
   );
 };

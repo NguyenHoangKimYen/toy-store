@@ -2,7 +2,6 @@
 import HeroSlide from './HeroSlide';
 import HeroNavigation from './HeroNavigation';
 import { useCarouselAutoplay, useCarouselNavigation, useResponsive } from '@/hooks';
-import { mockProducts } from '@/mocks';
 import './HeroSection.css';
 import example from '../../../../assets/example.png';
 import example2 from '../../../../assets/example2.png';
@@ -16,11 +15,6 @@ const images = [example, example2, example3, example4]
 const HeroSection = ({ featuredProducts }) => {
   const carouselRef = useRef(null);
   const listRef = useRef(null);
-  
-  // Use mock data if featuredProducts is empty
-  const displayProducts = (featuredProducts && featuredProducts.length > 0) 
-    ? featuredProducts 
-    : mockProducts.featured;
   
   const { direction, triggerSlide, goToNext, goToPrev } = useCarouselNavigation();
   const { reset: resetAutoPlay } = useCarouselAutoplay(5000);
@@ -64,14 +58,14 @@ const HeroSection = ({ featuredProducts }) => {
     resetAutoPlay(goToNext);
   };
 
-  if (!displayProducts || displayProducts.length === 0) {
+  if (!featuredProducts || featuredProducts.length === 0) {
     return null;
   }
 
   return (
     <div className="hero-carousel" ref={carouselRef}>
       <div className="list" ref={listRef}>
-        {displayProducts.slice(0, 6).map((product, index) => ( // index parameter is for mock data, remove when backend is ready
+        {featuredProducts.slice(0, 6).map((product, index) => (
           <HeroSlide 
             key={product._id} 
             product={product} 
