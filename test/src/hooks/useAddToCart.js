@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { addToCart } from '@/services/cart.service';
+import { useCart } from './useCart';
 
 /**
  * Hook for adding products to cart
@@ -8,6 +8,7 @@ import { addToCart } from '@/services/cart.service';
  */
 export const useAddToCart = () => {
   const [loading, setLoading] = useState(false);
+  const { addItem } = useCart();
 
   const handleAddToCart = async (product, variant = null) => {
     try {
@@ -24,19 +25,8 @@ export const useAddToCart = () => {
         return false;
       }
 
-      // Prepare cart item data
-      const cartItem = {
-        productId: product._id,
-        quantity: 1,
-      };
-
-      // Add variant ID if selected
-      if (variant) {
-        cartItem.variantId = variant._id;
-      }
-
-      // Add to cart
-      await addToCart(cartItem);
+      // Add to cart using the cart hook
+      await addItem(product._id, 1);
 
       // Show success message with variant info
       let variantInfo = '';
@@ -56,9 +46,6 @@ export const useAddToCart = () => {
       toast.success('Added to cart', {
         description: `${product.name}${variantInfo} has been added to your cart`,
       });
-
-      // Dispatch event to update navbar cart count
-      window.dispatchEvent(new Event('cartUpdated'));
 
       return true;
     } catch (err) {
