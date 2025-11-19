@@ -11,6 +11,11 @@ const {
     addProductImages,
     removeProductImages
 } = require('../controllers/product.controller.js');
+
+const {
+    getVariantsByProduct
+} = require('../controllers/variant.controller.js');
+
 const {
     uploadProductImages
 } = require('../middlewares/upload.middleware.js');
@@ -29,5 +34,7 @@ router.patch("/:id", updateProduct);
 router.post("/:id/images", uploadProductImages, addProductImages);
 router.delete("/:id/images", removeProductImages);
 
+
+router.get("/:productId/variants", getVariantsByProduct);
 
 module.exports = router;

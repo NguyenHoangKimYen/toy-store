@@ -43,13 +43,13 @@ const addItem = async (cartId, itemData) => {
     return updatedCart;
 };
 
-const removeItem = async (cartId, cartItemId, itemPrice) => {
-    const cart = await CartRepository.update(cartId, {
-        $pull: { items: cartItemId },
-        $inc: { totalPrice: -itemPrice },
-    });
-    return cart;
-};
+// const removeItem = async (cartId, cartItemId, itemPrice) => {
+//     const cart = await CartRepository.update(cartId, {
+//         $pull: { items: cartItemId },
+//         $inc: { totalPrice: -itemPrice },
+//     });
+//     return cart;
+// };
 
 const clearCart = async (cartId) => {
     return await CartRepository.update(cartId, {
@@ -71,8 +71,8 @@ const getAllCarts = async () => {
 module.exports = {
     getCartByUserOrSession,
     createCart,
-    addItem,
-    removeItem,
+    // addItem,
+    // removeItem,
     clearCart,
     deleteCart,
     getAllCarts,

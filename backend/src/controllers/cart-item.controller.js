@@ -1,47 +1,52 @@
 const CartItemService = require("../services/cart-item.service");
 
-const createCartItem = async (req, res) => {
+const createCartItem = async (req, res, next) => { // Thêm next
     try {
-        const { cartId, productId, quantity, price } = req.body;
+        // [SỬA] Đổi productId thành variantId
+        const { cartId, variantId, quantity } = req.body; 
+
         const item = await CartItemService.createCartItem(
             cartId,
-            productId,
+            variantId, // [SỬA]
             quantity,
-            price,
         );
         res.status(201).json(item);
     } catch (error) {
-        res.status(500).json({ message: "Internal Server Error" });
+        next(error); // [SỬA] Dùng next(error)
     }
 };
 
-const updateCartItem = async (req, res) => {
+const updateCartItem = async (req, res, next) => { // Thêm next
     try {
         const { id } = req.params;
-        const item = await CartItemService.updateCartItem(id, req.body);
+        // Chỉ cho phép cập nhật quantity
+        const { quantity } = req.body; 
+
+        const item = await CartItemService.updateCartItem(id, { quantity });
         res.status(200).json(item);
     } catch (error) {
-        res.status(500).json({ message: "Internal Server Error" });
+        next(error); // [SỬA]
     }
 };
 
-const deleteCartItem = async (req, res) => {
+const deleteCartItem = async (req, res, next) => { // Thêm next
     try {
         const { id } = req.params;
         await CartItemService.deleteCartItem(id);
         res.status(200).json({ message: "CartItem deleted successfully" });
-    } catch (error) {
-        res.status(500).json({ message: "Internal Server Error" });
+    } catch (error)
+    {
+        next(error); // [SỬA]
     }
 };
 
-const getItemsByCartId = async (req, res) => {
+const getItemsByCartId = async (req, res, next) => { // Thêm next
     try {
         const { cartId } = req.params;
         const items = await CartItemService.getItemsByCartId(cartId);
         res.status(200).json(items);
     } catch (error) {
-        res.status(500).json({ message: "Internal Server Error" });
+        next(error); // [SỬA]
     }
 };
 

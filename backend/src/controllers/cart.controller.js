@@ -63,20 +63,20 @@ const addItem = async (req, res) => {
     }
 };
 
-const removeItem = async (req, res) => {
-    try {
-        const { cartId } = req.params;
-        const { cartItemId, itemPrice } = req.body;
-        const updated = await CartService.removeItem(
-            cartId,
-            cartItemId,
-            itemPrice,
-        );
-        res.status(200).json(updated);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-};
+// const removeItem = async (req, res) => {
+//     try {
+//         const { cartId } = req.params;
+//         const { cartItemId, itemPrice } = req.body;
+//         const updated = await CartService.removeItem(
+//             cartId,
+//             cartItemId,
+//             itemPrice,
+//         );
+//         res.status(200).json(updated);
+//     } catch (err) {
+//         res.status(500).json({ message: err.message });
+//     }
+// };
 
 const clearCart = async (req, res) => {
     try {
@@ -103,8 +103,8 @@ module.exports = {
     getCartByUser,
     getCartBySession,
     createCart,
-    addItem,
-    removeItem,
+    // addItem,
+    // removeItem,
     clearCart,
     deleteCart,
 };
