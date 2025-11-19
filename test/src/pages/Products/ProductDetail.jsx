@@ -4,8 +4,7 @@ import { ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import { Button } from '@/components/ui/button';
-import { useProductDetail } from '@/hooks';
-import { addToCart } from '@/services/cart.service';
+import { useProductDetail, useCart } from '@/hooks';
 import { ROUTES } from '@/config/routes';
 import ProductImageGallery from './components/ProductImageGallery';
 import ProductInfo from './components/ProductInfo';
@@ -18,6 +17,7 @@ import './ProductDetail.css';
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addItem } = useCart();
   
   const {
     product,
@@ -51,11 +51,7 @@ const ProductDetail = () => {
 
     try {
       setAddingToCart(true);
-      await addToCart({
-        productId: product._id,
-        variantId: selectedVariant._id,
-        quantity,
-      });
+      await addItem(product._id, quantity, selectedVariant._id);
       
       // Show success message with variant details
       const variantInfo = selectedVariant.attributes
@@ -65,9 +61,6 @@ const ProductDetail = () => {
       toast.success(`${product.name} added to cart!`, {
         description: `${variantInfo} • Quantity: ${quantity}`,
       });
-      
-      // Dispatch custom event to update cart count
-      window.dispatchEvent(new Event('cartUpdated'));
     } catch (err) {
       console.error('Error adding to cart:', err);
       toast.error('Failed to add to cart', {
@@ -91,11 +84,7 @@ const ProductDetail = () => {
 
     try {
       setAddingToCart(true);
-      await addToCart({
-        productId: product._id,
-        variantId: selectedVariant._id,
-        quantity,
-      });
+      await addItem(product._id, quantity, selectedVariant._id);
       navigate(ROUTES.CHECKOUT);
     } catch (err) {
       console.error('Error adding to cart:', err);
