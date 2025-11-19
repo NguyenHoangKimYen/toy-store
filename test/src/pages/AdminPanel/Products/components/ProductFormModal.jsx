@@ -14,6 +14,7 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
     description: '',
     brand: '',
     isFeatured: false,
+    status: 'Published',
     imageUrls: [],
     categoryId: [],
     variants: [],
@@ -62,8 +63,12 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
         description: product.description || '',
         brand: product.brand || '',
         isFeatured: product.isFeatured || false,
+        status: product.status || 'Published',
         imageUrls: product.imageUrls || [],
-        categoryId: product.categoryId || [],
+        // Ensure categoryId is always an array of strings (IDs)
+        categoryId: (product.categoryId || []).map(cat => 
+          typeof cat === 'object' ? cat._id : cat
+        ),
         variants: convertedVariants,
       });
     }
@@ -146,6 +151,11 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
       ...prev,
       variants: newVariants,
     }));
+    
+    toast.success('Variants generated!', {
+      description: `Created ${newVariants.length} variant combinations. Now set prices for each.`,
+      duration: 4000,
+    });
   };
 
   const updateVariantPrice = (index, price) => {
@@ -278,6 +288,25 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
             <label className='text-sm text-gray-700 dark:text-gray-300'>Featured Product</label>
           </div>
 
+          {/* Product Status */}
+          <div>
+            <label className='text-sm font-medium text-gray-700 dark:text-gray-300'>Product Status *</label>
+            <select
+              name='status'
+              value={formData.status}
+              onChange={handleInputChange}
+              className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white'
+            >
+              <option value='Published'>Published (Visible to customers)</option>
+              <option value='Draft'>Draft (Hidden from customers)</option>
+              <option value='Disabled'>Disabled (Hidden from customers)</option>
+              <option value='Archived'>Archived (Hidden from customers)</option>
+            </select>
+            <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+              Only "Published" products are visible in the customer catalogue
+            </p>
+          </div>
+
           {/* Categories */}
           <div>
             <CategoryManager
@@ -300,15 +329,8 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
           </div>
 
           {/* Variants */}
-          <div className='space-y-4'>
-            <div className='flex items-center justify-between'>
-              <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>Product Variants (optional)</h3>
-              <span className='text-sm text-gray-500 dark:text-gray-400'>(Optional - can be added later)</span>
-            </div>
+          <div className='space-y-4 mt-6 pt-6 border-t-2 border-gray-200 dark:border-gray-700'>
             
-            <p className='text-sm text-gray-600 dark:text-gray-400'>
-              You can create the product skeleton first and add variants later from the product details page.
-            </p>
             
             <AttributeDefinitionBuilder
               attributeDefinitions={attributeDefinitions}
@@ -324,7 +346,6 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
               onUpdateStock={updateVariantStock}
               onRemove={removeVariant}
             />
-
           </div>
 
           {/* Action Buttons */}

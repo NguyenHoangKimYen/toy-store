@@ -13,11 +13,13 @@ const ProductActions = ({
   isFavorite,
   onToggleFavorite,
   onShare,
+  selectedVariant,
+  loading,
 }) => {
   return (
     <>
       {/* Quantity Selector */}
-      {inStock && (
+      {selectedVariant && inStock && (
         <div className="quantity-selector">
           <h3 className="quantity-title">Quantity</h3>
           <div className="quantity-controls">
@@ -47,17 +49,17 @@ const ProductActions = ({
         <Button
           size="lg"
           onClick={onAddToCart}
-          disabled={!inStock}
+          disabled={!selectedVariant || !inStock || loading}
           className="add-to-cart-btn flex-1"
         >
           <ShoppingCart size={20} className="mr-2" />
-          Add to Cart
+          {!selectedVariant ? 'Select Options' : 'Add to Cart'}
         </Button>
         <Button
           size="lg"
           variant="default"
           onClick={onBuyNow}
-          disabled={!inStock}
+          disabled={!selectedVariant || !inStock || loading}
           className="buy-now-btn flex-1"
         >
           Buy Now

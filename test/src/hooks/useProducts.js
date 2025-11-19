@@ -221,12 +221,8 @@ export const useProductDetail = (productId) => {
         
         setVariants(data.variants || []);
         
-        // Set first available variant as default
-        if (data.variants?.length > 0) {
-          const firstAvailable = data.variants.find(v => v.stockQuantity > 0 && v.isActive) || data.variants[0];
-          console.log('Selected variant:', firstAvailable);
-          setSelectedVariant(firstAvailable);
-        }
+        // Don't auto-select - user must choose all attributes first
+        setSelectedVariant(null);
       } catch (err) {
         console.error('Error fetching variants:', err);
       } finally {

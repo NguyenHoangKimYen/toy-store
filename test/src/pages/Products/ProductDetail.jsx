@@ -200,6 +200,7 @@ const ProductDetail = () => {
               isFavorite={isFavorite}
               onToggleFavorite={() => setIsFavorite(!isFavorite)}
               onShare={handleShare}
+              selectedVariant={selectedVariant}
               loading={addingToCart}
             />
           </div>

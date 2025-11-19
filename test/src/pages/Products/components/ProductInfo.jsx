@@ -38,27 +38,35 @@ const ProductInfo = ({ product, rating, reviewCount, price, originalPrice, inSto
 
       {/* Price */}
       <div className="product-pricing">
-        <div className="price-main">
-          <span className="current-price">{formatPrice(price)}</span>
-          {originalPrice && originalPrice > price && (
-            <span className="original-price">{formatPrice(originalPrice)}</span>
-          )}
-        </div>
-        <div className="stock-info">
-          {inStock ? (
-            <Badge variant="outline" className="stock-badge in-stock">
-              <Check size={14} className="mr-1" />
-              In Stock ({stock} available)
-            </Badge>
-          ) : (
-            <Badge variant="destructive" className="stock-badge">
-              Out of Stock
-            </Badge>
-          )}
-          {selectedVariant?.sku && (
-            <span className="product-sku">SKU: {selectedVariant.sku}</span>
-          )}
-        </div>
+        {selectedVariant ? (
+          <>
+            <div className="price-main">
+              <span className="current-price">{formatPrice(price)}</span>
+              {originalPrice && originalPrice > price && (
+                <span className="original-price">{formatPrice(originalPrice)}</span>
+              )}
+            </div>
+            <div className="stock-info">
+              {inStock ? (
+                <Badge variant="outline" className="stock-badge in-stock">
+                  <Check size={14} className="mr-1" />
+                  In Stock ({stock} available)
+                </Badge>
+              ) : (
+                <Badge variant="destructive" className="stock-badge">
+                  Out of Stock
+                </Badge>
+              )}
+              {selectedVariant?.sku && (
+                <span className="product-sku">SKU: {selectedVariant.sku}</span>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="price-main">
+            <span className="current-price text-gray-400">Select all options to see price</span>
+          </div>
+        )}
       </div>
 
       {/* Short Description */}

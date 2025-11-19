@@ -187,6 +187,21 @@
   color: white;
 }
 
+.badge-draft {
+  background: rgba(107, 114, 128, 0.95);
+  color: white;
+}
+
+.badge-disabled {
+  background: rgba(239, 68, 68, 0.95);
+  color: white;
+}
+
+.badge-archived {
+  background: rgba(107, 114, 128, 0.8);
+  color: white;
+}
+
 /* ========================================
    HORIZONTAL VARIANT
    ======================================== */

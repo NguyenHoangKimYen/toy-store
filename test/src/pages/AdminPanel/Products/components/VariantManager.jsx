@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Plus, Trash2, PackagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -22,86 +23,157 @@ const VariantManager = ({ productId, variants: initialVariants = [], onUpdate })
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // New variant form state
-  const [newVariant, setNewVariant] = useState({
-    sku: '',
-    attributes: [{ name: '', value: '' }],
-    price: '',
-    stockQuantity: 0,
-    weight: 0,
-    imageUrls: [],
-  });
+  // Attribute definition state (Step 1 & 2)
+  const [attributeDefinitions, setAttributeDefinitions] = useState([]);
+  const [newAttributeName, setNewAttributeName] = useState('');
+  const [attributeValueInputs, setAttributeValueInputs] = useState({});
+  
+  // Generated variants with prices (Step 3)
+  const [generatedVariants, setGeneratedVariants] = useState([]);
 
-  const addAttributeField = () => {
-    setNewVariant(prev => ({
-      ...prev,
-      attributes: [...prev.attributes, { name: '', value: '' }],
-    }));
+  // Step 1: Add attribute definition
+  const addAttributeDefinition = () => {
+    if (newAttributeName.trim()) {
+      setAttributeDefinitions(prev => [
+        ...prev,
+        { name: newAttributeName.trim(), values: [] }
+      ]);
+      setNewAttributeName('');
+    }
   };
 
-  const removeAttributeField = (index) => {
-    setNewVariant(prev => ({
-      ...prev,
-      attributes: prev.attributes.filter((_, i) => i !== index),
-    }));
+  const removeAttributeDefinition = (index) => {
+    setAttributeDefinitions(prev => prev.filter((_, i) => i !== index));
+    setAttributeValueInputs(prev => {
+      const newState = { ...prev };
+      delete newState[index];
+      return newState;
+    });
   };
 
-  const updateAttributeField = (index, field, value) => {
-    setNewVariant(prev => ({
-      ...prev,
-      attributes: prev.attributes.map((attr, i) =>
-        i === index ? { ...attr, [field]: value } : attr
-      ),
-    }));
+  // Step 2: Add values to attributes
+  const addValueToAttribute = (attrIndex) => {
+    const value = attributeValueInputs[attrIndex]?.trim();
+    if (value) {
+      setAttributeDefinitions(prev => prev.map((attr, i) => 
+        i === attrIndex 
+          ? { ...attr, values: [...attr.values, value] }
+          : attr
+      ));
+      setAttributeValueInputs(prev => ({ ...prev, [attrIndex]: '' }));
+    }
   };
 
-  const handleAddVariant = async () => {
-    try {
-      // Validate
-      if (!newVariant.sku.trim()) {
-        toast.error('SKU is required');
-        return;
-      }
-      if (!newVariant.price || parseFloat(newVariant.price) <= 0) {
-        toast.error('Valid price is required');
-        return;
-      }
-      
-      // Filter out empty attributes
-      const validAttributes = newVariant.attributes.filter(
-        attr => attr.name.trim() && attr.value.trim()
+  const removeValueFromAttribute = (attrIndex, valueIndex) => {
+    setAttributeDefinitions(prev => prev.map((attr, i) =>
+      i === attrIndex
+        ? { ...attr, values: attr.values.filter((_, vi) => vi !== valueIndex) }
+        : attr
+    ));
+  };
+
+  // Step 3: Generate all combinations
+  const generateVariantCombinations = () => {
+    if (attributeDefinitions.length === 0) {
+      toast.error('Please add at least one attribute');
+      return;
+    }
+
+    const hasEmptyValues = attributeDefinitions.some(attr => attr.values.length === 0);
+    if (hasEmptyValues) {
+      toast.error('All attributes must have at least one value');
+      return;
+    }
+
+    const generateCombinations = (arrays) => {
+      if (arrays.length === 0) return [[]];
+      const [first, ...rest] = arrays;
+      const restCombinations = generateCombinations(rest);
+      return first.flatMap(value =>
+        restCombinations.map(combo => [value, ...combo])
       );
-
-      setLoading(true);
-      const variantData = {
-        sku: newVariant.sku,
-        attributes: validAttributes,
-        price: parseFloat(newVariant.price),
-        stockQuantity: parseInt(newVariant.stockQuantity) || 0,
-        weight: parseFloat(newVariant.weight) || 0,
-        imageUrls: newVariant.imageUrls,
-      };
-
-      const created = await productsService.createVariant(productId, variantData);
+    };
+    
+    const attrValues = attributeDefinitions.map(attr => 
+      attr.values.map(val => ({ name: attr.name, value: val }))
+    );
+    
+    const combinations = generateCombinations(attrValues);
+    
+    const newVariants = combinations.map((combo, index) => {
+      const attributes = combo.map(attr => ({
+        name: attr.name,
+        value: attr.value
+      }));
       
-      setVariants(prev => [...prev, created]);
-      toast.success('Variant added successfully');
-      setShowAddModal(false);
-      setNewVariant({
-        sku: '',
-        attributes: [{ name: '', value: '' }],
+      // Generate SKU from combination
+      const skuSuffix = combo.map(c => c.value.toUpperCase().replace(/\s+/g, '-')).join('-');
+      
+      return {
+        tempId: `temp_${Date.now()}_${index}`,
+        attributes,
+        sku: `PROD-${skuSuffix}`,
         price: '',
         stockQuantity: 0,
-        weight: 0,
-        imageUrls: [],
-      });
+      };
+    });
+    
+    setGeneratedVariants(newVariants);
+    toast.success(`Generated ${newVariants.length} variant combinations`, {
+      description: 'Now set SKU and price for each combination',
+    });
+  };
+
+  // Step 4: Update variant price/stock
+  const updateGeneratedVariant = (index, field, value) => {
+    setGeneratedVariants(prev => prev.map((v, i) =>
+      i === index ? { ...v, [field]: value } : v
+    ));
+  };
+
+  // Save all generated variants
+  const handleSaveVariants = async () => {
+    try {
+      // Validate all variants have required fields
+      const invalidVariants = generatedVariants.filter(v => !v.sku.trim() || !v.price || parseFloat(v.price) <= 0);
+      if (invalidVariants.length > 0) {
+        toast.error('All variants must have SKU and valid price');
+        return;
+      }
+
+      setLoading(true);
+      
+      // Create all variants
+      const createdVariants = [];
+      for (const variant of generatedVariants) {
+        const variantData = {
+          sku: variant.sku,
+          attributes: variant.attributes,
+          price: parseFloat(variant.price),
+          stockQuantity: parseInt(variant.stockQuantity) || 0,
+        };
+        const created = await productsService.createVariant(productId, variantData);
+        createdVariants.push(created);
+      }
+      
+      setVariants(prev => [...prev, ...createdVariants]);
+      toast.success(`Added ${createdVariants.length} variants successfully`);
+      handleCloseModal();
       
       if (onUpdate) onUpdate();
     } catch (error) {
-      toast.error(error.message || 'Failed to add variant');
+      toast.error(error.message || 'Failed to add variants');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCloseModal = () => {
+    setShowAddModal(false);
+    setAttributeDefinitions([]);
+    setNewAttributeName('');
+    setAttributeValueInputs({});
+    setGeneratedVariants([]);
   };
 
   const handleDeleteVariant = async () => {
@@ -213,109 +285,225 @@ const VariantManager = ({ productId, variants: initialVariants = [], onUpdate })
       {/* Add Variant Modal */}
       {showAddModal && (
         <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4'>
-          <div className='bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto'>
+          <div className='bg-white dark:bg-gray-800 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto'>
             <div className='sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4'>
-              <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>Add New Variant</h3>
+              <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>Add Product Variants</h3>
+              <p className='text-sm text-gray-500 dark:text-gray-400 mt-1'>
+                Create attributes, add values, then generate all combinations
+              </p>
             </div>
-            <div className='p-6 space-y-4'>
-              <div>
-                <label className='text-sm font-medium text-gray-700 dark:text-gray-300'>SKU *</label>
-                <Input
-                  value={newVariant.sku}
-                  onChange={(e) => setNewVariant(prev => ({ ...prev, sku: e.target.value }))}
-                  placeholder='e.g., PROD-001-RED-M'
-                />
-              </div>
+            
+            <div className='p-6 space-y-6'>
+              {/* Step 1 & 2: Define Attributes and Values */}
+              {generatedVariants.length === 0 && (
+                <div className='space-y-4'>
+                  <div className='space-y-2'>
+                    <h4 className='text-base font-bold text-gray-900 dark:text-white'>
+                      📝 Step 1: Create Attributes
+                    </h4>
+                    <div className='flex gap-2'>
+                      <Input
+                        placeholder='Enter attribute name (Color, Size, Storage...)'
+                        value={newAttributeName}
+                        onChange={(e) => setNewAttributeName(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addAttributeDefinition())}
+                      />
+                      <Button 
+                        type='button' 
+                        onClick={addAttributeDefinition} 
+                        size='sm' 
+                        className='whitespace-nowrap'
+                      >
+                        <Plus className='w-4 h-4 mr-1' />
+                        Add Attribute
+                      </Button>
+                    </div>
+                  </div>
 
-              <div>
-                <label className='text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block'>
-                  Attributes
-                </label>
-                {newVariant.attributes.map((attr, index) => (
-                  <div key={index} className='flex gap-2 mb-2'>
-                    <Input
-                      placeholder='Name (e.g., Color)'
-                      value={attr.name}
-                      onChange={(e) => updateAttributeField(index, 'name', e.target.value)}
-                    />
-                    <Input
-                      placeholder='Value (e.g., Red)'
-                      value={attr.value}
-                      onChange={(e) => updateAttributeField(index, 'value', e.target.value)}
-                    />
+                  {/* Display Attributes */}
+                  {attributeDefinitions.length === 0 ? (
+                    <div className='text-center py-6 text-gray-500 dark:text-gray-400 text-sm'>
+                      No attributes yet. Add your first attribute above.
+                    </div>
+                  ) : (
+                    <div className='space-y-3'>
+                      <h4 className='text-base font-bold text-gray-900 dark:text-white'>
+                        💎 Step 2: Add Values to Each Attribute
+                      </h4>
+                      {attributeDefinitions.map((attr, attrIndex) => (
+                        <div key={attrIndex} className='p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700'>
+                          <div className='flex items-center justify-between mb-3'>
+                            <div>
+                              <span className='font-bold text-gray-900 dark:text-white'>
+                                {attr.name}
+                              </span>
+                              <span className='ml-2 text-xs text-gray-500 dark:text-gray-400'>
+                                ({attr.values.length} {attr.values.length === 1 ? 'value' : 'values'})
+                              </span>
+                            </div>
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='sm'
+                              onClick={() => removeAttributeDefinition(attrIndex)}
+                              className='text-red-600 hover:text-red-700 h-7'
+                            >
+                              <Trash2 className='w-4 h-4' />
+                            </Button>
+                          </div>
+                          
+                          {/* Add Value Input */}
+                          <div className='flex gap-2 mb-3'>
+                            <Input
+                              placeholder={`Add value (e.g., ${attr.name === 'Color' ? 'Red, Blue' : 'Small, Large'})`}
+                              value={attributeValueInputs[attrIndex] || ''}
+                              onChange={(e) => setAttributeValueInputs(prev => ({ ...prev, [attrIndex]: e.target.value }))}
+                              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addValueToAttribute(attrIndex))}
+                              className='h-9'
+                            />
+                            <Button
+                              type='button'
+                              onClick={() => addValueToAttribute(attrIndex)}
+                              size='sm'
+                              className='h-9'
+                              disabled={!attributeValueInputs[attrIndex]?.trim()}
+                            >
+                              <Plus className='w-4 h-4 mr-1' />
+                              Add
+                            </Button>
+                          </div>
+                          
+                          {/* Display Values */}
+                          {attr.values.length > 0 ? (
+                            <div className='flex flex-wrap gap-2'>
+                              {attr.values.map((value, valueIndex) => (
+                                <Badge key={valueIndex} variant='secondary' className='flex items-center gap-1'>
+                                  {value}
+                                  <button
+                                    onClick={() => removeValueFromAttribute(attrIndex, valueIndex)}
+                                    className='hover:text-red-600'
+                                  >
+                                    ×
+                                  </button>
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className='text-center py-2 text-xs text-gray-500 dark:text-gray-400'>
+                              No values yet
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      
+                      {attributeDefinitions.length > 0 && !attributeDefinitions.some(attr => attr.values.length === 0) && (
+                        <Button 
+                          onClick={generateVariantCombinations}
+                          className='w-full bg-green-600 hover:bg-green-700'
+                        >
+                          ✨ Generate All Combinations ({
+                            attributeDefinitions.reduce((total, attr) => total * attr.values.length, 1)
+                          } variants)
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Step 3: Set Prices for Generated Variants */}
+              {generatedVariants.length > 0 && (
+                <div className='space-y-4'>
+                  <div className='flex items-center justify-between'>
+                    <h4 className='text-base font-bold text-gray-900 dark:text-white'>
+                      💰 Step 3: Set SKU & Price for Each Combination
+                    </h4>
                     <Button
-                      onClick={() => removeAttributeField(index)}
-                      variant='destructive'
+                      onClick={() => {
+                        setGeneratedVariants([]);
+                        setAttributeDefinitions([]);
+                        setNewAttributeName('');
+                        setAttributeValueInputs({});
+                      }}
+                      variant='outline'
                       size='sm'
-                      disabled={newVariant.attributes.length === 1}
                     >
-                      <Trash2 className='w-4 h-4' />
+                      Start Over
                     </Button>
                   </div>
-                ))}
-                <Button onClick={addAttributeField} variant='outline' size='sm'>
-                  <Plus className='w-4 h-4 mr-2' />
-                  Add Attribute
-                </Button>
-              </div>
-
-              <div className='grid grid-cols-2 gap-4'>
-                <div>
-                  <label className='text-sm font-medium text-gray-700 dark:text-gray-300'>Price *</label>
-                  <Input
-                    type='number'
-                    step='0.01'
-                    min='0'
-                    value={newVariant.price}
-                    onChange={(e) => setNewVariant(prev => ({ ...prev, price: e.target.value }))}
-                    placeholder='0.00'
-                  />
+                  
+                  <div className='space-y-2 max-h-96 overflow-y-auto pr-2'>
+                    {generatedVariants.map((variant, index) => (
+                      <div key={variant.tempId} className='p-4 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600'>
+                        <div className='flex flex-wrap gap-2 mb-3'>
+                          {variant.attributes.map((attr, i) => (
+                            <Badge key={i} variant='outline' className='text-sm'>
+                              <span className='font-bold text-blue-600'>{attr.name}:</span>
+                              <span className='ml-1'>{attr.value}</span>
+                            </Badge>
+                          ))}
+                        </div>
+                        
+                        <div className='grid grid-cols-3 gap-3'>
+                          <div className='col-span-1'>
+                            <label className='text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block'>
+                              SKU *
+                            </label>
+                            <Input
+                              value={variant.sku}
+                              onChange={(e) => updateGeneratedVariant(index, 'sku', e.target.value)}
+                              placeholder='SKU'
+                              className='h-9'
+                            />
+                          </div>
+                          <div className='col-span-1'>
+                            <label className='text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block'>
+                              Price ($) *
+                            </label>
+                            <Input
+                              type='number'
+                              step='0.01'
+                              min='0'
+                              value={variant.price}
+                              onChange={(e) => updateGeneratedVariant(index, 'price', e.target.value)}
+                              placeholder='0.00'
+                              className='h-9'
+                            />
+                          </div>
+                          <div className='col-span-1'>
+                            <label className='text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block'>
+                              Stock
+                            </label>
+                            <Input
+                              type='number'
+                              min='0'
+                              value={variant.stockQuantity}
+                              onChange={(e) => updateGeneratedVariant(index, 'stockQuantity', e.target.value)}
+                              placeholder='0'
+                              className='h-9'
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <label className='text-sm font-medium text-gray-700 dark:text-gray-300'>Stock</label>
-                  <Input
-                    type='number'
-                    min='0'
-                    value={newVariant.stockQuantity}
-                    onChange={(e) => setNewVariant(prev => ({ ...prev, stockQuantity: e.target.value }))}
-                    placeholder='0'
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className='text-sm font-medium text-gray-700 dark:text-gray-300'>Weight (kg)</label>
-                <Input
-                  type='number'
-                  step='0.01'
-                  min='0'
-                  value={newVariant.weight}
-                  onChange={(e) => setNewVariant(prev => ({ ...prev, weight: e.target.value }))}
-                  placeholder='0.00'
-                />
-              </div>
+              )}
             </div>
+            
             <div className='flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700'>
               <Button
-                onClick={() => {
-                  setShowAddModal(false);
-                  setNewVariant({
-                    sku: '',
-                    attributes: [{ name: '', value: '' }],
-                    price: '',
-                    stockQuantity: 0,
-                    weight: 0,
-                    imageUrls: [],
-                  });
-                }}
+                onClick={handleCloseModal}
                 variant='outline'
                 disabled={loading}
               >
                 Cancel
               </Button>
-              <Button onClick={handleAddVariant} disabled={loading}>
-                {loading ? 'Adding...' : 'Add Variant'}
-              </Button>
+              {generatedVariants.length > 0 && (
+                <Button onClick={handleSaveVariants} disabled={loading}>
+                  {loading ? 'Saving...' : `Save ${generatedVariants.length} Variants`}
+                </Button>
+              )}
             </div>
           </div>
         </div>

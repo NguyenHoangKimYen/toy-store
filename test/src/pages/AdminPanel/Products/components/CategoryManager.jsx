@@ -3,6 +3,7 @@ import { Plus, X, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 import { useCategories } from '@/hooks/useCategories';
 
 const CategoryManager = ({ categories, onAdd, onRemove }) => {
@@ -20,6 +21,18 @@ const CategoryManager = ({ categories, onAdd, onRemove }) => {
   );
 
   const handleSelectCategory = (categoryId) => {
+    // Check if category is already added
+    if (categories.includes(categoryId)) {
+      const categoryName = getCategoryName(categoryId);
+      toast.warning('Already added', {
+        description: `"${categoryName}" is already in this product`,
+        duration: 3000,
+      });
+      setSearchQuery('');
+      setShowDropdown(false);
+      return;
+    }
+    
     onAdd(categoryId);
     setSearchQuery('');
     setShowDropdown(false);
@@ -34,7 +47,29 @@ const CategoryManager = ({ categories, onAdd, onRemove }) => {
         description: newCategoryDesc.trim() || undefined,
       });
       
-      onAdd(newCat._id);
+      // Check if this category is already added to the product
+      if (categories.includes(newCat._id)) {
+        toast.warning('Already added', {
+          description: `"${newCat.name}" is already in this product`,
+          duration: 3000,
+        });
+      } else {
+        // Check if we got an existing category (not newly created)
+        const wasExisting = allCategories.some(cat => cat._id === newCat._id);
+        if (wasExisting) {
+          toast.success('Using existing category', {
+            description: `Added "${newCat.name}" to product`,
+            duration: 3000,
+          });
+        } else {
+          toast.success('Category created', {
+            description: `Created and added "${newCat.name}"`,
+            duration: 3000,
+          });
+        }
+        onAdd(newCat._id);
+      }
+      
       setNewCategoryName('');
       setNewCategoryDesc('');
       setIsCreatingNew(false);

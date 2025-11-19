@@ -49,11 +49,8 @@ export const useCategories = () => {
       
       if (existingCategory) {
         setLoading(false);
-        toast.success('Category already exists', { 
-          description: `Using existing category "${existingCategory.name}"`,
-          duration: 3000,
-        });
-        // Return the existing category instead of creating a new one
+        // Return the existing category without showing toast
+        // Let the caller decide what message to show based on their context
         return existingCategory;
       }
       

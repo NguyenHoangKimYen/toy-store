@@ -21,7 +21,7 @@ const VariantSelector = ({
 
   console.log('VariantSelector render:', { variants, attributes, controlledVariant });
 
-  // Initialize with first variant or controlled variant
+  // Initialize with controlled variant only (don't auto-select first variant)
   useEffect(() => {
     if (controlledVariant) {
       // Extract attributes from controlled variant
@@ -30,15 +30,10 @@ const VariantSelector = ({
         attrs[attr.name] = attr.value;
       });
       setSelectedAttributes(attrs);
-    } else if (variants.length > 0) {
-      // Select first available variant
-      const firstVariant = variants[0];
-      const attrs = {};
-      firstVariant.attributes?.forEach(attr => {
-        attrs[attr.name] = attr.value;
-      });
-      setSelectedAttributes(attrs);
-      onVariantChange?.(firstVariant);
+    } else {
+      // Reset to empty selection - user must choose all attributes
+      setSelectedAttributes({});
+      onVariantChange?.(null);
     }
   }, [controlledVariant, variants, onVariantChange]);
 
@@ -63,10 +58,20 @@ const VariantSelector = ({
     };
     setSelectedAttributes(newAttrs);
 
-    // Find matching variant
-    const matchingVariant = findMatchingVariant(newAttrs);
-    if (matchingVariant) {
-      onVariantChange?.(matchingVariant);
+    // Only find variant if ALL attributes are selected
+    const allAttributesSelected = attributes.every(attr => newAttrs[attr.name]);
+    
+    if (allAttributesSelected) {
+      const matchingVariant = findMatchingVariant(newAttrs);
+      if (matchingVariant) {
+        onVariantChange?.(matchingVariant);
+      } else {
+        // No matching variant for this combination
+        onVariantChange?.(null);
+      }
+    } else {
+      // Not all attributes selected yet
+      onVariantChange?.(null);
     }
   };
 
@@ -92,7 +97,7 @@ const VariantSelector = ({
       {attributes.map(attribute => (
         <div key={attribute.name} className="attribute-group">
           <label className="attribute-label">
-            {attribute.name}: <span className="selected-value">{selectedAttributes[attribute.name]}</span>
+            {attribute.name}: <span className="selected-value">{selectedAttributes[attribute.name] || 'Please select'}</span>
           </label>
           <div className="attribute-options">
             {attribute.values.map(value => {

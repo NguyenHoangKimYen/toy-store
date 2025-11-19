@@ -97,6 +97,12 @@ const ProductCard = ({
               {product.isNew && <span className="badge badge-new">New</span>}
               {product.isFeatured && <span className="badge badge-featured">Featured</span>}
               {product.stockQuantity === 0 && <span className="badge badge-out">Out of Stock</span>}
+              {/* Status badge */}
+              {product.status && product.status !== 'Published' && (
+                <span className={`badge badge-${product.status.toLowerCase()}`}>
+                  {product.status}
+                </span>
+              )}
             </>
           )}
         </div>

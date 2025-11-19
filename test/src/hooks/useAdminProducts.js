@@ -45,7 +45,8 @@ export const useAdminProducts = () => {
           localStorage.setItem(MOCK_PRODUCTS_STORAGE_KEY, JSON.stringify(uniqueProducts));
         }
       } else {
-        const data = await productsService.getProducts(params);
+        // Admin should see ALL products regardless of status
+        const data = await productsService.getProducts({ ...params, status: 'all' });
         setProducts(Array.isArray(data) ? data : data.products || []);
       }
     } catch (err) {
