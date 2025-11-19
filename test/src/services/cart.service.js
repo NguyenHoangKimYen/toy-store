@@ -1,72 +1,76 @@
-import { API_BASE_URL, ENDPOINTS } from './config';
-import { handleResponse } from '../utils/apiHelpers';
-import { getAuthHeaders } from '../utils/authHelpers';
+import apiClient from './config';
 
 /**
- * Get user's cart
- * @returns {Promise<Array>} Cart items with populated product details
+ * Cart Service
+ * Handles all cart-related API calls
  */
-export const getCart = async () => {
-  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.CART}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-    },
-  });
-  return handleResponse(response);
+
+// Get all carts (admin only)
+export const getAllCarts = async () => {
+  const response = await apiClient.get('/carts');
+  return response.data;
 };
 
-/**
- * Add item to cart
- * @param {Object} cartItem - Cart item data
- * @returns {Promise<Object>} Added cart item
- */
-export const addToCart = async (cartItem) => {
-  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.CART}`, {
-    method: 'POST',
-    headers: getAuthHeaders(),
-    body: JSON.stringify(cartItem),
-  });
-  return handleResponse(response);
+// Get cart by user ID
+export const getCartByUser = async (userId) => {
+  const response = await apiClient.get(`/carts/user/${userId}`);
+  return response.data;
 };
 
-/**
- * Update cart item quantity
- * @param {string} cartItemId - Cart item ID
- * @param {number} quantity - New quantity
- * @returns {Promise<Object>} Updated cart item
- */
-export const updateCartItemQuantity = async (cartItemId, quantity) => {
-  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.CART}/${cartItemId}`, {
-    method: 'PATCH',
-    headers: getAuthHeaders(),
-    body: JSON.stringify({ quantity }),
-  });
-  return handleResponse(response);
+// Get cart by session ID (for guests)
+export const getCartBySession = async (sessionId) => {
+  const response = await apiClient.get(`/carts/session/${sessionId}`);
+  return response.data;
 };
 
-/**
- * Remove item from cart
- * @param {string} cartItemId - Cart item ID
- * @returns {Promise<Object>} Deletion confirmation
- */
-export const removeFromCart = async (cartItemId) => {
-  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.CART}/${cartItemId}`, {
-    method: 'DELETE',
-    headers: getAuthHeaders(),
-  });
-  return handleResponse(response);
+// Create cart
+export const createCart = async (cartData) => {
+  const response = await apiClient.post('/carts', cartData);
+  return response.data;
 };
 
-/**
- * Clear entire cart
- * @returns {Promise<Object>} Confirmation
- */
-export const clearCart = async () => {
-  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.CART}/clear`, {
-    method: 'DELETE',
-    headers: getAuthHeaders(),
-  });
-  return handleResponse(response);
+// Clear cart
+export const clearCart = async (cartId) => {
+  const response = await apiClient.delete(`/carts/${cartId}/clear`);
+  return response.data;
+};
+
+// Delete cart
+export const deleteCart = async (cartId) => {
+  const response = await apiClient.delete(`/carts/${cartId}`);
+  return response.data;
+};
+
+// Cart Item operations
+export const createCartItem = async (cartItemData) => {
+  const response = await apiClient.post('/cart-items', cartItemData);
+  return response.data;
+};
+
+export const getCartItems = async (cartId) => {
+  const response = await apiClient.get(`/cart-items/cart/${cartId}`);
+  return response.data;
+};
+
+export const updateCartItem = async (cartItemId, cartItemData) => {
+  const response = await apiClient.put(`/cart-items/${cartItemId}`, cartItemData);
+  return response.data;
+};
+
+export const deleteCartItem = async (cartItemId) => {
+  const response = await apiClient.delete(`/cart-items/${cartItemId}`);
+  return response.data;
+};
+
+export default {
+  getAllCarts,
+  getCartByUser,
+  getCartBySession,
+  createCart,
+  clearCart,
+  deleteCart,
+  createCartItem,
+  getCartItems,
+  updateCartItem,
+  deleteCartItem,
 };

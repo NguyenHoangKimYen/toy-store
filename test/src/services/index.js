@@ -6,6 +6,7 @@ export * from './reviews.service';
 export * from './discountCodes.service';
 export * from './categories.service';
 export * from './addresses.service';
+export * from './payments.service';
 export * from './config';
 export * from '../utils/apiHelpers';
 export * from '../utils/authHelpers';
@@ -19,6 +20,7 @@ import * as reviewsService from './reviews.service';
 import * as discountCodesService from './discountCodes.service';
 import * as categoriesService from './categories.service';
 import * as addressesService from './addresses.service';
+import * as paymentsService from './payments.service';
 
 export default {
   products: productsService,
@@ -29,4 +31,5 @@ export default {
   discountCodes: discountCodesService,
   categories: categoriesService,
   addresses: addressesService,
+  payments: paymentsService,
 };

@@ -1,72 +1,71 @@
-import { API_BASE_URL, ENDPOINTS } from './config';
-import { handleResponse, createUrl } from '../utils/apiHelpers';
-import { getAuthHeaders } from '../utils/authHelpers';
+import apiClient from './config';
 
 /**
- * Get all orders for the authenticated user
- * @param {Object} params - Query parameters (status, sort, search)
- * @returns {Promise<Array>} Array of orders
+ * Orders Service
+ * Handles all order-related API calls
  */
-export const getOrders = async (params = {}) => {
-  const url = createUrl(`${API_BASE_URL}${ENDPOINTS.ORDERS}`, params);
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: getAuthHeaders(),
-  });
-  return handleResponse(response);
+
+// Get all orders for authenticated user
+export const getMyOrders = async (params = {}) => {
+  const response = await apiClient.get('/orders/me', { params });
+  return response.data;
 };
 
-/**
- * Get a single order by ID
- * @param {string} orderId - Order ID
- * @returns {Promise<Object>} Order details
- */
+// Get all orders (admin only)
+export const getAllOrders = async (params = {}) => {
+  const response = await apiClient.get('/orders', { params });
+  return response.data;
+};
+
+// Get single order detail
 export const getOrderById = async (orderId) => {
-  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.ORDERS}/${orderId}`, {
-    method: 'GET',
-    headers: getAuthHeaders(),
-  });
-  return handleResponse(response);
+  const response = await apiClient.get(`/orders/${orderId}`);
+  return response.data;
 };
 
-/**
- * Create a new order
- * @param {Object} orderData - Order data
- * @returns {Promise<Object>} Created order
- */
+// Create order
 export const createOrder = async (orderData) => {
-  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.ORDERS}`, {
-    method: 'POST',
-    headers: getAuthHeaders(),
-    body: JSON.stringify(orderData),
-  });
-  return handleResponse(response);
+  const response = await apiClient.post('/orders', orderData);
+  return response.data;
 };
 
-/**
- * Update order status
- * @param {string} orderId - Order ID
- * @param {string} status - New status
- * @returns {Promise<Object>} Updated order
- */
+// Create order for guest
+export const createGuestOrder = async (orderData) => {
+  const response = await apiClient.post('/orders/guest', orderData);
+  return response.data;
+};
+
+// Checkout from cart (authenticated user)
+export const checkoutFromCart = async (checkoutData) => {
+  const response = await apiClient.post('/orders/checkout/cart', checkoutData);
+  return response.data;
+};
+
+// Checkout from cart (guest)
+export const guestCheckoutFromCart = async (checkoutData) => {
+  const response = await apiClient.post('/orders/guest/checkout/cart', checkoutData);
+  return response.data;
+};
+
+// Update order status (admin only)
 export const updateOrderStatus = async (orderId, status) => {
-  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.ORDERS}/${orderId}/status`, {
-    method: 'PATCH',
-    headers: getAuthHeaders(),
-    body: JSON.stringify({ status }),
-  });
-  return handleResponse(response);
+  const response = await apiClient.patch(`/orders/${orderId}/status`, { status });
+  return response.data;
 };
 
-/**
- * Cancel an order
- * @param {string} orderId - Order ID
- * @returns {Promise<Object>} Updated order
- */
+// Cancel order
 export const cancelOrder = async (orderId) => {
-  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.ORDERS}/${orderId}/cancel`, {
-    method: 'POST',
-    headers: getAuthHeaders(),
-  });
-  return handleResponse(response);
+  return updateOrderStatus(orderId, 'cancelled');
+};
+
+export default {
+  getMyOrders,
+  getAllOrders,
+  getOrderById,
+  createOrder,
+  createGuestOrder,
+  checkoutFromCart,
+  guestCheckoutFromCart,
+  updateOrderStatus,
+  cancelOrder,
 };
