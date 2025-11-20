@@ -31,7 +31,8 @@ export const useAdminProducts = (searchQuery = '') => {
                     // Show all products including drafts for admin
                     params.status = 'all';
                     
-                    // No limit - fetch all products
+                    // Fetch all products without limit (backend will use high default or return all)
+                    params.limit = 1000; // High limit to get all products
                     // Add other filters as needed:
                     // params.categoryId = selectedCategory;
                     // params.minPrice = minPrice;

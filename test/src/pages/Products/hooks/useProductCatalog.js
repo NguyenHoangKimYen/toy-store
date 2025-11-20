@@ -17,7 +17,8 @@ export const useProductCatalog = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
-  const limit = 12;
+  // No limit - show all products
+  const limit = null;
 
   // Get filters from URL
   const filters = {
@@ -40,7 +41,7 @@ export const useProductCatalog = () => {
 
         const params = {
           page: currentPage,
-          limit,
+          // No limit - fetch all products
         };
 
         // Add sort parameter (backend expects "field:order" format)
