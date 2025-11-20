@@ -21,23 +21,29 @@ export const useAdminProducts = (searchQuery = '') => {
                     setError(null)
 
                     // Fetch from backend with filters
-                    const data = await getProducts({ 
-                        search: searchQuery,
-                        // Add other filters as needed:
-                        // category: selectedCategory,
-                        // minPrice: minPrice,
-                        // maxPrice: maxPrice,
-                        // isNew: true,
-                        // isFeatured: false,
-                        // inStock: true,
-                        // sortBy: 'name',
-                        // sortOrder: 'asc',
-                        // page: 1,
-                        // No limit - fetch all products
-                    })
+                    const params = {};
+                    
+                    // Add search query (backend expects 'keyword')
+                    if (searchQuery) {
+                        params.keyword = searchQuery;
+                    }
+                    
+                    // Show all products including drafts for admin
+                    params.status = 'all';
+                    
+                    // No limit - fetch all products
+                    // Add other filters as needed:
+                    // params.categoryId = selectedCategory;
+                    // params.minPrice = minPrice;
+                    // params.maxPrice = maxPrice;
+                    // params.isFeatured = true;
+                    // params.minRating = 4;
+                    // params.sort = 'name:asc'; // field:order format
+                    
+                    const data = await getProducts(params)
 
-                    // Backend can return array or object with products property
-                    const productsArray = Array.isArray(data) ? data :  []
+                    // Backend returns { products: [...], pagination: {...} }
+                    const productsArray = Array.isArray(data) ? data : (data.products || [])
 
                     // Calculate stats from products
                     const calculatedStats = {
