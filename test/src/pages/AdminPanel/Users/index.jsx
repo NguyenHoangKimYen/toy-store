@@ -5,7 +5,7 @@ import UserStats from './components/UserStats'
 import UserDetailModal from './components/UserDetailModal'
 import UserFormModal from './components/UserFormModal'
 import { useUsers } from './hooks/useUsers'
-import { PageHeader, SearchBar, ScrollableContent } from '@/components/common'
+import { PageHeader, SearchBar, ScrollableContent, ConfirmDialog } from '@/components/common'
 
 const Users = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -13,6 +13,8 @@ const Users = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isFormModalOpen, setIsFormModalOpen] = useState(false)
   const [formMode, setFormMode] = useState('create') // 'create' | 'edit'
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [userToDelete, setUserToDelete] = useState(null)
 
   // Custom hook handles data fetching and CRUD operations
   const { 
@@ -42,11 +44,18 @@ const Users = () => {
     setIsFormModalOpen(true)
   }
 
-  const handleDeleteUser = async (userId) => {
-    if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+  const handleDeleteUser = (userId) => {
+    setUserToDelete(userId)
+    setShowDeleteConfirm(true)
+  }
+
+  const confirmDeleteUser = async () => {
+    if (userToDelete) {
       try {
-        await deleteUser(userId)
+        await deleteUser(userToDelete)
         setIsDetailModalOpen(false)
+        setShowDeleteConfirm(false)
+        setUserToDelete(null)
       } catch (error) {
         console.error('Delete failed:', error)
       }
@@ -143,6 +152,18 @@ const Users = () => {
         onClose={handleCloseFormModal}
         onSave={handleSaveUser}
         mode={formMode}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        onConfirm={confirmDeleteUser}
+        title="Delete User"
+        description="Are you sure you want to delete this user? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
       />
     </div>
   )
