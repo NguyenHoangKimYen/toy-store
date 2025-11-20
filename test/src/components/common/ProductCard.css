@@ -202,6 +202,38 @@
   color: white;
 }
 
+/* Out of Stock Overlay - replaces badge */
+.out-of-stock .product-image,
+.out-of-stock .product-card-image img,
+.out-of-stock .compact-image {
+  filter: grayscale(100%) opacity(0.5);
+}
+
+.out-of-stock-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 2;
+}
+
+.out-of-stock-text {
+  background: rgba(239, 68, 68, 0.95);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
 /* ========================================
    HORIZONTAL VARIANT
    ======================================== */

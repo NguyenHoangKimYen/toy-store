@@ -173,7 +173,7 @@ const ProductCard = ({
   // Horizontal variant (for category rows)
   if (variant === 'horizontal') {
     return (
-      <div className={`product-card-horizontal ${className}`} onClick={handleCardClick}>
+      <div className={`product-card-horizontal ${totalStock === 0 ? 'out-of-stock' : ''} ${className}`} onClick={handleCardClick}>
         <div className="product-card-image">
           <img
             src={imageUrl}
@@ -183,8 +183,11 @@ const ProductCard = ({
           {showBadges && product.isNew && (
             <span className="badge badge-new">New</span>
           )}
-          {showBadges && product.isFeatured && (
-            <span className="badge badge-featured">Featured</span>
+          {/* Out of Stock Overlay */}
+          {totalStock === 0 && (
+            <div className="out-of-stock-overlay">
+              <span className="out-of-stock-text">Out of Stock</span>
+            </div>
           )}
         </div>
         <div className="product-card-content">
@@ -214,11 +217,17 @@ const ProductCard = ({
   // Compact variant (for small grids)
   if (variant === 'compact') {
     return (
-      <div className={`product-card-compact ${className}`} onClick={handleCardClick}>
+      <div className={`product-card-compact ${totalStock === 0 ? 'out-of-stock' : ''} ${className}`} onClick={handleCardClick}>
         <div className="product-card-image">
           <img src={imageUrl} alt={product.name} loading="lazy" />
-          {showBadges && product.stockQuantity === 0 && (
-            <span className="badge badge-out">Out of Stock</span>
+          {showBadges && product.isNew && (
+            <span className="badge badge-new">New</span>
+          )}
+          {/* Out of Stock Overlay */}
+          {totalStock === 0 && (
+            <div className="out-of-stock-overlay">
+              <span className="out-of-stock-text">Out of Stock</span>
+            </div>
           )}
         </div>
         <div className="product-card-content">
@@ -231,7 +240,7 @@ const ProductCard = ({
 
   // Default variant (full featured)
   return (
-    <div className={`product-card ${className}`} onClick={handleCardClick}>
+    <div className={`product-card ${totalStock === 0 ? 'out-of-stock' : ''} ${className}`} onClick={handleCardClick}>
       <div className="product-image-wrapper">
         <img
           src={imageUrl}
@@ -244,13 +253,13 @@ const ProductCard = ({
             {product.isNew && (
               <span className="badge badge-new">New</span>
             )}
-            {product.isFeatured && (
-              <span className="badge badge-featured">Featured</span>
-            )}
-            {product.stockQuantity === 0 && (
-              <span className="badge badge-out">Out of Stock</span>
-            )}
           </>
+        )}
+        {/* Out of Stock Overlay */}
+        {totalStock === 0 && (
+          <div className="out-of-stock-overlay">
+            <span className="out-of-stock-text">Out of Stock</span>
+          </div>
         )}
       </div>
 
