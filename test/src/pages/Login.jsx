@@ -23,14 +23,15 @@ const Login = () => {
     e.preventDefault()
     setLoading(true)
 
-    const email = e.target.email.value
-    const password = e.target.password.value
+    const formData = new FormData(e.target)
+    const emailOrPhoneOrUsername = formData.get('email')
+    const password = formData.get('password')
 
     try {
       const res = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ emailOrPhoneOrUsername, password })
       })
 
       const data = await res.json()
@@ -76,13 +77,13 @@ const Login = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className='flex flex-col gap-1'>
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="random123@mail.com" required />
+              <Label htmlFor="email">Email / Phone / Username</Label>
+              <Input id="email" name="email" type="text" placeholder="email@example.com or username" required />
             </div>
 
             <div className='flex flex-col gap-1'>
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" placeholder="••••••••" required />
+              <Input id="password" name="password" type="password" placeholder="••••••••" required />
             </div>
 
             <div className="flex flex-col gap-1 mt-4">
