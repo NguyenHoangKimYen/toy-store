@@ -59,8 +59,7 @@ const Users = () => {
     
     const searchLower = searchQuery.toLowerCase();
     return allUsers.filter(u =>
-      u.firstName?.toLowerCase().includes(searchLower) ||
-      u.lastName?.toLowerCase().includes(searchLower) ||
+      u.fullname?.toLowerCase().includes(searchLower) ||
       u.username?.toLowerCase().includes(searchLower) ||
       u.email?.toLowerCase().includes(searchLower) ||
       u.phone?.toLowerCase().includes(searchLower)

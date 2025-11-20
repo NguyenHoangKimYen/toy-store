@@ -51,7 +51,11 @@ const ProductFilters = ({ filters, onFilterChange, onClearFilters, categories = 
     onFilterChange({ ...filters, [key]: value })
   }
 
-  const hasActiveFilters = Object.values(filters).some(v => v && v !== 'all')
+  // Check for active filters (exclude sort and empty values)
+  const hasActiveFilters = Object.entries(filters).some(([key, value]) => {
+    if (key === 'sort') return false; // sort always has a value, exclude it
+    return value && value !== 'all' && value !== ''
+  })
 
   return (
     <div className='mb-6 space-y-4'>
