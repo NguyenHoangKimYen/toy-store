@@ -17,6 +17,14 @@ export const useAdminProducts = () => {
   const [error, setError] = useState(null);
 
   // Initialize products from mock data or API
+  /**
+   * PAGINATION CONFIGURATION:
+   * - Products per page: 50 (efficient for admin management)
+   * - Shows all products including drafts (status: 'all')
+   * - Backend default: 20, we override with explicit value
+   */
+  const ADMIN_PRODUCTS_PER_PAGE = 50;
+
   const loadProducts = useCallback(async (params = {}) => {
     try {
       setLoading(true);
@@ -46,11 +54,10 @@ export const useAdminProducts = () => {
         }
       } else {
         // Admin should see ALL products regardless of status
-        // Set high limit to get all products (or implement pagination later)
         const data = await productsService.getProducts({ 
           ...params, 
           status: 'all',
-          limit: 1000  // High limit to get all products for admin
+          limit: ADMIN_PRODUCTS_PER_PAGE  // Explicit limit for admin pagination
         });
         setProducts(Array.isArray(data) ? data : data.products || []);
       }

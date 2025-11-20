@@ -161,7 +161,8 @@ export const handlers = [
     const url = new URL(request.url);
     const isFeatured = url.searchParams.get('isFeatured');
     const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
+    // Use limit from request or default to showing all products (for mock data)
+    const limit = parseInt(url.searchParams.get('limit') || '1000');
     const search = url.searchParams.get('search');
     const category = url.searchParams.get('category');
     const brand = url.searchParams.get('brand');

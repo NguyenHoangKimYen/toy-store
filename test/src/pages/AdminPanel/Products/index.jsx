@@ -26,7 +26,8 @@ const Products = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [productToDelete, setProductToDelete] = useState(null)
 
-  // Use global products hook
+  // Use global products hook with admin-specific params
+  // Admin needs to see ALL products (including drafts) with higher limit
   const { 
     products: allProducts, 
     loading, 
@@ -34,7 +35,12 @@ const Products = () => {
     createProduct,
     updateProduct,
     deleteProduct,
-  } = useProducts()
+  } = useProducts({ 
+    params: { 
+      status: 'all',  // Show all products including drafts
+      limit: 50       // Admin pagination: 50 products per page
+    } 
+  })
 
   // Filter products based on search
   const products = useMemo(() => {

@@ -51,8 +51,16 @@ export const useUsers = (options = {}) => {
       setLoading(true);
       setError(null);
       
+      /**
+       * PAGINATION CONFIGURATION:
+       * - Users per page: 50 (consistent with admin products)
+       * - Efficient for admin management without overwhelming UI
+       */
+      const ADMIN_USERS_PER_PAGE = 50;
+      
       const data = await usersService.getUsers({ 
         search: query,
+        limit: ADMIN_USERS_PER_PAGE,  // Explicit limit for admin pagination
       });
       
       const usersArray = Array.isArray(data) ? data : (data.data || []);
