@@ -16,6 +16,7 @@ const Users = () => {
   const [formMode, setFormMode] = useState('create') // 'create' | 'edit'
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [userToDelete, setUserToDelete] = useState(null)
+  const [showFilters, setShowFilters] = useState(false)
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -172,6 +173,7 @@ const Users = () => {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         placeholder='Search by name, username, email, or phone...'
+        onFilterClick={() => setShowFilters(!showFilters)}
       />
 
       {/* Filters */}
@@ -179,6 +181,7 @@ const Users = () => {
         filters={filters}
         onFilterChange={handleFilterChange}
         onClearFilters={handleClearFilters}
+        showFilters={showFilters}
       />
 
       {/* Stats Cards */}

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Filter, X, Calendar, DollarSign, Star, Tag, TrendingUp } from 'lucide-react'
+import { X, Calendar, DollarSign, Star, Tag, TrendingUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -11,8 +11,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-const ProductFilters = ({ filters, onFilterChange, onClearFilters, categories = [] }) => {
-  const [showFilters, setShowFilters] = React.useState(false)
+const ProductFilters = ({ filters, onFilterChange, onClearFilters, categories = [], showFilters }) => {
 
   const handleChange = (key, value) => {
     onFilterChange({ ...filters, [key]: value })
@@ -22,23 +21,9 @@ const ProductFilters = ({ filters, onFilterChange, onClearFilters, categories = 
 
   return (
     <div className='mb-6 space-y-4'>
-      {/* Filter Toggle & Clear Button */}
-      <div className='flex items-center justify-between'>
-        <Button
-          variant='outline'
-          onClick={() => setShowFilters(!showFilters)}
-          className='flex items-center gap-2'
-        >
-          <Filter className='w-4 h-4' />
-          {showFilters ? 'Hide Filters' : 'Show Filters'}
-          {hasActiveFilters && (
-            <span className='ml-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs'>
-              Active
-            </span>
-          )}
-        </Button>
-
-        {hasActiveFilters && (
+      {/* Clear Filters Button */}
+      {hasActiveFilters && (
+        <div className='flex justify-end'>
           <Button
             variant='ghost'
             onClick={onClearFilters}
@@ -47,8 +32,8 @@ const ProductFilters = ({ filters, onFilterChange, onClearFilters, categories = 
             <X className='w-4 h-4' />
             Clear All Filters
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Filter Panel */}
       {showFilters && (

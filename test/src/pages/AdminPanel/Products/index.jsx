@@ -28,6 +28,7 @@ const Products = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [productToDelete, setProductToDelete] = useState(null)
   const [categories, setCategories] = useState([])
+  const [showFilters, setShowFilters] = useState(false)
   
   // Filter state
   const [filters, setFilters] = useState({
@@ -194,6 +195,7 @@ const Products = () => {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         placeholder='Search for products'
+        onFilterClick={() => setShowFilters(!showFilters)}
       />
 
       {/* Filters */}
@@ -202,6 +204,8 @@ const Products = () => {
         onFilterChange={handleFilterChange}
         onClearFilters={handleClearFilters}
         categories={categories}
+        showFilters={showFilters}
+        onToggleFilters={() => setShowFilters(!showFilters)}
       />
 
       {/* Stats Cards */}
