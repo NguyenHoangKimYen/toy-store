@@ -10,6 +10,16 @@ import {
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 
+// Role options - matches backend ROLE_ENUM
+// To add new roles: 1) Update backend user.model.js ROLE_ENUM, 2) Add here
+const USER_ROLES = [
+  { value: 'customer', label: 'Customer' },
+  { value: 'admin', label: 'Admin' },
+  // Add more roles here as needed, e.g.:
+  // { value: 'moderator', label: 'Moderator' },
+  // { value: 'support', label: 'Support' },
+]
+
 const UserFilters = ({ filters, onFilterChange, onClearFilters, showFilters }) => {
 
   const handleChange = (key, value) => {
@@ -51,8 +61,11 @@ const UserFilters = ({ filters, onFilterChange, onClearFilters, showFilters }) =
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value='all'>All Roles</SelectItem>
-                  <SelectItem value='customer'>Customer</SelectItem>
-                  <SelectItem value='admin'>Admin</SelectItem>
+                  {USER_ROLES.map(role => (
+                    <SelectItem key={role.value} value={role.value}>
+                      {role.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

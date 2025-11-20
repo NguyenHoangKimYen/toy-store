@@ -46,7 +46,7 @@ const VariantList = ({ variants, onUpdatePrice, onUpdateStock, onRemove }) => {
                     step='0.01'
                     min='0'
                     placeholder='0.00'
-                    value={variant.price.$numberDecimal}
+                    value={variant.price?.$numberDecimal || variant.price || ''}
                     onChange={(e) => onUpdatePrice(index, e.target.value)}
                     className='h-9'
                     required
