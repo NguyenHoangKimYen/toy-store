@@ -4,7 +4,6 @@ const {
     getProductById,
     getProductBySlug,
     getProductByPrice,
-    getProductByRating,
     createProduct,
     updateProduct,
     deleteProduct,

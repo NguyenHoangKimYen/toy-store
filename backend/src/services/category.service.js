@@ -25,7 +25,6 @@ const getCategoryById = async (id) => {
     return category;
 };
 
-/** Lấy category theo Slug */
 const getCategoryBySlug = async (slug) => {
     const category = await categoryRepository.findBySlug(slug);
     if (!category) throw new Error("Category not found");
@@ -42,7 +41,6 @@ const updateCategory = async (id, data) => {
     return updated;
 };
 
-/** Xóa category (CHỈ KHI KHÔNG CÓ SẢN PHẨM SỬ DỤNG) */
 const deleteCategory = async (id) => {
     const { total } = await productRepository.findAll({ categoryId: id }, { limit: 1 });
 
@@ -54,7 +52,6 @@ const deleteCategory = async (id) => {
     if (!deleted) throw new Error("Category not found");
     return { message: "Category deleted successfully" };
 };
-
 
 module.exports = {
     createCategory,
