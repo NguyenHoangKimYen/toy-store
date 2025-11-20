@@ -335,6 +335,12 @@ export const handlers = [
     const endIndex = startIndex + limit;
     const paginatedProducts = products.slice(startIndex, endIndex);
 
+    // Add totalStock to each product
+    const productsWithStock = paginatedProducts.map(p => ({
+      ...p,
+      totalStock: getTotalStockForProduct(p._id)
+    }));
+
     console.log('[Mock Handler] Pagination:', { 
       total, 
       limit, 
@@ -344,7 +350,7 @@ export const handlers = [
     });
 
     return HttpResponse.json({
-      products: paginatedProducts,
+      products: productsWithStock,
       pagination: {
         page,
         limit,
@@ -399,7 +405,13 @@ export const handlers = [
       return new HttpResponse(null, { status: 404 });
     }
 
-    return HttpResponse.json(product);
+    // Add totalStock calculated from variants
+    const productWithStock = {
+      ...product,
+      totalStock: getTotalStockForProduct(product._id)
+    };
+
+    return HttpResponse.json(productWithStock);
   }),
 
   // Variant endpoints

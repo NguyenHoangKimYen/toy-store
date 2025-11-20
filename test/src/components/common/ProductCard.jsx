@@ -62,10 +62,9 @@ const ProductCard = ({
   const imageUrl = product.imageUrls?.[0] || '/placeholder.png';
   const categoryName = product.categoryId?.[0]?.name || product.categoryId?.name || 'Uncategorized';
   
-  // Calculate total stock from variants or use product.stockQuantity
-  const totalStock = hasVariants && Array.isArray(product.variants)
-    ? product.variants.reduce((sum, v) => sum + (v.stockQuantity || v.stock || 0), 0)
-    : (product.stockQuantity || 0);
+  // Use totalStock from product data (sum of all variant stocks)
+  // Backend/API should calculate and include this field
+  const totalStock = product.totalStock ?? 0;
 
   const handleCardClick = () => {
     onClick?.(product);
