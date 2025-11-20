@@ -184,10 +184,12 @@ module.exports = {
         const orderItems = items.map((i) => ({
             orderId: order._id,
             productId: i.productId,
+            variantId: i.variantId || null,
             quantity: i.quantity,
             unitPrice: i.unitPrice,
             subtotal: i.subtotal
         }));
+        
         await itemRepo.createMany(orderItems);
 
         await historyRepo.add(order._id, "pending");

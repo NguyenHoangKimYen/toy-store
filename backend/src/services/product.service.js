@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const productRepository = require("../repositories/product.repository.js");
 const variantRepository = require("../repositories/variant.repository.js");
 const { uploadToS3, deleteFromS3 } = require("../utils/s3.helper.js");
@@ -156,44 +157,140 @@ const getProductByPrice = (min, max) => {
     return productRepository.findByPrice(min, max);
 }
 
-/**
- * Tạo sản phẩm mới (chưa bao gồm ảnh)
- */
 const createProduct = async (productData, imgFiles) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    if (!productData.name) {
-        throw new Error("Product name is required.");
+    try {
+        // 1. Validate cơ bản
+        if (!productData.name) {
+            throw new Error("Product name is required.");
+        }
+
+        // 2. Tạo Slug
+        const slugToCreate = productData.slug 
+            ? slugify(productData.slug, { lower: true, strict: true })
+            : slugify(productData.name, { lower: true, strict: true });
+
+        const existingProduct = await productRepository.findBySlug(slugToCreate);
+        if (existingProduct) {
+            throw new Error(`Slug '${slugToCreate}' already exists.`);
+        }
+
+        // 3. Upload ảnh chính của Product (nếu có)
+        let imageUrls = [];
+        if (imgFiles && imgFiles.length > 0) {
+            imageUrls = await uploadToS3(imgFiles, "productImages");
+        }
+
+        // 4. Parse dữ liệu Variants
+        // Khi gửi multipart/form-data, mảng object thường bị chuyển thành chuỗi JSON
+        let variantsInput = [];
+        if (productData.variants) {
+            try {
+                variantsInput = typeof productData.variants === 'string' 
+                    ? JSON.parse(productData.variants) 
+                    : productData.variants;
+            } catch (e) {
+                throw new Error("Invalid variants data format. Must be a valid JSON array.");
+            }
+        }
+
+        // 5. Tạo Product Document (Tạm thời rỗng variants/attributes)
+        // Lưu ý: Cần truyền session vào repository
+        const newProduct = await productRepository.create({
+            ...productData,
+            slug: slugToCreate,
+            imageUrls: imageUrls,
+            variants: [],
+            attributes: [],
+            minPrice: 0,
+            maxPrice: 0
+        }, { session }); // Quan trọng: Truyền session
+
+        // 6. Xử lý Variants & Attributes
+        let createdVariantIds = [];
+        let allAttributes = []; 
+        let minPrice = 0;
+        let maxPrice = 0;
+
+        if (variantsInput.length > 0) {
+            const variantDocs = [];
+            const prices = [];
+
+            for (const v of variantsInput) {
+                // a. Xử lý Attributes cho từng variant
+                const attrs = v.attributes || [];
+                
+                // b. Gộp vào danh sách Attributes tổng của Product
+                attrs.forEach(attr => {
+                    const existing = allAttributes.find(a => a.name === attr.name);
+                    if (existing) {
+                        if (!existing.values.includes(attr.value)) {
+                            existing.values.push(attr.value);
+                        }
+                    } else {
+                        allAttributes.push({ name: attr.name, values: [attr.value] });
+                    }
+                });
+
+                // c. Chuẩn bị object Variant
+                variantDocs.push({
+                    productId: newProduct._id,
+                    name: v.name || `${productData.name} - ${attrs.map(a=>a.value).join(' ')}`,
+                    sku: v.sku,
+                    price: parseFloat(v.price || 0),
+                    stock: parseInt(v.stock || 0),
+                    attributes: attrs,
+                    imageUrls: [] // Chưa có ảnh
+                });
+
+                prices.push(parseFloat(v.price || 0));
+            }
+
+            // d. Lưu Variants vào DB (Batch Insert)
+            // Lưu ý: Repository cần hỗ trợ insertMany hoặc tạo vòng lặp create với session
+            // Giả sử variantRepository.createMany hỗ trợ session
+            const createdVariants = await variantRepository.createMany(variantDocs, { session });
+            
+            createdVariantIds = createdVariants.map(v => v._id);
+            
+            // e. Tính giá
+            if (prices.length > 0) {
+                minPrice = Math.min(...prices);
+                maxPrice = Math.max(...prices);
+            }
+        }
+
+        // 7. Cập nhật lại Product với thông tin variants vừa tạo
+        // Dùng findByIdAndUpdate hoặc update của repo, nhớ truyền session
+        await productRepository.update(newProduct._id, {
+            variants: createdVariantIds,
+            attributes: allAttributes,
+            minPrice,
+            maxPrice
+        }, { session });
+
+        // 8. Commit Transaction (Lưu tất cả)
+        await session.commitTransaction();
+        
+        // Trả về sản phẩm hoàn chỉnh
+        // Có thể cần gọi lại getById để lấy data đầy đủ populate
+        return await productRepository.findById(newProduct._id);
+
+    } catch (error) {
+        // 9. Rollback (Hủy tất cả thao tác DB)
+        await session.abortTransaction();
+        
+        // Nếu đã lỡ upload ảnh lên S3 thì xóa đi (dọn rác)
+        // (Bạn cần implement logic lấy array url vừa upload để xóa tại đây)
+        
+        throw error;
+    } finally {
+        session.endSession();
     }
-    
-    const slugToCreate = productData.slug 
-        ? slugify(productData.slug, { lower: true, strict: true })
-        : slugify(productData.name, { lower: true, strict: true });
-
-    const existingProduct = await productRepository.findBySlug(slugToCreate);
-    if (existingProduct) {
-        throw new Error(`Slug '${slugToCreate}' already exists. Please use a different name or provide a unique slug.`);
-    }
-    
-    let imageUrls = [];
-
-    if (imgFiles && imgFiles.length > 0) {
-        imageUrls = await uploadToS3(imgFiles, "productImages");
-    }
-
-    const product = {
-        ...productData,
-        slug: slugToCreate,
-        imageUrls: imageUrls,
-    };
-    
-    delete product.attributes;
-
-    return await productRepository.create(product);
 };
 
-/**
- * Xóa sản phẩm + ảnh trên S3 + các biến thể liên quan
- */
 const deleteProduct = async (id) => {
     const product = await productRepository.findById(id);
     if (!product) throw new Error("Product not found");
