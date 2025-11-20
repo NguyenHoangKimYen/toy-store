@@ -23,7 +23,8 @@ const Signup = () => {
         e.preventDefault()
         setLoading(true)
 
-        const fullname = e.target.fullname.value.trim()
+        const fullName = e.target.fullname.value.trim()
+        const username = e.target.username.value.trim()
         const email = e.target.email.value.trim()
         const phone = e.target.phone.value.trim()
         const password = e.target.password.value.trim()
@@ -32,7 +33,7 @@ const Signup = () => {
             const res = await fetch(`${API_BASE_URL}/auth/signup`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ fullname, email, phone, password })
+                body: JSON.stringify({ fullName, username, email, phone, password })
             })
 
             const data = await res.json()
@@ -77,8 +78,13 @@ const Signup = () => {
                 <CardContent>
                     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                         <div className='flex flex-col gap-1'>
-                            <Label htmlFor="password">Full name</Label>
-                            <Input id="fullname" type="text" placeholder="Nigger One" required />
+                            <Label htmlFor="fullname">Full name</Label>
+                            <Input id="fullname" type="text" placeholder="John Doe" required />
+                        </div>
+
+                        <div className='flex flex-col gap-1'>
+                            <Label htmlFor="username">Username</Label>
+                            <Input id="username" type="text" placeholder="johndoe123" required minLength={3} maxLength={30} pattern="[a-zA-Z0-9]+" title="Username must be alphanumeric (letters and numbers only)" />
                         </div>
 
                         <div className='flex flex-col gap-1'>
@@ -92,13 +98,15 @@ const Signup = () => {
                                 id="phone"
                                 type="tel"
                                 placeholder="0123456789"
+                                pattern="[0-9]{10,15}"
+                                title="Phone number must be 10-15 digits"
                                 required
                             />
                         </div>
 
                         <div className='flex flex-col gap-1'>
                             <Label htmlFor="password">Password</Label>
-                            <Input id="password" type="password" placeholder="••••••••" required />
+                            <Input id="password" type="password" placeholder="••••••••" minLength={8} required />
                         </div>
 
                         <div className="flex flex-col gap-1 mt-4">
