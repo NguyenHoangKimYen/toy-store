@@ -2,7 +2,7 @@ import React from 'react'
 import { Users } from 'lucide-react'
 import UserTableRow from './UserTableRow'
 
-const UserTable = ({ users, onViewDetails }) => {
+const UserTable = ({ users, onViewDetails, onEdit, onDelete }) => {
   if (users.length === 0) {
     return (
       <div className='text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg'>
@@ -48,6 +48,8 @@ const UserTable = ({ users, onViewDetails }) => {
                 key={user._id} 
                 user={user} 
                 onViewDetails={onViewDetails}
+                onEdit={onEdit}
+                onDelete={onDelete}
               />
             ))}
           </tbody>

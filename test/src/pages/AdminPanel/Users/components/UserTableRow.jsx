@@ -3,7 +3,7 @@ import { Eye, Edit, Trash2, CheckCircle, XCircle } from 'lucide-react'
 import { formatDate } from '@/utils/formatDate'
 import { formatPhone, getRoleBadgeColor } from '../utils/formatters'
 
-const UserTableRow = ({ user, onViewDetails }) => {
+const UserTableRow = ({ user, onViewDetails, onEdit, onDelete }) => {
   return (
     <tr className='hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors'>
       {/* User Info */}
@@ -86,12 +86,14 @@ const UserTableRow = ({ user, onViewDetails }) => {
             <Eye className='w-5 h-5' />
           </button>
           <button 
+            onClick={() => onEdit(user)}
             className='text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300'
             title='Edit User'
           >
             <Edit className='w-5 h-5' />
           </button>
           <button 
+            onClick={() => onDelete(user._id)}
             className='text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300'
             title='Delete User'
           >

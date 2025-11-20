@@ -121,6 +121,8 @@ const Users = () => {
         <UserTable 
           users={users} 
           onViewDetails={handleViewDetails}
+          onEdit={handleEditUser}
+          onDelete={handleDeleteUser}
         />
       </ScrollableContent>
 
