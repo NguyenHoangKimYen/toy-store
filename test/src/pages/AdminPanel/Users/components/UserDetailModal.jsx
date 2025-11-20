@@ -118,12 +118,31 @@ const UserDetailModal = ({ user, onClose, onEdit, onDelete }) => {
           {/* Default Address */}
           {user.defaultAddressId && (
             <div className='mb-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800'>
-              <p className='text-sm font-medium text-green-900 dark:text-green-200 mb-1'>
+              <p className='text-sm font-medium text-green-900 dark:text-green-200 mb-2'>
                 Default Address
               </p>
-              <p className='text-sm text-green-700 dark:text-green-300'>
-                Address ID: {user.defaultAddressId}
-              </p>
+              {typeof user.defaultAddressId === 'object' && user.defaultAddressId.addressLine ? (
+                <>
+                  <p className='text-sm text-green-700 dark:text-green-300'>
+                    {user.defaultAddressId.addressLine}
+                  </p>
+                  {user.defaultAddressId.city && (
+                    <p className='text-sm text-green-600 dark:text-green-400 mt-1'>
+                      {user.defaultAddressId.city}
+                      {user.defaultAddressId.postalCode && `, ${user.defaultAddressId.postalCode}`}
+                    </p>
+                  )}
+                  {user.defaultAddressId.phone && (
+                    <p className='text-xs text-green-600 dark:text-green-400 mt-1'>
+                      Phone: {user.defaultAddressId.phone}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className='text-sm text-green-700 dark:text-green-300'>
+                  Address ID: {typeof user.defaultAddressId === 'string' ? user.defaultAddressId : user.defaultAddressId._id || 'N/A'}
+                </p>
+              )}
             </div>
           )}
 
