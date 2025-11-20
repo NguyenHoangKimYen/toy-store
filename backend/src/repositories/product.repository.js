@@ -58,21 +58,32 @@ const findByPrice = async (min, max) => {
     });
 };
 
-const create = async (data) => {
+/**
+ * Updated: Thêm tham số options để hỗ trợ Transaction (Session)
+ */
+const create = async (data, options = {}) => {
     const product = new Product(data);
-    return product.save();
+    // save() của mongoose hỗ trợ options { session: ... }
+    return product.save(options);
 };
 
-const update = async (id, data) => {
-    return Product.findByIdAndUpdate(id, data, { new: true });
+/**
+ * Updated: Thêm options
+ */
+const update = async (id, data, options = {}) => {
+    // merge options vào tham số thứ 3
+    return Product.findByIdAndUpdate(id, data, { new: true, ...options });
 };
 
-const remove = async (id) => {
-    return Product.findByIdAndDelete(id);
+/**
+ * Updated: Thêm options (để nếu sau này xóa product trong transaction cũng dùng được)
+ */
+const remove = async (id, options = {}) => {
+    return Product.findByIdAndDelete(id, options);
 };
 
-const updatePriceRange = async (id, minPrice, maxPrice) => {
-  return await Product.findByIdAndUpdate(id, { minPrice, maxPrice });
+const updatePriceRange = async (id, minPrice, maxPrice, options = {}) => {
+  return await Product.findByIdAndUpdate(id, { minPrice, maxPrice }, options);
 };
 
 module.exports = {

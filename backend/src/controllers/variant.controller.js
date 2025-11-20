@@ -27,7 +27,6 @@ const getVariantById = async (req, res, next) => {
     }
 };
 
-/** Tạo mới variant */
 const createVariant = async (req, res, next) => {
     try {
         const { productId } = req.params; 
@@ -42,13 +41,12 @@ const createVariant = async (req, res, next) => {
             imgFiles
         );
 
-        res.status(201).json(newVariant);
+        res.json({ success: true, data: newVariant });
     } catch (error) {
         next(error);
     }
 };
 
-/** Cập nhật variant */
 const updateVariant = async (req, res, next) => {
     try {
         const variant = await variantService.updateVariant(req.params.id, req.body);
