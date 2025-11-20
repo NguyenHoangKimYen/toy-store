@@ -225,7 +225,7 @@ export const useCategorizedProducts = (options = {}) => {
         if (featured) {
           keys.push('featured');
           requests.push(
-            getProducts({ isFeatured: 'true', ...featured })
+            productsService.getProducts({ isFeatured: 'true', ...featured })
               .then(response => {
                 // Handle response from backend (might be wrapped in data object)
                 const products = response?.data?.products || response?.products || response?.data || response;
@@ -238,7 +238,7 @@ export const useCategorizedProducts = (options = {}) => {
         if (newProducts) {
           keys.push('newProducts');
           requests.push(
-            getProducts({ sort: 'createdAt:desc', ...newProducts })
+            productsService.getProducts({ sort: 'createdAt:desc', ...newProducts })
               .then(response => {
                 const products = response?.data?.products || response?.products || response?.data || response;
                 return Array.isArray(products) ? products : [];
@@ -250,7 +250,7 @@ export const useCategorizedProducts = (options = {}) => {
         if (bestSellers) {
           keys.push('bestSellers');
           requests.push(
-            getProducts({ sort: 'totalUnitsSold:desc', ...bestSellers })
+            productsService.getProducts({ sort: 'totalUnitsSold:desc', ...bestSellers })
               .then(response => {
                 const products = response?.data?.products || response?.products || response?.data || response;
                 return Array.isArray(products) ? products : [];
@@ -265,7 +265,7 @@ export const useCategorizedProducts = (options = {}) => {
             // Support both categoryId and category params for backwards compatibility
             const catParam = categoryId || category;
             requests.push(
-              getProducts({ categoryId: catParam, ...params })
+              productsService.getProducts({ categoryId: catParam, ...params })
                 .then(response => {
                   const products = response?.data?.products || response?.products || response?.data || response;
                   return Array.isArray(products) ? products : [];
@@ -373,7 +373,7 @@ export const useProductDetail = (productId) => {
     : 0;
 
   return {
-    product,
+    product: product ? { ...product, variants } : null, // Merge fetched variants into product
     loading: productLoading || variantsLoading,
     error,
     refetch,

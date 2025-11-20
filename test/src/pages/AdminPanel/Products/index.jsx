@@ -105,7 +105,7 @@ const Products = () => {
       {/* Header */}
       <PageHeader
         title='Product Management'
-        description={`Manage product inventory and listings ${useMockData ? '(Using Mock Data)' : '(Connected to API)'}`}
+        description='Manage product inventory and listings'
         actionButton={
           <button 
             onClick={handleAddProduct}
