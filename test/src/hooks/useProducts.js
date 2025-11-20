@@ -142,17 +142,75 @@ export const useProducts = (options = {}) => {
       setLoading(true);
       setError(null);
 
-      const allowedFields = ['name', 'slug', 'description', 'status', 'isFeatured', 'categoryId', 'brand'];
+      // Separate variants and deletedVariantIds from product data
+      const { variants, deletedVariantIds, ...productWithoutVariants } = productData;
+
+      // Delete removed variants first
+      if (deletedVariantIds && deletedVariantIds.length > 0) {
+        for (const variantId of deletedVariantIds) {
+          try {
+            await productsService.deleteVariant(variantId);
+          } catch (deleteErr) {
+            console.error('Error deleting variant:', deleteErr);
+          }
+        }
+      }
+
+      // Update product basic fields
+      const allowedFields = ['name', 'slug', 'description', 'status', 'isFeatured', 'categoryId', 'brand', 'imageUrls'];
       const updatePayload = {};
       
       allowedFields.forEach(field => {
-        if (productData[field] !== undefined) {
-          updatePayload[field] = productData[field];
+        if (productWithoutVariants[field] !== undefined) {
+          updatePayload[field] = productWithoutVariants[field];
         }
       });
 
       const updated = await productsService.patchProduct(id, updatePayload);
+      
+      // Update variants if provided
+      if (variants && variants.length > 0) {
+        for (const variant of variants) {
+          try {
+            // Check if variant has an ID (existing variant) or needs to be created
+            if (variant._id && !variant._id.startsWith('var_')) {
+              // Update existing variant
+              const variantPayload = {
+                attributes: Array.isArray(variant.attributes)
+                  ? variant.attributes
+                  : Object.entries(variant.attributes || {}).map(([name, value]) => ({
+                      name,
+                      value: String(value),
+                    })),
+                price: variant.price,
+                stockQuantity: variant.stockQuantity ?? variant.stock ?? 0,
+                isActive: variant.isActive !== false,
+              };
+              
+              await productsService.updateVariant(variant._id, variantPayload);
+            } else {
+              // Create new variant
+              const variantPayload = {
+                attributes: Object.entries(variant.attributes || {}).map(([name, value]) => ({
+                  name,
+                  value: String(value),
+                })),
+                price: variant.price,
+                stockQuantity: variant.stockQuantity ?? variant.stock ?? 0,
+                sku: variant.sku || '',
+                isActive: variant.isActive !== false,
+              };
+              
+              await productsService.createVariant(id, variantPayload);
+            }
+          } catch (variantErr) {
+            console.error('Error updating variant:', variantErr);
+          }
+        }
+      }
+      
       await fetchData(); // Refresh list
+      toast.success('Product updated successfully');
       return updated;
     } catch (err) {
       console.error('Error updating product:', err);

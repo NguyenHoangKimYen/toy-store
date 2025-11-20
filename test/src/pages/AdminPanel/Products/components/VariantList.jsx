@@ -46,7 +46,7 @@ const VariantList = ({ variants, onUpdatePrice, onUpdateStock, onRemove }) => {
                     step='0.01'
                     min='0'
                     placeholder='0.00'
-                    value={variant.price?.$numberDecimal || variant.price || ''}
+                    value={variant.price?.$numberDecimal ?? variant.price ?? ''}
                     onChange={(e) => onUpdatePrice(index, e.target.value)}
                     className='h-9'
                     required
@@ -60,7 +60,7 @@ const VariantList = ({ variants, onUpdatePrice, onUpdateStock, onRemove }) => {
                     type='number'
                     min='0'
                     placeholder='0'
-                    value={variant.stock}
+                    value={variant.stockQuantity ?? variant.stock ?? 0}
                     onChange={(e) => onUpdateStock(index, e.target.value)}
                     className='h-9'
                   />

@@ -24,6 +24,7 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
   const [attributeDefinitions, setAttributeDefinitions] = useState([]);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
+  const [deletedVariantIds, setDeletedVariantIds] = useState([]); // Track deleted variants
 
   useEffect(() => {
     if (product && mode === 'edit') {
@@ -33,9 +34,19 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
           v.attributes.forEach(attr => {
             attributesObj[attr.name] = attr.value;
           });
-          return { ...v, attributes: attributesObj };
+          return { 
+            ...v, 
+            attributes: attributesObj,
+            stockQuantity: v.stockQuantity ?? v.stock ?? 0,
+            stock: v.stockQuantity ?? v.stock ?? 0
+          };
         }
-        return { ...v, attributes: v.attributes || {} };
+        return { 
+          ...v, 
+          attributes: v.attributes || {},
+          stockQuantity: v.stockQuantity ?? v.stock ?? 0,
+          stock: v.stockQuantity ?? v.stock ?? 0
+        };
       });
       
       // Extract attribute definitions from existing variants
@@ -142,6 +153,7 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
         _id: `var_${Date.now()}_${index}`,
         attributes,
         price: { $numberDecimal: '0' },
+        stockQuantity: 0,
         stock: 0,
         isActive: true,
       };
@@ -171,16 +183,23 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
     setFormData(prev => ({
       ...prev,
       variants: prev.variants.map((v, i) =>
-        i === index ? { ...v, stock: parseInt(stock) || 0 } : v
+        i === index ? { ...v, stockQuantity: parseInt(stock) || 0, stock: parseInt(stock) || 0 } : v
       ),
     }));
   };
 
   const removeVariant = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      variants: prev.variants.filter((_, i) => i !== index),
-    }));
+    setFormData(prev => {
+      const variantToRemove = prev.variants[index];
+      // If variant has a real ID (not temporary), track it for deletion
+      if (variantToRemove._id && !variantToRemove._id.startsWith('var_')) {
+        setDeletedVariantIds(prevIds => [...prevIds, variantToRemove._id]);
+      }
+      return {
+        ...prev,
+        variants: prev.variants.filter((_, i) => i !== index),
+      };
+    });
   };
 
   const validateForm = () => {
@@ -215,8 +234,13 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
 
     setSaving(true);
     try {
-      // Don't transform here - let useAdminProducts handle the transformation
-      await onSave(formData);
+      // Include deleted variant IDs for update operations
+      const dataToSave = {
+        ...formData,
+        ...(mode === 'edit' && deletedVariantIds.length > 0 && { deletedVariantIds })
+      };
+      
+      await onSave(dataToSave);
       toast.success(`Product ${mode === 'create' ? 'created' : 'updated'} successfully`);
       onClose();
     } catch (error) {
