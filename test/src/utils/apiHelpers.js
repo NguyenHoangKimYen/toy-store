@@ -18,11 +18,8 @@ export const handleResponse = async (response) => {
     return json.data;
   }
   
-  // Handle paginated response format {products: [...], pagination: {...}}
-  if (json.products !== undefined) {
-    return json.products;
-  }
-
+  // Return full response to preserve pagination metadata
+  // Don't extract json.products - let the caller handle the structure
   return json;
 };
 
