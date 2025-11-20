@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { Search, ShoppingCart, User, UserCircle, Package, LogOut, Settings, X } from 'lucide-react'
+import { Search, ShoppingCart, User, UserCircle, Package, LogOut, Settings, X, Menu, Home, Box, Layers, Info, Phone } from 'lucide-react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+import './Navbar.css'
 
 const Navbar = () => {
     const navigate = useNavigate()
@@ -9,6 +10,7 @@ const Navbar = () => {
     const [user, setUser] = useState(null)
     const [showSearch, setShowSearch] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
+    const [showMobileMenu, setShowMobileMenu] = useState(false)
 
     const updateCartCount = () => {
         const cart = JSON.parse(localStorage.getItem('cart') || '[]');
@@ -61,6 +63,10 @@ const Navbar = () => {
         setSearchQuery(e.target.value)
     }
 
+    const closeMobileMenu = () => {
+        setShowMobileMenu(false)
+    }
+
     useEffect(() => {
         // Initial load
         updateCartCount();
@@ -77,7 +83,143 @@ const Navbar = () => {
     }, []);
 
     return (
+        <>
+            {/* Mobile Menu Overlay */}
+            {showMobileMenu && (
+                <div className="mobile-menu-overlay" onClick={closeMobileMenu} />
+            )}
+
+            {/* Mobile Menu */}
+            <div className={`mobile-menu ${showMobileMenu ? 'open' : ''}`}>
+                <div className="mobile-menu-header">
+                    <span className="logo">LOGO</span>
+                    <button className="mobile-menu-close" onClick={closeMobileMenu}>
+                        <X size={20} />
+                    </button>
+                </div>
+                <div className="mobile-menu-content">
+                    {/* User Section */}
+                    <div className="mobile-user-section">
+                        {user ? (
+                            <div className="mobile-user-info">
+                                <div className="user-avatar">
+                                    {user.fullname.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="mobile-user-details">
+                                    <div className="mobile-user-name">{user.fullname}</div>
+                                    <div className="mobile-user-email">{user.email}</div>
+                                    {user.role === 'admin' && (
+                                        <span className="mobile-user-role">Admin</span>
+                                    )}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="mobile-auth-buttons">
+                                <Link to="/login" className="login-btn" onClick={closeMobileMenu}>
+                                    Login
+                                </Link>
+                                <Link to="/register" className="signup-btn" onClick={closeMobileMenu}>
+                                    Sign Up
+                                </Link>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="mobile-divider" />
+
+                    {/* Navigation Links */}
+                    <ul className="mobile-nav-links">
+                        <li>
+                            <NavLink to="/" onClick={closeMobileMenu}>
+                                <Home size={20} />
+                                Home
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink to="/products" onClick={closeMobileMenu}>
+                                <Box size={20} />
+                                Products
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink to="/collection" onClick={closeMobileMenu}>
+                                <Layers size={20} />
+                                Collection
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink to="/about" onClick={closeMobileMenu}>
+                                <Info size={20} />
+                                About
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink to="/contact" onClick={closeMobileMenu}>
+                                <Phone size={20} />
+                                Contact
+                            </NavLink>
+                        </li>
+                    </ul>
+
+                    {user && (
+                        <>
+                            <div className="mobile-divider" />
+                            <ul className="mobile-nav-links">
+                                <li>
+                                    <NavLink to="/profile" onClick={closeMobileMenu}>
+                                        <UserCircle size={20} />
+                                        My Profile
+                                    </NavLink>
+                                </li>
+                                <li>
+                                    <NavLink to="/order-history" onClick={closeMobileMenu}>
+                                        <Package size={20} />
+                                        Orders
+                                    </NavLink>
+                                </li>
+                                <li>
+                                    <NavLink to="/settings" onClick={closeMobileMenu}>
+                                        <Settings size={20} />
+                                        Settings
+                                    </NavLink>
+                                </li>
+                                <li>
+                                    <button
+                                        onClick={() => {
+                                            handleLogout()
+                                            closeMobileMenu()
+                                        }}
+                                        style={{
+                                            width: '100%',
+                                            textAlign: 'left',
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '1rem 1.5rem',
+                                            color: '#ef4444',
+                                            fontSize: '1rem',
+                                            fontWeight: 500,
+                                        }}
+                                    >
+                                        <LogOut size={20} />
+                                        Logout
+                                    </button>
+                                </li>
+                            </ul>
+                        </>
+                    )}
+                </div>
+            </div>
+
         <div className='flex items-center justify-between py-5 font-medium'>
+            {/* Mobile Menu Toggle */}
+            <button className="mobile-menu-toggle" onClick={() => setShowMobileMenu(true)}>
+                <Menu size={24} />
+            </button>
+
             <Link to='/' className='text-4xl'>LOGO</Link>
 
             <ul className='hidden sm:flex gap-5 text-sm text-gray-700'>
@@ -192,6 +334,7 @@ const Navbar = () => {
 
 
         </div>
+        </>
     )
 }
 
