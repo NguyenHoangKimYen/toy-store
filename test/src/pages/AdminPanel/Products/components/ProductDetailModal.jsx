@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { X, Edit, Trash2, ExternalLink, MessageSquare } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { getProductVariants } from '@/services/products.service'
 import ProductImageGallery from './ProductImageGallery'
 import ProductInfo from './ProductInfo'
 import ProductDescription from './ProductDescription'
@@ -22,7 +23,29 @@ import VariantManager from './VariantManager'
 const ProductDetailModal = ({ product, onClose, onEdit, onDelete }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [variants, setVariants] = useState(product.variants || []);
+  const [loadingVariants, setLoadingVariants] = useState(false);
   const navigate = useNavigate();
+
+  // Fetch variants when modal opens
+  useEffect(() => {
+    const fetchVariants = async () => {
+      if (!product._id) return;
+      
+      try {
+        setLoadingVariants(true);
+        const data = await getProductVariants(product._id);
+        setVariants(data.variants || data || []);
+      } catch (error) {
+        console.error('Error fetching variants:', error);
+        setVariants(product.variants || []);
+      } finally {
+        setLoadingVariants(false);
+      }
+    };
+
+    fetchVariants();
+  }, [product._id, product.variants]);
 
   const handleEdit = () => {
     setShowEditModal(true);
@@ -88,7 +111,7 @@ const ProductDetailModal = ({ product, onClose, onEdit, onDelete }) => {
               <ProductImageGallery images={product.imageUrls} productName={product.name} />
               
               {/* Product Info */}
-              <ProductInfo product={product} />
+              <ProductInfo product={{ ...product, variants }} />
             </div>
 
             {/* Description */}
@@ -96,14 +119,23 @@ const ProductDetailModal = ({ product, onClose, onEdit, onDelete }) => {
 
             {/* Variants Section */}
             <div className='mt-6'>
-              <VariantManager
-                productId={product._id}
-                variants={product.variants || []}
-                onUpdate={() => {
-                  // Optionally refresh product data
-                  console.log('Variants updated');
-                }}
-              />
+              {loadingVariants ? (
+                <div className='text-center py-4'>Loading variants...</div>
+              ) : (
+                <VariantManager
+                  productId={product._id}
+                  variants={variants}
+                  onUpdate={async () => {
+                    // Refresh variants after update
+                    try {
+                      const data = await getProductVariants(product._id);
+                      setVariants(data.variants || data || []);
+                    } catch (error) {
+                      console.error('Error refreshing variants:', error);
+                    }
+                  }}
+                />
+              )}
             </div>
 
             {/* Metadata */}
