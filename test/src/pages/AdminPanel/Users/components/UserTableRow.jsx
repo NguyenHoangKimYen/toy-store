@@ -11,15 +11,15 @@ const UserTableRow = ({ user, onViewDetails, onEdit, onDelete }) => {
         <div className='flex items-center'>
           <div className='flex-shrink-0 h-10 w-10'>
             <div className='h-10 w-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-semibold'>
-              {user.fullName.charAt(0).toUpperCase()}
+              {(user.fullname || user.fullName || 'U').charAt(0).toUpperCase()}
             </div>
           </div>
           <div className='ml-4'>
             <div className='text-sm font-medium text-gray-900 dark:text-white'>
-              {user.fullName}
+              {user.fullname || user.fullName || 'Unknown'}
             </div>
             <div className='text-sm text-gray-500 dark:text-gray-400'>
-              @{user.username}
+              @{user.username || 'unknown'}
             </div>
           </div>
         </div>
