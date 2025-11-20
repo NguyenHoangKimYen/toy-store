@@ -61,6 +61,11 @@ const ProductCard = ({
 
   const imageUrl = product.imageUrls?.[0] || '/placeholder.png';
   const categoryName = product.categoryId?.[0]?.name || product.categoryId?.name || 'Uncategorized';
+  
+  // Calculate total stock from variants or use product.stockQuantity
+  const totalStock = hasVariants && Array.isArray(product.variants)
+    ? product.variants.reduce((sum, v) => sum + (v.stockQuantity || v.stock || 0), 0)
+    : (product.stockQuantity || 0);
 
   const handleCardClick = () => {
     onClick?.(product);
@@ -96,7 +101,7 @@ const ProductCard = ({
             <>
               {product.isNew && <span className="badge badge-new">New</span>}
               {product.isFeatured && <span className="badge badge-featured">Featured</span>}
-              {product.stockQuantity === 0 && <span className="badge badge-out">Out of Stock</span>}
+              {totalStock === 0 && <span className="badge badge-out">Out of Stock</span>}
               {/* Status badge */}
               {product.status && product.status !== 'Published' && (
                 <span className={`badge badge-${product.status.toLowerCase()}`}>
@@ -128,8 +133,8 @@ const ProductCard = ({
               {showStock && (
                 <div className="product-stock">
                   <Package size={16} />
-                  <span className={product.stockQuantity === 0 ? 'out-of-stock' : ''}>
-                    Stock: {product.stockQuantity || 0}
+                  <span className={totalStock === 0 ? 'out-of-stock' : ''}>
+                    Stock: {totalStock}
                   </span>
                 </div>
               )}

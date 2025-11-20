@@ -44,11 +44,20 @@ const ProductInfo = ({ product }) => {
       {/* Price */}
       <div className='mb-4'>
         <p className='text-3xl font-bold text-blue-600 dark:text-blue-400'>
-          {formatPrice(product.price)}
+          {product.variants && product.variants.length > 0
+            ? (() => {
+                const prices = product.variants.map(v => parseFloat(v.price?.$numberDecimal || v.price || 0));
+                const minPrice = Math.min(...prices);
+                const maxPrice = Math.max(...prices);
+                return minPrice === maxPrice 
+                  ? formatPrice(minPrice)
+                  : `${formatPrice(minPrice)} - ${formatPrice(maxPrice)}`;
+              })()
+            : formatPrice(product.price?.$numberDecimal || product.price || 0)}
         </p>
         {product.originalPrice && (
           <p className='text-lg text-gray-500 line-through'>
-            {formatPrice(product.originalPrice)}
+            {formatPrice(product.originalPrice?.$numberDecimal || product.originalPrice)}
           </p>
         )}
       </div>
