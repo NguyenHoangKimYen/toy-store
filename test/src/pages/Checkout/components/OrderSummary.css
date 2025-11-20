@@ -92,6 +92,16 @@
   font-weight: 700;
 }
 
+.order-points-discount {
+  color: #6c5ce7;
+  font-weight: 600;
+}
+
+.points-discount-value {
+  color: #6c5ce7;
+  font-weight: 700;
+}
+
 .order-total-final {
   border-top: 1px solid #e5e5e5;
   margin-top: 0.5rem;

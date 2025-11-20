@@ -17,13 +17,14 @@ export const useCheckout = () => {
     discountAmount: 0,
     isApplied: false,
   });
+  const [loyaltyPointsUsed, setLoyaltyPointsUsed] = useState(0);
 
   // Calculate totals
   const subtotal = cartSummary.subtotal;
   const shipping = subtotal > 1000000 ? 0 : 50000; // Free shipping over 1,000,000 VND
   const tax = subtotal * 0.1; // 10% tax
   const discount = discountInfo.discountAmount || 0;
-  const total = subtotal + shipping + tax - discount;
+  const total = Math.max(0, subtotal + shipping + tax - discount - loyaltyPointsUsed);
 
   const loading = cartLoading || orderLoading;
 
@@ -52,6 +53,7 @@ export const useCheckout = () => {
         addressId,
         paymentMethod,
         discountCodeId: discountInfo.appliedCode?.id || null,
+        pointsUsed: loyaltyPointsUsed,
       };
 
       // Submit order via cart checkout
@@ -91,6 +93,10 @@ export const useCheckout = () => {
     setDiscountInfo(info);
   };
 
+  const handlePointsApplied = (points) => {
+    setLoyaltyPointsUsed(points);
+  };
+
   return {
     cartItems,
     paymentMethod,
@@ -98,6 +104,7 @@ export const useCheckout = () => {
     shipping,
     tax,
     discount: discountInfo.discountAmount || 0,
+    loyaltyPointsDiscount: loyaltyPointsUsed,
     total,
     loading,
     error,
@@ -105,5 +112,6 @@ export const useCheckout = () => {
     handlePaymentMethodChange,
     handleSubmitOrder,
     handleDiscountApplied,
+    handlePointsApplied,
   };
 };

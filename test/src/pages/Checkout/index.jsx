@@ -21,6 +21,7 @@ const Checkout = () => {
     shipping,
     tax,
     discount,
+    loyaltyPointsDiscount,
     total,
     loading,
     error,
@@ -28,6 +29,7 @@ const Checkout = () => {
     handlePaymentMethodChange,
     handleSubmitOrder,
     handleDiscountApplied,
+    handlePointsApplied,
   } = useCheckout();
 
   if (loading) {
@@ -101,10 +103,12 @@ const Checkout = () => {
             shipping={shipping}
             tax={tax}
             discount={discount}
+            loyaltyPointsDiscount={loyaltyPointsDiscount}
             total={total}
             onSubmit={handleCheckout}
             submitting={submitting}
             onDiscountApplied={handleDiscountApplied}
+            onPointsApplied={handlePointsApplied}
             disabled={!selectedAddressId}
           />
         </div>

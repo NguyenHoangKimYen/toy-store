@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { ChevronLeft, Package, MapPin, CreditCard, Clock } from 'lucide-react';
+import { ChevronLeft, Package, MapPin, CreditCard, Clock, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import { useOrders } from '@/hooks';
@@ -158,6 +158,43 @@ const OrderDetail = () => {
             )}
           </div>
         </div>
+
+        {/* Status History Card */}
+        {order.history && order.history.length > 0 && (
+          <div className="order-info-card status-history-card">
+            <h2>
+              <History size={20} />
+              Status History
+            </h2>
+            <div className="status-history-table-wrapper">
+              <table className="status-history-table">
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {order.history.map((entry, index) => {
+                    const historyStatus = statusConfig[entry.status] || statusConfig.pending;
+                    const HistoryIcon = historyStatus.icon;
+                    return (
+                      <tr key={entry._id || index}>
+                        <td>
+                          <div className={`status-badge status-${historyStatus.color}`}>
+                            <HistoryIcon size={14} />
+                            <span>{historyStatus.label}</span>
+                          </div>
+                        </td>
+                        <td>{format(new Date(entry.updatedAt || entry.createdAt), 'PPp')}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Order Items Card */}
         <div className="order-info-card">

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { formatPrice } from '@/utils/formatPrice';
 import DiscountCodeInput from '@/components/common/DiscountCodeInput';
+import LoyaltyPointsInput from './LoyaltyPointsInput';
 import './OrderSummary.css';
 
 const OrderSummary = ({
@@ -11,10 +12,12 @@ const OrderSummary = ({
   shipping,
   tax,
   discount,
+  loyaltyPointsDiscount = 0,
   total,
   onSubmit,
   submitting,
   onDiscountApplied,
+  onPointsApplied,
 }) => {
   return (
     <Card className="order-summary-card">
@@ -68,6 +71,12 @@ const OrderSummary = ({
         onDiscountApplied={onDiscountApplied}
       />
 
+      {/* Loyalty Points Input */}
+      <LoyaltyPointsInput
+        onPointsApplied={onPointsApplied}
+        currentTotal={total}
+      />
+
       {/* Price Breakdown */}
       <div className="order-totals">
         <div className="order-total-row">
@@ -86,6 +95,12 @@ const OrderSummary = ({
           <div className="order-total-row order-discount">
             <span>Discount</span>
             <span className="discount-value">-{formatPrice(discount)}</span>
+          </div>
+        )}
+        {loyaltyPointsDiscount > 0 && (
+          <div className="order-total-row order-points-discount">
+            <span>Loyalty Points</span>
+            <span className="points-discount-value">-{formatPrice(loyaltyPointsDiscount)}</span>
           </div>
         )}
         <div className="order-total-row order-total-final">

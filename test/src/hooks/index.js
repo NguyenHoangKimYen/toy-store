@@ -8,6 +8,7 @@ export { useProducts, useCategorizedProducts, useProductDetail } from './useProd
 
 // Review hooks - Manage product reviews and user reviews
 export { useReviews, useReview, useUserReviews } from './useReviews';
+export { useReviewPolling } from './useReviewPolling';
 
 // Discount code hooks - Validate and manage discount codes
 export { useDiscountCode, useDiscountCodes, useDiscountCodeDetails } from './useDiscountCode';

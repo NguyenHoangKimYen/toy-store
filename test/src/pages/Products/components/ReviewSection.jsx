@@ -1,16 +1,26 @@
-import React, { useState } from 'react';
-import { Star, ThumbsUp, Flag } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { Star, ThumbsUp, Flag, Wifi } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useProductReviews } from '../hooks/useProductReviews';
+import { useReviewPolling } from '@/hooks';
 import ReviewForm from './ReviewForm';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import './ReviewSection.css';
 
 const ReviewSection = ({ productId }) => {
-  const { reviews, stats, loading, submitting, hasMore, submitReview, loadMore } = useProductReviews(productId);
+  const { reviews, stats, loading, submitting, hasMore, submitReview, loadMore, refetch } = useProductReviews(productId);
   const [showForm, setShowForm] = useState(false);
+
+  // Enable real-time updates via polling (30 seconds interval)
+  const fetchReviews = useCallback(() => {
+    if (!showForm) {  // Only poll when not writing a review
+      refetch();
+    }
+  }, [refetch, showForm]);
+
+  useReviewPolling(fetchReviews, 30000, true);
 
   const handleSubmitReview = async (reviewData) => {
     const success = await submitReview(reviewData);
@@ -62,7 +72,13 @@ const ReviewSection = ({ productId }) => {
   return (
     <div className="review-section">
       <div className="review-header">
-        <h2>Customer Reviews</h2>
+        <div className="review-header-left">
+          <h2>Customer Reviews</h2>
+          <span className="real-time-badge">
+            <Wifi size={14} />
+            Live Updates
+          </span>
+        </div>
         <Button onClick={() => setShowForm(!showForm)}>
           {showForm ? 'Cancel' : 'Write a Review'}
         </Button>

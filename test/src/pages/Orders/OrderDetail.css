@@ -260,6 +260,96 @@
   padding-top: 1rem;
 }
 
+/* Status History Table Styles */
+.status-history-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+}
+
+.status-history-table-wrapper {
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.status-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.status-history-table thead {
+  background-color: #f9fafb;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.status-history-table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-history-table tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.15s ease;
+}
+
+.status-history-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.status-history-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.status-history-table td {
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: #1a1a1a;
+}
+
+.status-history-table .status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.status-history-table .status-badge.status-warning {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-history-table .status-badge.status-info {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.status-history-table .status-badge.status-primary {
+  background-color: #e0e7ff;
+  color: #4338ca;
+}
+
+.status-history-table .status-badge.status-success {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.status-history-table .status-badge.status-danger {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
 @media (max-width: 768px) {
   .order-detail-container {
     padding: 1rem;
@@ -284,5 +374,16 @@
   .item-pricing {
     align-items: flex-start;
     width: 100%;
+  }
+
+  .status-history-table th,
+  .status-history-table td {
+    padding: 0.5rem;
+    font-size: 0.8125rem;
+  }
+
+  .status-history-table .status-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
   }
 }
