@@ -161,9 +161,11 @@ export const handlers = [
     const url = new URL(request.url);
     const isFeatured = url.searchParams.get('isFeatured');
     const page = parseInt(url.searchParams.get('page') || '1');
-    // Use limit from request or default to showing all products (for mock data)
-    const limit = parseInt(url.searchParams.get('limit') || '1000');
+    // Respect limit from frontend, default to reasonable value for mock
+    const limit = parseInt(url.searchParams.get('limit') || '20');
     const search = url.searchParams.get('search');
+    
+    console.log('[Mock Handler] Products request:', { page, limit, url: request.url });
     const category = url.searchParams.get('category');
     const brand = url.searchParams.get('brand');
     
@@ -332,6 +334,14 @@ export const handlers = [
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
     const paginatedProducts = products.slice(startIndex, endIndex);
+
+    console.log('[Mock Handler] Pagination:', { 
+      total, 
+      limit, 
+      totalPages, 
+      page, 
+      returning: paginatedProducts.length 
+    });
 
     return HttpResponse.json({
       products: paginatedProducts,

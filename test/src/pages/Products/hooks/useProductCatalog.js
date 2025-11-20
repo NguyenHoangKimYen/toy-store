@@ -68,6 +68,9 @@ export const useProductCatalog = () => {
 
         const response = await getProducts(params);
         
+        console.log('[useProductCatalog] Response:', response);
+        console.log('[useProductCatalog] Pagination:', response.pagination);
+        
         // Backend returns { products: [...], pagination: { totalProducts, totalPages, currentPage, limit } }
         setProducts(response.products || response || []);
         setTotalPages(response.pagination?.totalPages || 1);
