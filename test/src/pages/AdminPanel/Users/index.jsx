@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { UserPlus } from 'lucide-react'
 import UserTable from './components/UserTable'
 import UserStats from './components/UserStats'
 import UserDetailModal from './components/UserDetailModal'
 import UserFormModal from './components/UserFormModal'
+import UserFilters from './components/UserFilters'
 import { useUsers } from '@/hooks' // Using global hook
 import { PageHeader, SearchBar, ScrollableContent, ConfirmDialog } from '@/components/common'
 
@@ -16,16 +17,67 @@ const Users = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [userToDelete, setUserToDelete] = useState(null)
 
+  // Filter state
+  const [filters, setFilters] = useState({
+    role: 'all',
+    isVerified: 'all',
+    socialProvider: 'all'
+  })
+
+  // Build params for API call
+  const apiParams = useMemo(() => {
+    const params = {
+      search: searchQuery.trim() || undefined,
+    }
+
+    // Add filters if not 'all'
+    if (filters.role !== 'all') params.role = filters.role
+    if (filters.isVerified !== 'all') params.isVerified = filters.isVerified
+    if (filters.socialProvider !== 'all') params.socialProvider = filters.socialProvider
+
+    return params
+  }, [searchQuery, filters])
+
   // Custom hook handles data fetching and CRUD operations
   const { 
-    users, 
+    users: allUsers, 
     stats, 
     loading, 
     error,
     createUser,
     updateUser,
     deleteUser,
-  } = useUsers({ searchQuery })
+  } = useUsers({ 
+    params: apiParams,
+    dependencies: [apiParams]
+  })
+
+  // Client-side filtering for instant feedback on search
+  const users = useMemo(() => {
+    if (!searchQuery.trim()) return allUsers;
+    
+    const searchLower = searchQuery.toLowerCase();
+    return allUsers.filter(u =>
+      u.firstName?.toLowerCase().includes(searchLower) ||
+      u.lastName?.toLowerCase().includes(searchLower) ||
+      u.username?.toLowerCase().includes(searchLower) ||
+      u.email?.toLowerCase().includes(searchLower) ||
+      u.phone?.toLowerCase().includes(searchLower)
+    );
+  }, [allUsers, searchQuery])
+
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters)
+  }
+
+  const handleClearFilters = () => {
+    setFilters({
+      role: 'all',
+      isVerified: 'all',
+      socialProvider: 'all'
+    })
+    setSearchQuery('')
+  }
 
   const handleViewDetails = (user) => {
     setSelectedUser(user)
@@ -120,6 +172,13 @@ const Users = () => {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         placeholder='Search by name, username, email, or phone...'
+      />
+
+      {/* Filters */}
+      <UserFilters
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onClearFilters={handleClearFilters}
       />
 
       {/* Stats Cards */}

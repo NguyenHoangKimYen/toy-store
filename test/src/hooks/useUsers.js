@@ -6,15 +6,26 @@ import * as usersService from '@/services/users.service';
  * Universal Users Hook - Use this everywhere for user data
  * @param {Object} options - Configuration options
  * @param {string} options.userId - Fetch single user by ID
- * @param {string} options.searchQuery - Search/filter users
+ * @param {Object} options.params - Query parameters for filtering (role, isVerified, socialProvider, search)
+ * @param {string} options.searchQuery - Deprecated: use params.search instead
  * @param {boolean} options.autoFetch - Auto-fetch on mount (default: true)
+ * @param {Array} options.dependencies - Additional dependencies for refetch
  * @returns {Object} User data and CRUD operations
+ * 
+ * Supported params:
+ * - role: 'customer' or 'admin'
+ * - isVerified: 'true' or 'false'
+ * - socialProvider: 'local', 'google', 'facebook'
+ * - search: Search keyword
+ * - page, limit: Pagination
  */
 export const useUsers = (options = {}) => {
   const {
     userId = null,
-    searchQuery = '',
-    autoFetch = true
+    params = {},
+    searchQuery = '', // Deprecated, use params.search
+    autoFetch = true,
+    dependencies = []
   } = options;
 
   const [users, setUsers] = useState([]);
@@ -27,6 +38,10 @@ export const useUsers = (options = {}) => {
   });
   const [loading, setLoading] = useState(autoFetch);
   const [error, setError] = useState(null);
+
+  // Stringify params and dependencies for stable comparison
+  const paramsKey = JSON.stringify(params);
+  const depsKey = JSON.stringify(dependencies);
 
   // Fetch single user
   const fetchUser = useCallback(async (id) => {
@@ -46,7 +61,7 @@ export const useUsers = (options = {}) => {
   }, []);
 
   // Fetch multiple users (list)
-  const fetchUsers = useCallback(async (query = searchQuery) => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -58,10 +73,21 @@ export const useUsers = (options = {}) => {
        */
       const ADMIN_USERS_PER_PAGE = 50;
       
-      const data = await usersService.getUsers({ 
-        search: query,
-        limit: ADMIN_USERS_PER_PAGE,  // Explicit limit for admin pagination
-      });
+      // Merge params with search query (for backwards compatibility)
+      const queryParams = {
+        ...params,
+        search: params.search || searchQuery || undefined,
+        limit: params.limit || ADMIN_USERS_PER_PAGE,
+      }
+      
+      // Remove undefined/empty values
+      Object.keys(queryParams).forEach(key => {
+        if (queryParams[key] === undefined || queryParams[key] === '') {
+          delete queryParams[key]
+        }
+      })
+      
+      const data = await usersService.getUsers(queryParams);
       
       const usersArray = Array.isArray(data) ? data : (data.data || []);
       
@@ -84,7 +110,8 @@ export const useUsers = (options = {}) => {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paramsKey, searchQuery]);
 
   // Auto-fetch on mount
   useEffect(() => {
@@ -100,7 +127,8 @@ export const useUsers = (options = {}) => {
       }, 500);
       return () => clearTimeout(delayTimer);
     }
-  }, [userId, searchQuery, autoFetch, fetchUser, fetchUsers]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, paramsKey, searchQuery, autoFetch, depsKey]);
 
   // Create user
   const createUser = async (userData) => {

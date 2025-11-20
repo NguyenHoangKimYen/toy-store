@@ -1,11 +1,13 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Plus } from 'lucide-react'
 import ProductGrid from './components/ProductGrid'
 import ProductStats from './components/ProductStats'
 import ProductDetailModal from './components/ProductDetailModal'
 import ProductFormModal from './components/ProductFormModal'
+import ProductFilters from './components/ProductFilters'
 import { useProducts } from '@/hooks' // Using global hook
 import { PageHeader, SearchBar, ScrollableContent } from '@/components/common'
+import { getCategories } from '@/services/categories.service'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,9 +27,56 @@ const Products = () => {
   const [formMode, setFormMode] = useState('create')
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [productToDelete, setProductToDelete] = useState(null)
+  const [categories, setCategories] = useState([])
+  
+  // Filter state
+  const [filters, setFilters] = useState({
+    status: 'all',
+    categoryId: 'all',
+    isFeatured: 'all',
+    minPrice: '',
+    maxPrice: '',
+    minRating: 'all',
+    daysAgo: 'all',
+    sort: 'createdAt:desc'
+  })
 
-  // Use global products hook with admin-specific params
-  // Admin needs to see ALL products (including drafts) with higher limit
+  // Fetch categories for filter dropdown
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const cats = await getCategories()
+        setCategories(cats)
+      } catch (err) {
+        console.error('Failed to fetch categories:', err)
+      }
+    }
+    fetchCategories()
+  }, [])
+
+  // Build params for API call
+  const apiParams = useMemo(() => {
+    const params = {
+      limit: 50,
+      keyword: searchQuery.trim() || undefined,
+    }
+
+    // Add filters if not 'all'
+    if (filters.status !== 'all') params.status = filters.status
+    else params.status = 'all' // Show all statuses for admin
+    
+    if (filters.categoryId !== 'all') params.categoryId = filters.categoryId
+    if (filters.isFeatured !== 'all') params.isFeatured = filters.isFeatured
+    if (filters.minPrice) params.minPrice = filters.minPrice
+    if (filters.maxPrice) params.maxPrice = filters.maxPrice
+    if (filters.minRating !== 'all') params.minRating = filters.minRating
+    if (filters.daysAgo !== 'all') params.daysAgo = filters.daysAgo
+    if (filters.sort) params.sort = filters.sort
+
+    return params
+  }, [searchQuery, filters])
+
+  // Use global products hook with dynamic params
   const { 
     products: allProducts, 
     loading, 
@@ -35,14 +84,13 @@ const Products = () => {
     createProduct,
     updateProduct,
     deleteProduct,
+    refetch,
   } = useProducts({ 
-    params: { 
-      status: 'all',  // Show all products including drafts
-      limit: 50       // Admin pagination: 50 products per page
-    } 
+    params: apiParams,
+    dependencies: [apiParams]
   })
 
-  // Filter products based on search
+  // Filter products based on search (client-side for instant feedback)
   const products = useMemo(() => {
     if (!searchQuery.trim()) return allProducts;
     
@@ -54,13 +102,31 @@ const Products = () => {
     );
   }, [allProducts, searchQuery])
   
-  // Calculate stats from products
+  // Calculate stats from ALL products (not filtered)
   const stats = useMemo(() => ({
     totalProducts: allProducts.length,
     totalStock: allProducts.reduce((sum, p) => sum + (p.stockQuantity || 0), 0),
     totalSold: allProducts.reduce((sum, p) => sum + (p.soldCount || 0), 0),
     outOfStock: allProducts.filter(p => p.stockQuantity === 0).length,
   }), [allProducts])
+
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters)
+  }
+
+  const handleClearFilters = () => {
+    setFilters({
+      status: 'all',
+      categoryId: 'all',
+      isFeatured: 'all',
+      minPrice: '',
+      maxPrice: '',
+      minRating: 'all',
+      daysAgo: 'all',
+      sort: 'createdAt:desc'
+    })
+    setSearchQuery('')
+  }
 
   const handleViewDetails = (product) => {
     setSelectedProduct(product)
@@ -128,6 +194,14 @@ const Products = () => {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         placeholder='Search for products'
+      />
+
+      {/* Filters */}
+      <ProductFilters
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onClearFilters={handleClearFilters}
+        categories={categories}
       />
 
       {/* Stats Cards */}

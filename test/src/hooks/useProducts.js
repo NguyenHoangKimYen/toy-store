@@ -6,11 +6,22 @@ import * as productsService from '@/services/products.service';
  * Universal hook for fetching products with flexible options
  * Supports both read operations and CRUD for admin use
  * @param {Object} options - Configuration options
- * @param {Object} options.params - Query parameters for getProducts
+ * @param {Object} options.params - Query parameters for getProducts (supports all backend filters)
  * @param {string} options.productId - Single product ID to fetch
  * @param {boolean} options.enabled - Whether to auto-fetch (default: true)
  * @param {Array} options.dependencies - Additional dependencies for refetch
  * @returns {Object} Product data and utilities
+ * 
+ * Supported params:
+ * - keyword: Search in name and slug
+ * - categoryId: Filter by category ID
+ * - minPrice, maxPrice: Price range filter
+ * - minRating: Minimum rating filter
+ * - isFeatured: 'true' for featured products
+ * - status: 'Published', 'Draft', 'Archived', or 'all'
+ * - daysAgo: Filter by creation date (last N days)
+ * - sort: Sort field and direction (e.g., 'createdAt:desc', 'minPrice:asc')
+ * - page, limit: Pagination
  */
 export const useProducts = (options = {}) => {
   const {
