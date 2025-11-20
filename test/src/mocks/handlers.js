@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw';
 import { mockProducts } from './mockProducts';
 import { mockReviews } from './mockReviews';
 import { getVariantsByProductId, getVariantById, getTotalStockForProduct } from './mockVariants';
-import { validateCredentials, emailExists, addUser, findUserById } from './mockUsers';
+import { validateCredentials, emailExists, addUser, findUserById, mockUsers } from './mockUsers';
 import { 
   validateDiscountCode, 
   calculateDiscountAmount, 
@@ -152,6 +152,76 @@ export const handlers = [
     return HttpResponse.json({
       success: true,
       message: 'Logged out successfully',
+    });
+  }),
+
+  // Users endpoints
+  http.get(`${API_BASE_URL}/users`, ({ request }) => {
+    const url = new URL(request.url);
+    const role = url.searchParams.get('role');
+    const isVerified = url.searchParams.get('isVerified');
+    const socialProvider = url.searchParams.get('socialProvider');
+    const search = url.searchParams.get('search');
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '50');
+
+    console.log('[Mock Handler] Users request:', { role, isVerified, socialProvider, search, page, limit });
+
+    let users = [...mockUsers];
+
+    // Filter by role
+    if (role && role !== 'all') {
+      users = users.filter(u => u.role === role);
+    }
+
+    // Filter by verification status
+    if (isVerified && isVerified !== 'all') {
+      const isVerifiedBool = isVerified === 'true';
+      users = users.filter(u => Boolean(u.isVerified) === isVerifiedBool);
+    }
+
+    // Filter by social provider
+    if (socialProvider && socialProvider !== 'all') {
+      if (socialProvider === 'local') {
+        users = users.filter(u => !u.socialProvider || u.socialProvider === 'local');
+      } else {
+        users = users.filter(u => u.socialProvider === socialProvider);
+      }
+    }
+
+    // Search filter
+    if (search) {
+      const searchLower = search.toLowerCase();
+      users = users.filter(u =>
+        u.fullname?.toLowerCase().includes(searchLower) ||
+        u.username?.toLowerCase().includes(searchLower) ||
+        u.email?.toLowerCase().includes(searchLower) ||
+        u.phone?.includes(searchLower)
+      );
+    }
+
+    // Pagination
+    const total = users.length;
+    const totalPages = Math.ceil(total / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedUsers = users.slice(startIndex, endIndex);
+
+    console.log('[Mock Handler] Users result:', { 
+      total, 
+      filtered: users.length,
+      returning: paginatedUsers.length 
+    });
+
+    return HttpResponse.json({
+      users: paginatedUsers,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasMore: page < totalPages,
+      },
     });
   }),
 
