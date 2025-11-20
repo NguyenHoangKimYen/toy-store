@@ -4,30 +4,30 @@ const User = require('../models/user.model.js');
 
 const findAll = async (filter = {}, options = {}) => { //tìm tắt cả
     return Address.find(filter)
-    .populate({
-        path: 'userId',
-        select: 'fullNameOfReceiver email phone defaultAddressId',
-        populate: {
-            path: 'defaultAddressId',
-            select: 'fullNameOfReceiver phone addressLine city postalCode isDefault',
-        },
-    })
-    .skip(options.skip || 0) //phân trang
-    .limit(options.limit || 20)
-    .sort(options.sort || { createdAt: -1 })
+        .populate({
+            path: 'userId',
+            select: 'fullNameOfReceiver email phone defaultAddressId',
+            populate: {
+                path: 'defaultAddressId',
+                select: 'fullNameOfReceiver phone addressLine city postalCode isDefault',
+            },
+        })
+        .skip(options.skip || 0) //phân trang
+        .limit(options.limit || 20)
+        .sort(options.sort || { createdAt: -1 })
 };
 
 const findById = async (id) => { //tìm địa chỉ theo ID
     return Address.findById(id)
-    .populate({
-        path: 'userId',
-        select: 'fullNameOfReceiver email phone defaultAddressId',
-    })
+        .populate({
+            path: 'userId',
+            select: 'fullNameOfReceiver email phone defaultAddressId',
+        })
 };
 
 const findByUserId = async (userId) => { //tim tat ca dia chi cua mot user
     return Address.find({ userId })
-    .sort({ isDefault: -1, createdAt: -1 })
+        .sort({ isDefault: -1, createdAt: -1 })
 };
 
 //tạo địa chỉ
@@ -89,6 +89,10 @@ const setDefault = async (userId, addressId) => {
     return Address.findById(addressId);
 };
 
+async function findDefaultByUserId(userId) {
+    return Address.findOne({ userId, isDefault: true });
+}
+
 module.exports = {
     findAll,
     findById,
@@ -98,6 +102,7 @@ module.exports = {
     remove,
     unsetDefault,
     setDefault,
+    findDefaultByUserId,
 };
 
 
