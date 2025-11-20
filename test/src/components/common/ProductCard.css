@@ -158,7 +158,7 @@
   transform: scale(1.05);
 }
 
-/* Badges */
+/* Badges - No animations */
 .badge {
   position: absolute;
   top: 12px;
@@ -173,32 +173,32 @@
 }
 
 .badge-new {
-  background: #3b82f6;
+  background: #3b82f6 !important;
   color: white;
 }
 
 .badge-featured {
-  background: #f59e0b;
+  background: #f59e0b !important;
   color: white;
 }
 
 .badge-out {
-  background: rgba(239, 68, 68, 0.95);
+  background: rgba(239, 68, 68, 0.95) !important;
   color: white;
 }
 
 .badge-draft {
-  background: rgba(107, 114, 128, 0.95);
+  background: rgba(107, 114, 128, 0.95) !important;
   color: white;
 }
 
 .badge-disabled {
-  background: rgba(239, 68, 68, 0.95);
+  background: rgba(239, 68, 68, 0.95) !important;
   color: white;
 }
 
 .badge-archived {
-  background: rgba(107, 114, 128, 0.8);
+  background: rgba(107, 114, 128, 0.8) !important;
   color: white;
 }
 
