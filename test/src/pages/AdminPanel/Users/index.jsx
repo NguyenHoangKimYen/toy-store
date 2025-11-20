@@ -63,11 +63,19 @@ const Users = () => {
   }
 
   const handleSaveUser = async (userData) => {
+    // Clean up data before sending to backend
+    const cleanedData = { ...userData }
+    
+    // Remove empty socialProvider (backend validation doesn't accept empty string)
+    if (cleanedData.socialProvider === '') {
+      delete cleanedData.socialProvider
+    }
+    
     if (formMode === 'create') {
-      await createUser(userData)
+      await createUser(cleanedData)
     } else {
       // For updates, handle password separately if provided
-      const { password, confirmPassword, ...userDataWithoutPassword } = userData
+      const { password, confirmPassword, ...userDataWithoutPassword } = cleanedData
       
       // Update user fields (without password)
       await updateUser(selectedUser._id, userDataWithoutPassword)

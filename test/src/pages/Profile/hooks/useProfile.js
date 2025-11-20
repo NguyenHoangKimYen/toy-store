@@ -1,38 +1,56 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import * as usersService from '@/services/users.service';
+import { useAuth } from '@/hooks/useAuth';
 
 export const useProfile = () => {
+  const { user: authUser } = useAuth();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    loadProfile();
-  }, []);
-
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Get current user ID from auth context/localStorage
-      const currentUserId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+      console.log('Auth user from context:', authUser);
+
+      if (!authUser) {
+        throw new Error('No user session found');
+      }
+
+      // Get user ID from auth context - check multiple possible field names
+      const currentUserId = authUser?.id || authUser?._id || authUser?.userId;
+      
+      console.log('Extracted user ID:', currentUserId);
       
       if (!currentUserId) {
-        throw new Error('No user session found');
+        console.error('Auth user object:', authUser);
+        throw new Error('No user ID found in session');
       }
 
       const userData = await usersService.getUserById(currentUserId);
       setUser(userData);
     } catch (err) {
-      console.error('Error loading profile:', err);
+      // Don't log/show error if user is simply not logged in
+      if (err.message !== 'No user session found') {
+        console.error('Error loading profile:', err);
+        toast.error('Failed to load profile');
+      }
       setError(err.message || 'Failed to load profile');
-      toast.error('Failed to load profile');
     } finally {
       setLoading(false);
     }
-  };
+  }, [authUser]);
+
+  useEffect(() => {
+    if (authUser) {
+      loadProfile();
+    } else {
+      setLoading(false);
+    }
+  }, [authUser, loadProfile]);
 
   const updateProfile = async (updates) => {
     try {

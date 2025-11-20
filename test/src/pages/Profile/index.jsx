@@ -21,10 +21,10 @@ const Profile = () => {
     );
   }
 
-  if (error) {
+  if (error || !user) {
     return (
       <div className="profile-error">
-        <p>{error}</p>
+        <p>{error || 'Failed to load profile'}</p>
       </div>
     );
   }

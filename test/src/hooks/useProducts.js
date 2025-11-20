@@ -211,8 +211,7 @@ export const useProductDetail = (productId) => {
       
       try {
         setVariantsLoading(true);
-        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-        const url = `${API_BASE_URL}/api/products/${product._id}/variants`;
+        const url = `http://localhost:5000/api/products/${product._id}/variants`;
         console.log('Fetching variants from:', url);
         
         const response = await fetch(url);

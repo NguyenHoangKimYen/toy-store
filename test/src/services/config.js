@@ -60,7 +60,10 @@ const apiClient = {
       const result = await response.json();
       return result;
     } catch (error) {
-      console.error('API request failed:', error);
+      // Don't log 404 errors (expected for non-existent carts)
+      if (!error.message?.includes('404') && !error.message?.includes('Không tìm thấy')) {
+        console.error('API request failed:', error);
+      }
       throw error;
     }
   },

@@ -5,11 +5,11 @@ import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+import { API_BASE_URL } from '@/services/config'
 
 const Login = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
   // Redirect if already logged in
   useEffect(() => {
@@ -27,7 +27,7 @@ const Login = () => {
     const password = e.target.password.value
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })

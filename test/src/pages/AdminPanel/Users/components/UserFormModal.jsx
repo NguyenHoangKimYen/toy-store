@@ -16,6 +16,8 @@ const UserFormModal = ({ user, isOpen, onClose, onSave, mode = 'create' }) => {
     role: 'customer',
     isVerified: false,
     avatar: '',
+    loyaltyPoints: 0,
+    socialProvider: '',
   });
 
   const [errors, setErrors] = useState({});
@@ -33,6 +35,8 @@ const UserFormModal = ({ user, isOpen, onClose, onSave, mode = 'create' }) => {
         role: user.role || 'customer',
         isVerified: user.isVerified || false,
         avatar: user.avatar || '',
+        loyaltyPoints: user.loyaltyPoints || 0,
+        socialProvider: user.socialProvider || '',
       });
     }
   }, [user, mode]);
@@ -255,6 +259,37 @@ const UserFormModal = ({ user, isOpen, onClose, onSave, mode = 'create' }) => {
               onChange={handleInputChange}
               placeholder='https://example.com/avatar.jpg'
             />
+          </div>
+
+          {/* Loyalty Points and Social Provider */}
+          <div className='grid grid-cols-2 gap-4'>
+            <div>
+              <Label htmlFor='loyaltyPoints'>Loyalty Points</Label>
+              <Input
+                id='loyaltyPoints'
+                name='loyaltyPoints'
+                type='number'
+                value={formData.loyaltyPoints}
+                onChange={handleInputChange}
+                placeholder='0'
+                min='0'
+              />
+            </div>
+            <div>
+              <Label htmlFor='socialProvider'>Social Provider</Label>
+              <select
+                id='socialProvider'
+                name='socialProvider'
+                value={formData.socialProvider}
+                onChange={handleInputChange}
+                className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white'
+              >
+                <option value=''>None</option>
+                <option value='google'>Google</option>
+                <option value='facebook'>Facebook</option>
+                <option value='github'>GitHub</option>
+              </select>
+            </div>
           </div>
 
           {/* Action Buttons */}

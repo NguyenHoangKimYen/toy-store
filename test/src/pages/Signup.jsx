@@ -5,11 +5,11 @@ import { Label } from '../components/ui/label'
 import { Button } from '../components/ui/button'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+import { API_BASE_URL } from '@/services/config'
 
 const Signup = () => {
     const [loading, setLoading] = useState(false)
     const navigate = useNavigate()
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
     // Redirect if already logged in
     useEffect(() => {
@@ -29,7 +29,7 @@ const Signup = () => {
         const password = e.target.password.value.trim()
 
         try {
-            const res = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+            const res = await fetch(`${API_BASE_URL}/auth/signup`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ fullname, email, phone, password })
