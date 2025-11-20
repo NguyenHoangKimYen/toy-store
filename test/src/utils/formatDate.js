@@ -1,4 +1,9 @@
 export function formatDate(date = new Date(), locale = navigator.language) {
+  // Handle MongoDB date format
+  if (date && typeof date === 'object' && date.$date) {
+    date = new Date(date.$date);
+  }
+  
   // Convert string dates to Date objects
   if (typeof date === 'string') {
     date = new Date(date);

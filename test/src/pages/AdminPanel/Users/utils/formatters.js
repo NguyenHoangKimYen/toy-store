@@ -3,7 +3,19 @@ export { formatDate } from '@/utils/formatDate';
 
 // Domain-specific utilities for Users
 export const formatDateTime = (dateString) => {
-  return new Date(dateString).toLocaleString('en-US', {
+  // Handle MongoDB date format
+  let date = dateString;
+  if (date && typeof date === 'object' && date.$date) {
+    date = new Date(date.$date);
+  } else if (typeof date === 'string') {
+    date = new Date(date);
+  }
+  
+  if (!(date instanceof Date) || isNaN(date.getTime())) {
+    return 'Invalid Date';
+  }
+  
+  return date.toLocaleString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
