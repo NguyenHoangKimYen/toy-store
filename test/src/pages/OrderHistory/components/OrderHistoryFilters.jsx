@@ -1,10 +1,55 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getMyOrders } from '@/services/orders.service';
 import './OrderHistoryFilters.css';
 
 const OrderHistoryFilters = ({ filters, onFilterChange, onSearch }) => {
+  const [availableStatuses, setAvailableStatuses] = useState([])
+  const [loadingStatuses, setLoadingStatuses] = useState(true)
+
+  // Fetch all unique order statuses from database
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      try {
+        setLoadingStatuses(true)
+        const response = await getMyOrders({ limit: 1000 })
+        const orders = response.orders || response || []
+        
+        // Extract unique statuses
+        const statusesSet = new Set()
+        orders.forEach(order => {
+          if (order.status) {
+            statusesSet.add(order.status)
+          }
+        })
+        
+        // Convert to array
+        const statuses = Array.from(statusesSet).map(status => ({
+          value: status.toLowerCase(),
+          label: status.charAt(0).toUpperCase() + status.slice(1)
+        }))
+        
+        setAvailableStatuses(statuses)
+      } catch (error) {
+        console.error('Failed to fetch order statuses:', error)
+        // Fallback to default statuses
+        setAvailableStatuses([
+          { value: 'pending', label: 'Pending' },
+          { value: 'processing', label: 'Processing' },
+          { value: 'shipped', label: 'Shipped' },
+          { value: 'delivered', label: 'Delivered' },
+          { value: 'cancelled', label: 'Cancelled' },
+        ])
+      } finally {
+        setLoadingStatuses(false)
+      }
+    }
+
+    fetchStatuses()
+  }, [])
+
   const handleSearchChange = (e) => {
     onSearch(e.target.value);
   };
@@ -26,17 +71,18 @@ const OrderHistoryFilters = ({ filters, onFilterChange, onSearch }) => {
         <Select
           value={filters.status}
           onValueChange={(value) => onFilterChange('status', value)}
+          disabled={loadingStatuses}
         >
           <SelectTrigger className="filter-select">
-            <SelectValue placeholder="All Status" />
+            <SelectValue placeholder={loadingStatuses ? 'Loading...' : 'All Status'} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="processing">Processing</SelectItem>
-            <SelectItem value="shipped">Shipped</SelectItem>
-            <SelectItem value="delivered">Delivered</SelectItem>
-            <SelectItem value="cancelled">Cancelled</SelectItem>
+            {availableStatuses.map(status => (
+              <SelectItem key={status.value} value={status.value}>
+                {status.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 

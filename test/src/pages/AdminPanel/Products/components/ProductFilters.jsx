@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { X, Calendar, DollarSign, Star, Tag, TrendingUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,8 +10,42 @@ import {
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { getProducts } from '@/services/products.service'
 
 const ProductFilters = ({ filters, onFilterChange, onClearFilters, categories = [], showFilters }) => {
+  const [availableStatuses, setAvailableStatuses] = useState([])
+  const [loadingStatuses, setLoadingStatuses] = useState(true)
+
+  // Fetch all unique statuses from database
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      try {
+        setLoadingStatuses(true)
+        const response = await getProducts({ limit: 1000, status: 'all' })
+        const products = response.products || response || []
+        
+        // Extract unique statuses
+        const statusesSet = new Set()
+        products.forEach(product => {
+          if (product.status) {
+            statusesSet.add(product.status)
+          }
+        })
+        
+        // Convert to array
+        const statuses = Array.from(statusesSet)
+        setAvailableStatuses(statuses)
+      } catch (error) {
+        console.error('Failed to fetch statuses:', error)
+        // Fallback to default statuses
+        setAvailableStatuses(['Published', 'Draft', 'Archived'])
+      } finally {
+        setLoadingStatuses(false)
+      }
+    }
+
+    fetchStatuses()
+  }, [])
 
   const handleChange = (key, value) => {
     onFilterChange({ ...filters, [key]: value })
@@ -46,15 +80,21 @@ const ProductFilters = ({ filters, onFilterChange, onClearFilters, categories = 
                 <Tag className='w-4 h-4' />
                 Status
               </Label>
-              <Select value={filters.status || 'all'} onValueChange={(v) => handleChange('status', v)}>
+              <Select 
+                value={filters.status || 'all'} 
+                onValueChange={(v) => handleChange('status', v)}
+                disabled={loadingStatuses}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder='All Statuses' />
+                  <SelectValue placeholder={loadingStatuses ? 'Loading...' : 'All Statuses'} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value='all'>All Statuses</SelectItem>
-                  <SelectItem value='Published'>Published</SelectItem>
-                  <SelectItem value='Draft'>Draft</SelectItem>
-                  <SelectItem value='Archived'>Archived</SelectItem>
+                  {availableStatuses.map(status => (
+                    <SelectItem key={status} value={status}>
+                      {status}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

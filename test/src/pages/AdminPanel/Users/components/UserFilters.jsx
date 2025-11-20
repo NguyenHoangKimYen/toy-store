@@ -14,6 +14,8 @@ import { getUsers } from '@/services/users.service'
 const UserFilters = ({ filters, onFilterChange, onClearFilters, showFilters }) => {
   const [availableRoles, setAvailableRoles] = useState([])
   const [loadingRoles, setLoadingRoles] = useState(true)
+  const [availableProviders, setAvailableProviders] = useState([])
+  const [loadingProviders, setLoadingProviders] = useState(true)
 
   // Fetch all unique roles from database
   useEffect(() => {
@@ -52,6 +54,47 @@ const UserFilters = ({ filters, onFilterChange, onClearFilters, showFilters }) =
     }
 
     fetchRoles()
+  }, [])
+
+  // Fetch all unique social providers from database
+  useEffect(() => {
+    const fetchProviders = async () => {
+      try {
+        setLoadingProviders(true)
+        const response = await getUsers({ limit: 1000 })
+        const users = response.users || response || []
+        
+        // Extract unique social providers
+        const providersSet = new Set()
+        users.forEach(user => {
+          if (user.socialProvider) {
+            providersSet.add(user.socialProvider)
+          } else {
+            providersSet.add('local')
+          }
+        })
+        
+        // Convert to array with labels
+        const providers = Array.from(providersSet).map(provider => ({
+          value: provider,
+          label: provider === 'local' ? 'Email/Password' : provider.charAt(0).toUpperCase() + provider.slice(1)
+        }))
+        
+        setAvailableProviders(providers)
+      } catch (error) {
+        console.error('Failed to fetch social providers:', error)
+        // Fallback to default providers
+        setAvailableProviders([
+          { value: 'local', label: 'Email/Password' },
+          { value: 'google', label: 'Google' },
+          { value: 'facebook', label: 'Facebook' },
+        ])
+      } finally {
+        setLoadingProviders(false)
+      }
+    }
+
+    fetchProviders()
   }, [])
 
   const handleChange = (key, value) => {
@@ -130,15 +173,21 @@ const UserFilters = ({ filters, onFilterChange, onClearFilters, showFilters }) =
                 <Shield className='w-4 h-4' />
                 Login Method
               </Label>
-              <Select value={filters.socialProvider || 'all'} onValueChange={(v) => handleChange('socialProvider', v)}>
+              <Select 
+                value={filters.socialProvider || 'all'} 
+                onValueChange={(v) => handleChange('socialProvider', v)}
+                disabled={loadingProviders}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder='All Methods' />
+                  <SelectValue placeholder={loadingProviders ? 'Loading...' : 'All Methods'} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value='all'>All Methods</SelectItem>
-                  <SelectItem value='local'>Email/Password</SelectItem>
-                  <SelectItem value='google'>Google</SelectItem>
-                  <SelectItem value='facebook'>Facebook</SelectItem>
+                  {availableProviders.map(provider => (
+                    <SelectItem key={provider.value} value={provider.value}>
+                      {provider.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
