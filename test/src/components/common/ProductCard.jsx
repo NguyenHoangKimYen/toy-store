@@ -94,15 +94,13 @@ const ProductCard = ({
   // Admin variant (for admin panel)
   if (variant === 'admin') {
     return (
-      <div className={`product-card-admin ${size} ${className}`} onClick={handleCardClick}>
+      <div className={`product-card-admin ${size} ${totalStock === 0 ? 'out-of-stock' : ''} ${className}`} onClick={handleCardClick}>
         <div className="product-card-image">
           <img src={imageUrl} alt={product.name} loading="lazy" />
           {showBadges && (
             <>
               {product.isNew && <span className="badge badge-new">New</span>}
               {product.isFeatured && <span className="badge badge-featured">Featured</span>}
-              {/* Admin-only: Show Out of Stock badge for quick inventory visibility */}
-              {totalStock === 0 && <span className="badge badge-out">Out of Stock</span>}
               {/* Status badge */}
               {product.status && product.status !== 'Published' && (
                 <span className={`badge badge-${product.status.toLowerCase()}`}>
@@ -110,6 +108,11 @@ const ProductCard = ({
                 </span>
               )}
             </>
+          )}
+          {totalStock === 0 && (
+            <div className="out-of-stock-overlay">
+              <span className="out-of-stock-text">Out of Stock</span>
+            </div>
           )}
         </div>
 
