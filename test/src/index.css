@@ -116,7 +116,7 @@ a.active hr {
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
