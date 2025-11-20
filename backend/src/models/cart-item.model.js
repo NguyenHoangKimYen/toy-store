@@ -8,6 +8,13 @@ const CartItemSchema = new mongoose.Schema({
         ref: "Cart",
         required: true,
     },
+
+    productId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
+        required: true,
+    },
+
     variantId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Variant",
@@ -42,25 +49,25 @@ async function recalculateCart(cartId) {
     if (items.length > 0) {
         newTotalPrice = items.reduce((sum, item) => {
             itemIds.push(item._id);
-            return sum + parseFloat(item.price.toString());
+
+            const unitPrice = parseFloat(item.price.toString());
+            return sum + (unitPrice * item.quantity); // ⭐⭐ SỬA TẠI ĐÂY
         }, 0);
     }
 
-    // [SỬA LỖI QUAN TRỌNG] 
-    // Gọi trực tiếp model "Cart" từ mongoose thay vì qua Repository để tránh vòng lặp import
-    await mongoose.model("Cart").findByIdAndUpdate(cartId, { 
+    await mongoose.model("Cart").findByIdAndUpdate(cartId, {
         totalPrice: newTotalPrice,
-        items: itemIds 
+        items: itemIds
     });
-    
+
     console.log(`Updated Cart ${cartId}: ${newTotalPrice} VND & ${itemIds.length} items.`);
 }
 
-CartItemSchema.post('save', async function() {
+CartItemSchema.post('save', async function () {
     await recalculateCart(this.cartId);
 });
 
-CartItemSchema.post('findOneAndDelete', async function(doc) {
+CartItemSchema.post('findOneAndDelete', async function (doc) {
     if (doc) {
         await recalculateCart(doc.cartId);
     }

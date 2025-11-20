@@ -15,6 +15,12 @@ const OrderItemSchema = new mongoose.Schema({
         required: true,
     },
 
+    variantId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Variant",
+        required: true
+    },
+
     // Số lượng sản phẩm được đặt
     quantity: {
         type: Number,
