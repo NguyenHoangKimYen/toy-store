@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getProducts, getProductCategories } from '@/services/products.service';
 
@@ -28,8 +28,8 @@ export const useProductCatalog = () => {
   // Products per page: 24 works well with grid layouts (2, 3, 4, 6 columns)
   const PRODUCTS_PER_PAGE = 24;
 
-  // Get filters from URL
-  const filters = {
+  // Get filters from URL (memoized to prevent unnecessary re-renders)
+  const filters = useMemo(() => ({
     search: searchParams.get('search') || '',
     category: searchParams.get('category') || '',
     brand: searchParams.get('brand') || '',
@@ -38,11 +38,15 @@ export const useProductCatalog = () => {
     rating: searchParams.get('rating') || '',
     sortBy: searchParams.get('sortBy') || 'createdAt',
     sortOrder: searchParams.get('sortOrder') || 'desc',
-  };
+  }), [searchParams]);
 
   // Fetch products
   useEffect(() => {
+    console.log('[useProductCatalog] useEffect triggered!', { currentPage, filters });
+    
     const fetchProducts = async () => {
+      console.log('[useProductCatalog] fetchProducts called, currentPage:', currentPage, 'PRODUCTS_PER_PAGE:', PRODUCTS_PER_PAGE);
+      
       try {
         setLoading(true);
         setError(null);
@@ -51,6 +55,8 @@ export const useProductCatalog = () => {
           page: currentPage,
           limit: PRODUCTS_PER_PAGE, // Explicit limit to override backend default (20)
         };
+        
+        console.log('[useProductCatalog] Params to send:', params);
 
         // Add sort parameter (backend expects "field:order" format)
         if (filters.sortBy && filters.sortOrder) {
@@ -71,10 +77,11 @@ export const useProductCatalog = () => {
         console.log('[useProductCatalog] Response:', response);
         console.log('[useProductCatalog] Pagination:', response.pagination);
         
+        // Mock returns { products: [...], pagination: { total, totalPages, page, limit, hasMore } }
         // Backend returns { products: [...], pagination: { totalProducts, totalPages, currentPage, limit } }
         setProducts(response.products || response || []);
         setTotalPages(response.pagination?.totalPages || 1);
-        setTotalProducts(response.pagination?.totalProducts || response.pagination?.total || response.length || 0);
+        setTotalProducts(response.pagination?.total || response.pagination?.totalProducts || response.length || 0);
       } catch (err) {
         console.error('Error fetching products:', err);
         setError(err.message || 'Failed to load products');
@@ -84,8 +91,7 @@ export const useProductCatalog = () => {
     };
 
     fetchProducts();
-  }, [currentPage, PRODUCTS_PER_PAGE, filters.search, filters.category, 
-      filters.minPrice, filters.maxPrice, filters.rating, filters.sortBy, filters.sortOrder]);
+  }, [currentPage, filters]); // filters is memoized by searchParams
 
   // Fetch metadata (categories and brands)
   useEffect(() => {
