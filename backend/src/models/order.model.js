@@ -61,6 +61,17 @@ const OrderSchema = new mongoose.Schema(
             min: 0,
         },
 
+        deliveryType: {
+            type: String,
+            enum: ["standard", "express"],
+            default: "standard"
+        },
+
+        shippingFee: {
+            type: Number,
+            default: 0,
+        },
+
         // Trạng thái hiện tại của đơn hàng
         status: {
             type: String,

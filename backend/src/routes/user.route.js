@@ -32,5 +32,4 @@ router.put("/:id", updateUser);
 router.delete("/:id", deleteUser);
 router.post("/:id/avatar", uploadAvatarMiddleware, uploadAvatarController);
 router.patch("/:id/avatar", uploadAvatarMiddleware, updateAvatarController);
-
 module.exports = router;

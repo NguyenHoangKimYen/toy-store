@@ -5,13 +5,18 @@ const create = async (data) => {
     return await item.save();
 };
 
+const withProductAndVariant = (query) => {
+    return query
+        .populate({ path: "productId", model: "Product" })
+        .populate({ path: "variantId", model: "Variant" });
+};
 const findById = async (id) => {
-    return await CartItem.findById(id).populate("variantId");
+    return await withProductAndVariant(CartItem.findById(id));
 };
 
 const update = async (id, data) => {
-    return await CartItem.findByIdAndUpdate(id, data, { new: true }).populate(
-        "variantId",
+    return await withProductAndVariant(
+        CartItem.findByIdAndUpdate(id, data, { new: true }),
     );
 };
 
@@ -20,7 +25,7 @@ const remove = async (id) => {
 };
 
 const getAllByCartId = async (cartId) => {
-    return await CartItem.find({ cartId }).populate("variantId");
+    return await withProductAndVariant(CartItem.find({ cartId }));
 };
 
 module.exports = {
