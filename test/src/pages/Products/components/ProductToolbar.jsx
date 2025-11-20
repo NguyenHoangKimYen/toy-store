@@ -1,7 +1,7 @@
 import React from 'react';
 import { SlidersHorizontal, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import Badge from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { AdvancedSearchBar } from '@/components/common';
 import ProductSort from './ProductSort';

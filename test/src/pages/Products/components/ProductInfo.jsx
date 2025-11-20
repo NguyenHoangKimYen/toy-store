@@ -1,6 +1,6 @@
 import React from 'react';
 import { Check, Star } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import Badge from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ProductBadges } from '@/components/common';
 import { formatPrice } from '@/utils/formatPrice';

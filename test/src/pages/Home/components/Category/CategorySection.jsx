@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import { ProductCard } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import Badge from '@/components/ui/badge';
 import './CategorySection.css';
 
 const CategorySection = ({ title, subtitle, products, viewAllLink }) => {

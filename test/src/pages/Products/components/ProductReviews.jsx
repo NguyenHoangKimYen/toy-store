@@ -3,7 +3,7 @@ import { Star, ThumbsUp, MessageCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
+import Badge from '@/components/ui/badge';
 import './ProductReviews.css';
 
 const ProductReviews = ({ productId, rating = 0, reviewCount = 0 }) => {

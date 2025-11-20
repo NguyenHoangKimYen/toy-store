@@ -1,6 +1,6 @@
 import { Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import Badge from '@/components/ui/badge';
 
 const VariantList = ({ variants, onUpdatePrice, onUpdateStock, onRemove }) => {
   if (variants.length === 0) return null;

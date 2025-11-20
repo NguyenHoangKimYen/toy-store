@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Package, Clock, CheckCircle, XCircle, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import Badge from '@/components/ui/badge';
 import { formatPrice } from '@/utils/formatPrice';
 import './OrderCard.css';
 
