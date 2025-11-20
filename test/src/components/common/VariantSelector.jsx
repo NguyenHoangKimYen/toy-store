@@ -52,6 +52,15 @@ const VariantSelector = ({
 
   // Handle attribute selection
   const handleAttributeSelect = (attributeName, value) => {
+    // If clicking the same value, deselect it
+    if (selectedAttributes[attributeName] === value) {
+      const newAttrs = { ...selectedAttributes };
+      delete newAttrs[attributeName];
+      setSelectedAttributes(newAttrs);
+      onVariantChange?.(null);
+      return;
+    }
+    
     const newAttrs = {
       ...selectedAttributes,
       [attributeName]: value
@@ -77,14 +86,32 @@ const VariantSelector = ({
 
   // Check if an attribute value is available (has stock)
   const isValueAvailable = (attributeName, value) => {
+    // If this is the currently selected value, always allow deselection
+    if (selectedAttributes[attributeName] === value) {
+      return true;
+    }
+    
     // Create temporary attributes with this value
     const tempAttrs = {
       ...selectedAttributes,
       [attributeName]: value
     };
     
-    const variant = findMatchingVariant(tempAttrs);
-    return variant && variant.stockQuantity > 0 && variant.isActive;
+    // Check if any variant matches this combination (considering only selected attributes)
+    // Allow partial selections - only check attributes that would be selected
+    const hasMatchingVariant = variants.some(variant => {
+      if (!variant.attributes || variant.stockQuantity <= 0 || !variant.isActive) {
+        return false;
+      }
+      
+      // Check if all selected attributes (including the new one) match this variant
+      return Object.entries(tempAttrs).every(([name, val]) => {
+        const variantAttr = variant.attributes.find(a => a.name === name);
+        return variantAttr && variantAttr.value === val;
+      });
+    });
+    
+    return hasMatchingVariant;
   };
 
   if (!variants.length || !attributes.length) {

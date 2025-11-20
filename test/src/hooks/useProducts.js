@@ -233,8 +233,8 @@ export const useProductDetail = (productId) => {
   }, [product]);
 
   const handleVariantChange = useCallback((variant) => {
+    setSelectedVariant(variant);
     if (variant) {
-      setSelectedVariant(variant);
       setQuantity(1);
     }
   }, []);
