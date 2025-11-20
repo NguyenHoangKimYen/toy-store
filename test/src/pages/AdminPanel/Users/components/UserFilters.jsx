@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { X, Shield, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -9,18 +9,50 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-
-// Role options - matches backend ROLE_ENUM
-// To add new roles: 1) Update backend user.model.js ROLE_ENUM, 2) Add here
-const USER_ROLES = [
-  { value: 'customer', label: 'Customer' },
-  { value: 'admin', label: 'Admin' },
-  // Add more roles here as needed, e.g.:
-  // { value: 'moderator', label: 'Moderator' },
-  // { value: 'support', label: 'Support' },
-]
+import { getUsers } from '@/services/users.service'
 
 const UserFilters = ({ filters, onFilterChange, onClearFilters, showFilters }) => {
+  const [availableRoles, setAvailableRoles] = useState([])
+  const [loadingRoles, setLoadingRoles] = useState(true)
+
+  // Fetch all unique roles from database
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        setLoadingRoles(true)
+        // Fetch a large sample to get all role types
+        const response = await getUsers({ limit: 1000 })
+        const users = response.users || response || []
+        
+        // Extract unique roles
+        const rolesSet = new Set()
+        users.forEach(user => {
+          if (user.role) {
+            rolesSet.add(user.role)
+          }
+        })
+        
+        // Convert to array with labels
+        const roles = Array.from(rolesSet).map(role => ({
+          value: role,
+          label: role.charAt(0).toUpperCase() + role.slice(1)
+        }))
+        
+        setAvailableRoles(roles)
+      } catch (error) {
+        console.error('Failed to fetch roles:', error)
+        // Fallback to default roles if fetch fails
+        setAvailableRoles([
+          { value: 'customer', label: 'Customer' },
+          { value: 'admin', label: 'Admin' },
+        ])
+      } finally {
+        setLoadingRoles(false)
+      }
+    }
+
+    fetchRoles()
+  }, [])
 
   const handleChange = (key, value) => {
     onFilterChange({ ...filters, [key]: value })
@@ -55,13 +87,17 @@ const UserFilters = ({ filters, onFilterChange, onClearFilters, showFilters }) =
                 <Shield className='w-4 h-4' />
                 Role
               </Label>
-              <Select value={filters.role || 'all'} onValueChange={(v) => handleChange('role', v)}>
+              <Select 
+                value={filters.role || 'all'} 
+                onValueChange={(v) => handleChange('role', v)}
+                disabled={loadingRoles}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder='All Roles' />
+                  <SelectValue placeholder={loadingRoles ? 'Loading roles...' : 'All Roles'} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value='all'>All Roles</SelectItem>
-                  {USER_ROLES.map(role => (
+                  {availableRoles.map(role => (
                     <SelectItem key={role.value} value={role.value}>
                       {role.label}
                     </SelectItem>
