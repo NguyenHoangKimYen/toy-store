@@ -89,7 +89,8 @@ export const useUsers = (options = {}) => {
       
       const data = await usersService.getUsers(queryParams);
       
-      const usersArray = Array.isArray(data) ? data : (data.data || []);
+      // Handle different response formats
+      const usersArray = Array.isArray(data) ? data : (data.users || data.data || []);
       
       // Calculate stats
       const calculatedStats = {
