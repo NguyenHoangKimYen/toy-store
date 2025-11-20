@@ -28,7 +28,7 @@ export const useUsers = (searchQuery = '') => {
         // sortBy: 'createdAt',
         // sortOrder: 'desc',
         // page: 1,
-        // limit: 50
+        // No limit - fetch all users
       })
       
       // Backend returns { success: true, data: [...users] }

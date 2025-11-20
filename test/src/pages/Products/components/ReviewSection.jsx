@@ -74,10 +74,6 @@ const ReviewSection = ({ productId }) => {
       <div className="review-header">
         <div className="review-header-left">
           <h2>Customer Reviews</h2>
-          <span className="real-time-badge">
-            <Wifi size={14} />
-            Live Updates
-          </span>
         </div>
         <Button onClick={() => setShowForm(!showForm)}>
           {showForm ? 'Cancel' : 'Write a Review'}

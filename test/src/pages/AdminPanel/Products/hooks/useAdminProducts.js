@@ -33,7 +33,7 @@ export const useAdminProducts = (searchQuery = '') => {
                         // sortBy: 'name',
                         // sortOrder: 'asc',
                         // page: 1,
-                        // limit: 50
+                        // No limit - fetch all products
                     })
 
                     // Backend can return array or object with products property
