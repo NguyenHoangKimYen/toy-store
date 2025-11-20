@@ -570,7 +570,7 @@
 
 @media (max-width: 480px) {
   .product-info {
-    padding: 12px;
+    padding: 10px;
   }
 
   .product-name {
@@ -578,11 +578,33 @@
   }
 
   .current-price {
-    font-size: 15px;
+    font-size: 14px !important;
+  }
+
+  .product-category {
+    font-size: 11px;
+  }
+
+  .add-to-cart-btn {
+    width: 28px;
+    height: 28px;
   }
 
   .product-card-horizontal {
-    min-width: 140px;
-    max-width: 160px;
+    min-width: 130px;
+    max-width: 150px;
+  }
+
+  .product-card.small,
+  .product-card.medium,
+  .product-card.large {
+    max-width: 100%;
+  }
+
+  .badge {
+    top: 8px;
+    right: 8px;
+    padding: 3px 8px;
+    font-size: 9px;
   }
 }
