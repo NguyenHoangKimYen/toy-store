@@ -65,7 +65,7 @@ const UserTableRow = ({ user, onViewDetails, onEdit, onDelete }) => {
         <div className='flex items-center gap-1'>
           <span className='text-yellow-500'>⭐</span>
           <span className='text-sm font-medium text-gray-900 dark:text-white'>
-            {user.loyaltyPoints.toLocaleString()}
+            {(user.loyaltyPoints ?? 0).toLocaleString()}
           </span>
         </div>
       </td>
