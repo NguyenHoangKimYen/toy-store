@@ -4,7 +4,7 @@ import UserTable from './components/UserTable'
 import UserStats from './components/UserStats'
 import UserDetailModal from './components/UserDetailModal'
 import UserFormModal from './components/UserFormModal'
-import { useUsers } from './hooks/useUsers'
+import { useUsers } from '@/hooks' // Using global hook
 import { PageHeader, SearchBar, ScrollableContent, ConfirmDialog } from '@/components/common'
 
 const Users = () => {
@@ -25,7 +25,7 @@ const Users = () => {
     createUser,
     updateUser,
     deleteUser,
-  } = useUsers(searchQuery)
+  } = useUsers({ searchQuery })
 
   const handleViewDetails = (user) => {
     setSelectedUser(user)

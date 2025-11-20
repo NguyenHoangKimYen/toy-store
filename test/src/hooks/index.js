@@ -27,3 +27,6 @@ export { useAdminProducts } from './useAdminProducts';
 
 // Auth hooks - Authentication and user context
 export { useAuth } from './useAuth';
+
+// User hooks - Use EVERYWHERE for user data (admin, profile, etc.)
+export { useUsers, useUser, useUsersList } from './useUsers';

@@ -1,56 +1,24 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import * as usersService from '@/services/users.service';
 import { useAuth } from '@/hooks/useAuth';
+import { useUser } from '@/hooks'; // Using global user hook
 
 export const useProfile = () => {
   const { user: authUser } = useAuth();
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const loadProfile = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      console.log('Auth user from context:', authUser);
-
-      if (!authUser) {
-        throw new Error('No user session found');
-      }
-
-      // Get user ID from auth context - check multiple possible field names
-      const currentUserId = authUser?.id || authUser?._id || authUser?.userId;
-      
-      console.log('Extracted user ID:', currentUserId);
-      
-      if (!currentUserId) {
-        console.error('Auth user object:', authUser);
-        throw new Error('No user ID found in session');
-      }
-
-      const userData = await usersService.getUserById(currentUserId);
-      setUser(userData);
-    } catch (err) {
-      // Don't log/show error if user is simply not logged in
-      if (err.message !== 'No user session found') {
-        console.error('Error loading profile:', err);
-        toast.error('Failed to load profile');
-      }
-      setError(err.message || 'Failed to load profile');
-    } finally {
-      setLoading(false);
-    }
-  }, [authUser]);
-
-  useEffect(() => {
-    if (authUser) {
-      loadProfile();
-    } else {
-      setLoading(false);
-    }
-  }, [authUser, loadProfile]);
+  // Get user ID from auth context
+  const currentUserId = authUser?.id || authUser?._id || authUser?.userId;
+  
+  // Use global user hook for fetching
+  const { 
+    user, 
+    loading, 
+    error: fetchError,
+    updateUser: updateUserFromHook,
+    refreshUser 
+  } = useUser(currentUserId);
 
   const updateProfile = async (updates) => {
     try {
@@ -60,14 +28,12 @@ export const useProfile = () => {
         throw new Error('No user ID found');
       }
 
-      // Use PUT for full update
-      const updatedUser = await usersService.updateUser(user._id, {
+      // Use the hook's update function
+      await updateUserFromHook(user._id, {
         ...user,
         ...updates,
       });
 
-      setUser(updatedUser);
-      toast.success('Profile updated successfully');
       return true;
     } catch (err) {
       console.error('Error updating profile:', err);
@@ -85,12 +51,15 @@ export const useProfile = () => {
         throw new Error('No user ID found');
       }
 
-      // Check if user has existing avatar
-      const result = user.avatar 
-        ? await usersService.updateAvatar(user._id, file)
-        : await usersService.uploadAvatar(user._id, file);
+      // Avatar upload still uses service directly (not part of standard CRUD)
+      if (user.avatar) {
+        await usersService.updateAvatar(user._id, file);
+      } else {
+        await usersService.uploadAvatar(user._id, file);
+      }
 
-      setUser(prev => ({ ...prev, avatar: result.avatar || result.data?.avatar }));
+      // Refresh user data after avatar update
+      await refreshUser();
       toast.success('Avatar updated successfully');
       return true;
     } catch (err) {
@@ -109,6 +78,7 @@ export const useProfile = () => {
         throw new Error('No user ID found');
       }
 
+      // Password change uses service directly (special operation)
       await usersService.setUserPassword(user._id, newPassword, newPassword);
       toast.success('Password changed successfully');
       return true;
@@ -123,10 +93,10 @@ export const useProfile = () => {
   return {
     user,
     loading,
-    error,
+    error: error || fetchError,
     updateProfile,
     updateAvatar,
     changePassword,
-    refetch: loadProfile,
+    refetch: refreshUser,
   };
 };
