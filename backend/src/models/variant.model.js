@@ -35,12 +35,6 @@ const VariantSchema = new mongoose.Schema(
             min: 0,
         },
 
-        weight: {
-            type: Number,        // đơn vị: gram
-            default: 100,        // mặc định 100 gram
-            min: 0,
-        },
-
         imageUrls: [
             {
                 type: String,
