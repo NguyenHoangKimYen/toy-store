@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getProducts, getProductById } from '@/services/products.service';
+import { toast } from 'sonner';
+import * as productsService from '@/services/products.service';
 
 /**
  * Universal hook for fetching products with flexible options
+ * Supports both read operations and CRUD for admin use
  * @param {Object} options - Configuration options
  * @param {Object} options.params - Query parameters for getProducts
  * @param {string} options.productId - Single product ID to fetch
@@ -18,7 +20,7 @@ export const useProducts = (options = {}) => {
     dependencies = [],
   } = options;
 
-  const [data, setData] = useState(null);
+  const [data, setData] = useState(productId ? null : []);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -34,15 +36,13 @@ export const useProducts = (options = {}) => {
       let result;
       if (productId) {
         // Fetch single product
-        result = await getProductById(productId);
+        result = await productsService.getProductById(productId);
       } else {
         // Fetch multiple products
-        result = await getProducts(params);
+        result = await productsService.getProducts(params);
         
         // Extract products array if response is wrapped
         if (result && typeof result === 'object' && !Array.isArray(result)) {
-          // Backend returns: { products: [...], pagination: {...} }
-          // handleResponse already extracted 'data', so we get the products array
           if (result.products && Array.isArray(result.products)) {
             result = result.products;
           }
@@ -68,16 +68,127 @@ export const useProducts = (options = {}) => {
     }
   }, [enabled, fetchData]);
 
-  // Manual refetch function
-  const refetch = useCallback(() => {
-    return fetchData();
+  // Create product
+  const createProduct = useCallback(async (productData) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { variants, ...productWithoutVariants } = productData;
+      
+      const productPayload = {
+        ...productWithoutVariants,
+        categoryId: Array.isArray(productData.categoryId) ? productData.categoryId : [],
+        variants: [],
+      };
+
+      const newProduct = await productsService.createProduct(productPayload);
+      
+      // Create variants if provided
+      if (variants && variants.length > 0) {
+        const variantIds = [];
+        for (const variant of variants) {
+          try {
+            const variantPayload = {
+              attributes: Object.entries(variant.attributes || {}).map(([name, value]) => ({
+                name,
+                value: String(value),
+              })),
+              price: variant.price,
+              stockQuantity: variant.stock || 0,
+              sku: variant.sku || '',
+              isActive: variant.isActive !== false,
+            };
+            
+            const createdVariant = await productsService.createVariant(newProduct._id, variantPayload);
+            variantIds.push(createdVariant._id);
+          } catch (variantErr) {
+            console.error('Error creating variant:', variantErr);
+          }
+        }
+        
+        if (variantIds.length > 0) {
+          await productsService.patchProduct(newProduct._id, { variants: variantIds });
+        }
+      }
+      
+      await fetchData(); // Refresh list
+      toast.success('Product created successfully');
+      return newProduct;
+    } catch (err) {
+      console.error('Error creating product:', err);
+      setError(err.message || 'Failed to create product');
+      toast.error('Failed to create product', { description: err.message });
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchData]);
+
+  // Update product
+  const updateProduct = useCallback(async (id, productData) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const allowedFields = ['name', 'slug', 'description', 'status', 'isFeatured', 'categoryId', 'brand'];
+      const updatePayload = {};
+      
+      allowedFields.forEach(field => {
+        if (productData[field] !== undefined) {
+          updatePayload[field] = productData[field];
+        }
+      });
+
+      const updated = await productsService.patchProduct(id, updatePayload);
+      await fetchData(); // Refresh list
+      return updated;
+    } catch (err) {
+      console.error('Error updating product:', err);
+      setError(err.message || 'Failed to update product');
+      toast.error('Failed to update product', { description: err.message });
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchData]);
+
+  // Delete product
+  const deleteProduct = useCallback(async (id) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      await productsService.deleteProduct(id);
+      await fetchData(); // Refresh list
+      toast.success('Product deleted successfully');
+    } catch (err) {
+      console.error('Error deleting product:', err);
+      setError(err.message || 'Failed to delete product');
+      toast.error('Failed to delete product', { description: err.message });
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   }, [fetchData]);
 
   return {
+    // For backwards compatibility with existing code
     data,
+    products: Array.isArray(data) ? data : [],
+    product: !Array.isArray(data) ? data : null,
+    
     loading,
     error,
-    refetch,
+    
+    // CRUD operations
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    
+    // Refetch
+    refetch: fetchData,
+    refreshProducts: fetchData,
   };
 };
 

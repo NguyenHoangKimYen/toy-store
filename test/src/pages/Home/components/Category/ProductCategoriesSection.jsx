@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/common';
 import { ArrowRight, Tag, Sparkles, Package } from 'lucide-react';
-import { getProducts } from '@/services/products.service';
+import { useProducts } from '@/hooks'; // Using global hook
 import { getCategories } from '@/services/categories.service';
 import './ProductCategoriesSection.css';
 
@@ -11,21 +11,17 @@ const ProductCategoriesSection = () => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Use global products hook
+  const { products: allProducts, loading: productsLoading } = useProducts();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
+        setLoading(productsLoading);
         
-        // Fetch both products and categories
-        const [productsResponse, categoriesResponse] = await Promise.all([
-          getProducts(),
-          getCategories()
-        ]);
-        
-        const allProducts = Array.isArray(productsResponse) 
-          ? productsResponse 
-          : (productsResponse.products || productsResponse.data || []);
+        // Fetch categories (products come from hook)
+        const categoriesResponse = await getCategories();
           
         const allCategories = Array.isArray(categoriesResponse)
           ? categoriesResponse
@@ -86,7 +82,7 @@ const ProductCategoriesSection = () => {
     };
 
     fetchData();
-  }, []);
+  }, [allProducts, productsLoading]);
 
   const handleProductClick = (product) => {
     navigate(`/products/${product._id}`);

@@ -4,7 +4,7 @@ import ProductGrid from './components/ProductGrid'
 import ProductStats from './components/ProductStats'
 import ProductDetailModal from './components/ProductDetailModal'
 import ProductFormModal from './components/ProductFormModal'
-import { useAdminProducts } from '@/hooks'
+import { useProducts } from '@/hooks' // Using global hook
 import { PageHeader, SearchBar, ScrollableContent } from '@/components/common'
 import {
   AlertDialog,
@@ -26,7 +26,7 @@ const Products = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [productToDelete, setProductToDelete] = useState(null)
 
-  // Use admin products hook with mock/real API toggle
+  // Use global products hook
   const { 
     products: allProducts, 
     loading, 
@@ -34,8 +34,7 @@ const Products = () => {
     createProduct,
     updateProduct,
     deleteProduct,
-    useMockData
-  } = useAdminProducts()
+  } = useProducts()
 
   // Filter products based on search
   const products = useMemo(() => {

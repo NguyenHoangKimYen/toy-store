@@ -1,29 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { getProducts } from '@/services/products.service';
+import { useProducts } from '@/hooks'; // Using global hook
 import { formatPrice } from '@/utils/formatPrice';
 import './ProductCarousel.css';
 
 const ProductCarousel = () => {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Use global products hook with featured filter
+  const { products: allProducts, loading } = useProducts({ filters: { isFeatured: true, limit: 6 } });
+  const [displayProducts, setDisplayProducts] = useState([]);
 
   useEffect(() => {
-    const fetchFeaturedProducts = async () => {
-      try {
-        const data = await getProducts({ isFeatured: true, limit: 6 });
-        setProducts(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error('Failed to fetch featured products:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFeaturedProducts();
-  }, []);
+    if (allProducts.length > 0) {
+      setDisplayProducts(allProducts.slice(0, 6));
+    }
+  }, [allProducts]);
 
   useEffect(() => {
-    if (loading || products.length === 0) return;
+    if (loading || displayProducts.length === 0) return;
     let nextButton = document.getElementById('next');
     let prevButton = document.getElementById('prev');
     let carousel = document.querySelector('.carousel');
@@ -72,7 +64,7 @@ const ProductCarousel = () => {
     backButton.onclick = function() {
       carousel.classList.remove('showDetail');
     };
-  }, [loading, products]);
+  }, [loading, displayProducts]);
 
   if (loading) {
     return (
@@ -89,7 +81,7 @@ const ProductCarousel = () => {
     );
   }
 
-  if (products.length === 0) {
+  if (displayProducts.length === 0) {
     return (
       <div className="carousel-loading" style={{ 
         display: 'flex', 
@@ -107,7 +99,7 @@ const ProductCarousel = () => {
   return (
     <div className="carousel">
       <div className="list">
-        {products.map((product) => (
+        {displayProducts.map((product) => (
           <div className="item" key={product._id}>
             <img src={product.imageUrls?.[0] || '/placeholder.png'} alt={product.name} />
             <div className="introduce">

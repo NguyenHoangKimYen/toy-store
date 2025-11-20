@@ -96,14 +96,14 @@ const ProductDetailModal = ({ product, onClose, onEdit, onDelete }) => {
           <div className='p-6'>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-6'>
               {/* Image Gallery */}
-              <ProductImageGallery images={product.imageUrls} productName={product.name} />
+              <ProductImageGallery images={productWithVariants.imageUrls} productName={productWithVariants.name} />
               
               {/* Product Info */}
-              <ProductInfo product={{ ...product, variants }} />
+              <ProductInfo product={productWithVariants} />
             </div>
 
             {/* Description */}
-            <ProductDescription description={product.description} />
+            <ProductDescription description={productWithVariants.description} />
 
             {/* Variants Section */}
             <div className='mt-6'>
@@ -111,7 +111,7 @@ const ProductDetailModal = ({ product, onClose, onEdit, onDelete }) => {
                 <div className='text-center py-4'>Loading variants...</div>
               ) : (
                 <VariantManager
-                  productId={product._id}
+                  productId={productWithVariants._id}
                   variants={variants}
                   onUpdate={() => {
                     // Hook will automatically refresh on next render
@@ -121,7 +121,7 @@ const ProductDetailModal = ({ product, onClose, onEdit, onDelete }) => {
             </div>
 
             {/* Metadata */}
-            <ProductMetadata createdAt={product.createdAt} updatedAt={product.updatedAt} />
+            <ProductMetadata createdAt={productWithVariants.createdAt} updatedAt={productWithVariants.updatedAt} />
           </div>
         </div>
       </div>
@@ -129,7 +129,7 @@ const ProductDetailModal = ({ product, onClose, onEdit, onDelete }) => {
       {/* Edit Modal */}
       {showEditModal && (
         <ProductFormModal
-          product={product}
+          product={productWithVariants}
           isOpen={showEditModal}
           onClose={() => setShowEditModal(false)}
           onSave={handleSaveEdit}
@@ -143,7 +143,7 @@ const ProductDetailModal = ({ product, onClose, onEdit, onDelete }) => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Product</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{product.name}"? This action cannot be undone.
+              Are you sure you want to delete "{productWithVariants.name}"? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
