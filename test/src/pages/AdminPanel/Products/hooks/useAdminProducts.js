@@ -1,7 +1,20 @@
 import { useState, useEffect } from 'react'
 import { getProducts } from '@/services/products.service'
 
+/**
+ * Hook for fetching and managing products in admin panel
+ * 
+ * PAGINATION CONFIGURATION:
+ * - Products per page: 50 (reasonable for admin management)
+ * - Allows efficient product browsing without overwhelming UI
+ * - Backend default: 20, we override with explicit value
+ * 
+ * @param {string} searchQuery - Search keyword for filtering products
+ */
 export const useAdminProducts = (searchQuery = '') => {
+    // Admin shows more items per page for efficient management
+    const ADMIN_PRODUCTS_PER_PAGE = 50;
+    
     const [products, setProducts] = useState([])
     const [stats, setStats] = useState({
         totalProducts: 0,
@@ -31,8 +44,8 @@ export const useAdminProducts = (searchQuery = '') => {
                     // Show all products including drafts for admin
                     params.status = 'all';
                     
-                    // Fetch all products without limit (backend will use high default or return all)
-                    params.limit = 1000; // High limit to get all products
+                    // Explicit limit to override backend default (20)
+                    params.limit = ADMIN_PRODUCTS_PER_PAGE;
                     // Add other filters as needed:
                     // params.categoryId = selectedCategory;
                     // params.minPrice = minPrice;

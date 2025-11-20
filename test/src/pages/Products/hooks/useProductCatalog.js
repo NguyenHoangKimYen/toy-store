@@ -4,6 +4,13 @@ import { getProducts, getProductCategories } from '@/services/products.service';
 
 /**
  * Custom hook for managing product catalog state and data fetching
+ * 
+ * PAGINATION CONFIGURATION:
+ * - Products per page: 24 (divisible by 2, 3, 4, 6 for responsive grids)
+ * - Desktop grid: 4 columns (220px cards)
+ * - Tablet grid: 3 columns (180px cards)
+ * - Mobile grid: 2 columns
+ * - Backend limit: Default 20, we override with explicit value
  */
 export const useProductCatalog = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -17,8 +24,9 @@ export const useProductCatalog = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
-  // No limit - show all products
-  const limit = null;
+  
+  // Products per page: 24 works well with grid layouts (2, 3, 4, 6 columns)
+  const PRODUCTS_PER_PAGE = 24;
 
   // Get filters from URL
   const filters = {
@@ -41,7 +49,7 @@ export const useProductCatalog = () => {
 
         const params = {
           page: currentPage,
-          // No limit - fetch all products
+          limit: PRODUCTS_PER_PAGE, // Explicit limit to override backend default (20)
         };
 
         // Add sort parameter (backend expects "field:order" format)
@@ -73,7 +81,7 @@ export const useProductCatalog = () => {
     };
 
     fetchProducts();
-  }, [currentPage, limit, filters.search, filters.category, 
+  }, [currentPage, PRODUCTS_PER_PAGE, filters.search, filters.category, 
       filters.minPrice, filters.maxPrice, filters.rating, filters.sortBy, filters.sortOrder]);
 
   // Fetch metadata (categories and brands)

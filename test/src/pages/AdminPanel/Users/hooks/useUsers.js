@@ -2,7 +2,20 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import * as usersService from '@/services/users.service'
 
+/**
+ * Hook for fetching and managing users in admin panel
+ * 
+ * PAGINATION CONFIGURATION:
+ * - Users per page: 50 (reasonable for admin management)
+ * - Backend default: 20, we override with explicit value
+ * - Allows efficient user browsing without performance issues
+ * 
+ * @param {string} searchQuery - Search keyword for filtering users
+ */
 export const useUsers = (searchQuery = '') => {
+  // Admin shows more items per page for efficient management
+  const ADMIN_USERS_PER_PAGE = 50;
+  
   const [users, setUsers] = useState([])
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -21,6 +34,7 @@ export const useUsers = (searchQuery = '') => {
       // Fetch from backend
       const data = await usersService.getUsers({ 
         search: searchQuery,
+        limit: ADMIN_USERS_PER_PAGE, // Explicit limit to override backend default (20)
         // Add other filters as needed
         // role: 'customer',
         // isVerified: true,
@@ -28,7 +42,6 @@ export const useUsers = (searchQuery = '') => {
         // sortBy: 'createdAt',
         // sortOrder: 'desc',
         // page: 1,
-        // No limit - fetch all users
       })
       
       // Backend returns { success: true, data: [...users] }
