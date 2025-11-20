@@ -1,0 +1,136 @@
+/* Admin Panel Responsive Layout */
+.admin-panel-container {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 1rem;
+  background: #fef2f2;
+  padding: 1rem;
+  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.admin-panel-sidebar {
+  position: relative;
+  z-index: 10;
+}
+
+.admin-panel-main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.admin-panel-content {
+  background: white;
+  border-radius: 12px;
+  overflow: auto;
+  flex: 1;
+}
+
+.admin-panel-overlay {
+  display: none;
+}
+
+.admin-mobile-menu-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  color: #1e293b;
+  transition: all 0.2s ease;
+}
+
+.admin-mobile-menu-toggle:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+/* Tablet responsiveness */
+@media (max-width: 1024px) {
+  .admin-panel-container {
+    grid-template-columns: 220px 1fr;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .admin-panel-container {
+    grid-template-columns: 1fr;
+    padding: 0.5rem;
+    gap: 0;
+  }
+
+  .admin-mobile-menu-toggle {
+    display: flex;
+  }
+
+  .admin-panel-overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .admin-panel-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    max-width: 85vw;
+    background: white;
+    z-index: 999;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+  }
+
+  .admin-panel-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .admin-panel-content {
+    border-radius: 8px;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .admin-panel-container {
+    padding: 0.25rem;
+  }
+
+  .admin-panel-content {
+    border-radius: 6px;
+  }
+
+  .admin-mobile-menu-toggle {
+    width: 44px;
+    height: 44px;
+    margin-bottom: 0.5rem;
+  }
+}

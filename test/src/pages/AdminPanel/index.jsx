@@ -1,13 +1,40 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import Sidebar from './Components/Sidebar'
+import { Menu } from 'lucide-react'
+import './AdminPanel.css'
 
 const AdminPanel = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
   return (
-    <div className='grid gap-4 bg-red-100 p-4 grid-cols-[250px_1fr] h-screen'>
-      <Sidebar />
-      <div className='bg-white rounded-lg overflow-auto'>
-        <Outlet />
+    <div className='admin-panel-container'>
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div 
+          className="admin-panel-overlay" 
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div className={`admin-panel-sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <Sidebar onNavigate={() => setSidebarOpen(false)} />
+      </div>
+
+      {/* Main Content */}
+      <div className='admin-panel-main'>
+        {/* Mobile Menu Toggle */}
+        <button 
+          className="admin-mobile-menu-toggle"
+          onClick={() => setSidebarOpen(true)}
+        >
+          <Menu size={24} />
+        </button>
+
+        <div className='admin-panel-content'>
+          <Outlet />
+        </div>
       </div>
     </div>
   )
