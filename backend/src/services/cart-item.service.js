@@ -1,104 +1,96 @@
-// Thêm các model/repository cần thiết ở đầu file
 const CartItemRepository = require("../repositories/cart-item.repository.js");
-const CartRepository = require("../repositories/cart.repository.js"); // Cần để cập nhật giỏ hàng cha
-const Variant = require("../models/variant.model.js"); // Cần để lấy giá + tồn kho
-const CartItem = require("../models/cart-item.model.js"); // Cần cho logic tìm-hoặc-cập-nhật
+const CartRepository = require("../repositories/cart.repository.js");
+const Variant = require("../models/variant.model.js");
+const CartItem = require("../models/cart-item.model.js");
 
 /**
- * Thêm một item vào giỏ hàng (hoặc cập nhật số lượng nếu đã tồn tại).
- * Đây là logic "Upsert" (Update or Insert).
+ * Thêm hoặc cập nhật item trong cart (Upsert)
  */
 const createCartItem = async (cartId, variantId, quantity) => {
-    // 1. Lấy thông tin variant (giá, tồn kho)
-    const variant = await Variant.findById(variantId);
-    if (!variant) {
-        throw new Error("Variant not found");
-    }
+    const variant = await Variant.findById(variantId).populate("productId");
+    if (!variant) throw new Error("Variant not found");
 
-    const unitPrice = parseFloat(variant.price.toString());
+    // GIÁ CHUẨN LÀ GIÁ VARIANT KHÔNG PHẢI PRODUCT
+    const unitPrice = Number(variant.price);
 
-    // 2. Kiểm tra xem item này đã tồn tại trong giỏ hàng chưa
     const existingItem = await CartItem.findOne({ cartId, variantId });
 
     if (existingItem) {
-        // 3a. NẾU ĐÃ TỒN TẠI: Cập nhật số lượng
         const newQuantity = existingItem.quantity + quantity;
 
-        // Kiểm tra lại tồn kho
         if (newQuantity > variant.stockQuantity) {
             throw new Error(`Not enough stock. Only ${variant.stockQuantity} available.`);
         }
 
         existingItem.quantity = newQuantity;
-        existingItem.price = unitPrice * newQuantity; // Cập nhật tổng giá của item
+        existingItem.price = unitPrice;  // luôn unitPrice
 
-        // Lưu (sẽ kích hoạt hook 'save' trong model để tính lại tổng giỏ hàng)
-        return await existingItem.save();
-        
-    } else {
-        // 3b. NẾU CHƯA TỒN TẠI: Tạo mới
-        // Kiểm tra tồn kho
-        if (quantity > variant.stockQuantity) {
-            throw new Error(`Not enough stock. Only ${variant.stockQuantity} available.`);
-        }
+        await existingItem.save();
 
-        const itemPrice = unitPrice * quantity;
-        const data = { cartId, variantId, quantity, price: itemPrice };
+        // Update subtotal cart
+        await CartRepository.update(cartId, {
+            $inc: { totalPrice: unitPrice * quantity }  // chỉ + thêm cái mới
+        });
 
-        // Tạo (sẽ kích hoạt hook 'save' trong model để tính lại tổng giỏ hàng)
-        return await CartItemRepository.create(data);
-    }
-};
-
-/**
- * Cập nhật số lượng của một item (ví dụ: đổi từ 2 thành 5)
- */
-const updateCartItem = async (cartItemId, updates) => {
-    const { quantity } = updates;
-    if (quantity < 1) {
-        // Nếu số lượng là 0 hoặc âm, hãy xóa nó
-        return await deleteCartItem(cartItemId);
+        return existingItem;
     }
 
-    // 1. Lấy item và variant liên quan
-    const item = await CartItem.findById(cartItemId);
-    if (!item) throw new Error("CartItem not found");
-
-    const variant = await Variant.findById(item.variantId);
-    if (!variant) throw new Error("Variant not found");
-
-    // 2. Kiểm tra tồn kho
+    // Nếu item chưa tồn tại
     if (quantity > variant.stockQuantity) {
         throw new Error(`Not enough stock. Only ${variant.stockQuantity} available.`);
     }
 
-    // 3. Tính giá mới
-    const unitPrice = parseFloat(variant.price.toString());
-    const newPrice = unitPrice * quantity;
-
-    // 4. Cập nhật (sẽ kích hoạt hook 'save' để tính lại tổng giỏ hàng)
-    return await CartItemRepository.update(cartItemId, {
-        quantity: quantity,
-        price: newPrice,
+    const newItem = await CartItemRepository.create({
+        cartId,
+        variantId,
+        productId: variant.productId._id,  // ĐÚNG
+        quantity,
+        price: unitPrice                  // LUÔN UNIT PRICE
     });
+
+    // Cộng subtotal vào cart
+    await CartRepository.update(cartId, {
+        $push: { items: newItem._id },
+        $inc: { totalPrice: unitPrice * quantity }
+    });
+
+    return newItem;
 };
 
 /**
- * Xóa một item khỏi giỏ hàng
+ * Cập nhật số lượng item
+ */
+const updateCartItem = async (cartItemId, updates) => {
+    const { quantity } = updates;
+
+    const item = await CartItem.findById(cartItemId);
+    const variant = await Variant.findById(item.variantId).populate("productId");
+
+    const unitPrice = Number(variant.price);
+
+    const differenceInQuantity = quantity - item.quantity;
+
+    await CartItemRepository.update(cartItemId, {
+        quantity,
+        price: unitPrice
+    });
+
+    // Update totalPrice bằng phần chênh lệch
+    await CartRepository.update(item.cartId, {
+        $inc: { totalPrice: unitPrice * differenceInQuantity }
+    });
+};
+/**
+ * Xoá item khỏi cart
  */
 const deleteCartItem = async (cartItemId) => {
-    // Lấy item ra trước để lấy cartId (cần cho hook 'remove')
     const item = await CartItemRepository.findById(cartItemId);
     if (!item) throw new Error("CartItem not found");
 
-    // Xóa (sẽ kích hoạt hook 'remove' để tính lại tổng giỏ hàng)
     await CartItemRepository.remove(cartItemId);
     return { message: "CartItem deleted successfully" };
 };
 
-/**
- * Lấy tất cả item theo cartId
- */
 const getItemsByCartId = async (cartId) => {
     return await CartItemRepository.getAllByCartId(cartId);
 };
@@ -107,5 +99,5 @@ module.exports = {
     createCartItem,
     updateCartItem,
     deleteCartItem,
-    getItemsByCartId,
+    getItemsByCartId
 };

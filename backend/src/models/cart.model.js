@@ -10,8 +10,8 @@ const CartSchema = new mongoose.Schema(
             required: false, // Cho phép null/undefined (khách vãng lai)
             default: null,
             // Nên tạo index độc nhất nếu userId tồn tại để 1 user chỉ có 1 cart
-            unique: true,
-            sparse: true,
+            // unique: true,
+            // sparse: true,
         },
 
         // ID phiên làm việc (Session ID) - Dùng cho khách vãng lai (guest checkout)

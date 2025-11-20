@@ -44,39 +44,36 @@ const createCart = async (req, res) => {
     }
 };
 
-const addItem = async (req, res) => {
+const addItem = async (req, res, next) => {
+  try {
+    const cartId = req.params.cartId;
+    const itemData = req.body;
+
+    const updatedCart = await CartService.addItem(cartId, itemData);
+
+    return res.status(200).json({
+      success: true,
+      data: updatedCart,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const removeItem = async (req, res) => {
     try {
         const { cartId } = req.params;
-        const { productId, variantId, quantity, price } = req.body;
-
-        if (!productId || !quantity || !price) {
-            return res.status(400).json({ message: "Missing required fields" });
-        }
-
-        const updated = await CartService.addItem(cartId, {
-            productId, variantId, quantity, price
-        });
-
+        const { cartItemId, itemPrice } = req.body;
+        const updated = await CartService.removeItem(
+            cartId,
+            cartItemId,
+            itemPrice,
+        );
         res.status(200).json(updated);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 };
-
-// const removeItem = async (req, res) => {
-//     try {
-//         const { cartId } = req.params;
-//         const { cartItemId, itemPrice } = req.body;
-//         const updated = await CartService.removeItem(
-//             cartId,
-//             cartItemId,
-//             itemPrice,
-//         );
-//         res.status(200).json(updated);
-//     } catch (err) {
-//         res.status(500).json({ message: err.message });
-//     }
-// };
 
 const clearCart = async (req, res) => {
     try {
@@ -103,8 +100,8 @@ module.exports = {
     getCartByUser,
     getCartBySession,
     createCart,
-    // addItem,
-    // removeItem,
+    addItem,
+    removeItem,
     clearCart,
     deleteCart,
 };

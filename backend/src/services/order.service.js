@@ -59,7 +59,14 @@ module.exports = {
     },
 
     async createOrderFromCart(payload) {
-        const { userId, sessionId, addressId, discountCodeId, guestInfo } = payload;
+        const { userId, sessionId, addressId, discountCodeId, guestInfo, paymentMethod, deliveryType } = payload;
+
+        // Validate deliveryType
+        let finalDeliveryType = deliveryType;
+        if (!["standard", "express"].includes(finalDeliveryType)) {
+            finalDeliveryType = "standard";
+        }
+
 
         // 1. Lấy cart theo user hoặc session
         let cart = null;
@@ -86,13 +93,17 @@ module.exports = {
             const quantity = ci.quantity;
             const unitPrice = subtotal / quantity;
 
-            totalAmount += subtotal;
+            totalAmount += Number(ci.variantId.price) * ci.quantity;
 
+            if (!ci.productId) {
+                throw new Error("Product in cart no longer exists");
+            }
             return {
-                productId: ci.productId._id || ci.productId,
-                quantity,
-                unitPrice,
-                subtotal,
+                productId: ci.productId._id,
+                variantId: ci.variantId._id,       // 👈 LẤY GIÁ THEO VARIANT
+                quantity: ci.quantity,
+                unitPrice: Number(ci.variantId.price), // 👈 GIÁ TỪ VARIANT
+                subtotal: Number(ci.variantId.price) * ci.quantity
             };
         });
 
@@ -101,6 +112,8 @@ module.exports = {
             userId: userId || null,
             guestInfo: guestInfo || null,
             addressId: addressId || null,
+            paymentMethod: paymentMethod || null,
+            deliveryType: deliveryType || "standard",
             items,
             discountCodeId: discountCodeId || cart.discountCodeId || null,
             totalAmount,
@@ -123,14 +136,39 @@ module.exports = {
 
     // Tạo đơn hàng
     async createOrder(data) {
-        let { userId, guestInfo, addressId, items, discountCodeId } = data;
+        // Lấy toàn bộ biến ngay từ đầu
+        let { userId, guestInfo, addressId, items, discountCodeId, paymentMethod, deliveryType } = data;
+        let shippingAddress = null;
 
-        // 1) Guest checkout: create user + snapshot address
+        // Validate deliveryType
+        if (!["standard", "express"].includes(deliveryType)) {
+            deliveryType = "standard";
+        }
+
+        // ⭐ CASE 1 — USER LOGIN (KHÔNG PHẢI GUEST)
+        if (userId && !guestInfo) {
+            // Nếu không có addressId → tự lấy default address của user
+            if (!addressId) {
+                const defaultAddr = await addressRepo.findDefaultByUserId(userId);
+                if (!defaultAddr) {
+                    throw new Error("NO_DEFAULT_ADDRESS");
+                }
+                addressId = defaultAddr._id;
+                shippingAddress = defaultAddr;
+            }
+        }
+
+        if (addressId && !shippingAddress) {
+            shippingAddress = await addressRepo.findById(addressId);
+        }
+
+        // ⭐ CASE 2 — GUEST CHECKOUT
         if (!userId) {
             if (!guestInfo || !guestInfo.fullName || !guestInfo.email || !guestInfo.phone) {
                 throw new Error("Guest must provide fullName, email, phone.");
             }
 
+            // Tạo user mới nếu chưa có
             const user = await this.createOrGetUserForGuest({
                 fullName: guestInfo.fullName,
                 email: guestInfo.email,
@@ -138,12 +176,12 @@ module.exports = {
             });
 
             userId = user._id;
-            // Kiểm tra user đã có địa chỉ hay chưa
-            const existingAddresses = await addressRepo.findByUserId(userId);
 
-            // Nếu user chưa có địa chỉ nào → địa chỉ mới là defaultAddress
-            const isFirstAddress = existingAddresses.length === 0;
+            // Kiểm tra đã có defaultAddress chưa
+            const existingDefault = await addressRepo.findDefaultByUserId(userId);
+            const isFirstAddress = !existingDefault;
 
+            // Tạo address
             const addr = await addressRepo.create({
                 userId,
                 fullNameOfReceiver: guestInfo.fullName,
@@ -153,10 +191,10 @@ module.exports = {
                 postalCode: guestInfo.postalCode || null,
                 lat: guestInfo.lat || null,
                 lng: guestInfo.lng || null,
-                isDefault: isFirstAddress   // ⭐ GIỮA TỰ ĐỘNG SET DEFAULT ⭐
+                isDefault: isFirstAddress
             });
 
-            // Nếu là địa chỉ đầu tiên → update user.defaultAddressId
+            // set defaultAddressId nếu chưa có
             if (isFirstAddress) {
                 await userRepository.update(userId, {
                     defaultAddressId: addr._id
@@ -164,35 +202,64 @@ module.exports = {
             }
 
             addressId = addr._id;
-
+            shippingAddress = addr;
         }
 
-        // 2) Logged-in user flow could be extended here if needed
+        // ⭐ Tạo order
+        if (!shippingAddress) {
+            shippingAddress = await addressRepo.findById(addressId);
+        }
+        if (!shippingAddress) {
+            throw new Error("SHIPPING_ADDRESS_NOT_FOUND");
+        }
 
-        // 3) Create order
-        const totalAmount = data.totalAmount;
+        const totalAmount = Number(data.totalAmount);
+        if (Number.isNaN(totalAmount)) {
+            throw new Error("INVALID_TOTAL_AMOUNT");
+        }
+
+        const shipping = await calculateShippingFee(
+            {
+                lat: shippingAddress.lat,
+                lng: shippingAddress.lng,
+                addressLine: shippingAddress.addressLine,
+            },
+            500,
+            totalAmount,
+            false,
+            deliveryType,
+        );
+
+        const shippingFee = Number(shipping?.fee || 0);
+        const finalAmount = totalAmount + shippingFee;
+
         const order = await orderRepository.create({
             userId,
             addressId,
             discountCodeId: discountCodeId || null,
-            totalAmount,
+            paymentMethod: paymentMethod || null,
+            deliveryType: deliveryType || "standard",
+            totalAmount: finalAmount,
+            shippingFee,
             pointsUsed: 0,
             pointsEarned: 0,
         });
 
-        // 4) Create order items
-        const orderItems = items.map((i) => ({
+        // ⭐ Tạo order item
+        const orderItems = items.map(i => ({
             orderId: order._id,
             productId: i.productId,
+            variantId: i.variantId,         // 👈 LƯU VARIANT EPIC
             quantity: i.quantity,
             unitPrice: i.unitPrice,
             subtotal: i.subtotal
         }));
+
         await itemRepo.createMany(orderItems);
 
         await historyRepo.add(order._id, "pending");
 
-        // 5) Send confirmation email
+        // ⭐ Email guest
         try {
             const emailToSend = guestInfo ? guestInfo.email : data.customerEmail;
             if (emailToSend) {
@@ -227,6 +294,11 @@ module.exports = {
         const weather = await getWeatherCondition(address.lat, address.lng);
 
         // Shipping fee
+        const goodsAmount = Math.max(
+            Number(order.totalAmount) - Number(order.shippingFee || 0),
+            0,
+        );
+
         const shipping = await calculateShippingFee(
             {
                 lat: address.lat,
@@ -234,12 +306,13 @@ module.exports = {
                 addressLine: address.addressLine,
             },
             500,                             // tạm thời: trọng lượng mặc định
-            Number(order.totalAmount),       // tổng tiền
+            goodsAmount,                     // tổng tiền hàng (không gồm ship)
             false,                           // freeship hay không
-            "standard"                       // loại giao hàng
+            order.deliveryType               // loại giao hàng
         );
 
-        // Thêm weather vào shipping
+        // Ghi đè phí ship thực tế + thêm weather thông tin
+        shipping.fee = Number(order.shippingFee || shipping.fee || 0);
         shipping.weather = weather;
 
         // Payment
