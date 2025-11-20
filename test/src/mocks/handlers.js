@@ -33,7 +33,7 @@ const verifyToken = (token) => {
 
 export const handlers = [
   // Auth endpoints
-  http.post(`${API_BASE_URL}/api/auth/login`, async ({ request }) => {
+  http.post(`${API_BASE_URL}/auth/login`, async ({ request }) => {
     const { email, password } = await request.json();
 
     // Validate input
@@ -67,7 +67,7 @@ export const handlers = [
     });
   }),
 
-  http.post(`${API_BASE_URL}/api/auth/signup`, async ({ request }) => {
+  http.post(`${API_BASE_URL}/auth/signup`, async ({ request }) => {
     const { fullname, email, phone, password } = await request.json();
 
     // Validate input
@@ -112,7 +112,7 @@ export const handlers = [
     });
   }),
 
-  http.get(`${API_BASE_URL}/api/auth/me`, ({ request }) => {
+  http.get(`${API_BASE_URL}/auth/me`, ({ request }) => {
     const authHeader = request.headers.get('Authorization');
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -148,7 +148,7 @@ export const handlers = [
     });
   }),
 
-  http.post(`${API_BASE_URL}/api/auth/logout`, () => {
+  http.post(`${API_BASE_URL}/auth/logout`, () => {
     return HttpResponse.json({
       success: true,
       message: 'Logged out successfully',
@@ -157,7 +157,7 @@ export const handlers = [
 
   // Products endpoints
   // Products endpoints
-  http.get(`${API_BASE_URL}/api/products`, ({ request }) => {
+  http.get(`${API_BASE_URL}/products`, ({ request }) => {
     const url = new URL(request.url);
     const isFeatured = url.searchParams.get('isFeatured');
     const page = parseInt(url.searchParams.get('page') || '1');
@@ -344,7 +344,7 @@ export const handlers = [
     });
   }),
 
-  http.get(`${API_BASE_URL}/api/products/categories`, () => {
+  http.get(`${API_BASE_URL}/products/categories`, () => {
     // Extract unique categories from all products
     const allProducts = [
       ...mockProducts.featured,
@@ -371,7 +371,7 @@ export const handlers = [
     return HttpResponse.json(categories);
   }),
 
-  http.get(`${API_BASE_URL}/api/products/:id`, ({ params }) => {
+  http.get(`${API_BASE_URL}/products/:id`, ({ params }) => {
     const { id } = params;
     const allProducts = [
       ...mockProducts.featured,
@@ -392,7 +392,7 @@ export const handlers = [
   }),
 
   // Variant endpoints
-  http.get(`${API_BASE_URL}/api/products/:productId/variants`, ({ params }) => {
+  http.get(`${API_BASE_URL}/products/:productId/variants`, ({ params }) => {
     const { productId } = params;
     const variants = getVariantsByProductId(productId);
     
@@ -402,7 +402,7 @@ export const handlers = [
     });
   }),
 
-  http.get(`${API_BASE_URL}/api/variants/:variantId`, ({ params }) => {
+  http.get(`${API_BASE_URL}/variants/:variantId`, ({ params }) => {
     const { variantId } = params;
     const variant = getVariantById(variantId);
     
@@ -414,7 +414,7 @@ export const handlers = [
   }),
 
   // Reviews endpoints
-  http.get(`${API_BASE_URL}/api/products/:productId/reviews`, ({ params, request }) => {
+  http.get(`${API_BASE_URL}/products/:productId/reviews`, ({ params, request }) => {
     const { productId } = params;
     const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get('limit') || '10');
@@ -483,7 +483,7 @@ export const handlers = [
     });
   }),
 
-  http.get(`${API_BASE_URL}/api/reviews/:reviewId`, ({ params }) => {
+  http.get(`${API_BASE_URL}/reviews/:reviewId`, ({ params }) => {
     const { reviewId } = params;
 
     // Check mock reviews
@@ -520,7 +520,7 @@ export const handlers = [
     return HttpResponse.json(review);
   }),
 
-  http.post(`${API_BASE_URL}/api/products/:productId/reviews`, async ({ params, request }) => {
+  http.post(`${API_BASE_URL}/products/:productId/reviews`, async ({ params, request }) => {
     const { productId } = params;
     const reviewData = await request.json();
 
@@ -584,7 +584,7 @@ export const handlers = [
     }, { status: 201 });
   }),
 
-  http.patch(`${API_BASE_URL}/api/reviews/:reviewId`, async ({ params, request }) => {
+  http.patch(`${API_BASE_URL}/reviews/:reviewId`, async ({ params, request }) => {
     const { reviewId } = params;
     const updateData = await request.json();
 
@@ -634,7 +634,7 @@ export const handlers = [
     });
   }),
 
-  http.delete(`${API_BASE_URL}/api/reviews/:reviewId`, ({ params }) => {
+  http.delete(`${API_BASE_URL}/reviews/:reviewId`, ({ params }) => {
     const { reviewId } = params;
 
     // Get reviews from localStorage (only localStorage reviews can be deleted)
@@ -659,7 +659,7 @@ export const handlers = [
   }),
 
   // Get all reviews by a specific user
-  http.get(`${API_BASE_URL}/api/users/:userId/reviews`, ({ params, request }) => {
+  http.get(`${API_BASE_URL}/users/:userId/reviews`, ({ params, request }) => {
     const { userId } = params;
     const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get('limit') || '10');
@@ -711,7 +711,7 @@ export const handlers = [
   }),
 
   // Cart endpoints
-  http.get(`${API_BASE_URL}/api/cart`, () => {
+  http.get(`${API_BASE_URL}/cart`, () => {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
     
     // Populate product and variant data
@@ -738,7 +738,7 @@ export const handlers = [
     return HttpResponse.json(populatedCart);
   }),
 
-  http.post(`${API_BASE_URL}/api/cart`, async ({ request }) => {
+  http.post(`${API_BASE_URL}/cart`, async ({ request }) => {
     const cartItem = await request.json();
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
     
@@ -781,7 +781,7 @@ export const handlers = [
   }),
 
   // Update cart item quantity
-  http.patch(`${API_BASE_URL}/api/cart/:itemId`, async ({ params, request }) => {
+  http.patch(`${API_BASE_URL}/cart/:itemId`, async ({ params, request }) => {
     const { itemId } = params;
     const updates = await request.json();
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
@@ -822,7 +822,7 @@ export const handlers = [
   }),
 
   // Delete cart item
-  http.delete(`${API_BASE_URL}/api/cart/:itemId`, ({ params }) => {
+  http.delete(`${API_BASE_URL}/cart/:itemId`, ({ params }) => {
     const { itemId } = params;
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
     
@@ -839,13 +839,13 @@ export const handlers = [
   }),
 
   // Clear cart
-  http.delete(`${API_BASE_URL}/api/cart`, () => {
+  http.delete(`${API_BASE_URL}/cart`, () => {
     localStorage.setItem('cart', JSON.stringify([]));
     return HttpResponse.json({ message: 'Cart cleared' });
   }),
 
   // Orders endpoints
-  http.get(`${API_BASE_URL}/api/orders`, ({ request }) => {
+  http.get(`${API_BASE_URL}/orders`, ({ request }) => {
     const url = new URL(request.url);
     const status = url.searchParams.get('status');
     const search = url.searchParams.get('search');
@@ -868,7 +868,7 @@ export const handlers = [
     return HttpResponse.json(orders);
   }),
 
-  http.post(`${API_BASE_URL}/api/orders`, async ({ request }) => {
+  http.post(`${API_BASE_URL}/orders`, async ({ request }) => {
     const orderData = await request.json();
 
     const newOrder = {
@@ -896,7 +896,7 @@ export const handlers = [
   }),
 
   // Discount Code endpoints
-  http.post(`${API_BASE_URL}/api/discount-codes/validate`, async ({ request }) => {
+  http.post(`${API_BASE_URL}/discount-codes/validate`, async ({ request }) => {
     const { code, orderTotal } = await request.json();
 
     // Validate input
@@ -945,7 +945,7 @@ export const handlers = [
     });
   }),
 
-  http.get(`${API_BASE_URL}/api/discount-codes`, ({ request }) => {
+  http.get(`${API_BASE_URL}/discount-codes`, ({ request }) => {
     const url = new URL(request.url);
     const available = url.searchParams.get('available') === 'true';
 
@@ -970,7 +970,7 @@ export const handlers = [
     });
   }),
 
-  http.get(`${API_BASE_URL}/api/discount-codes/:code`, ({ params }) => {
+  http.get(`${API_BASE_URL}/discount-codes/:code`, ({ params }) => {
     const { code } = params;
 
     const discountCode = getDiscountCodeByCode(code);
@@ -995,7 +995,7 @@ export const handlers = [
     });
   }),
 
-  http.post(`${API_BASE_URL}/api/discount-codes/:codeId/use`, async ({ params }) => {
+  http.post(`${API_BASE_URL}/discount-codes/:codeId/use`, async ({ params }) => {
     const { codeId } = params;
 
     // Get discount codes from localStorage (to track usage)
@@ -1055,7 +1055,7 @@ export const handlers = [
 
   // ===== ADMIN PRODUCT CRUD OPERATIONS =====
   // Create product
-  http.post(`${API_BASE_URL}/api/products`, async ({ request }) => {
+  http.post(`${API_BASE_URL}/products`, async ({ request }) => {
     const productData = await request.json();
     
     const newProduct = {
@@ -1072,7 +1072,7 @@ export const handlers = [
   }),
 
   // Update product (PUT)
-  http.put(`${API_BASE_URL}/api/products/:id`, async ({ params, request }) => {
+  http.put(`${API_BASE_URL}/products/:id`, async ({ params, request }) => {
     const { id } = params;
     const productData = await request.json();
     
@@ -1086,7 +1086,7 @@ export const handlers = [
   }),
 
   // Partial update product (PATCH)
-  http.patch(`${API_BASE_URL}/api/products/:id`, async ({ params, request }) => {
+  http.patch(`${API_BASE_URL}/products/:id`, async ({ params, request }) => {
     const { id } = params;
     const productData = await request.json();
     
@@ -1100,7 +1100,7 @@ export const handlers = [
   }),
 
   // Delete product
-  http.delete(`${API_BASE_URL}/api/products/:id`, ({ params }) => {
+  http.delete(`${API_BASE_URL}/products/:id`, ({ params }) => {
     const { id } = params;
     
     return HttpResponse.json({
@@ -1111,7 +1111,7 @@ export const handlers = [
   }),
 
   // Bulk delete products
-  http.post(`${API_BASE_URL}/api/products/bulk-delete`, async ({ request }) => {
+  http.post(`${API_BASE_URL}/products/bulk-delete`, async ({ request }) => {
     const { ids } = await request.json();
     
     return HttpResponse.json({
@@ -1121,3 +1121,4 @@ export const handlers = [
     });
   }),
 ];
+
