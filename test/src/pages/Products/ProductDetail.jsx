@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import { Button } from '@/components/ui/button';
@@ -200,6 +200,27 @@ const ProductDetail = () => {
 
         {/* Reviews Section */}
         <ReviewSection productId={id} />
+      </div>
+
+      {/* Mobile Bottom Action Bar */}
+      <div className="mobile-action-bar">
+        <div className="mobile-action-buttons">
+          <button
+            className="mobile-cart-btn"
+            onClick={handleAddToCart}
+            disabled={!selectedVariant || !inStock || addingToCart}
+          >
+            <ShoppingCart size={20} />
+            Add to Cart
+          </button>
+          <button
+            className="mobile-buy-btn"
+            onClick={handleBuyNow}
+            disabled={!selectedVariant || !inStock || addingToCart}
+          >
+            Buy Now
+          </button>
+        </div>
       </div>
     </div>
   );
