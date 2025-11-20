@@ -35,10 +35,9 @@
 .products-toolbar {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 1rem;
+  padding: 1.25rem;
   background: white;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
   gap: 1rem;
@@ -46,8 +45,8 @@
 
 .toolbar-search {
   width: 100%;
-  display: flex;
-  justify-content: center;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .toolbar-controls {
@@ -56,20 +55,51 @@
   align-items: center;
   width: 100%;
   gap: 1rem;
-  flex-wrap: wrap;
 }
 
-.toolbar-left,
-.toolbar-right {
+.toolbar-left {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.toolbar-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.toolbar-separator {
+  height: 2rem;
+  margin: 0 0.5rem;
+  display: none;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .products-count {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
   font-size: 0.875rem;
   color: #64748b;
+  white-space: nowrap;
+}
+
+.count-number {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.count-label {
+  display: inline;
 }
 
 /* Content Layout */
@@ -285,13 +315,35 @@
   }
 
   .products-toolbar {
-    padding: 0.75rem;
+    padding: 1rem;
+    gap: 0.875rem;
   }
 
-  .toolbar-left,
+  .toolbar-search {
+    max-width: 100%;
+  }
+
+  .toolbar-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .toolbar-left {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .toolbar-separator {
+    display: block;
+  }
+
   .toolbar-right {
     width: 100%;
-    justify-content: space-between;
+  }
+
+  .products-count {
+    font-size: 0.8125rem;
   }
 
   .products-grid {
@@ -318,7 +370,42 @@
   }
 
   .products-toolbar {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .toolbar-left {
+    gap: 0.5rem;
+  }
+
+  .toolbar-filters {
+    gap: 0.375rem;
+  }
+
+  .toolbar-separator {
+    height: 1.5rem;
+    margin: 0 0.25rem;
+  }
+
+  .filter-text,
+  .clear-text {
+    display: none;
+  }
+
+  .clear-btn {
     padding: 0.5rem;
+  }
+
+  .products-count {
+    font-size: 0.75rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.125rem;
+  }
+
+  .count-label {
+    display: block;
+    font-size: 0.6875rem;
   }
 
   .products-main {

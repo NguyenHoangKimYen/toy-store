@@ -18,45 +18,51 @@ const ProductToolbar = ({
 }) => {
   return (
     <div className="products-toolbar">
-      {/* Advanced Search Bar */}
+      {/* Advanced Search Bar - Full Width */}
       <div className="toolbar-search">
         <AdvancedSearchBar placeholder="Search for products..." />
       </div>
 
+      {/* Controls Row */}
       <div className="toolbar-controls">
+        {/* Left Side - Filters and Count */}
         <div className="toolbar-left">
-          <Button
-            variant="outline"
-            size="default"
-            onClick={() => setShowFilters(!showFilters)}
-            className="gap-2"
-          >
-            <SlidersHorizontal size={20} />
-            <span>Filters</span>
-            {hasActiveFilters && (
-              <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center rounded-full" />
-            )}
-          </Button>
-
-          {hasActiveFilters && (
+          <div className="toolbar-filters">
             <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearFilters}
-              className="gap-1"
+              variant="outline"
+              size="default"
+              onClick={() => setShowFilters(!showFilters)}
+              className="gap-2"
             >
-              <X size={16} />
-              Clear Filters
+              <SlidersHorizontal size={18} />
+              <span className="filter-text">Filters</span>
+              {hasActiveFilters && (
+                <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center rounded-full" />
+              )}
             </Button>
-          )}
 
-          <Separator orientation="vertical" className="h-8 mx-2" />
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className="gap-1 clear-btn"
+              >
+                <X size={16} />
+                <span className="clear-text">Clear</span>
+              </Button>
+            )}
+          </div>
 
-          <span className="products-count text-sm text-muted-foreground">
-            {totalProducts} {totalProducts === 1 ? 'Product' : 'Products'}
+          <Separator orientation="vertical" className="toolbar-separator" />
+
+          <span className="products-count">
+            <span className="count-number">{totalProducts}</span>
+            <span className="count-label">{totalProducts === 1 ? 'Product' : 'Products'}</span>
           </span>
         </div>
 
+        {/* Right Side - Sort */}
         <div className="toolbar-right">
           <ProductSort
             sortBy={sortBy}
