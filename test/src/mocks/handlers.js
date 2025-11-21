@@ -166,19 +166,22 @@ export const handlers = [
       ...mockProducts.newProducts,
     ];
 
-    const categoriesSet = new Set();
+    const categoriesMap = new Map();
     allProducts.forEach(product => {
-      if (product.category) {
-        categoriesSet.add(product.category);
+      if (product.categoryId && Array.isArray(product.categoryId)) {
+        product.categoryId.forEach(cat => {
+          if (cat._id && cat.name && !categoriesMap.has(cat._id)) {
+            categoriesMap.set(cat._id, {
+              _id: cat._id,
+              name: cat.name,
+              slug: cat.name.toLowerCase().replace(/\s+/g, '-'),
+            });
+          }
+        });
       }
     });
 
-    const categories = Array.from(categoriesSet).map(name => ({
-      _id: `cat-${name.toLowerCase().replace(/\s+/g, '-')}`,
-      name,
-      slug: name.toLowerCase().replace(/\s+/g, '-'),
-    }));
-
+    const categories = Array.from(categoriesMap.values());
     return HttpResponse.json(categories);
   }),
 
