@@ -41,9 +41,9 @@ const ProductInfo = ({ product, rating, reviewCount, price, originalPrice, inSto
         {selectedVariant ? (
           <>
             <div className="price-main">
-              <span className="current-price">{formatPrice(price)}</span>
+              <span className="detail-current-price">{formatPrice(price)}</span>
               {originalPrice && originalPrice > price && (
-                <span className="original-price">{formatPrice(originalPrice)}</span>
+                <span className="detail-original-price">{formatPrice(originalPrice)}</span>
               )}
             </div>
             <div className="stock-info">
@@ -64,7 +64,7 @@ const ProductInfo = ({ product, rating, reviewCount, price, originalPrice, inSto
           </>
         ) : (
           <div className="price-main">
-            <span className="current-price text-gray-400">Select all options to see price</span>
+            <span className="detail-current-price text-gray-400">Select all options to see price</span>
           </div>
         )}
       </div>

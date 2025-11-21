@@ -1,16 +1,21 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const HeroSlide = ({ product, image }) => {
+const HeroSlide = ({ product }) => {
   const navigate = useNavigate();
 
   const handleShopNow = () => {
     navigate(`/products/${product._id}`);
   };
 
+  // Use first image from product imageUrls array, fallback to placeholder
+  const productImage = product.imageUrls && product.imageUrls.length > 0 
+    ? product.imageUrls[0] 
+    : '/placeholder.png';
+
   return (
     <div className="item">
-      <img src={image} alt={product.name} />
+      <img src={productImage} alt={product.name} />
       <div className="introduce">
         <div className="tag">FEATURED</div>
         <div className="name">{product.name}</div>

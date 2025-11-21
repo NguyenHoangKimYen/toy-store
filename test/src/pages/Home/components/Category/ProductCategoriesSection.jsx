@@ -29,12 +29,24 @@ const ProductCategoriesSection = () => {
         console.log('Fetched:', allProducts.length, 'products,', allCategories.length, 'categories');
         
         // Create category sections with their products
-        const categoryData = allCategories.slice(0, 4).map((category, index) => {
-          const categoryProducts = allProducts.filter(p => 
-            Array.isArray(p.categoryId) 
-              ? p.categoryId.some(catId => catId === category._id || catId._id === category._id)
-              : p.categoryId === category._id || p.categoryId?._id === category._id
-          ).slice(0, 12);
+        const categoryData = allCategories.map((category, index) => {
+          const categoryProducts = allProducts.filter(p => {
+            if (!p.categoryId) return false;
+            
+            if (Array.isArray(p.categoryId)) {
+              return p.categoryId.some(catId => {
+                // Handle null/undefined category references
+                if (!catId) return false;
+                // Handle both populated objects and plain IDs
+                const id = typeof catId === 'object' ? catId._id : catId;
+                return id === category._id;
+              });
+            }
+            
+            // Single category ID
+            const id = typeof p.categoryId === 'object' ? p.categoryId._id : p.categoryId;
+            return id === category._id;
+          }).slice(0, 12);
           
           // Icon rotation for visual variety
           const icons = [
@@ -56,7 +68,7 @@ const ProductCategoriesSection = () => {
             gradient: iconData.gradient,
             bgColor: iconData.bgColor,
           };
-        }).filter(cat => cat.products.length > 0);
+        }).filter(cat => cat.products.length > 0).slice(0, 4);
         
         // If no categories have products, add a featured section
         if (categoryData.length === 0 && allProducts.length > 0) {
@@ -121,7 +133,7 @@ const ProductCategoriesSection = () => {
       {/* Tab Navigation */}
       <div className="tab-container">
         <div className="tab-content-container">
-          {categories.map((category, index) => (
+          {categories.slice(0, 4).map((category, index) => (
             <div
               key={category.id}
               className={`tab-item ${index === activeTabIndex ? 'tab-active' : ''}`}
@@ -130,6 +142,14 @@ const ProductCategoriesSection = () => {
               {category.title}
             </div>
           ))}
+          {categories.length > 4 && (
+            <div
+              className="tab-item"
+              onClick={() => navigate('/products')}
+            >
+              More
+            </div>
+          )}
         </div>
       </div>
 

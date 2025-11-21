@@ -21,7 +21,7 @@ const ReviewForm = ({ onSubmit, submitting }) => {
 
   return (
     <form onSubmit={handleSubmit} className="review-form">
-      <div className="form-group">
+      <div className="review-form-group">
         <Label>Your Rating</Label>
         <div className="star-rating">
           {[1, 2, 3, 4, 5].map((star) => (
@@ -43,7 +43,7 @@ const ReviewForm = ({ onSubmit, submitting }) => {
         </div>
       </div>
 
-      <div className="form-group">
+      <div className="review-form-group">
         <Label htmlFor="review-content">Your Review</Label>
         <textarea
           id="review-content"
@@ -58,7 +58,7 @@ const ReviewForm = ({ onSubmit, submitting }) => {
         <p className="character-count">{content.length} characters</p>
       </div>
 
-      <div className="form-actions">
+      <div className="review-form-actions">
         <Button type="submit" disabled={submitting || !content.trim()}>
           {submitting ? 'Submitting...' : 'Submit Review'}
         </Button>
