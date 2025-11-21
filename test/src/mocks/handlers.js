@@ -155,6 +155,33 @@ export const handlers = [
     });
   }),
 
+  // Categories endpoint
+  http.get(`${API_BASE_URL}/categories`, () => {
+    const allProducts = [
+      ...mockProducts.featured,
+      ...mockProducts.bestSellers,
+      ...mockProducts.keychains,
+      ...mockProducts.plushToys,
+      ...mockProducts.accessories,
+      ...mockProducts.newProducts,
+    ];
+
+    const categoriesSet = new Set();
+    allProducts.forEach(product => {
+      if (product.category) {
+        categoriesSet.add(product.category);
+      }
+    });
+
+    const categories = Array.from(categoriesSet).map(name => ({
+      _id: `cat-${name.toLowerCase().replace(/\s+/g, '-')}`,
+      name,
+      slug: name.toLowerCase().replace(/\s+/g, '-'),
+    }));
+
+    return HttpResponse.json(categories);
+  }),
+
   // Users endpoints
   http.get(`${API_BASE_URL}/users`, ({ request }) => {
     const url = new URL(request.url);
