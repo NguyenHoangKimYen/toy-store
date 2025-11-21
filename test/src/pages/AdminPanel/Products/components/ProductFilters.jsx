@@ -58,10 +58,10 @@ const ProductFilters = ({ filters, onFilterChange, onClearFilters, categories = 
   })
 
   return (
-    <div className='mb-6 space-y-4'>
+    <div className='mb-4'>
       {/* Clear Filters Button */}
       {hasActiveFilters && (
-        <div className='flex justify-end'>
+        <div className='flex justify-end mb-2'>
           <Button
             variant='ghost'
             onClick={onClearFilters}
@@ -75,8 +75,8 @@ const ProductFilters = ({ filters, onFilterChange, onClearFilters, categories = 
 
       {/* Filter Panel */}
       {showFilters && (
-        <div className='p-6 bg-gray-50 rounded-lg border border-gray-200 space-y-6'>
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+        <div className='p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-4 mb-4'>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
             
             {/* Status Filter */}
             <div className='space-y-2'>
@@ -242,7 +242,7 @@ const ProductFilters = ({ filters, onFilterChange, onClearFilters, categories = 
 
           {/* Active Filters Summary */}
           {hasActiveFilters && (
-            <div className='pt-4 border-t border-gray-300'>
+            <div className='pt-3 border-t border-gray-300'>
               <div className='flex flex-wrap gap-2'>
                 <span className='text-sm font-medium text-gray-700'>Active Filters:</span>
                 {filters.status && filters.status !== 'all' && (

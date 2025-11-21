@@ -104,10 +104,10 @@ const UserFilters = ({ filters, onFilterChange, onClearFilters, showFilters }) =
   const hasActiveFilters = Object.values(filters).some(v => v && v !== 'all')
 
   return (
-    <div className='mb-6 space-y-4'>
+    <div className='mb-4'>
       {/* Clear Filters Button */}
       {hasActiveFilters && (
-        <div className='flex justify-end'>
+        <div className='flex justify-end mb-2'>
           <Button
             variant='ghost'
             onClick={onClearFilters}
@@ -121,8 +121,8 @@ const UserFilters = ({ filters, onFilterChange, onClearFilters, showFilters }) =
 
       {/* Filter Panel */}
       {showFilters && (
-        <div className='p-6 bg-gray-50 rounded-lg border border-gray-200 space-y-6'>
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+        <div className='p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-4 mb-4'>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
             
             {/* Role Filter */}
             <div className='space-y-2'>

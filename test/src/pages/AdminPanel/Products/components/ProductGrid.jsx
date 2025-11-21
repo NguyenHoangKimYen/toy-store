@@ -1,6 +1,6 @@
 import React from 'react'
 import { Package } from 'lucide-react'
-import ProductCard from '@/components/common/ProductCard'
+import AdminProductCard from './AdminProductCard'
 
 const ProductGrid = ({ products, onViewDetails, onEdit, onDelete }) => {
   if (products.length === 0) {
@@ -20,11 +20,9 @@ const ProductGrid = ({ products, onViewDetails, onEdit, onDelete }) => {
   return (
     <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
       {products.map((product) => (
-        <ProductCard 
+        <AdminProductCard 
           key={product._id || crypto.randomUUID()} 
           product={product}
-          variant="admin"
-          size="medium"
           showBadges={true}
           showStock={true}
           showRating={true}

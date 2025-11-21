@@ -1,0 +1,20 @@
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: white;
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  transform: translateY(0);
+}
+
+.sticky-header.sticky {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sticky-header.hidden {
+  transform: translateY(-100%);
+}
+
+.sticky-header.visible {
+  transform: translateY(0);
+}

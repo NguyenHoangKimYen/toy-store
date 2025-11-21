@@ -6,7 +6,7 @@ import ProductDetailModal from './components/ProductDetailModal'
 import ProductFormModal from './components/ProductFormModal'
 import ProductFilters from './components/ProductFilters'
 import { useProducts } from '@/hooks' // Using global hook
-import { PageHeader, SearchBar, ScrollableContent } from '@/components/common'
+import { PageHeader, SearchBar } from '@/components/common'
 import { getCategories } from '@/services/categories.service'
 import {
   AlertDialog,
@@ -29,6 +29,7 @@ const Products = () => {
   const [productToDelete, setProductToDelete] = useState(null)
   const [categories, setCategories] = useState([])
   const [showFilters, setShowFilters] = useState(false)
+  const [stickyScrolled, setStickyScrolled] = useState(false)
   
   // Filter state
   const [filters, setFilters] = useState({
@@ -53,6 +54,20 @@ const Products = () => {
       }
     }
     fetchCategories()
+  }, [])
+
+  // Handle scroll for sticky header shadow
+  useEffect(() => {
+    const scrollContainer = document.querySelector('.admin-scroll-container')
+    if (!scrollContainer) return
+
+    const handleScroll = () => {
+      const scrollTop = scrollContainer.scrollTop
+      setStickyScrolled(scrollTop > 20)
+    }
+
+    scrollContainer.addEventListener('scroll', handleScroll)
+    return () => scrollContainer.removeEventListener('scroll', handleScroll)
   }, [])
 
   // Build params for API call
@@ -174,64 +189,83 @@ const Products = () => {
   }
 
   return (
-    <div className='h-full flex flex-col p-6'>
-      {/* Header */}
-      <PageHeader
-        title='Product Management'
-        description='Manage product inventory and listings'
-        actionButton={
-          <button 
-            onClick={handleAddProduct}
-            className='flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
+    <div className='h-full flex flex-col'>
+      <div className='flex-1 overflow-y-auto px-6 admin-scroll-container'>
+        <div className='py-6'>
+          {/* Header */}
+          <PageHeader
+            title='Product Management'
+            description='Manage product inventory and listings'
+            actionButton={
+              <button 
+                onClick={handleAddProduct}
+                className='flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
+              >
+                <Plus className='w-4 h-4' />
+                Add Product
+              </button>
+            }
+          />
+
+          {/* Sticky Search and Filter Section */}
+          <div 
+            className={`sticky top-0 z-40 bg-white py-4 transition-shadow duration-300 ${stickyScrolled ? 'shadow-md' : ''}`}
           >
-            <Plus className='w-4 h-4' />
-            Add Product
-          </button>
-        }
-      />
+            {/* Search Bar */}
+            <SearchBar
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              placeholder='Search for products'
+              onFilterClick={() => setShowFilters(!showFilters)}
+            />
 
-      {/* Search Bar */}
-      <SearchBar
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        placeholder='Search for products'
-        onFilterClick={() => setShowFilters(!showFilters)}
-      />
+            {/* Filters */}
+            <ProductFilters
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onClearFilters={handleClearFilters}
+              categories={categories}
+              showFilters={showFilters}
+              onToggleFilters={() => setShowFilters(!showFilters)}
+            />
+          </div>
 
-      {/* Filters */}
-      <ProductFilters
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onClearFilters={handleClearFilters}
-        categories={categories}
-        showFilters={showFilters}
-        onToggleFilters={() => setShowFilters(!showFilters)}
-      />
+          {/* Stats Cards */}
+          <div className='mb-6'>
+            <ProductStats stats={stats} />
+          </div>
 
-      {/* Stats Cards */}
-      <div className='flex-shrink-0 mb-6'>
-        <ProductStats stats={stats} />
+          {/* Product Grid */}
+          {error ? (
+            <div className='text-center py-12'>
+              <h3 className='text-lg font-semibold text-red-600 mb-2'>Error Loading Products</h3>
+              <p className='text-gray-600 mb-4'>{error}</p>
+              <button 
+                onClick={() => window.location.reload()}
+                className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700'
+              >
+                Retry
+              </button>
+            </div>
+          ) : loading ? (
+            <div className='text-center py-12'>
+              <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto'></div>
+              <p className='mt-4 text-gray-600'>Loading products...</p>
+            </div>
+          ) : (
+            <ProductGrid 
+              products={products} 
+              onViewDetails={handleViewDetails}
+              onEdit={(product) => {
+                setSelectedProduct(product);
+                setFormMode('edit');
+                setIsFormModalOpen(true);
+              }}
+              onDelete={handleDeleteProduct}
+            />
+          )}
+        </div>
       </div>
-
-      {/* Product Grid */}
-      <ScrollableContent
-        loading={loading}
-        error={error}
-        loadingMessage='Loading products...'
-        errorTitle='Error Loading Products'
-        onRetry={() => window.location.reload()}
-      >
-        <ProductGrid 
-          products={products} 
-          onViewDetails={handleViewDetails}
-          onEdit={(product) => {
-            setSelectedProduct(product);
-            setFormMode('edit');
-            setIsFormModalOpen(true);
-          }}
-          onDelete={handleDeleteProduct}
-        />
-      </ScrollableContent>
 
       {/* Product Detail Modal */}
       {isDetailModalOpen && selectedProduct && (
