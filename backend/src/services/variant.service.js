@@ -17,7 +17,6 @@ const updateProductPriceRange = async (productId) => {
     await productRepository.updatePriceRange(productId, min, max);
 };
 
-/** Lấy danh sách variant theo product */
 const getVariantsByProduct = async (productId) => {
     return await variantRepository.findByProductId(productId);
 };
@@ -30,7 +29,6 @@ const getVariantById = async (id) => {
     return variant;
 };
 
-/** Tạo một biến thể mới và đảm bảo tính toàn vẹn dữ liệu */
 const createVariant = async (productId, variantData, imgFiles) => {
     const product = await productRepository.findById(productId);
     if (!product) {
@@ -91,7 +89,6 @@ const createVariant = async (productId, variantData, imgFiles) => {
     return createdVariant;
 };
 
-/** Cập nhật variant */
 const updateVariant = async (id, data) => {
     const updated = await variantRepository.update(id, data);
     if (!updated) throw new Error("Variant not found");
@@ -100,12 +97,10 @@ const updateVariant = async (id, data) => {
     return updated;
 };
 
-/** Xóa variant và cập nhật lại product */
 const deleteVariant = async (id) => {
     const variant = await variantRepository.findById(id);
     if (!variant) throw new Error("Variant not found");
 
-    // Xóa ảnh S3 nếu có
     if (variant.imageUrls?.length) {
         await deleteFromS3(variant.imageUrls);
     }
@@ -121,9 +116,6 @@ const deleteVariant = async (id) => {
     return { message: "Variant deleted successfully" };
 };
 
-
-
-/** Thêm ảnh mới cho variant */
 const addVariantImages = async (id, files) => {
     const uploadedUrls = await uploadToS3(files, "variantImages");
 
@@ -135,7 +127,6 @@ const addVariantImages = async (id, files) => {
     return updated;
 };
 
-/** Xóa ảnh khỏi variant */
 const removeVariantImages = async (id, urlsToRemove) => {
     await deleteFromS3(urlsToRemove);
 

@@ -23,6 +23,12 @@ const VariantSchema = new mongoose.Schema(
             },
         ],
 
+        weight: {
+            type: Number,
+            default: 100,
+            min: 0,
+        },
+
         price: {
             type: mongoose.Schema.Types.Decimal128,
             min: 0,
