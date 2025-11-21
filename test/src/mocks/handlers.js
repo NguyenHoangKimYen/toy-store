@@ -257,26 +257,33 @@ export const handlers = [
     // Respect limit from frontend, default to reasonable value for mock
     const limit = parseInt(url.searchParams.get('limit') || '20');
     const search = url.searchParams.get('search');
+    const keyword = url.searchParams.get('keyword'); // Backend uses 'keyword' for search
     
     console.log('[Mock Handler] Products request:', { page, limit, url: request.url });
-    const category = url.searchParams.get('category');
+    
+    // Support both 'category' and 'categoryId' parameters
+    const category = url.searchParams.get('category') || url.searchParams.get('categoryId');
     const brand = url.searchParams.get('brand');
     
     // Support both 'sortBy=field:order' and separate 'sortBy' and 'sortOrder' params
-    const sortByParam = url.searchParams.get('sortBy') || 'createdAt';
-    let sortBy = sortByParam;
+    const sortParam = url.searchParams.get('sort') || url.searchParams.get('sortBy');
+    let sortBy = 'createdAt';
     let sortOrder = url.searchParams.get('sortOrder') || 'desc';
     
-    // Parse 'sortBy:order' format (e.g., 'totalUnitsSold:desc')
-    if (sortByParam.includes(':')) {
-      const [field, order] = sortByParam.split(':');
-      sortBy = field;
-      sortOrder = order || 'desc';
+    // Parse 'field:order' format (e.g., 'totalUnitsSold:desc')
+    if (sortParam) {
+      if (sortParam.includes(':')) {
+        const [field, order] = sortParam.split(':');
+        sortBy = field;
+        sortOrder = order || 'desc';
+      } else {
+        sortBy = sortParam;
+      }
     }
     
     const minPrice = parseFloat(url.searchParams.get('minPrice') || '0');
     const maxPrice = parseFloat(url.searchParams.get('maxPrice') || 'Infinity');
-    const minRating = parseFloat(url.searchParams.get('rating') || '0');
+    const minRating = parseFloat(url.searchParams.get('rating') || url.searchParams.get('minRating') || '0');
     const daysAgo = parseInt(url.searchParams.get('daysAgo') || '0');
     const startDate = url.searchParams.get('startDate');
     const endDate = url.searchParams.get('endDate');
@@ -321,8 +328,10 @@ export const handlers = [
       });
     }
 
-    if (search) {
-      const searchLower = search.toLowerCase();
+    // Search filter - support both 'search' and 'keyword' params
+    const searchQuery = search || keyword;
+    if (searchQuery) {
+      const searchLower = searchQuery.toLowerCase();
       products = products.filter(p =>
         p.name.toLowerCase().includes(searchLower) ||
         p.description.toLowerCase().includes(searchLower) ||
