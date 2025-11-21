@@ -1,121 +1,4 @@
-/* Product Categories Section Styles - Shopee Style */
-
-.product-categories-section {
-  padding: 80px 5%;
-  background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
-}
-
-.section-header {
-  text-align: center;
-  margin-bottom: 60px;
-}
-
-.section-title {
-  font-size: 3rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 12px;
-}
-
-.section-subtitle {
-  font-size: 1.125rem;
-  color: #64748b;
-  font-weight: 500;
-}
-
-.categories-container {
-  max-width: 1600px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 50px;
-}
-
-/* Each category row */
-.category-row {
-  background: white;
-  border-radius: 16px;
-  padding: 30px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  transition: box-shadow 0.3s ease;
-}
-
-.category-row:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-}
-
-.category-row-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #f1f5f9;
-}
-
-.category-title-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.category-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.icon-gradient {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  color: white;
-}
-
-.category-row-title {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0;
-}
-
-.category-row-subtitle {
-  font-size: 0.875rem;
-  color: #64748b;
-  margin: 4px 0 0 0;
-}
-
-.view-more-button {
-  height: 44px;
-  padding: 0 24px;
-  font-weight: 600;
-  border-radius: 10px;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-}
-
-.view-more-button:hover {
-  background: #3b82f6;
-  color: white;
-  border-color: #3b82f6;
-  transform: translateY(-2px);
-}
-
-/* Horizontal scrolling products */
-.products-scroll-container {
-  position: relative;
-}
-
+/* Horizontal scrolling products - Essential styles that can't be done with Tailwind */
 .products-horizontal-scroll {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -124,10 +7,8 @@
   overflow-y: hidden;
   padding-bottom: 10px;
   scroll-behavior: smooth;
-  /* Enable horizontal scrolling */
   grid-auto-flow: column;
   grid-auto-columns: minmax(200px, 1fr);
-  /* Smooth scrolling on mobile */
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x mandatory;
 }
@@ -136,7 +17,7 @@
   scroll-snap-align: start;
 }
 
-/* Hide scrollbar but keep functionality */
+/* Custom scrollbar styling */
 .products-horizontal-scroll::-webkit-scrollbar {
   height: 6px;
 }
@@ -155,7 +36,7 @@
   background: #94a3b8;
 }
 
-/* Scroll indicator - fade effect on edges */
+/* Scroll indicator */
 .scroll-indicator {
   display: none;
   position: absolute;
@@ -167,7 +48,7 @@
   pointer-events: none;
 }
 
-/* Responsive Design */
+/* Responsive adjustments */
 @media screen and (max-width: 1400px) {
   .products-horizontal-scroll {
     grid-auto-columns: minmax(180px, 1fr);
@@ -181,22 +62,6 @@
 }
 
 @media screen and (max-width: 1024px) {
-  .product-categories-section {
-    padding: 60px 4%;
-  }
-
-  .categories-container {
-    gap: 40px;
-  }
-
-  .category-row {
-    padding: 24px;
-  }
-
-  .category-row-title {
-    font-size: 1.5rem;
-  }
-
   .products-horizontal-scroll {
     grid-auto-columns: minmax(160px, 1fr);
     gap: 16px;
@@ -204,81 +69,24 @@
 }
 
 @media screen and (max-width: 768px) {
-  .section-title {
-    font-size: 2rem;
-  }
-
-  .section-subtitle {
-    font-size: 1rem;
-  }
-
-  .category-row-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-
-  .view-more-button {
-    width: 100%;
-    justify-content: center;
-  }
-
   .products-horizontal-scroll {
     grid-auto-columns: minmax(150px, 1fr);
     gap: 12px;
   }
 
-  /* Show scroll indicator on mobile */
   .scroll-indicator {
     display: block;
   }
 
-  /* Hide scrollbar on mobile for cleaner look */
   .products-horizontal-scroll::-webkit-scrollbar {
     display: none;
   }
 }
 
 @media screen and (max-width: 480px) {
-  .product-categories-section {
-    padding: 40px 4%;
-  }
-
-  .section-header {
-    margin-bottom: 40px;
-  }
-
-  .section-title {
-    font-size: 1.75rem;
-  }
-
-  .category-row {
-    padding: 16px;
-    border-radius: 12px;
-  }
-
-  .category-row-title {
-    font-size: 1.25rem;
-  }
-
-  .category-row-subtitle {
-    font-size: 0.8rem;
-  }
-
-  .category-icon {
-    width: 44px;
-    height: 44px;
-  }
-
   .products-horizontal-scroll {
     grid-auto-columns: minmax(140px, 1fr);
     gap: 10px;
-    /* Better touch scrolling */
     scroll-padding: 0 16px;
-  }
-
-  .view-more-button {
-    height: 48px;
-    font-size: 0.9rem;
   }
 }

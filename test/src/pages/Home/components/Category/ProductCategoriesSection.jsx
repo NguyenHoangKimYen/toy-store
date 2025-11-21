@@ -97,10 +97,10 @@ const ProductCategoriesSection = () => {
   
   if (loading) {
     return (
-      <section className="product-categories-section">
-        <div className="section-header">
-          <h2 className="section-title">Shop by Category</h2>
-          <p className="section-subtitle">Discover our curated collections</p>
+      <section className="px-[5%] py-20 bg-gradient-to-b from-white to-slate-50">
+        <div className="text-center mb-15">
+          <h2 className="text-5xl font-extrabold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-3">Shop by Category</h2>
+          <p className="text-lg text-slate-500 font-medium">Discover our curated collections</p>
         </div>
         <div style={{ textAlign: 'center', padding: '40px' }}>
           <p>Loading products...</p>
@@ -112,10 +112,10 @@ const ProductCategoriesSection = () => {
   if (!hasAnyProducts) {
     console.log('No products in any category!');
     return (
-      <section className="product-categories-section">
-        <div className="section-header">
-          <h2 className="section-title">Shop by Category</h2>
-          <p className="section-subtitle">Discover our curated collections</p>
+      <section className="px-[5%] py-20 bg-gradient-to-b from-white to-slate-50">
+        <div className="text-center mb-15">
+          <h2 className="text-5xl font-extrabold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-3">Shop by Category</h2>
+          <p className="text-lg text-slate-500 font-medium">Discover our curated collections</p>
         </div>
         <div style={{ textAlign: 'center', padding: '40px' }}>
           <p>No products available.</p>
@@ -125,13 +125,13 @@ const ProductCategoriesSection = () => {
   }
 
   return (
-    <section className="product-categories-section">
-      <div className="section-header">
-        <h2 className="section-title">Shop by Category</h2>
-        <p className="section-subtitle">Discover our curated collections</p>
+    <section className="px-[5%] py-20 bg-gradient-to-b from-white to-slate-50">
+      <div className="text-center mb-15">
+        <h2 className="text-5xl font-extrabold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-3">Shop by Category</h2>
+        <p className="text-lg text-slate-500 font-medium">Discover our curated collections</p>
       </div>
 
-      <div className="categories-container">
+      <div className="max-w-[1600px] mx-auto flex flex-col gap-12">
         {categories.map((category) => {
           // Show fewer products on mobile for better performance
           const isMobile = window.innerWidth < 768;
@@ -141,30 +141,30 @@ const ProductCategoriesSection = () => {
           if (displayProducts.length === 0) return null;
 
           return (
-            <div key={category.id} className="category-row">
-              <div className="category-row-header">
-                <div className="category-title-wrapper">
-                  <div className={`category-icon ${category.bgColor}`}>
-                    <div className={`icon-gradient bg-gradient-to-br ${category.gradient}`}>
+            <div key={category.id} className="bg-white rounded-2xl p-6 md:p-8 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-5 border-b-2 border-slate-100">
+                <div className="flex items-center gap-4">
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${category.bgColor}`}>
+                    <div className={`w-full h-full flex items-center justify-center rounded-xl text-white bg-gradient-to-br ${category.gradient}`}>
                       {category.icon}
                     </div>
                   </div>
                   <div>
-                    <h3 className="category-row-title">{category.title}</h3>
-                    <p className="category-row-subtitle">{category.subtitle}</p>
+                    <h3 className="text-2xl md:text-3xl font-bold text-slate-800 m-0">{category.title}</h3>
+                    <p className="text-sm text-slate-500 mt-1 mb-0">{category.subtitle}</p>
                   </div>
                 </div>
                 <Button
                   onClick={() => handleViewAll(category.link)}
                   variant="outline"
-                  className="view-more-button"
+                  className="h-11 px-6 font-semibold rounded-lg transition-all whitespace-nowrap hover:bg-blue-500 hover:text-white hover:border-blue-500 hover:-translate-y-0.5 w-full sm:w-auto"
                 >
                   View All
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
 
-              <div className="products-scroll-container">
+              <div className="relative">
                 <div className="products-horizontal-scroll">
                   {displayProducts.map((product) => (
                     <ProductCard

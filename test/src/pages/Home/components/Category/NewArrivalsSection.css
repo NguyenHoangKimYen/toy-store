@@ -1,55 +1,4 @@
-/* ===== New Arrivals Section ===== */
-.new-arrivals-section {
-  padding: 4rem 5%;
-  background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
-}
-
-/* Header Styling - Match CategorySection style */
-.new-arrivals-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  max-width: 1600px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-bottom: 1.5rem;
-  border-bottom: 2px solid #f1f5f9;
-}
-
-.new-arrivals-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 0.5rem;
-}
-
-.new-arrivals-subtitle {
-  font-size: 0.875rem;
-  color: #64748b;
-}
-
-.view-all-button {
-  height: 44px;
-  padding: 0 24px;
-  font-weight: 600;
-  border-radius: 10px;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-}
-
-.view-all-button:hover {
-  background: #3b82f6;
-  color: white;
-  border-color: #3b82f6;
-  transform: translateY(-2px);
-}
-
-/* Horizontal scrolling products */
-.products-scroll-container {
-  position: relative;
-}
-
+/* Horizontal scrolling products - Essential styles that can't be done with Tailwind */
 .products-horizontal-scroll {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -68,7 +17,7 @@
   scroll-snap-align: start;
 }
 
-/* Scrollbar styling */
+/* Custom scrollbar styling */
 .products-horizontal-scroll::-webkit-scrollbar {
   height: 6px;
 }
@@ -99,7 +48,7 @@
   pointer-events: none;
 }
 
-/* ===== Responsive Design ===== */
+/* Responsive adjustments */
 @media (max-width: 1400px) {
   .products-horizontal-scroll {
     grid-auto-columns: minmax(180px, 1fr);
@@ -113,19 +62,6 @@
 }
 
 @media (max-width: 1024px) {
-  .new-arrivals-header {
-    padding: 20px;
-  }
-  
-  .new-arrivals-title {
-    font-size: 24px;
-  }
-  
-  .icon-badge {
-    width: 48px;
-    height: 48px;
-  }
-
   .products-horizontal-scroll {
     grid-auto-columns: minmax(160px, 1fr);
     gap: 16px;
@@ -133,81 +69,21 @@
 }
 
 @media (max-width: 768px) {
-  .new-arrivals-header {
-    flex-direction: column;
-    gap: 16px;
-    align-items: flex-start;
-    padding: 20px;
-  }
-  
-  .header-left {
-    width: 100%;
-  }
-  
-  .view-all-button {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .new-arrivals-title {
-    font-size: 20px;
-  }
-  
-  .icon-badge {
-    width: 44px;
-    height: 44px;
-  }
-
   .products-horizontal-scroll {
     grid-auto-columns: minmax(150px, 1fr);
     gap: 12px;
   }
 
-  /* Show scroll indicator on mobile */
   .scroll-indicator {
     display: block;
   }
 
-  /* Hide scrollbar on mobile */
   .products-horizontal-scroll::-webkit-scrollbar {
     display: none;
   }
 }
 
 @media (max-width: 480px) {
-  .new-arrivals-section {
-    padding: 0 4%;
-    margin-bottom: 40px;
-  }
-  
-  .new-arrivals-header {
-    padding: 16px;
-    border-radius: 16px;
-    margin-bottom: 20px;
-  }
-  
-  .header-left {
-    gap: 12px;
-  }
-  
-  .icon-badge {
-    width: 40px;
-    height: 40px;
-  }
-  
-  .new-arrivals-title {
-    font-size: 18px;
-  }
-  
-  .badge-new {
-    font-size: 10px;
-    padding: 3px 8px;
-  }
-  
-  .new-arrivals-subtitle {
-    font-size: 12px;
-  }
-  
   .products-horizontal-scroll {
     grid-auto-columns: minmax(140px, 1fr);
     gap: 10px;

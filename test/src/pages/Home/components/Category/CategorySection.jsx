@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { ProductCard } from '@/components/common';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import Badge from '@/components/ui/badge';
 import './CategorySection.css';
 
 const CategorySection = ({ title, subtitle, products, viewAllLink }) => {
@@ -17,14 +15,14 @@ const CategorySection = ({ title, subtitle, products, viewAllLink }) => {
   };
 
   return (
-    <section className="category-section">
-      <div className="category-header">
+    <section className="px-[5%] py-16 bg-gradient-to-b from-white to-slate-50">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 max-w-[1600px] mx-auto pb-6 border-b-2 border-slate-100">
         <div>
-          <h2 className="category-title">{title}</h2>
-          {subtitle && <p className="category-subtitle text-muted-foreground">{subtitle}</p>}
+          <h2 className="text-3xl font-bold text-slate-800 mb-2">{title}</h2>
+          {subtitle && <p className="text-sm text-slate-500">{subtitle}</p>}
         </div>
         {viewAllLink && (
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild className="w-full sm:w-auto">
             <a href={viewAllLink}>
               View All <ArrowRight className="ml-2 h-4 w-4" />
             </a>
@@ -32,7 +30,7 @@ const CategorySection = ({ title, subtitle, products, viewAllLink }) => {
         )}
       </div>
 
-      <div className="products-scroll-container">
+      <div className="relative max-w-[1600px] mx-auto">
         <div className="products-horizontal-scroll">
           {products.slice(0, 12).map((product) => (
             <ProductCard

@@ -19,23 +19,23 @@ const NewArrivalsSection = ({ newProducts }) => {
   if (!newProducts || newProducts.length === 0) return null;
 
   return (
-    <section className="new-arrivals-section">
-      <div className="new-arrivals-header">
+    <section className="px-[5%] py-16 bg-gradient-to-b from-white to-slate-50">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 max-w-[1600px] mx-auto pb-6 border-b-2 border-slate-100">
         <div>
-          <h2 className="new-arrivals-title">New Arrivals</h2>
-          <p className="new-arrivals-subtitle">Fresh drops you can't miss</p>
+          <h2 className="text-3xl font-bold text-slate-800 mb-2">New Arrivals</h2>
+          <p className="text-sm text-slate-500">Fresh drops you can't miss</p>
         </div>
         <Button
           onClick={handleViewAll}
           variant="outline"
-          className="view-all-button"
+          className="h-11 px-6 font-semibold rounded-lg transition-all whitespace-nowrap hover:bg-blue-500 hover:text-white hover:border-blue-500 hover:-translate-y-0.5 w-full sm:w-auto"
         >
           View All
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </div>
 
-      <div className="products-scroll-container">
+      <div className="relative">
         <div className="products-horizontal-scroll">
           {newProducts.slice(0, 12).map((product) => (
             <ProductCard

@@ -4,7 +4,6 @@ import { CategorySection, ProductCategoriesSection, NewArrivalsSection } from '.
 import { FeaturedBanner } from './components/Banner';
 import { useCategorizedProducts, useCategories } from '@/hooks';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
-import './Home.css';
 
 const Home = () => {
   const { categories, loading: categoriesLoading } = useCategories();
@@ -33,7 +32,7 @@ const Home = () => {
 
   if (loading || categoriesLoading) {
     return (
-      <div className="home-loading">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
         <LoadingSpinner/>
       </div>
     );
@@ -41,7 +40,7 @@ const Home = () => {
 
   if (error) {
     return (
-      <div className="home-error">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-5 text-center">
         <ErrorMessage 
           title="Oops! Something went wrong"
           message={error}
@@ -52,7 +51,7 @@ const Home = () => {
   }
 
   return (
-    <div className="home-page">
+    <div className="min-h-screen bg-white overflow-x-hidden">
       {/* Hero Section with Featured Products Carousel */}
       {categorizedProducts.featured && categorizedProducts.featured.length > 0 && (
         <HeroSection featuredProducts={categorizedProducts.featured} />

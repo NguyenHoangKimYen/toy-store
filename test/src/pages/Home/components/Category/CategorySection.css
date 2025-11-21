@@ -1,40 +1,4 @@
-/* Category Section */
-.category-section {
-    padding: 4rem 5%;
-    background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
-}
-
-.category-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    max-width: 1600px;
-    margin-left: auto;
-    margin-right: auto;
-    padding-bottom: 1.5rem;
-    border-bottom: 2px solid #f1f5f9;
-}
-
-.category-title {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 0.5rem;
-}
-
-.category-subtitle {
-    font-size: 0.875rem;
-    color: #64748b;
-}
-
-/* Horizontal scrolling products - same as ProductCategoriesSection */
-.products-scroll-container {
-  position: relative;
-  max-width: 1600px;
-  margin: 0 auto;
-}
-
+/* Horizontal scrolling products - Essential styles that can't be done with Tailwind */
 .products-horizontal-scroll {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -53,7 +17,7 @@
   scroll-snap-align: start;
 }
 
-/* Scrollbar styling */
+/* Custom scrollbar styling */
 .products-horizontal-scroll::-webkit-scrollbar {
   height: 6px;
 }
@@ -72,7 +36,7 @@
   background: #94a3b8;
 }
 
-/* Scroll indicator - fade effect on edges */
+/* Scroll indicator */
 .scroll-indicator {
   display: none;
   position: absolute;
@@ -84,7 +48,7 @@
   pointer-events: none;
 }
 
-/* Responsive */
+/* Responsive adjustments */
 @media (max-width: 1400px) {
   .products-horizontal-scroll {
     grid-auto-columns: minmax(180px, 1fr);
@@ -98,10 +62,6 @@
 }
 
 @media (max-width: 1024px) {
-  .category-section {
-    padding: 3rem 4%;
-  }
-
   .products-horizontal-scroll {
     grid-auto-columns: minmax(160px, 1fr);
     gap: 16px;
@@ -109,53 +69,24 @@
 }
 
 @media (max-width: 768px) {
-    .category-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-        margin-bottom: 2rem;
-    }
+  .products-horizontal-scroll {
+    grid-auto-columns: minmax(150px, 1fr);
+    gap: 12px;
+  }
 
-    .category-title {
-        font-size: 1.75rem;
-    }
+  .scroll-indicator {
+    display: block;
+  }
 
-    .category-subtitle {
-        font-size: 0.875rem;
-    }
-
-    .products-horizontal-scroll {
-      grid-auto-columns: minmax(150px, 1fr);
-      gap: 12px;
-    }
-
-    /* Show scroll indicator on mobile */
-    .scroll-indicator {
-      display: block;
-    }
-
-    /* Hide scrollbar on mobile for cleaner look */
-    .products-horizontal-scroll::-webkit-scrollbar {
-      display: none;
-    }
-
-    .category-section {
-        padding: 2rem 4%;
-    }
+  .products-horizontal-scroll::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @media (max-width: 480px) {
-    .category-section {
-      padding: 2rem 4%;
-    }
-
-    .category-title {
-        font-size: 1.5rem;
-    }
-
-    .products-horizontal-scroll {
-      grid-auto-columns: minmax(140px, 1fr);
-      gap: 10px;
-      scroll-padding: 0 16px;
-    }
+  .products-horizontal-scroll {
+    grid-auto-columns: minmax(140px, 1fr);
+    gap: 10px;
+    scroll-padding: 0 16px;
+  }
 }
