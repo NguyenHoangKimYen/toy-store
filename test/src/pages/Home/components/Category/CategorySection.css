@@ -1,74 +1,111 @@
 /* Category Section */
 .category-section {
-    padding: 4rem 2rem;
-    max-width: 1400px;
-    margin: 0 auto;
+    padding: 4rem 5%;
+    background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
 }
 
 .category-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 3rem;
-    gap: 2rem;
+    align-items: center;
+    margin-bottom: 2rem;
+    max-width: 1600px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #f1f5f9;
 }
 
 .category-title {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: 700;
     color: #1e293b;
     margin-bottom: 0.5rem;
 }
 
 .category-subtitle {
-    font-size: 1rem;
+    font-size: 0.875rem;
     color: #64748b;
 }
 
-.view-all-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #3b82f6;
-    text-decoration: none;
-    transition: all 0.3s ease;
+/* Horizontal scrolling products - same as ProductCategoriesSection */
+.products-scroll-container {
+  position: relative;
+  max-width: 1600px;
+  margin: 0 auto;
 }
 
-.view-all-link:hover {
-    color: #2563eb;
-    gap: 0.75rem;
+.products-horizontal-scroll {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 10px;
+  scroll-behavior: smooth;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(200px, 1fr);
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
 }
 
-.arrow-icon {
-    width: 20px;
-    height: 20px;
-    transition: transform 0.3s ease;
+.products-horizontal-scroll > * {
+  scroll-snap-align: start;
 }
 
-.view-all-link:hover .arrow-icon {
-    transform: translateX(4px);
+/* Scrollbar styling */
+.products-horizontal-scroll::-webkit-scrollbar {
+  height: 6px;
 }
 
-/* Products Grid */
-/* Remove custom ProductCard overrides - let the unified component handle its own styling */
-.products-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 2rem;
+.products-horizontal-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.products-horizontal-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.products-horizontal-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Scroll indicator - fade effect on edges */
+.scroll-indicator {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 10px;
+  width: 40px;
+  background: linear-gradient(to left, rgba(255, 255, 255, 0.95), transparent);
+  pointer-events: none;
 }
 
 /* Responsive */
-@media (max-width: 1024px) {
-    .products-grid {
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        gap: 1.5rem;
-    }
+@media (max-width: 1400px) {
+  .products-horizontal-scroll {
+    grid-auto-columns: minmax(180px, 1fr);
+  }
+}
 
-    .category-section {
-        padding: 3rem 1.5rem;
-    }
+@media (max-width: 1200px) {
+  .products-horizontal-scroll {
+    grid-auto-columns: minmax(170px, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .category-section {
+    padding: 3rem 4%;
+  }
+
+  .products-horizontal-scroll {
+    grid-auto-columns: minmax(160px, 1fr);
+    gap: 16px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -80,25 +117,45 @@
     }
 
     .category-title {
-        font-size: 2rem;
+        font-size: 1.75rem;
     }
 
-    .products-grid {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 1rem;
+    .category-subtitle {
+        font-size: 0.875rem;
+    }
+
+    .products-horizontal-scroll {
+      grid-auto-columns: minmax(150px, 1fr);
+      gap: 12px;
+    }
+
+    /* Show scroll indicator on mobile */
+    .scroll-indicator {
+      display: block;
+    }
+
+    /* Hide scrollbar on mobile for cleaner look */
+    .products-horizontal-scroll::-webkit-scrollbar {
+      display: none;
     }
 
     .category-section {
-        padding: 2rem 1rem;
+        padding: 2rem 4%;
     }
 }
 
 @media (max-width: 480px) {
-    .products-grid {
-        grid-template-columns: repeat(2, 1fr);
+    .category-section {
+      padding: 2rem 4%;
     }
 
     .category-title {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
+    }
+
+    .products-horizontal-scroll {
+      grid-auto-columns: minmax(140px, 1fr);
+      gap: 10px;
+      scroll-padding: 0 16px;
     }
 }

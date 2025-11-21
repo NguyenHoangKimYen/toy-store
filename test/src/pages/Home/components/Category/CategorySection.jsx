@@ -32,18 +32,22 @@ const CategorySection = ({ title, subtitle, products, viewAllLink }) => {
         )}
       </div>
 
-      <div className="products-grid">
-        {products.slice(0, 8).map((product) => (
-          <ProductCard
-            key={product._id}
-            product={product}
-            variant="default"
-            showBadges={true}
-            showCategory={true}
-            showQuickView={false}
-            onClick={handleProductClick}
-          />
-        ))}
+      <div className="products-scroll-container">
+        <div className="products-horizontal-scroll">
+          {products.slice(0, 12).map((product) => (
+            <ProductCard
+              key={product._id}
+              product={product}
+              variant="horizontal"
+              showBadges={true}
+              showCategory={false}
+              showQuickView={false}
+              onClick={handleProductClick}
+            />
+          ))}
+        </div>
+        {/* Scroll indicator for mobile */}
+        <div className="scroll-indicator"></div>
       </div>
     </section>
   );
