@@ -4,6 +4,15 @@ import { useProducts } from '@/hooks';
 import { getCategories } from '@/services/categories.service';
 import CategorySection from './CategorySection';
 
+const CategoryHeader = () => (
+  <div className="text-center mb-12">
+    <h2 className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-3">
+      Shop by Category
+    </h2>
+    <p className="text-lg text-slate-500 font-medium">Discover our curated collections</p>
+  </div>
+);
+
 const ProductCategoriesSection = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -84,10 +93,7 @@ const ProductCategoriesSection = () => {
   if (loading) {
     return (
       <section className="px-[5%] py-20 bg-gradient-to-b from-white to-slate-50">
-        <div className="text-center mb-15">
-          <h2 className="text-5xl font-extrabold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-3">Shop by Category</h2>
-          <p className="text-lg text-slate-500 font-medium">Discover our curated collections</p>
-        </div>
+        <CategoryHeader />
         <div className="text-center py-10">
           <p>Loading products...</p>
         </div>
@@ -98,10 +104,7 @@ const ProductCategoriesSection = () => {
   if (!hasAnyProducts) {
     return (
       <section className="px-[5%] py-20 bg-gradient-to-b from-white to-slate-50">
-        <div className="text-center mb-15">
-          <h2 className="text-5xl font-extrabold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-3">Shop by Category</h2>
-          <p className="text-lg text-slate-500 font-medium">Discover our curated collections</p>
-        </div>
+        <CategoryHeader />
         <div className="text-center py-10">
           <p>No products available.</p>
         </div>
@@ -112,10 +115,7 @@ const ProductCategoriesSection = () => {
   return (
     <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12">
       <section className="px-[5%]">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-3">Shop by Category</h2>
-          <p className="text-lg text-slate-500 font-medium">Discover our curated collections</p>
-        </div>
+        <CategoryHeader />
 
         <div className="max-w-[1600px] mx-auto space-y-0">
           {categories.map((category) => (
