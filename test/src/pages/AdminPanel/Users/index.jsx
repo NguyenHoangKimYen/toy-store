@@ -42,7 +42,7 @@ const Users = () => {
 
   // Custom hook handles data fetching and CRUD operations
   const { 
-    users: allUsers, 
+    users, 
     stats, 
     loading, 
     error,
@@ -53,19 +53,6 @@ const Users = () => {
     params: apiParams,
     dependencies: [apiParams]
   })
-
-  // Client-side filtering for instant feedback on search
-  const users = useMemo(() => {
-    if (!searchQuery.trim()) return allUsers;
-    
-    const searchLower = searchQuery.toLowerCase();
-    return allUsers.filter(u =>
-      u.fullname?.toLowerCase().includes(searchLower) ||
-      u.username?.toLowerCase().includes(searchLower) ||
-      u.email?.toLowerCase().includes(searchLower) ||
-      u.phone?.toLowerCase().includes(searchLower)
-    );
-  }, [allUsers, searchQuery])
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters)
