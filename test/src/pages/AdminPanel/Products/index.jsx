@@ -5,6 +5,7 @@ import ProductStats from './components/ProductStats'
 import ProductDetailModal from './components/ProductDetailModal'
 import ProductFormModal from './components/ProductFormModal'
 import ProductFilters from './components/ProductFilters'
+import AdminLayout from '../layouts/AdminLayout'
 import { useProducts } from '@/hooks' // Using global hook
 import { PageHeader, SearchBar } from '@/components/common'
 import { getCategories } from '@/services/categories.service'
@@ -29,7 +30,6 @@ const Products = () => {
   const [productToDelete, setProductToDelete] = useState(null)
   const [categories, setCategories] = useState([])
   const [showFilters, setShowFilters] = useState(false)
-  const [stickyScrolled, setStickyScrolled] = useState(false)
   
   // Filter state
   const [filters, setFilters] = useState({
@@ -54,20 +54,6 @@ const Products = () => {
       }
     }
     fetchCategories()
-  }, [])
-
-  // Handle scroll for sticky header shadow
-  useEffect(() => {
-    const scrollContainer = document.querySelector('.admin-scroll-container')
-    if (!scrollContainer) return
-
-    const handleScroll = () => {
-      const scrollTop = scrollContainer.scrollTop
-      setStickyScrolled(scrollTop > 20)
-    }
-
-    scrollContainer.addEventListener('scroll', handleScroll)
-    return () => scrollContainer.removeEventListener('scroll', handleScroll)
   }, [])
 
   // Build params for API call
@@ -99,8 +85,7 @@ const Products = () => {
     error,
     createProduct,
     updateProduct,
-    deleteProduct,
-    refetch,
+    deleteProduct
   } = useProducts({ 
     params: apiParams,
     dependencies: [apiParams]
@@ -189,10 +174,9 @@ const Products = () => {
   }
 
   return (
-    <div className='h-full flex flex-col'>
-      <div className='flex-1 overflow-y-auto px-6 admin-scroll-container'>
-        <div className='py-6'>
-          {/* Header */}
+    <>
+      <AdminLayout
+        header={
           <PageHeader
             title='Product Management'
             description='Manage product inventory and listings'
@@ -206,20 +190,15 @@ const Products = () => {
               </button>
             }
           />
-
-          {/* Sticky Search and Filter Section */}
-          <div 
-            className={`sticky top-0 z-40 bg-white py-4 transition-shadow duration-300 ${stickyScrolled ? 'shadow-md' : ''}`}
-          >
-            {/* Search Bar */}
+        }
+        filters={
+          <>
             <SearchBar
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
               placeholder='Search for products'
               onFilterClick={() => setShowFilters(!showFilters)}
             />
-
-            {/* Filters */}
             <ProductFilters
               filters={filters}
               onFilterChange={handleFilterChange}
@@ -228,44 +207,24 @@ const Products = () => {
               showFilters={showFilters}
               onToggleFilters={() => setShowFilters(!showFilters)}
             />
-          </div>
-
-          {/* Stats Cards */}
-          <div className='mb-6'>
-            <ProductStats stats={stats} />
-          </div>
-
-          {/* Product Grid */}
-          {error ? (
-            <div className='text-center py-12'>
-              <h3 className='text-lg font-semibold text-red-600 mb-2'>Error Loading Products</h3>
-              <p className='text-gray-600 mb-4'>{error}</p>
-              <button 
-                onClick={() => window.location.reload()}
-                className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700'
-              >
-                Retry
-              </button>
-            </div>
-          ) : loading ? (
-            <div className='text-center py-12'>
-              <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto'></div>
-              <p className='mt-4 text-gray-600'>Loading products...</p>
-            </div>
-          ) : (
-            <ProductGrid 
-              products={products} 
-              onViewDetails={handleViewDetails}
-              onEdit={(product) => {
-                setSelectedProduct(product);
-                setFormMode('edit');
-                setIsFormModalOpen(true);
-              }}
-              onDelete={handleDeleteProduct}
-            />
-          )}
-        </div>
-      </div>
+          </>
+        }
+        stats={<ProductStats stats={stats} />}
+        loading={loading}
+        error={error}
+        onRetry={() => window.location.reload()}
+      >
+        <ProductGrid 
+          products={products} 
+          onViewDetails={handleViewDetails}
+          onEdit={(product) => {
+            setSelectedProduct(product);
+            setFormMode('edit');
+            setIsFormModalOpen(true);
+          }}
+          onDelete={handleDeleteProduct}
+        />
+      </AdminLayout>
 
       {/* Product Detail Modal */}
       {isDetailModalOpen && selectedProduct && (
@@ -306,7 +265,7 @@ const Products = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   )
 }
 

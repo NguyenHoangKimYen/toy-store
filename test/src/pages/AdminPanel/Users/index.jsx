@@ -1,10 +1,11 @@
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo } from 'react'
 import { UserPlus } from 'lucide-react'
 import UserTable from './components/UserTable'
 import UserStats from './components/UserStats'
 import UserDetailModal from './components/UserDetailModal'
 import UserFormModal from './components/UserFormModal'
 import UserFilters from './components/UserFilters'
+import AdminLayout from '../layouts/AdminLayout'
 import { useUsers } from '@/hooks' // Using global hook
 import { PageHeader, SearchBar, ConfirmDialog } from '@/components/common'
 
@@ -17,7 +18,6 @@ const Users = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [userToDelete, setUserToDelete] = useState(null)
   const [showFilters, setShowFilters] = useState(false)
-  const [stickyScrolled, setStickyScrolled] = useState(false)
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -66,20 +66,6 @@ const Users = () => {
       u.phone?.toLowerCase().includes(searchLower)
     );
   }, [allUsers, searchQuery])
-
-  // Handle scroll for sticky header shadow
-  useEffect(() => {
-    const scrollContainer = document.querySelector('.admin-scroll-container')
-    if (!scrollContainer) return
-
-    const handleScroll = () => {
-      const scrollTop = scrollContainer.scrollTop
-      setStickyScrolled(scrollTop > 20)
-    }
-
-    scrollContainer.addEventListener('scroll', handleScroll)
-    return () => scrollContainer.removeEventListener('scroll', handleScroll)
-  }, [])
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters)
@@ -166,10 +152,9 @@ const Users = () => {
   }
 
   return (
-    <div className='h-full flex flex-col'>
-      <div className='flex-1 overflow-y-auto px-6 admin-scroll-container'>
-        <div className='py-6'>
-          {/* Header */}
+    <>
+      <AdminLayout
+        header={
           <PageHeader
             title='User Management'
             description='Manage user accounts and permissions'
@@ -183,60 +168,35 @@ const Users = () => {
               </button>
             }
           />
-
-          {/* Sticky Search and Filter Section */}
-          <div 
-            className={`sticky top-0 z-40 transition-shadow duration-300 ${stickyScrolled ? 'shadow-md' : ''}`}
-          >
-            {/* Search Bar */}
+        }
+        filters={
+          <>
             <SearchBar
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
               placeholder='Search by name, username, email, or phone...'
               onFilterClick={() => setShowFilters(!showFilters)}
             />
-
-            {/* Filters */}
             <UserFilters
               filters={filters}
               onFilterChange={handleFilterChange}
               onClearFilters={handleClearFilters}
               showFilters={showFilters}
             />
-          </div>
-
-          {/* Stats Cards */}
-          <div className='mb-6'>
-            <UserStats stats={stats} />
-          </div>
-
-          {/* User Table */}
-          {error ? (
-            <div className='text-center py-12'>
-              <h3 className='text-lg font-semibold text-red-600 mb-2'>Error Loading Users</h3>
-              <p className='text-gray-600 mb-4'>{error}</p>
-              <button 
-                onClick={() => window.location.reload()}
-                className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700'
-              >
-                Retry
-              </button>
-            </div>
-          ) : loading ? (
-            <div className='text-center py-12'>
-              <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto'></div>
-              <p className='mt-4 text-gray-600'>Loading users...</p>
-            </div>
-          ) : (
-            <UserTable 
-              users={users} 
-              onViewDetails={handleViewDetails}
-              onEdit={handleEditUser}
-              onDelete={handleDeleteUser}
-            />
-          )}
-        </div>
-      </div>
+          </>
+        }
+        stats={<UserStats stats={stats} />}
+        loading={loading}
+        error={error}
+        onRetry={() => window.location.reload()}
+      >
+        <UserTable 
+          users={users} 
+          onViewDetails={handleViewDetails}
+          onEdit={handleEditUser}
+          onDelete={handleDeleteUser}
+        />
+      </AdminLayout>
 
       {/* User Detail Modal */}
       {isDetailModalOpen && selectedUser && (
@@ -268,7 +228,7 @@ const Users = () => {
         cancelText="Cancel"
         variant="destructive"
       />
-    </div>
+    </>
   )
 }
 
