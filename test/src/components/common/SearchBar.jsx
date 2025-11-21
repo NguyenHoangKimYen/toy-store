@@ -12,7 +12,7 @@ const SearchBar = ({
   onFilterClick
 }) => {
   return (
-    <div className='flex gap-4 mb-6 flex-shrink-0'>
+    <div className='flex gap-4 flex-shrink-0 bg-white dark:bg-gray-900 p-3 rounded-lg shadow-sm'>
       <div className='flex-1 relative'>
         <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400' />
         <input

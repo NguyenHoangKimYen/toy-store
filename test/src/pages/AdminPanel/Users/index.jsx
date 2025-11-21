@@ -186,7 +186,7 @@ const Users = () => {
 
           {/* Sticky Search and Filter Section */}
           <div 
-            className={`sticky top-0 z-40 bg-white py-4 transition-shadow duration-300 ${stickyScrolled ? 'shadow-md' : ''}`}
+            className={`sticky top-0 z-40 transition-shadow duration-300 ${stickyScrolled ? 'shadow-md' : ''}`}
           >
             {/* Search Bar */}
             <SearchBar

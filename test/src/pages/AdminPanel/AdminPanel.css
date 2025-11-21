@@ -1,4 +1,3 @@
-/* Admin Panel Responsive Layout */
 .admin-panel-container {
   display: grid;
   grid-template-columns: 250px 1fr;
