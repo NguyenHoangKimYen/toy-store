@@ -1,21 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Tag, Sparkles, Package } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Tag, Sparkles, Package, ArrowRight } from 'lucide-react';
 import { useProducts } from '@/hooks';
 import { getCategories } from '@/services/categories.service';
-import CategorySection from './CategorySection';
-
-const CategoryHeader = () => (
-  <div className="text-center mb-8">
-    <h2 className="text-3xl md:text-4xl lg:text-5xl leading-[1.4] font-extrabold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-3">
-      Shop by Category
-    </h2>
-    <p className="text-base md:text-lg text-slate-500 font-medium">Discover our curated collections</p>
-  </div>
-);
+import { ProductCard } from '@/components/common';
+import './ProductCategoriesSection.css';
 
 const ProductCategoriesSection = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTabIndex, setActiveTabIndex] = useState(0);
+  const navigate = useNavigate();
   
   const { products: allProducts, loading: productsLoading } = useProducts();
 
@@ -89,13 +84,23 @@ const ProductCategoriesSection = () => {
   }, [allProducts, productsLoading]);
 
   const hasAnyProducts = categories.some(cat => cat.products && cat.products.length > 0);
+  const activeCategory = categories[activeTabIndex] || null;
+
+  const handleProductClick = (product) => {
+    navigate(`/products/${product._id}`);
+  };
+
+  const handleViewAll = () => {
+    if (activeCategory?.link) {
+      navigate(activeCategory.link);
+    }
+  };
   
   if (loading) {
     return (
       <section className="px-[5%] py-10 bg-gradient-to-b from-white to-slate-50">
-        <CategoryHeader />
         <div className="text-center py-10">
-          <p>Loading products...</p>
+          <p>Loading categories...</p>
         </div>
       </section>
     );
@@ -104,7 +109,6 @@ const ProductCategoriesSection = () => {
   if (!hasAnyProducts) {
     return (
       <section className="px-[5%] py-10 bg-gradient-to-b from-white to-slate-50">
-        <CategoryHeader />
         <div className="text-center py-10">
           <p>No products available.</p>
         </div>
@@ -113,29 +117,55 @@ const ProductCategoriesSection = () => {
   }
 
   return (
-    <div className="py-10 bg-gradient-to-b from-rose-100 via-pink-100 to-purple-100">
-      <section className="px-[5%]">
-        <CategoryHeader />
-
-        <div className="max-w-[1600px] mx-auto space-y-0">
-          {categories.map((category) => (
-            <CategorySection
+    <div className="multi-category-container">
+      {/* Tab Navigation */}
+      <div className="tab-container">
+        <div className="tab-content-container">
+          {categories.map((category, index) => (
+            <div
               key={category.id}
-              title={category.title}
-              subtitle={category.subtitle}
-              products={category.products}
-              viewAllLink={category.link}
-              showIcon={true}
-              icon={category.icon}
-              iconBgColor={category.bgColor}
-              iconGradient={category.gradient}
-            />
+              className={`tab-item ${index === activeTabIndex ? 'tab-active' : ''}`}
+              onClick={() => setActiveTabIndex(index)}
+            >
+              {category.title}
+            </div>
           ))}
         </div>
-      </section>
-      
+      </div>
+
+      {/* Active Category Content */}
+      {activeCategory && (
+        <div 
+          className="tab-content-item-container"
+          style={{
+            backgroundImage: activeCategory.backgroundImage ? `url(${activeCategory.backgroundImage})` : 'none',
+            backgroundColor: activeCategory.backgroundImage ? 'transparent' : '#f8f9fa',
+          }}
+        >
+          <div className="content-container">
+            <div className="product-cards-wrapper">
+              {activeCategory.products.slice(0, 10).map((product) => (
+                <div key={product._id} className="card-item-wrapper">
+                  <ProductCard
+                    product={product}
+                    variant="compact"
+                    showBadges={false}
+                    showCategory={false}
+                    showQuickView={false}
+                    onClick={() => handleProductClick(product)}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* View More Button */}
+            <button onClick={handleViewAll} className="view-more-btn">
+              View All <ArrowRight className="ml-2 h-4 w-4 inline" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
-    
   );
 };
 
