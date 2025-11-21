@@ -1179,27 +1179,7 @@ export const mockProducts = {
       ],
       variants: ['var6-1', 'var6-2', 'var6-3'],
     },
-    {
-      _id: '7',
-      name: 'LED Light Keychain',
-      slug: 'led-light-keychain',
-      description: 'Practical keychain with built-in LED light',
-      categoryId: ['cat1'],
-      brand: 'TechGlow',
-      minPrice: 425000,
-      maxPrice: 500000,
-      imageUrls: [productImages.plush7],
-      averageRating: 4.6,
-      status: 'Published',
-      isNew: true,
-      totalUnitsSold: 143,
-      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-      attributes: [
-        { name: 'Color', values: ['Black', 'Silver'] },
-        { name: 'Battery', values: ['Included', 'Not Included'] },
-      ],
-      variants: ['var7-1', 'var7-2'],
-    },
+    
   ],
 };
 

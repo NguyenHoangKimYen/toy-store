@@ -60,7 +60,6 @@ const ProductGrid = ({
           <ProductCard
             key={product._id}
             product={product}
-            variant="default"
             showQuickView={false}
             onClick={handleProductClick}
             onAddToCart={handleAddToCart}

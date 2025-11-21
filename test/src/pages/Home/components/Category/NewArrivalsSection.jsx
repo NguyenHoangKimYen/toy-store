@@ -70,7 +70,6 @@ const NewArrivalsSection = ({ newProducts }) => {
             <ProductCard
               key={product._id}
               product={product}
-              variant="horizontal"
               showBadges={true}
               showCategory={false}
               showQuickView={false}

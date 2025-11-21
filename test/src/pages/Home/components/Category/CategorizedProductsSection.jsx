@@ -170,10 +170,10 @@ const CategorizedProductsSection = () => {
                 <div key={product._id} className="categorized-product-card">
                   <ProductCard
                     product={product}
-                    variant="compact"
                     showBadges={false}
                     showCategory={false}
                     showQuickView={false}
+                    showAddToCart={false}
                     onClick={() => handleProductClick(product)}
                   />
                 </div>

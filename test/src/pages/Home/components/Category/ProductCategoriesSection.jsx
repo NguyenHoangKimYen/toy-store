@@ -148,10 +148,10 @@ const ProductCategoriesSection = () => {
                 <div key={product._id} className="card-item-wrapper">
                   <ProductCard
                     product={product}
-                    variant="compact"
                     showBadges={false}
                     showCategory={false}
                     showQuickView={false}
+                    showAddToCart={false}
                     onClick={() => handleProductClick(product)}
                   />
                 </div>
