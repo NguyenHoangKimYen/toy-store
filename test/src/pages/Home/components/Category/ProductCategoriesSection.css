@@ -112,7 +112,10 @@
 }
 
 /* Horizontal scrolling products */
-/* Remove custom ProductCard overrides - component handles its own styling */
+.products-scroll-container {
+  position: relative;
+}
+
 .products-horizontal-scroll {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -124,6 +127,44 @@
   /* Enable horizontal scrolling */
   grid-auto-flow: column;
   grid-auto-columns: minmax(200px, 1fr);
+  /* Smooth scrolling on mobile */
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+}
+
+.products-horizontal-scroll > * {
+  scroll-snap-align: start;
+}
+
+/* Hide scrollbar but keep functionality */
+.products-horizontal-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.products-horizontal-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.products-horizontal-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.products-horizontal-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Scroll indicator - fade effect on edges */
+.scroll-indicator {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 10px;
+  width: 40px;
+  background: linear-gradient(to left, rgba(255, 255, 255, 0.95), transparent);
+  pointer-events: none;
 }
 
 /* Responsive Design */
@@ -179,11 +220,22 @@
 
   .view-more-button {
     width: 100%;
+    justify-content: center;
   }
 
   .products-horizontal-scroll {
     grid-auto-columns: minmax(150px, 1fr);
     gap: 12px;
+  }
+
+  /* Show scroll indicator on mobile */
+  .scroll-indicator {
+    display: block;
+  }
+
+  /* Hide scrollbar on mobile for cleaner look */
+  .products-horizontal-scroll::-webkit-scrollbar {
+    display: none;
   }
 }
 
@@ -201,20 +253,32 @@
   }
 
   .category-row {
-    padding: 20px;
+    padding: 16px;
+    border-radius: 12px;
   }
 
   .category-row-title {
     font-size: 1.25rem;
   }
 
+  .category-row-subtitle {
+    font-size: 0.8rem;
+  }
+
   .category-icon {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
   }
 
   .products-horizontal-scroll {
     grid-auto-columns: minmax(140px, 1fr);
     gap: 10px;
+    /* Better touch scrolling */
+    scroll-padding: 0 16px;
+  }
+
+  .view-more-button {
+    height: 48px;
+    font-size: 0.9rem;
   }
 }

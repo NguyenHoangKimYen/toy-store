@@ -133,7 +133,10 @@ const ProductCategoriesSection = () => {
 
       <div className="categories-container">
         {categories.map((category) => {
-          const displayProducts = category.products.slice(0, 12);
+          // Show fewer products on mobile for better performance
+          const isMobile = window.innerWidth < 768;
+          const productLimit = isMobile ? 6 : 12;
+          const displayProducts = category.products.slice(0, productLimit);
           
           if (displayProducts.length === 0) return null;
 
@@ -161,18 +164,22 @@ const ProductCategoriesSection = () => {
                 </Button>
               </div>
 
-              <div className="products-horizontal-scroll">
-                {displayProducts.map((product) => (
-                  <ProductCard
-                    key={product._id}
-                    product={product}
-                    variant="horizontal"
-                    showBadges={false}
-                    showCategory={false}
-                    showQuickView={false}
-                    onClick={handleProductClick}
-                  />
-                ))}
+              <div className="products-scroll-container">
+                <div className="products-horizontal-scroll">
+                  {displayProducts.map((product) => (
+                    <ProductCard
+                      key={product._id}
+                      product={product}
+                      variant="horizontal"
+                      showBadges={false}
+                      showCategory={false}
+                      showQuickView={false}
+                      onClick={handleProductClick}
+                    />
+                  ))}
+                </div>
+                {/* Scroll indicator for mobile */}
+                <div className="scroll-indicator"></div>
               </div>
             </div>
           );
