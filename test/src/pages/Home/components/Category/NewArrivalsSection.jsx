@@ -1,10 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import Badge from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
 import { ProductCard } from '@/components/common';
-import { ArrowRight, Sparkles, Tag } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import './NewArrivalsSection.css';
 
 const NewArrivalsSection = ({ newProducts }) => {
@@ -23,17 +21,9 @@ const NewArrivalsSection = ({ newProducts }) => {
   return (
     <section className="new-arrivals-section">
       <div className="new-arrivals-header">
-        <div className="header-left">
-          <div className="icon-badge">
-            <Sparkles className="w-6 h-6" />
-          </div>
-          <div>
-            <h2 className="new-arrivals-title">
-              New Arrivals
-              <Badge variant="default" className="ml-2">NEW</Badge>
-            </h2>
-            <p className="new-arrivals-subtitle text-muted-foreground">Fresh drops you can't miss</p>
-          </div>
+        <div>
+          <h2 className="new-arrivals-title">New Arrivals</h2>
+          <p className="new-arrivals-subtitle">Fresh drops you can't miss</p>
         </div>
         <Button
           onClick={handleViewAll}

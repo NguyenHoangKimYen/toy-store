@@ -1,84 +1,48 @@
 /* ===== New Arrivals Section ===== */
 .new-arrivals-section {
-  width: 100%;
-  max-width: 1600px;
-  margin: 0 auto 60px;
-  padding: 0 5%;
+  padding: 4rem 5%;
+  background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
 }
 
-/* Header Styling */
+/* Header Styling - Match CategorySection style */
 .new-arrivals-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
-  padding: 25px 30px;
-  background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(245, 158, 11, 0.2);
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  color: white;
-}
-
-.icon-badge {
-  width: 56px;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 16px;
-  backdrop-filter: blur(10px);
-  color: white;
+  margin-bottom: 2rem;
+  max-width: 1600px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #f1f5f9;
 }
 
 .new-arrivals-title {
-  font-size: 28px;
+  font-size: 2rem;
   font-weight: 700;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: white;
-}
-
-.badge-new {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 12px;
-  background: #fbbf24;
-  color: #92400e;
-  font-size: 12px;
-  font-weight: 700;
-  border-radius: 20px;
-  letter-spacing: 0.5px;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
 }
 
 .new-arrivals-subtitle {
-  font-size: 14px;
-  margin: 5px 0 0;
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 400;
+  font-size: 0.875rem;
+  color: #64748b;
 }
 
 .view-all-button {
-  background: white;
-  color: #f59e0b;
-  border: none;
-  padding: 10px 24px;
+  height: 44px;
+  padding: 0 24px;
   font-weight: 600;
+  border-radius: 10px;
   transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
 .view-all-button:hover {
-  background: rgba(255, 255, 255, 0.95);
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
   transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
 }
 
 /* Horizontal scrolling products */
