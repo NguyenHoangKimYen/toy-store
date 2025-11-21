@@ -239,6 +239,7 @@ const createProduct = async (productData, imgFiles) => {
                     productId: newProduct._id,
                     name: v.name || `${productData.name} - ${attrs.map(a=>a.value).join(' ')}`,
                     sku: v.sku,
+                    weight: parseInt(v.weight || 100),
                     price: parseFloat(v.price || 0),
                     stock: parseInt(v.stock || 0),
                     attributes: attrs,
