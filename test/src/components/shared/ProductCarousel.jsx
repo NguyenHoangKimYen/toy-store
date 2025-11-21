@@ -114,7 +114,7 @@ const ProductCarousel = () => {
               <div className="specifications">
                 <div>
                   <p>Price</p>
-                  <p>{formatPrice(product.minPrice || product.price?.$numberDecimal || product.price)}</p>
+                  <p>{formatPrice(product.minPrice || product.price)}</p>
                 </div>
                 <div>
                   <p>Stock</p>

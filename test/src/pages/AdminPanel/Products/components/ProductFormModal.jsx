@@ -74,7 +74,10 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
         description: product.description || '',
         brand: product.brand || '',
         isFeatured: product.isFeatured || false,
-        status: product.status || 'Published',
+        // Normalize invalid status values (e.g., "Active" -> "Published")
+        status: ['Draft', 'Published', 'Archived', 'Disabled'].includes(product.status) 
+          ? product.status 
+          : 'Published',
         imageUrls: product.imageUrls || [],
         // Ensure categoryId is always an array of strings (IDs)
         categoryId: (product.categoryId || []).map(cat => 
@@ -255,13 +258,26 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
   return (
     <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4'>
       <div className='bg-white dark:bg-gray-800 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto'>
-        <div className='sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between'>
-          <h2 className='text-xl font-semibold text-gray-900 dark:text-white'>
-            {mode === 'create' ? 'Add New Product' : 'Edit Product'}
-          </h2>
-          <button onClick={onClose} className='text-gray-400 hover:text-gray-600'>
-            <X className='w-6 h-6' />
-          </button>
+        <div className='sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4'>
+          <div className='flex items-center justify-between mb-3'>
+            <h2 className='text-xl font-semibold text-gray-900 dark:text-white'>
+              {mode === 'create' ? 'Add New Product' : 'Edit Product'}
+            </h2>
+            <button onClick={onClose} className='text-gray-400 hover:text-gray-600'>
+              <X className='w-6 h-6' />
+            </button>
+          </div>
+          
+          {/* Action Buttons at Top */}
+          <div className='flex justify-end gap-3'>
+            <Button type='button' variant='outline' onClick={onClose} disabled={saving}>
+              Cancel
+            </Button>
+            <Button type='submit' disabled={saving} className='bg-blue-600 hover:bg-blue-700' onClick={handleSubmit}>
+              <Save className='w-4 h-4 mr-2' />
+              {saving ? 'Saving...' : mode === 'create' ? 'Create Product' : 'Save Changes'}
+            </Button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className='p-6 space-y-6'>
@@ -370,17 +386,6 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
               onUpdateStock={updateVariantStock}
               onRemove={removeVariant}
             />
-          </div>
-
-          {/* Action Buttons */}
-          <div className='flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700'>
-            <Button type='button' variant='outline' onClick={onClose} disabled={saving}>
-              Cancel
-            </Button>
-            <Button type='submit' disabled={saving} className='bg-blue-600 hover:bg-blue-700'>
-              <Save className='w-4 h-4 mr-2' />
-              {saving ? 'Saving...' : mode === 'create' ? 'Create Product' : 'Save Changes'}
-            </Button>
           </div>
         </form>
       </div>

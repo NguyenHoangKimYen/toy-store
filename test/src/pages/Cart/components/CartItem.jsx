@@ -2,6 +2,7 @@ import React from 'react';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatPrice } from '@/utils/formatPrice';
+import { parsePrice } from '@/utils/priceUtils';
 import './CartItem.css';
 
 const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
@@ -14,7 +15,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
   }
   
   // Use variant price if available, otherwise use product price
-  const price = variant?.price?.$numberDecimal || variant?.price || product.minPrice || product.price?.$numberDecimal || product.price || 0;
+  const price = parsePrice(variant?.price || product.minPrice || product.price || 0);
   const imageUrl = variant?.imageUrls?.[0] || product.imageUrls?.[0] || '/placeholder.png';
   const stock = variant?.stockQuantity || product.stockQuantity || 999;
   const total = price * item.quantity;

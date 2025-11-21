@@ -1,6 +1,7 @@
 import React from 'react';
 import { Package, Eye, Edit, Trash2 } from 'lucide-react';
 import { formatPrice } from '@/utils/formatPrice';
+import { parsePrice, calculateTotalStock } from '@/utils/priceUtils';
 import './AdminProductCard.css';
 
 /**
@@ -19,13 +20,13 @@ const AdminProductCard = ({
   if (!product) return null;
 
   const hasVariants = product.variants && product.variants.length > 0;
-  const minPrice = product.minPrice?.$numberDecimal || product.minPrice;
-  const singlePrice = product.price?.$numberDecimal || product.price;
+  const minPrice = parsePrice(product.minPrice);
+  const singlePrice = parsePrice(product.price);
   const priceDisplay = hasVariants && minPrice ? formatPrice(minPrice) : formatPrice(singlePrice);
 
   const imageUrl = product.imageUrls?.[0] || '/placeholder.png';
   const categoryName = product.categoryId?.[0]?.name || product.categoryId?.name || 'Uncategorized';
-  const totalStock = product.totalStock ?? 0;
+  const totalStock = product.totalStock ?? calculateTotalStock(product.variants);
 
   const handleCardClick = () => {
     onClick?.(product);

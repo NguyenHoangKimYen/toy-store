@@ -1,6 +1,7 @@
 import { Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import Badge from '@/components/ui/badge';
+import { parsePrice } from '@/utils/priceUtils';
 
 const VariantList = ({ variants, onUpdatePrice, onUpdateStock, onRemove }) => {
   if (variants.length === 0) return null;
@@ -46,7 +47,7 @@ const VariantList = ({ variants, onUpdatePrice, onUpdateStock, onRemove }) => {
                     step='0.01'
                     min='0'
                     placeholder='0.00'
-                    value={variant.price?.$numberDecimal ?? variant.price ?? ''}
+                    value={parsePrice(variant.price) || ''}
                     onChange={(e) => onUpdatePrice(index, e.target.value)}
                     className='h-9'
                     required

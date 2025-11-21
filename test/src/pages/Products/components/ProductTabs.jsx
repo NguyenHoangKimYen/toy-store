@@ -127,7 +127,7 @@ const ProductTabs = ({ product }) => {
                           </div>
                         )}
                         <div className="variant-stock-info">
-                          Stock: {variant.stock} units
+                          Stock: {variant.stockQuantity} units
                         </div>
                       </div>
                     ))}

@@ -10,3 +10,4 @@ export {
   isAuthenticated, 
   getAuthHeaders 
 } from './authHelpers';
+export { parsePrice as parsePriceDecimal, calculateTotalStock, getPriceRange } from './priceUtils';

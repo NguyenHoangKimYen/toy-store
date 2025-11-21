@@ -125,7 +125,7 @@ export const useAdminProducts = () => {
                   value: String(value),
                 })),
                 price: variant.price,
-                stockQuantity: variant.stock || 0,
+                stockQuantity: variant.stockQuantity || 0,
                 sku: variant.sku || '',
                 isActive: variant.isActive !== false,
               };

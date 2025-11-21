@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import * as productsService from '@/services/products.service';
+import { parsePrice } from '@/utils/priceUtils';
 
 /**
  * Universal hook for fetching products with flexible options
@@ -106,7 +107,7 @@ export const useProducts = (options = {}) => {
                 value: String(value),
               })),
               price: variant.price,
-              stockQuantity: variant.stock || 0,
+              stockQuantity: variant.stockQuantity || 0,
               sku: variant.sku || '',
               isActive: variant.isActive !== false,
             };
@@ -183,7 +184,7 @@ export const useProducts = (options = {}) => {
                       value: String(value),
                     })),
                 price: variant.price,
-                stockQuantity: variant.stockQuantity ?? variant.stock ?? 0,
+                stockQuantity: variant.stockQuantity ?? 0,
                 isActive: variant.isActive !== false,
               };
               
@@ -196,7 +197,7 @@ export const useProducts = (options = {}) => {
                   value: String(value),
                 })),
                 price: variant.price,
-                stockQuantity: variant.stockQuantity ?? variant.stock ?? 0,
+                stockQuantity: variant.stockQuantity ?? 0,
                 sku: variant.sku || '',
                 isActive: variant.isActive !== false,
               };
@@ -379,38 +380,11 @@ export const useCategorizedProducts = (options = {}) => {
 export const useProductDetail = (productId) => {
   const { data: product, loading: productLoading, error, refetch } = useProducts({ productId });
   
-  const [variants, setVariants] = useState([]);
-  const [variantsLoading, setVariantsLoading] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [quantity, setQuantity] = useState(1);
 
-  // Fetch variants when product loads
-  useEffect(() => {
-    const fetchVariants = async () => {
-      if (!product?._id) return;
-      
-      try {
-        setVariantsLoading(true);
-        const url = `http://localhost:5000/api/products/${product._id}/variants`;
-        console.log('Fetching variants from:', url);
-        
-        const response = await fetch(url);
-        const data = await response.json();
-        console.log('Variants fetched:', data);
-        
-        setVariants(data.variants || []);
-        
-        // Don't auto-select - user must choose all attributes first
-        setSelectedVariant(null);
-      } catch (err) {
-        console.error('Error fetching variants:', err);
-      } finally {
-        setVariantsLoading(false);
-      }
-    };
-
-    fetchVariants();
-  }, [product]);
+  // Use variants from product (already populated by backend)
+  const variants = product?.variants || [];
 
   const handleVariantChange = useCallback((variant) => {
     setSelectedVariant(variant);
@@ -429,21 +403,21 @@ export const useProductDetail = (productId) => {
   }, [quantity, selectedVariant]);
 
   // Calculated values
-  const price = selectedVariant?.price?.$numberDecimal || selectedVariant?.price || 0;
+  const price = parsePrice(selectedVariant?.price) || 0;
   const stock = selectedVariant?.stockQuantity || 0;
   const inStock = stock > 0 && selectedVariant?.isActive;
   
   // For discount calculation, compare to highest price variant if multiple exist
   const maxVariantPrice = variants.length > 0 
-    ? Math.max(...variants.map(v => parseFloat(v.price?.$numberDecimal || v.price || 0)))
+    ? Math.max(...variants.map(v => parsePrice(v.price) || 0))
     : price;
   const discount = maxVariantPrice && price && maxVariantPrice > price 
     ? Math.round(((maxVariantPrice - price) / maxVariantPrice) * 100) 
     : 0;
 
   return {
-    product: product ? { ...product, variants } : null, // Merge fetched variants into product
-    loading: productLoading || variantsLoading,
+    product, // Product already has variants populated
+    loading: productLoading,
     error,
     refetch,
     variants,
