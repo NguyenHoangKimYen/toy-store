@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import { mockProducts } from './mockProducts';
 import { mockReviews } from './mockReviews';
+import { mockCategories, getCategoriesByIds } from './mockCategories';
 import { getVariantsByProductId, getVariantById, getTotalStockForProduct } from './mockVariants';
 import { validateCredentials, emailExists, addUser, findUserById, mockUsers } from './mockUsers';
 import { 
@@ -12,6 +13,23 @@ import {
 } from './mockDiscountCodes';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+// Helper to populate product categoryId (simulates Mongoose populate)
+const populateProduct = (product) => {
+  if (!product) return product;
+  
+  return {
+    ...product,
+    categoryId: Array.isArray(product.categoryId)
+      ? product.categoryId.map(catId => {
+          // If already populated (has name), return as is
+          if (typeof catId === 'object' && catId.name) return catId;
+          // Otherwise populate from mockCategories
+          return getCategoriesByIds([catId])[0] || catId;
+        })
+      : product.categoryId
+  };
+};
 
 // Helper to generate JWT token (mock)
 const generateToken = (user) => {
@@ -157,32 +175,7 @@ export const handlers = [
 
   // Categories endpoint
   http.get(`${API_BASE_URL}/categories`, () => {
-    const allProducts = [
-      ...mockProducts.featured,
-      ...mockProducts.bestSellers,
-      ...mockProducts.keychains,
-      ...mockProducts.plushToys,
-      ...mockProducts.accessories,
-      ...mockProducts.newProducts,
-    ];
-
-    const categoriesMap = new Map();
-    allProducts.forEach(product => {
-      if (product.categoryId && Array.isArray(product.categoryId)) {
-        product.categoryId.forEach(cat => {
-          if (cat._id && cat.name && !categoriesMap.has(cat._id)) {
-            categoriesMap.set(cat._id, {
-              _id: cat._id,
-              name: cat.name,
-              slug: cat.name.toLowerCase().replace(/\s+/g, '-'),
-            });
-          }
-        });
-      }
-    });
-
-    const categories = Array.from(categoriesMap.values());
-    return HttpResponse.json(categories);
+    return HttpResponse.json(mockCategories);
   }),
 
   // Users endpoints
@@ -435,8 +428,8 @@ export const handlers = [
     const endIndex = startIndex + limit;
     const paginatedProducts = products.slice(startIndex, endIndex);
 
-    // Add totalStock to each product
-    const productsWithStock = paginatedProducts.map(p => ({
+    // Add totalStock to each product and populate categoryId
+    const productsWithStock = paginatedProducts.map(p => populateProduct({
       ...p,
       totalStock: getTotalStockForProduct(p._id)
     }));
@@ -505,11 +498,11 @@ export const handlers = [
       return new HttpResponse(null, { status: 404 });
     }
 
-    // Add totalStock calculated from variants
-    const productWithStock = {
+    // Add totalStock calculated from variants and populate categoryId
+    const productWithStock = populateProduct({
       ...product,
       totalStock: getTotalStockForProduct(product._id)
-    };
+    });
 
     return HttpResponse.json(productWithStock);
   }),
