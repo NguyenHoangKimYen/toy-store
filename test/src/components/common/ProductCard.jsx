@@ -46,15 +46,10 @@ const ProductCard = ({
   // For products without variants (legacy), use single price
   const singlePrice = product.price?.$numberDecimal || product.price;
   
-  // Determine display price
+  // Determine display price - always show min price only
   let priceDisplay;
-  if (hasVariants && minPrice && maxPrice) {
-    // Show range if prices differ
-    if (minPrice !== maxPrice) {
-      priceDisplay = `${formatPrice(minPrice)} - ${formatPrice(maxPrice)}`;
-    } else {
-      priceDisplay = formatPrice(minPrice);
-    }
+  if (hasVariants && minPrice) {
+    priceDisplay = formatPrice(minPrice);
   } else {
     priceDisplay = formatPrice(singlePrice);
   }
