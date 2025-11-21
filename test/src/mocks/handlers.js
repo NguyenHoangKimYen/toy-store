@@ -330,13 +330,13 @@ export const handlers = [
       );
     }
 
-    // Category filter
+    // Category filter - categoryId is array of string IDs at this point (not populated yet)
     if (category) {
       products = products.filter(p => {
         if (Array.isArray(p.categoryId)) {
-          return p.categoryId.some(cat => 
-            (cat._id || cat).toLowerCase() === category.toLowerCase() ||
-            (cat.name || cat).toLowerCase().includes(category.toLowerCase())
+          // Check if any category ID matches (case-insensitive)
+          return p.categoryId.some(catId => 
+            catId.toLowerCase() === category.toLowerCase()
           );
         }
         return false;
