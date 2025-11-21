@@ -15,27 +15,27 @@ const CategorySection = ({ title, subtitle, products, viewAllLink, showIcon, ico
   };
 
   return (
-    <section className="px-[5%] py-8 first:pt-0">
-      <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm hover:shadow-md transition-shadow">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-5 border-b-2 border-slate-100">
-          <div className="flex items-center gap-4">
+    <section className="px-[5%] py-4 first:pt-0">
+      <div className="bg-white rounded-xl p-4 md:p-5 shadow-sm hover:shadow-md transition-shadow">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 pb-3 border-b border-slate-100">
+          <div className="flex items-center gap-3">
             {showIcon && icon && (
-              <div className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBgColor}`}>
-                <div className={`w-full h-full flex items-center justify-center rounded-xl text-white bg-gradient-to-br ${iconGradient}`}>
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${iconBgColor}`}>
+                <div className={`w-full h-full flex items-center justify-center rounded-lg text-white bg-gradient-to-br ${iconGradient}`}>
                   {icon}
                 </div>
               </div>
             )}
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-slate-800 mb-0">{title}</h2>
-              {subtitle && <p className="text-sm text-slate-500 mt-1">{subtitle}</p>}
+              <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-800 mb-0">{title}</h2>
+              {subtitle && <p className="text-sm md:text-base text-slate-500 mt-1">{subtitle}</p>}
             </div>
           </div>
           {viewAllLink && (
             <Button 
               variant="outline" 
               asChild 
-              className="h-11 px-6 font-semibold rounded-lg transition-all whitespace-nowrap hover:bg-blue-500 hover:text-white hover:border-blue-500 hover:-translate-y-0.5 w-full sm:w-auto"
+              className="h-10 px-5 text-sm md:text-base font-semibold rounded-lg transition-all whitespace-nowrap hover:bg-blue-500 hover:text-white hover:border-blue-500 hover:-translate-y-0.5 w-full sm:w-auto"
             >
               <a href={viewAllLink}>
                 View All <ArrowRight className="ml-2 h-4 w-4" />

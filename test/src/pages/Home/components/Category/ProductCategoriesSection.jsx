@@ -5,11 +5,11 @@ import { getCategories } from '@/services/categories.service';
 import CategorySection from './CategorySection';
 
 const CategoryHeader = () => (
-  <div className="text-center mb-12">
-    <h2 className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-3">
+  <div className="text-center mb-8">
+    <h2 className="text-3xl md:text-4xl lg:text-5xl leading-[1.4] font-extrabold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-3">
       Shop by Category
     </h2>
-    <p className="text-lg text-slate-500 font-medium">Discover our curated collections</p>
+    <p className="text-base md:text-lg text-slate-500 font-medium">Discover our curated collections</p>
   </div>
 );
 
@@ -92,7 +92,7 @@ const ProductCategoriesSection = () => {
   
   if (loading) {
     return (
-      <section className="px-[5%] py-20 bg-gradient-to-b from-white to-slate-50">
+      <section className="px-[5%] py-10 bg-gradient-to-b from-white to-slate-50">
         <CategoryHeader />
         <div className="text-center py-10">
           <p>Loading products...</p>
@@ -103,7 +103,7 @@ const ProductCategoriesSection = () => {
   
   if (!hasAnyProducts) {
     return (
-      <section className="px-[5%] py-20 bg-gradient-to-b from-white to-slate-50">
+      <section className="px-[5%] py-10 bg-gradient-to-b from-white to-slate-50">
         <CategoryHeader />
         <div className="text-center py-10">
           <p>No products available.</p>
@@ -113,7 +113,7 @@ const ProductCategoriesSection = () => {
   }
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12">
+    <div className="py-10 bg-gradient-to-b from-rose-100 via-pink-100 to-purple-100">
       <section className="px-[5%]">
         <CategoryHeader />
 
@@ -133,7 +133,9 @@ const ProductCategoriesSection = () => {
           ))}
         </div>
       </section>
+      
     </div>
+    
   );
 };
 
