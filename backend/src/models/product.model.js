@@ -56,12 +56,6 @@ const ProductSchema = new mongoose.Schema(
             max: 5,
         },
 
-        weight: {
-            type: Number,        // đơn vị: gram
-            default: 100,        // mặc định 100 gram
-            min: 0,
-        },
-
         variants: [
             {
                 type: mongoose.Schema.Types.ObjectId,
