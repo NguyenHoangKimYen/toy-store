@@ -34,7 +34,6 @@ const findById = async (id) => {
         },
         {
             path: "variants",
-            // select: "name sku price stockQuantity",
         },
     ]);
 };
@@ -47,7 +46,6 @@ const findBySlug = async (slug) => {
         },
         {
             path: "variants",
-            // select: "name sku price stockQuantity",
         },
     ]);
 };
@@ -58,26 +56,15 @@ const findByPrice = async (min, max) => {
     });
 };
 
-/**
- * Updated: Thêm tham số options để hỗ trợ Transaction (Session)
- */
 const create = async (data, options = {}) => {
     const product = new Product(data);
-    // save() của mongoose hỗ trợ options { session: ... }
     return product.save(options);
 };
 
-/**
- * Updated: Thêm options
- */
 const update = async (id, data, options = {}) => {
-    // merge options vào tham số thứ 3
     return Product.findByIdAndUpdate(id, data, { new: true, ...options });
 };
 
-/**
- * Updated: Thêm options (để nếu sau này xóa product trong transaction cũng dùng được)
- */
 const remove = async (id, options = {}) => {
     return Product.findByIdAndDelete(id, options);
 };
