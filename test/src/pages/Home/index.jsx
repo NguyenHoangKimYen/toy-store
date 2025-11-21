@@ -1,11 +1,15 @@
 ﻿import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { HeroSection } from './components/Hero';
-import { CategorySection, ProductCategoriesSection, NewArrivalsSection } from './components/Category';
+import { NewArrivalsSection, CategorizedProductsSection } from './components/Category';
 import { FeaturedBanner } from './components/Banner';
 import { useCategorizedProducts, useCategories } from '@/hooks';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
+import { ProductCard } from '@/components/common';
+import './components/Category/NewArrivalsSection.css';
 
 const Home = () => {
+  const navigate = useNavigate();
   const { categories, loading: categoriesLoading } = useCategories();
   const [categoryConfig, setCategoryConfig] = useState([]);
 
@@ -63,16 +67,37 @@ const Home = () => {
       {/* New Arrivals Section - Above Everything */}
       <NewArrivalsSection newProducts={categorizedProducts.newProducts} />
 
-      {/* Best Sellers */}
-      <CategorySection
-        title="Best Sellers"
-        subtitle="Customer favorites"
-        products={categorizedProducts.bestSellers}
-        viewAllLink="/products?filter=bestsellers"
-      />
+      {/* Best Sellers Section */}
+      {categorizedProducts.bestSellers && categorizedProducts.bestSellers.length > 0 && (
+        <section className="px-[5%] py-16 bg-gradient-to-b from-slate-50 to-white">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 max-w-[1600px] mx-auto pb-6 border-b-2 border-slate-100">
+            <div>
+              <h2 className="text-3xl font-bold text-slate-800 mb-2">Best Sellers</h2>
+              <p className="text-sm text-slate-500">Customer favorites</p>
+            </div>
+          </div>
+          <div className="relative">
+            <div className="products-horizontal-scroll">
+              {categorizedProducts.bestSellers.slice(0, 12).map((product) => (
+                <ProductCard
+                  key={product._id}
+                  product={product}
+                  variant="horizontal"
+                  showBadges={true}
+                  showCategory={false}
+                  showQuickView={false}
+                  onClick={(product) => navigate(`/products/${product._id}`)}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
-      {/* Product Categories Section - Shows all categories with products in grid layout */}
-      <ProductCategoriesSection categorizedProducts={categorizedProducts} />
+      {/* Categorized Products Section */}
+      <div className="px-[5%]">
+        <CategorizedProductsSection />
+      </div>
     </div>
   );
 };

@@ -1,12 +1,23 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/common';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import './NewArrivalsSection.css';
 
 const NewArrivalsSection = ({ newProducts }) => {
   const navigate = useNavigate();
+  const scrollRef = useRef(null);
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const scrollAmount = 400;
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   const handleViewAll = () => {
     navigate('/products?filter=new');
@@ -36,7 +47,25 @@ const NewArrivalsSection = ({ newProducts }) => {
       </div>
 
       <div className="relative">
-        <div className="products-horizontal-scroll">
+        {/* Left Arrow */}
+        <button
+          onClick={() => scroll('left')}
+          className="scroll-arrow scroll-arrow-left"
+          aria-label="Scroll left"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+
+        {/* Right Arrow */}
+        <button
+          onClick={() => scroll('right')}
+          className="scroll-arrow scroll-arrow-right"
+          aria-label="Scroll right"
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
+
+        <div ref={scrollRef} className="products-horizontal-scroll">
           {newProducts.slice(0, 12).map((product) => (
             <ProductCard
               key={product._id}
