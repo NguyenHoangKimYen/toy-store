@@ -1,18 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { ProductCard } from '@/components/common';
-import { ArrowRight, Tag, Sparkles, Package } from 'lucide-react';
-import { useProducts } from '@/hooks'; // Using global hook
+import { Tag, Sparkles, Package } from 'lucide-react';
+import { useProducts } from '@/hooks';
 import { getCategories } from '@/services/categories.service';
-import './ProductCategoriesSection.css';
+import CategorySection from './CategorySection';
 
 const ProductCategoriesSection = () => {
-  const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Use global products hook
   const { products: allProducts, loading: productsLoading } = useProducts();
 
   useEffect(() => {
@@ -84,15 +79,6 @@ const ProductCategoriesSection = () => {
     fetchData();
   }, [allProducts, productsLoading]);
 
-  const handleProductClick = (product) => {
-    navigate(`/products/${product._id}`);
-  };
-
-  const handleViewAll = (link) => {
-    navigate(link);
-  };
-
-  // If all categories are empty, show a message
   const hasAnyProducts = categories.some(cat => cat.products && cat.products.length > 0);
   
   if (loading) {
@@ -102,7 +88,7 @@ const ProductCategoriesSection = () => {
           <h2 className="text-5xl font-extrabold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-3">Shop by Category</h2>
           <p className="text-lg text-slate-500 font-medium">Discover our curated collections</p>
         </div>
-        <div style={{ textAlign: 'center', padding: '40px' }}>
+        <div className="text-center py-10">
           <p>Loading products...</p>
         </div>
       </section>
@@ -110,14 +96,13 @@ const ProductCategoriesSection = () => {
   }
   
   if (!hasAnyProducts) {
-    console.log('No products in any category!');
     return (
       <section className="px-[5%] py-20 bg-gradient-to-b from-white to-slate-50">
         <div className="text-center mb-15">
           <h2 className="text-5xl font-extrabold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-3">Shop by Category</h2>
           <p className="text-lg text-slate-500 font-medium">Discover our curated collections</p>
         </div>
-        <div style={{ textAlign: 'center', padding: '40px' }}>
+        <div className="text-center py-10">
           <p>No products available.</p>
         </div>
       </section>
@@ -125,67 +110,30 @@ const ProductCategoriesSection = () => {
   }
 
   return (
-    <section className="px-[5%] py-20 bg-gradient-to-b from-white to-slate-50">
-      <div className="text-center mb-15">
-        <h2 className="text-5xl font-extrabold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-3">Shop by Category</h2>
-        <p className="text-lg text-slate-500 font-medium">Discover our curated collections</p>
-      </div>
+    <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12">
+      <section className="px-[5%]">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-3">Shop by Category</h2>
+          <p className="text-lg text-slate-500 font-medium">Discover our curated collections</p>
+        </div>
 
-      <div className="max-w-[1600px] mx-auto flex flex-col gap-12">
-        {categories.map((category) => {
-          // Show fewer products on mobile for better performance
-          const isMobile = window.innerWidth < 768;
-          const productLimit = isMobile ? 6 : 12;
-          const displayProducts = category.products.slice(0, productLimit);
-          
-          if (displayProducts.length === 0) return null;
-
-          return (
-            <div key={category.id} className="bg-white rounded-2xl p-6 md:p-8 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-5 border-b-2 border-slate-100">
-                <div className="flex items-center gap-4">
-                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${category.bgColor}`}>
-                    <div className={`w-full h-full flex items-center justify-center rounded-xl text-white bg-gradient-to-br ${category.gradient}`}>
-                      {category.icon}
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-2xl md:text-3xl font-bold text-slate-800 m-0">{category.title}</h3>
-                    <p className="text-sm text-slate-500 mt-1 mb-0">{category.subtitle}</p>
-                  </div>
-                </div>
-                <Button
-                  onClick={() => handleViewAll(category.link)}
-                  variant="outline"
-                  className="h-11 px-6 font-semibold rounded-lg transition-all whitespace-nowrap hover:bg-blue-500 hover:text-white hover:border-blue-500 hover:-translate-y-0.5 w-full sm:w-auto"
-                >
-                  View All
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-
-              <div className="relative">
-                <div className="products-horizontal-scroll">
-                  {displayProducts.map((product) => (
-                    <ProductCard
-                      key={product._id}
-                      product={product}
-                      variant="horizontal"
-                      showBadges={false}
-                      showCategory={false}
-                      showQuickView={false}
-                      onClick={handleProductClick}
-                    />
-                  ))}
-                </div>
-                {/* Scroll indicator for mobile */}
-                <div className="scroll-indicator"></div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </section>
+        <div className="max-w-[1600px] mx-auto space-y-0">
+          {categories.map((category) => (
+            <CategorySection
+              key={category.id}
+              title={category.title}
+              subtitle={category.subtitle}
+              products={category.products}
+              viewAllLink={category.link}
+              showIcon={true}
+              icon={category.icon}
+              iconBgColor={category.bgColor}
+              iconGradient={category.gradient}
+            />
+          ))}
+        </div>
+      </section>
+    </div>
   );
 };
 
