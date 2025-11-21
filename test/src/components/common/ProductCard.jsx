@@ -1,7 +1,7 @@
 import React from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { formatPrice } from '@/utils/formatPrice';
-import { parsePrice, calculateTotalStock } from '@/utils/priceUtils';
+import { parsePrice } from '@/utils/priceUtils';
 import './ProductCard.css';
 
 /**
@@ -41,7 +41,7 @@ const ProductCard = ({
 
   const imageUrl = product.imageUrls?.[0] || '/placeholder.png';
   const categoryName = product.categoryId?.[0]?.name || product.categoryId?.name || 'Uncategorized';
-  const totalStock = product.totalStock ?? calculateTotalStock(product.variants);
+  const totalStock = product.totalStock ?? 0;
 
   const handleCardClick = () => {
     onClick?.(product);

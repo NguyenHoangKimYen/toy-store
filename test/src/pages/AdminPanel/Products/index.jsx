@@ -9,7 +9,6 @@ import AdminLayout from '../layouts/AdminLayout'
 import { useProducts } from '@/hooks' // Using global hook
 import { PageHeader, SearchBar } from '@/components/common'
 import { getCategories } from '@/services/categories.service'
-import { calculateTotalStock } from '@/utils'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -107,9 +106,9 @@ const Products = () => {
   // Calculate stats from ALL products (not filtered)
   const stats = useMemo(() => ({
     totalProducts: allProducts.length,
-    totalStock: allProducts.reduce((sum, p) => sum + calculateTotalStock(p.variants), 0),
+    totalStock: allProducts.reduce((sum, p) => sum + (p.totalStock ?? 0), 0),
     totalSold: allProducts.reduce((sum, p) => sum + (p.totalUnitsSold || 0), 0),
-    outOfStock: allProducts.filter(p => calculateTotalStock(p.variants) === 0).length,
+    outOfStock: allProducts.filter(p => (p.totalStock ?? 0) === 0).length,
   }), [allProducts])
 
   const handleFilterChange = (newFilters) => {
