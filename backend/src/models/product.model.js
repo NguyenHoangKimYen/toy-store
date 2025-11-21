@@ -42,6 +42,13 @@ const ProductSchema = new mongoose.Schema(
         minPrice: { type: Number, default: 0 },
         maxPrice: { type: Number, default: 0 },
 
+        totalStock: { 
+            type: Number, 
+            default: 0,
+            min: 0,
+            index: true
+        },
+
         imageUrls: [
             {
                 type: String,

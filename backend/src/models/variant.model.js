@@ -67,7 +67,7 @@ const VariantSchema = new mongoose.Schema(
     },
 );
 
-// Hàm tìm và cập nhật giá MIN/MAX cho sản phẩm cha
+// Hàm tìm và cập nhật giá MIN/MAX và totalStock cho sản phẩm cha
 async function updateProductPrices(productId) {
     if (!productId) return;
 
@@ -75,20 +75,27 @@ async function updateProductPrices(productId) {
 
     let minPrice = 0;
     let maxPrice = 0;
+    let totalStock = 0;
 
     if (activeVariants.length > 0) {
         const prices = activeVariants.map(v => parseFloat(v.price.toString()));
 
         minPrice = Math.min(...prices);
         maxPrice = Math.max(...prices);
+        totalStock = activeVariants.reduce((sum, v) => sum + (v.stockQuantity || 0), 0);
     }
     
     await mongoose.model("Product").updateOne(
         { _id: productId },
-        { $set: { minPrice: minPrice, maxPrice: maxPrice } }
+        { $set: { minPrice: minPrice, maxPrice: maxPrice, totalStock: totalStock } }
     );
-    console.log(`Updated min/max price for Product ${productId}: ${minPrice} - ${maxPrice}`);
+    console.log(`Updated min/max price and totalStock for Product ${productId}: ${minPrice} - ${maxPrice}, Stock: ${totalStock}`);
 }
+
+// Static method to manually recalculate product data (for bulk operations)
+VariantSchema.statics.recalculateProductData = async function(productId) {
+    await updateProductPrices(productId);
+};
 
 // 3. Đăng ký Middleware (Sau khi Variant được lưu, cập nhật, hoặc xóa)
 VariantSchema.post('save', function() {
@@ -97,6 +104,18 @@ VariantSchema.post('save', function() {
 
 VariantSchema.post('remove', function() {
     updateProductPrices(this.productId);
+});
+
+VariantSchema.post('findOneAndDelete', function(doc) {
+    if (doc) {
+        updateProductPrices(doc.productId);
+    }
+});
+
+VariantSchema.post('findOneAndUpdate', function(doc) {
+    if (doc) {
+        updateProductPrices(doc.productId);
+    }
 });
 
 module.exports = mongoose.model("Variant", VariantSchema);

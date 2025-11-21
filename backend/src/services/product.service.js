@@ -256,11 +256,14 @@ const createProduct = async (productData, imgFiles) => {
             
             createdVariantIds = createdVariants.map(v => v._id);
             
-            // e. Tính giá
+            // e. Tính giá và totalStock
             if (prices.length > 0) {
                 minPrice = Math.min(...prices);
                 maxPrice = Math.max(...prices);
             }
+            
+            // Calculate totalStock from created variants
+            const totalStock = variantDocs.reduce((sum, v) => sum + (v.stockQuantity || 0), 0);
         }
 
         // 7. Cập nhật lại Product với thông tin variants vừa tạo
@@ -269,7 +272,8 @@ const createProduct = async (productData, imgFiles) => {
             variants: createdVariantIds,
             attributes: allAttributes,
             minPrice,
-            maxPrice
+            maxPrice,
+            totalStock
         }, { session });
 
         // 8. Commit Transaction (Lưu tất cả)
