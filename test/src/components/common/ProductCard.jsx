@@ -41,7 +41,6 @@ const ProductCard = ({
   // Handle price display for variant-based products
   const hasVariants = product.variants && product.variants.length > 0;
   const minPrice = product.minPrice?.$numberDecimal || product.minPrice;
-  const maxPrice = product.maxPrice?.$numberDecimal || product.maxPrice;
   
   // For products without variants (legacy), use single price
   const singlePrice = product.price?.$numberDecimal || product.price;
