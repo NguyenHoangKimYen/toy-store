@@ -45,22 +45,22 @@ const NewArrivalsSection = ({ newProducts }) => {
         </Button>
       </div>
 
-      <div className="new-arrivals-grid">
-        {newProducts.slice(0, 8).map((product) => (
-          <div 
-            key={product._id}
-            className="new-arrival-wrapper"
-          >
+      <div className="products-scroll-container">
+        <div className="products-horizontal-scroll">
+          {newProducts.slice(0, 12).map((product) => (
             <ProductCard
+              key={product._id}
               product={product}
-              variant="default"
+              variant="horizontal"
               showBadges={true}
               showCategory={false}
               showQuickView={false}
               onClick={handleProductClick}
             />
-          </div>
-        ))}
+          ))}
+        </div>
+        {/* Scroll indicator for mobile */}
+        <div className="scroll-indicator"></div>
       </div>
     </section>
   );
