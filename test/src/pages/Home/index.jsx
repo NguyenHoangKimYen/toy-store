@@ -72,24 +72,8 @@ const Home = () => {
         viewAllLink="/products?filter=bestsellers"
       />
 
-      {/* Product Categories Section with shadcn */}
+      {/* Product Categories Section - Shows all categories with products in grid layout */}
       <ProductCategoriesSection categorizedProducts={categorizedProducts} />
-
-      {/* Dynamic Category Sections - Based on fetched categories */}
-      {categoryConfig.map(({ key, name, categoryId }) => {
-        const products = categorizedProducts[key];
-        if (!products || products.length === 0) return null;
-        
-        return (
-          <CategorySection
-            key={key}
-            title={name}
-            subtitle={`Explore our ${name.toLowerCase()} collection`}
-            products={products}
-            viewAllLink={`/products?categoryId=${categoryId}`}
-          />
-        );
-      })}
     </div>
   );
 };
