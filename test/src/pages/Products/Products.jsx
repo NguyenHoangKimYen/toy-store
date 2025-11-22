@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { LoadingSpinner } from '@/components/common';
 import { useProductCatalog } from './hooks';
 import ProductToolbar from './components/ProductToolbar';
 import ProductFilterSidebar from './components/ProductFilterSidebar';

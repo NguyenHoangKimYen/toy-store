@@ -1,6 +1,7 @@
 import React from 'react'
-import { Route, Routes } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import Layout from '../components/Layout'
+import ErrorBoundary from '../components/ErrorBoundary'
 import Home from '../pages/Home'
 import Collection from '../pages/Collection'
 import { Products, ProductDetail } from '../pages/Products'
@@ -24,40 +25,132 @@ import AdminOrders from '../pages/AdminPanel/Orders'
 import DiscountCodes from '../pages/AdminPanel/DiscountCodes'
 import CarouselDemo from '../pages/CarouselDemo'
 import { ROUTES } from '../config/routes'
+import { homeLoader, categoriesLoader } from './loaders'
+
+const router = createBrowserRouter([
+  {
+    path: ROUTES.LOGIN,
+    element: <Login />
+  },
+  {
+    path: ROUTES.REGISTER,
+    element: <Signup />
+  },
+  {
+    path: "/verify-email",
+    element: <VerifyEmail />
+  },
+  
+  // Admin routes with nested routing
+  {
+    path: ROUTES.ADMIN,
+    element: <AdminPanel />,
+    children: [
+      {
+        index: true,
+        element: <Dashboard />
+      },
+      {
+        path: 'users',
+        element: <Users />
+      },
+      {
+        path: 'products',
+        element: <AdminProducts />
+      },
+      {
+        path: 'orders',
+        element: <AdminOrders />
+      },
+      {
+        path: 'discount-codes',
+        element: <DiscountCodes />
+      }
+    ]
+  },
+
+  // Main app routes with Layout
+  {
+    element: <Layout />,
+    errorElement: <ErrorBoundary />,
+    children: [
+      {
+        path: ROUTES.HOME,
+        element: <Home />,
+        loader: homeLoader,
+        errorElement: <ErrorBoundary />
+      },
+      {
+        path: ROUTES.COLLECTION,
+        element: <Collection />,
+        loader: categoriesLoader,
+        errorElement: <ErrorBoundary />
+      },
+      {
+        path: ROUTES.PRODUCTS,
+        element: <Products />
+      },
+      {
+        path: ROUTES.PRODUCT_DETAIL,
+        element: <ProductDetail />
+      },
+      {
+        path: ROUTES.ABOUT,
+        element: <About />
+      },
+      {
+        path: ROUTES.CONTACT,
+        element: <Contact />
+      },
+      {
+        path: ROUTES.CART,
+        element: <Cart />
+      },
+      {
+        path: ROUTES.CHECKOUT,
+        element: <Checkout />
+      },
+      {
+        path: ROUTES.PLACE_ORDER,
+        element: <PlaceOrder />
+      },
+      {
+        path: ROUTES.PAYMENT,
+        element: <Payment />
+      },
+      {
+        path: ROUTES.ORDERS,
+        element: <Orders />
+      },
+      {
+        path: ROUTES.ORDER_HISTORY,
+        element: <OrderHistory />
+      },
+      {
+        path: ROUTES.PROFILE,
+        element: <Profile />
+      },
+      {
+        path: '/carousel-demo',
+        element: <CarouselDemo />
+      }
+    ]
+  }
+])
 
 const AppRoutes = () => {
   return (
-    <Routes>
-        <Route path={ROUTES.LOGIN} element={<Login/>}/>
-        <Route path={ROUTES.REGISTER} element={<Signup />}></Route>
-        <Route path="/verify-email" element={<VerifyEmail />}></Route>
-        
-        {/* Admin routes with nested routing */}
-        <Route path={ROUTES.ADMIN} element={<AdminPanel />}>
-          <Route index element={<Dashboard />} />
-          <Route path='users' element={<Users />} />
-          <Route path='products' element={<AdminProducts />} />
-          <Route path='orders' element={<AdminOrders />} />
-          <Route path='discount-codes' element={<DiscountCodes />} />
-        </Route>
-
-        <Route element={<Layout />}>
-            <Route path={ROUTES.HOME} element={<Home />}></Route>
-            <Route path={ROUTES.COLLECTION} element={<Collection />}></Route>
-            <Route path={ROUTES.PRODUCTS} element={<Products />}></Route>
-            <Route path={ROUTES.PRODUCT_DETAIL} element={<ProductDetail />}></Route>
-            <Route path={ROUTES.ABOUT} element={<About />}></Route>
-            <Route path={ROUTES.CONTACT} element={<Contact />}></Route>
-            <Route path={ROUTES.CART} element={<Cart />}></Route>
-            <Route path={ROUTES.CHECKOUT} element={<Checkout />}></Route>
-            <Route path={ROUTES.PLACE_ORDER} element={<PlaceOrder />}></Route>
-            <Route path={ROUTES.PAYMENT} element={<Payment />}></Route>
-            <Route path={ROUTES.ORDERS} element={<Orders />}></Route>
-            <Route path={ROUTES.ORDER_HISTORY} element={<OrderHistory />}></Route>
-            <Route path={ROUTES.PROFILE} element={<Profile />}></Route>
-            <Route path='/carousel-demo' element={<CarouselDemo />}></Route>
-        </Route>
-    </Routes>
+    <RouterProvider 
+      router={router}
+      fallbackElement={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-violet-600 border-r-transparent"></div>
+            <p className="mt-4 text-gray-600">Loading...</p>
+          </div>
+        </div>
+      }
+    />
   )
 }
 

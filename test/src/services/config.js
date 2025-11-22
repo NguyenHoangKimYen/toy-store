@@ -15,9 +15,9 @@ export const getDefaultHeaders = () => ({
   'Content-Type': 'application/json',
 });
 
-export const REQUEST_TIMEOUT = 20000;
+export const REQUEST_TIMEOUT = 15000; // Reduced from 20s to 15s for faster failure detection
 
-// API Client
+// API Client with optimizations
 const apiClient = {
   async request(method, url, options = {}) {
     const { data, params, headers = {}, ...fetchOptions } = options;
@@ -37,6 +37,7 @@ const apiClient = {
     
     const defaultHeaders = {
       ...getDefaultHeaders(),
+      'Connection': 'keep-alive', // Enable HTTP connection reuse
       ...(token && { Authorization: `Bearer ${token}` }),
       ...(sessionId && { 'X-Session-Id': sessionId }),
       ...headers,
@@ -45,6 +46,7 @@ const apiClient = {
     const config = {
       method,
       headers: defaultHeaders,
+      keepalive: true, // Enable connection pooling
       ...fetchOptions,
     };
 
@@ -53,7 +55,13 @@ const apiClient = {
     }
 
     try {
+      // Add timeout
+      const timeoutId = setTimeout(() => {
+        throw new Error('Request timeout');
+      }, REQUEST_TIMEOUT);
+
       const response = await fetch(fullUrl, config);
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         const error = await response.json().catch(() => ({

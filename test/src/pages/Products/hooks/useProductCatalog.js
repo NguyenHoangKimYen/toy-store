@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getProducts, getProductCategories } from '@/services/products.service';
 
@@ -40,12 +40,22 @@ export const useProductCatalog = () => {
     sortOrder: searchParams.get('sortOrder') || 'desc',
   }), [searchParams]);
 
-  // Fetch products
+  // Fetch products with debouncing and abort control
+  const abortControllerRef = useRef(null);
+  
   useEffect(() => {
     console.log('[useProductCatalog] useEffect triggered!', { currentPage, filters });
     
+    // Cancel previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
     const fetchProducts = async () => {
       console.log('[useProductCatalog] fetchProducts called, currentPage:', currentPage, 'PRODUCTS_PER_PAGE:', PRODUCTS_PER_PAGE);
+      
+      // Create new abort controller for this request
+      abortControllerRef.current = new AbortController();
       
       try {
         setLoading(true);

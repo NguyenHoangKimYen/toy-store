@@ -12,7 +12,8 @@ const Layout = () => {
                     <Navbar />
                 </div>
             </div>
-            <main className='w-full'>
+            
+            <main className='w-full relative'>
                 <Outlet />
             </main>
             <Toaster />

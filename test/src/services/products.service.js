@@ -14,8 +14,10 @@ export const getProducts = async (params = {}) => {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      'Connection': 'keep-alive',
       ...getAuthHeaders(),
     },
+    keepalive: true,
   });
   
   return handleResponse(response);
@@ -31,8 +33,10 @@ export const getProductById = async (id) => {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      'Connection': 'keep-alive',
       ...getAuthHeaders(),
     },
+    keepalive: true,
   });
   
   return handleResponse(response);
@@ -174,8 +178,10 @@ export const getProductCategories = async () => {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      'Connection': 'keep-alive',
       ...getAuthHeaders(),
     },
+    keepalive: true,
   });
   
   return handleResponse(response);

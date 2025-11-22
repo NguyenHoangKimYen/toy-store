@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   getCartByUser,
   getCartBySession,
@@ -246,13 +246,13 @@ export const useCart = () => {
     }
   }, [cart]);
 
-  // Calculate cart summary
-  const cartSummary = {
+  // Calculate cart summary (memoized)
+  const cartSummary = useMemo(() => ({
     itemCount: cartItems.reduce((sum, item) => sum + item.quantity, 0),
     subtotal: cartItems.reduce((sum, item) => sum + item.quantity * (item.price || 0), 0),
     total: cart?.totalPrice || 0,
     discount: cart?.discountAmount || 0,
-  };
+  }), [cartItems, cart?.totalPrice, cart?.discountAmount]);
 
   // Clear session ID (called after login)
   const clearGuestSession = useCallback(() => {
