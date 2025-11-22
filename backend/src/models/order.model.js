@@ -12,14 +12,11 @@ const ORDER_STATUS_ENUM = [
 
 const OrderSchema = new mongoose.Schema(
     {
-        // Trường _id (PK) tự động được Mongoose/MongoDB tạo ra
-
-        // Khóa ngoại: Người đặt hàng (FK → User)
         userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User", // Tham chiếu đến Model 'User'
             required: true,
-            index: true, // Index để truy vấn đơn hàng theo người dùng
+            index: true,
         },
 
         // Khóa ngoại: Địa chỉ giao hàng cố định (FK → Address)

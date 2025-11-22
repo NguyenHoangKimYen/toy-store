@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 
-// Định nghĩa các trạng thái đơn hàng phổ biến (có thể điều chỉnh)
 const ORDER_STATUS_ENUM = [
     "pending",
     "confirmed",
@@ -11,9 +10,6 @@ const ORDER_STATUS_ENUM = [
 ];
 
 const OrderStatusHistorySchema = new mongoose.Schema({
-    // Trường _id (PK) tự động được Mongoose/MongoDB tạo ra
-
-    // Khóa ngoại: Đơn hàng được thay đổi (FK → Order)
     orderId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Order", // Tham chiếu đến Model 'Order'
