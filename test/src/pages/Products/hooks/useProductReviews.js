@@ -9,7 +9,7 @@ export const useProductReviews = (productId) => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [hasMore, setHasMore] = useState(false);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
   const pageSize = 10;
 
   const loadReviews = async (resetPage = false) => {
@@ -17,22 +17,25 @@ export const useProductReviews = (productId) => {
       setLoading(true);
       setError(null);
       
-      const currentPage = resetPage ? 0 : page;
-      const skip = currentPage * pageSize;
+      const currentPage = resetPage ? 1 : page + 1;
       
       const data = await getProductReviews(productId, {
         limit: pageSize,
-        skip,
+        page: currentPage,
       });
       
+      const reviewsData = data.metadata?.reviews || [];
+      
       if (resetPage) {
-        setReviews(data.reviews);
-        setPage(0);
+        setReviews(reviewsData);
+        setPage(1);
       } else {
-        setReviews(prev => [...prev, ...data.reviews]);
+        setReviews(prev => [...prev, ...reviewsData]);
+        setPage(currentPage);
       }
       
-      setHasMore(data.hasMore);
+      const total = data.metadata?.total || 0;
+      setHasMore((currentPage * pageSize) < total);
     } catch (err) {
       console.error('Error loading reviews:', err);
       setError(err.message || 'Failed to load reviews');
@@ -62,7 +65,9 @@ export const useProductReviews = (productId) => {
   const submitReview = async (reviewData) => {
     try {
       setSubmitting(true);
-      const newReview = await createReview(productId, reviewData);
+      const result = await createReview(reviewData);
+      
+      const newReview = result.metadata;
       
       // Add new review to the top of the list
       setReviews(prev => [newReview, ...prev]);
@@ -86,7 +91,7 @@ export const useProductReviews = (productId) => {
   };
 
   useEffect(() => {
-    if (page > 0) {
+    if (page > 1) {
       loadReviews();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
