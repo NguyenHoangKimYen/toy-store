@@ -107,12 +107,12 @@ const ProductInfo = ({ product }) => {
         <div className='mb-4'>
           <p className='text-sm text-gray-600 dark:text-gray-400 mb-2'>Tags</p>
           <div className='flex flex-wrap gap-2'>
-            {product.tags.map((tag) => (
+            {product.tags.map((tag, index) => (
               <span
-                key={tag._id}
+                key={tag._id || index}
                 className='px-3 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded-full text-sm font-medium uppercase'
               >
-                {tag.name}
+                {typeof tag === 'object' ? tag.name : tag}
               </span>
             ))}
           </div>
@@ -135,7 +135,7 @@ const ProductInfo = ({ product }) => {
                   <div className='flex flex-wrap gap-2 mb-2'>
                     {Object.entries(attributes).map(([key, value]) => (
                       <span key={key} className='px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded text-xs font-medium'>
-                        <span className='font-semibold'>{key}:</span> {value}
+                        <span className='font-semibold'>{key}:</span> {typeof value === 'object' ? JSON.stringify(value) : value}
                       </span>
                     ))}
                   </div>

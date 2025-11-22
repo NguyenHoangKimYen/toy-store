@@ -30,7 +30,7 @@ const apiClient = {
     }
 
     // Get auth token if exists
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('authToken');
     
     // Get guest sessionId if user is not logged in
     const sessionId = !token ? localStorage.getItem('guestSessionId') : null;
