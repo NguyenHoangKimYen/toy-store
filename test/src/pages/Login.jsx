@@ -250,10 +250,10 @@ const Login = () => {
   }
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="flex h-screen items-center justify-center bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900">
       {showForgotPassword ? (
         // Forgot Password Modal
-        <Card className="w-[480px] shadow-2xl border-0 bg-white animate-in fade-in duration-500">
+        <Card className="w-[480px] shadow-2xl border border-white/20 bg-white/10 backdrop-blur-xl animate-in fade-in duration-500">
           <CardHeader className="space-y-4 pb-6">
             <button
               onClick={() => setShowForgotPassword(false)}
@@ -267,10 +267,10 @@ const Login = () => {
                 <Mail className="w-12 h-12 text-blue-600" />
               </div>
             </div>
-            <CardTitle className="text-3xl text-center font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <CardTitle className="text-3xl text-center font-bold text-white [text-shadow:_0_2px_8px_rgb(0_0_0_/_40%)]">
               Reset Password
             </CardTitle>
-            <CardDescription className="text-center text-gray-600 text-base">
+            <CardDescription className="text-center text-white/95 text-base [text-shadow:_0_1px_4px_rgb(0_0_0_/_30%)]">
               Enter your email address and we'll send you a link to reset your password
             </CardDescription>
           </CardHeader>
@@ -278,13 +278,13 @@ const Login = () => {
           <CardContent>
             <form onSubmit={handleForgotPassword} className="space-y-5">
               <div className='space-y-2'>
-                <Label htmlFor="forgotEmail" className="text-sm font-semibold text-gray-700">Email Address</Label>
+                <Label htmlFor="forgotEmail" className="text-sm font-semibold text-white/90">Email Address</Label>
                 <Input
                   id="forgotEmail"
                   name="forgotEmail"
                   type="email"
                   placeholder="john@example.com"
-                  className="h-11"
+                  className="h-11 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20"
                   required
                 />
               </div>
@@ -292,7 +292,7 @@ const Login = () => {
               <Button
                 type="submit"
                 disabled={forgotPasswordLoading}
-                className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg"
+                className="w-full h-12 bg-white/90 hover:bg-white text-gray-900 font-semibold shadow-lg border border-white/50 backdrop-blur-sm"
                 size="lg"
               >
                 {forgotPasswordLoading ? (
@@ -309,7 +309,7 @@ const Login = () => {
         </Card>
       ) : needsOtp ? (
         // OTP Verification Form
-        <Card className="w-[500px] shadow-2xl border-0 bg-white animate-in fade-in duration-500">
+        <Card className="w-[500px] shadow-2xl border border-white/20 bg-white/10 backdrop-blur-xl animate-in fade-in duration-500">
           <CardHeader className="space-y-4 pb-6">
             <button
               onClick={() => {
@@ -330,10 +330,10 @@ const Login = () => {
                 </div>
               </div>
             </div>
-            <CardTitle className="text-3xl text-center font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+            <CardTitle className="text-3xl text-center font-bold text-white [text-shadow:_0_2px_8px_rgb(0_0_0_/_40%)]">
               Security Verification
             </CardTitle>
-            <CardDescription className="text-center text-gray-600 text-base leading-relaxed">
+            <CardDescription className="text-center text-white/95 text-base leading-relaxed [text-shadow:_0_1px_4px_rgb(0_0_0_/_30%)]">
               Too many failed login attempts detected.<br />
               Please enter the 6-digit code sent to your email
             </CardDescription>
@@ -342,7 +342,7 @@ const Login = () => {
           <CardContent className="space-y-6">
             <form onSubmit={handleOtpVerify} className="space-y-6">
               <div className='space-y-3'>
-                <Label className="text-sm font-semibold text-gray-700 text-center block">Enter Verification Code</Label>
+                <Label className="text-sm font-semibold text-white/90 text-center block">Enter Verification Code</Label>
                 <div className="flex gap-2 justify-center" onPaste={handleOtpPaste}>
                   {otp.map((digit, index) => (
                     <Input
@@ -354,11 +354,11 @@ const Login = () => {
                       value={digit}
                       onChange={(e) => handleOtpChange(index, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                      className="w-12 h-14 text-center text-2xl font-bold border-2 focus:ring-2 focus:ring-orange-500"
+                      className="w-12 h-14 text-center text-2xl font-bold bg-white/10 border-2 border-white/30 text-white focus:ring-2 focus:ring-white/50 focus:bg-white/20"
                     />
                   ))}
                 </div>
-                <p className="text-xs text-center text-gray-500 flex items-center justify-center gap-1">
+                <p className="text-xs text-center text-white/60 flex items-center justify-center gap-1">
                   <AlertCircle className="w-3 h-3" />
                   Code expires in 10 minutes
                 </p>
@@ -368,7 +368,7 @@ const Login = () => {
                 <Button
                   type="submit"
                   disabled={otpLoading || otp.some(d => !d)}
-                  className="w-full h-12 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-semibold shadow-lg"
+                  className="w-full h-12 bg-white/90 hover:bg-white text-gray-900 font-semibold shadow-lg border border-white/50 backdrop-blur-sm"
                   size="lg"
                 >
                   {otpLoading ? (
@@ -386,7 +386,7 @@ const Login = () => {
                   variant="outline"
                   onClick={handleResendOtp}
                   disabled={otpLoading}
-                  className="w-full h-11 border-gray-300 hover:bg-gray-50"
+                  className="w-full h-11 bg-white/5 border-white/40 hover:bg-white/15 text-white [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)] backdrop-blur-sm"
                 >
                   Resend Code
                 </Button>
@@ -396,12 +396,12 @@ const Login = () => {
         </Card>
       ) : (
         // Normal Login Form
-        <Card className="w-[500px] shadow-2xl border-0 bg-white animate-in fade-in duration-500">
+        <Card className="w-[500px] shadow-2xl border border-white/20 bg-white/10 backdrop-blur-xl animate-in fade-in duration-500">
           <CardHeader className="space-y-2 pb-6">
-            <CardTitle className="text-3xl text-center font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <CardTitle className="text-3xl text-center font-bold text-white [text-shadow:_0_2px_8px_rgb(0_0_0_/_40%)]">
               Welcome Back
             </CardTitle>
-            <CardDescription className="text-center text-gray-600">
+            <CardDescription className="text-center text-white/95 [text-shadow:_0_1px_4px_rgb(0_0_0_/_30%)]">
               Sign in to continue to your account
             </CardDescription>
           </CardHeader>
@@ -409,24 +409,24 @@ const Login = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className='space-y-2'>
-                <Label htmlFor="email" className="text-sm font-semibold text-gray-700">Email / Phone / Username</Label>
+                <Label htmlFor="email" className="text-sm font-semibold text-white [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)]">Email / Phone / Username</Label>
                 <Input
                   id="email"
                   name="email"
                   type="text"
                   placeholder="john@example.com or username"
-                  className="h-11"
+                  className="h-11 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20"
                   required
                 />
               </div>
 
               <div className='space-y-2'>
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-sm font-semibold text-gray-700">Password</Label>
+                  <Label htmlFor="password" className="text-sm font-semibold text-white">Password</Label>
                   <button
                     type="button"
                     onClick={() => setShowForgotPassword(true)}
-                    className="text-sm text-blue-600 hover:text-blue-700 hover:underline font-medium"
+                    className="text-sm text-white/80 hover:text-white hover:underline font-medium"
                   >
                     Forgot?
                   </button>
@@ -437,13 +437,13 @@ const Login = () => {
                     name="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className="h-11 pr-10"
+                    className="h-11 pr-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -454,7 +454,7 @@ const Login = () => {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
+                  className="w-full h-12 bg-white/90 hover:bg-white text-gray-900 font-semibold shadow-lg hover:shadow-xl transition-all border border-white/50 backdrop-blur-sm"
                   size="lg"
                 >
                   {loading ? (
@@ -471,10 +471,10 @@ const Login = () => {
               {/* Divider */}
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-gray-200" />
+                  <span className="w-full border-t border-white/20" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-3 text-gray-500 font-semibold">Or continue with</span>
+                  <span className="px-3 text-white font-semibold">Or continue with</span>
                 </div>
               </div>
 
@@ -483,7 +483,7 @@ const Login = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-11 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all"
+                  className="h-11 bg-white/5 border-white/40 hover:bg-white/15 text-white [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)] backdrop-blur-sm transition-all"
                   onClick={() => window.location.href = `${API_BASE_URL}/auth/google`}
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -498,7 +498,7 @@ const Login = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-11 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all"
+                  className="h-11 bg-white/5 border-white/40 hover:bg-white/15 text-white [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)] backdrop-blur-sm transition-all"
                   onClick={() => window.location.href = `${API_BASE_URL}/auth/facebook`}
                 >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -509,19 +509,14 @@ const Login = () => {
               </div>
 
               {/* Trust Badge */}
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 border border-green-200">
-                <div className="flex items-center gap-2 text-sm text-green-700">
-                  <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-                  <span className="font-medium">Your data is secure and encrypted</span>
-                </div>
-              </div>
+
             </form>
           </CardContent>
 
-          <CardFooter className="flex flex-col gap-2 pt-6 border-t">
-            <p className="text-sm text-center text-gray-600">
+          <CardFooter className="flex flex-col gap-2 pt-6 border-t border-white/20">
+            <p className="text-sm text-center text-white/80">
               Don't have an account?{" "}
-              <Link to="/register" className="font-semibold text-blue-600 hover:text-blue-700 hover:underline">
+              <Link to="/register" className="font-semibold text-white hover:underline">
                 Create one now
               </Link>
             </p>

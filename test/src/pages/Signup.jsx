@@ -173,9 +173,9 @@ const Signup = () => {
     const passwordStrength = formData.password ? calculatePasswordStrength(formData.password) : null
 
     return (
-        <div className="flex items-center justify-center min-h-screen py-8 bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <div className="flex items-center justify-center min-h-screen py-8 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900">
             {showVerificationNotice ? (
-                <Card className="w-[500px] shadow-2xl border-0 bg-white animate-in fade-in duration-500">
+                <Card className="w-[500px] shadow-2xl border border-white/20 bg-white/10 backdrop-blur-xl animate-in fade-in duration-500">
                     <CardHeader className="space-y-4 pb-8">
                         <div className="flex justify-center">
                             <div className="relative">
@@ -185,53 +185,53 @@ const Signup = () => {
                                 </div>
                             </div>
                         </div>
-                        <CardTitle className="text-3xl text-center font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                        <CardTitle className="text-3xl text-center font-bold text-white [text-shadow:_0_2px_8px_rgb(0_0_0_/_40%)]">
                             Verify Your Email
                         </CardTitle>
-                        <CardDescription className="text-center text-base text-gray-600 leading-relaxed">
+                        <CardDescription className="text-center text-base text-white/95 leading-relaxed [text-shadow:_0_1px_4px_rgb(0_0_0_/_30%)]">
                             We've sent a verification link to<br />
-                            <strong className="text-gray-900 font-semibold">{userEmail}</strong>
+                            <strong className="text-white font-semibold">{userEmail}</strong>
                         </CardDescription>
                     </CardHeader>
 
                     <CardContent className="space-y-6">
-                        <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 space-y-4 border border-blue-100">
+                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 space-y-4 border border-white/20">
                             <div className="flex items-start gap-3">
-                                <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold mt-0.5">1</div>
+                                <div className="flex-shrink-0 w-6 h-6 bg-white/30 rounded-full flex items-center justify-center text-white text-sm font-bold mt-0.5">1</div>
                                 <div>
-                                    <p className="font-semibold text-gray-800">Check your inbox</p>
-                                    <p className="text-sm text-gray-600">Open the email we just sent you</p>
+                                    <p className="font-semibold text-white [text-shadow:_0_1px_3px_rgb(0_0_0_/_50%)]">Check your inbox</p>
+                                    <p className="text-sm text-white/90 [text-shadow:_0_1px_2px_rgb(0_0_0_/_40%)]">Open the email we just sent you</p>
                                 </div>
                             </div>
                             <div className="flex items-start gap-3">
-                                <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold mt-0.5">2</div>
+                                <div className="flex-shrink-0 w-6 h-6 bg-white/30 rounded-full flex items-center justify-center text-white text-sm font-bold mt-0.5">2</div>
                                 <div>
-                                    <p className="font-semibold text-gray-800">Click the verification link</p>
-                                    <p className="text-sm text-gray-600">This will activate your account</p>
+                                    <p className="font-semibold text-white [text-shadow:_0_1px_3px_rgb(0_0_0_/_50%)]">Click the verification link</p>
+                                    <p className="text-sm text-white/90 [text-shadow:_0_1px_2px_rgb(0_0_0_/_40%)]">This will activate your account</p>
                                 </div>
                             </div>
                             <div className="flex items-start gap-3">
-                                <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold mt-0.5">3</div>
+                                <div className="flex-shrink-0 w-6 h-6 bg-white/30 rounded-full flex items-center justify-center text-white text-sm font-bold mt-0.5">3</div>
                                 <div>
-                                    <p className="font-semibold text-gray-800">Start shopping!</p>
-                                    <p className="text-sm text-gray-600">You'll be redirected to login</p>
+                                    <p className="font-semibold text-white [text-shadow:_0_1px_3px_rgb(0_0_0_/_50%)]">Start shopping!</p>
+                                    <p className="text-sm text-white/90 [text-shadow:_0_1px_2px_rgb(0_0_0_/_40%)]">You'll be redirected to login</p>
                                 </div>
                             </div>
                         </div>
 
                         <div className="flex items-center justify-center gap-2 text-sm">
-                            <Shield className="w-4 h-4 text-orange-500" />
-                            <span className="text-gray-600">
-                                Link expires in <span className="font-mono font-semibold text-orange-600">{formatTime(countdown)}</span>
+                            <Shield className="w-4 h-4 text-white/70" />
+                            <span className="text-white/80">
+                                Link expires in <span className="font-mono font-semibold text-white">{formatTime(countdown)}</span>
                             </span>
                         </div>
 
                         <div className="text-center space-y-2">
-                            <p className="text-sm text-gray-500">Didn't receive the email?</p>
+                            <p className="text-sm text-white/90 [text-shadow:_0_1px_2px_rgb(0_0_0_/_40%)]">Didn't receive the email?</p>
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                className="text-white [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)] hover:text-white hover:bg-white/10"
                             >
                                 Resend verification email
                             </Button>
@@ -241,23 +241,23 @@ const Signup = () => {
                     <CardFooter className="flex flex-col gap-3 pt-6">
                         <Button
                             onClick={() => navigate('/login')}
-                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
+                            className="w-full bg-white/90 hover:bg-white text-gray-900 shadow-lg border border-white/50 backdrop-blur-sm"
                             size="lg"
                         >
                             Go to Login
                         </Button>
-                        <p className="text-xs text-center text-gray-500">
+                        <p className="text-xs text-center text-white/60">
                             Check your spam folder if you don't see the email
                         </p>
                     </CardFooter>
                 </Card>
             ) : (
-                <Card className="w-[550px] shadow-2xl border-0 bg-white animate-in fade-in duration-500">
+                <Card className="w-[550px] shadow-2xl border border-white/20 bg-white/10 backdrop-blur-xl animate-in fade-in duration-500">
                     <CardHeader className="space-y-2 pb-6">
-                        <CardTitle className="text-3xl text-center font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        <CardTitle className="text-3xl text-center font-bold text-white [text-shadow:_0_2px_8px_rgb(0_0_0_/_40%)]">
                             Create Account
                         </CardTitle>
-                        <CardDescription className="text-center text-gray-600">
+                        <CardDescription className="text-center text-white/95 [text-shadow:_0_1px_4px_rgb(0_0_0_/_30%)]">
                             Join thousands of happy customers
                         </CardDescription>
                     </CardHeader>
@@ -266,7 +266,7 @@ const Signup = () => {
                         <form onSubmit={handleSubmit} className="space-y-5">
                             {/* Full Name */}
                             <div className='space-y-2'>
-                                <Label htmlFor="fullname" className="text-sm font-semibold text-gray-700">Full Name</Label>
+                                <Label htmlFor="fullname" className="text-sm font-semibold text-white [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)]">Full Name</Label>
                                 <div className="relative">
                                     <Input
                                         id="fullname"
@@ -276,11 +276,11 @@ const Signup = () => {
                                         value={formData.fullname}
                                         onChange={handleInputChange}
                                         onBlur={handleBlur}
-                                        className={`pr-10 transition-all ${
+                                        className={`pr-10 transition-all bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20 ${
                                             touchedFields.fullname
                                                 ? validationErrors.fullname
-                                                    ? 'border-red-500 focus:ring-red-500'
-                                                    : 'border-green-500 focus:ring-green-500'
+                                                    ? 'border-red-400 focus:ring-red-400'
+                                                    : 'border-green-400 focus:ring-green-400'
                                                 : ''
                                         }`}
                                         required
@@ -296,7 +296,7 @@ const Signup = () => {
                                     )}
                                 </div>
                                 {touchedFields.fullname && validationErrors.fullname && (
-                                    <p className="text-xs text-red-600 flex items-center gap-1 animate-in slide-in-from-top-1">
+                                    <p className="text-xs text-red-300 flex items-center gap-1 animate-in slide-in-from-top-1">
                                         <X className="w-3 h-3" />
                                         {validationErrors.fullname}
                                     </p>
@@ -305,7 +305,7 @@ const Signup = () => {
 
                             {/* Username */}
                             <div className='space-y-2'>
-                                <Label htmlFor="username" className="text-sm font-semibold text-gray-700">Username</Label>
+                                <Label htmlFor="username" className="text-sm font-semibold text-white/90">Username</Label>
                                 <div className="relative">
                                     <Input
                                         id="username"
@@ -315,11 +315,11 @@ const Signup = () => {
                                         value={formData.username}
                                         onChange={handleInputChange}
                                         onBlur={handleBlur}
-                                        className={`pr-10 transition-all ${
+                                        className={`pr-10 transition-all bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20 ${
                                             touchedFields.username
                                                 ? validationErrors.username
-                                                    ? 'border-red-500 focus:ring-red-500'
-                                                    : 'border-green-500 focus:ring-green-500'
+                                                    ? 'border-red-400 focus:ring-red-400'
+                                                    : 'border-green-400 focus:ring-green-400'
                                                 : ''
                                         }`}
                                         required
@@ -335,7 +335,7 @@ const Signup = () => {
                                     )}
                                 </div>
                                 {touchedFields.username && validationErrors.username && (
-                                    <p className="text-xs text-red-600 flex items-center gap-1 animate-in slide-in-from-top-1">
+                                    <p className="text-xs text-red-300 flex items-center gap-1 animate-in slide-in-from-top-1">
                                         <X className="w-3 h-3" />
                                         {validationErrors.username}
                                     </p>
@@ -344,7 +344,7 @@ const Signup = () => {
 
                             {/* Email */}
                             <div className='space-y-2'>
-                                <Label htmlFor="email" className="text-sm font-semibold text-gray-700">Email Address</Label>
+                                <Label htmlFor="email" className="text-sm font-semibold text-white/90">Email Address</Label>
                                 <div className="relative">
                                     <Input
                                         id="email"
@@ -354,11 +354,11 @@ const Signup = () => {
                                         value={formData.email}
                                         onChange={handleInputChange}
                                         onBlur={handleBlur}
-                                        className={`pr-10 transition-all ${
+                                        className={`pr-10 transition-all bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20 ${
                                             touchedFields.email
                                                 ? validationErrors.email
-                                                    ? 'border-red-500 focus:ring-red-500'
-                                                    : 'border-green-500 focus:ring-green-500'
+                                                    ? 'border-red-400 focus:ring-red-400'
+                                                    : 'border-green-400 focus:ring-green-400'
                                                 : ''
                                         }`}
                                         required
@@ -374,7 +374,7 @@ const Signup = () => {
                                     )}
                                 </div>
                                 {touchedFields.email && validationErrors.email && (
-                                    <p className="text-xs text-red-600 flex items-center gap-1 animate-in slide-in-from-top-1">
+                                    <p className="text-xs text-red-300 flex items-center gap-1 animate-in slide-in-from-top-1">
                                         <X className="w-3 h-3" />
                                         {validationErrors.email}
                                     </p>
@@ -383,7 +383,7 @@ const Signup = () => {
 
                             {/* Phone */}
                             <div className="space-y-2">
-                                <Label htmlFor="phone" className="text-sm font-semibold text-gray-700">Phone Number</Label>
+                                <Label htmlFor="phone" className="text-sm font-semibold text-white/90">Phone Number</Label>
                                 <div className="relative">
                                     <Input
                                         id="phone"
@@ -393,11 +393,11 @@ const Signup = () => {
                                         value={formData.phone}
                                         onChange={handleInputChange}
                                         onBlur={handleBlur}
-                                        className={`pr-10 transition-all ${
+                                        className={`pr-10 transition-all bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20 ${
                                             touchedFields.phone
                                                 ? validationErrors.phone
-                                                    ? 'border-red-500 focus:ring-red-500'
-                                                    : 'border-green-500 focus:ring-green-500'
+                                                    ? 'border-red-400 focus:ring-red-400'
+                                                    : 'border-green-400 focus:ring-green-400'
                                                 : ''
                                         }`}
                                         required
@@ -413,7 +413,7 @@ const Signup = () => {
                                     )}
                                 </div>
                                 {touchedFields.phone && validationErrors.phone && (
-                                    <p className="text-xs text-red-600 flex items-center gap-1 animate-in slide-in-from-top-1">
+                                    <p className="text-xs text-red-300 flex items-center gap-1 animate-in slide-in-from-top-1">
                                         <X className="w-3 h-3" />
                                         {validationErrors.phone}
                                     </p>
@@ -422,7 +422,7 @@ const Signup = () => {
 
                             {/* Password with Strength Meter */}
                             <div className='space-y-2'>
-                                <Label htmlFor="password" className="text-sm font-semibold text-gray-700">Password</Label>
+                                <Label htmlFor="password" className="text-sm font-semibold text-white/90">Password</Label>
                                 <div className="relative">
                                     <Input
                                         id="password"
@@ -432,11 +432,11 @@ const Signup = () => {
                                         value={formData.password}
                                         onChange={handleInputChange}
                                         onBlur={handleBlur}
-                                        className={`pr-10 transition-all ${
+                                        className={`pr-10 transition-all bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20 ${
                                             touchedFields.password
                                                 ? validationErrors.password
-                                                    ? 'border-red-500 focus:ring-red-500'
-                                                    : 'border-green-500 focus:ring-green-500'
+                                                    ? 'border-red-400 focus:ring-red-400'
+                                                    : 'border-green-400 focus:ring-green-400'
                                                 : ''
                                         }`}
                                         required
@@ -444,7 +444,7 @@ const Signup = () => {
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
                                     >
                                         {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                     </button>
@@ -470,28 +470,28 @@ const Signup = () => {
                                             ))}
                                         </div>
                                         <p className={`text-xs font-semibold ${
-                                            passwordStrength.strength < 40 ? 'text-red-600' :
-                                            passwordStrength.strength < 80 ? 'text-orange-600' :
-                                            'text-green-600'
+                                            passwordStrength.strength < 40 ? 'text-red-300' :
+                                            passwordStrength.strength < 80 ? 'text-orange-300' :
+                                            'text-green-300'
                                         }`}>
                                             {passwordStrength.strength < 40 ? 'Weak password' :
                                              passwordStrength.strength < 80 ? 'Medium password' :
                                              'Strong password'}
                                         </p>
                                         <div className="grid grid-cols-2 gap-2 text-xs">
-                                            <div className={`flex items-center gap-1 ${passwordStrength.checks.length ? 'text-green-600' : 'text-gray-400'}`}>
+                                            <div className={`flex items-center gap-1 ${passwordStrength.checks.length ? 'text-green-300' : 'text-white/40'}`}>
                                                 {passwordStrength.checks.length ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
                                                 8+ characters
                                             </div>
-                                            <div className={`flex items-center gap-1 ${passwordStrength.checks.uppercase ? 'text-green-600' : 'text-gray-400'}`}>
+                                            <div className={`flex items-center gap-1 ${passwordStrength.checks.uppercase ? 'text-green-300' : 'text-white/40'}`}>
                                                 {passwordStrength.checks.uppercase ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
                                                 Uppercase letter
                                             </div>
-                                            <div className={`flex items-center gap-1 ${passwordStrength.checks.lowercase ? 'text-green-600' : 'text-gray-400'}`}>
+                                            <div className={`flex items-center gap-1 ${passwordStrength.checks.lowercase ? 'text-green-300' : 'text-white/40'}`}>
                                                 {passwordStrength.checks.lowercase ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
                                                 Lowercase letter
                                             </div>
-                                            <div className={`flex items-center gap-1 ${passwordStrength.checks.number ? 'text-green-600' : 'text-gray-400'}`}>
+                                            <div className={`flex items-center gap-1 ${passwordStrength.checks.number ? 'text-green-300' : 'text-white/40'}`}>
                                                 {passwordStrength.checks.number ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
                                                 Number
                                             </div>
@@ -500,7 +500,7 @@ const Signup = () => {
                                 )}
                                 
                                 {touchedFields.password && validationErrors.password && (
-                                    <p className="text-xs text-red-600 flex items-center gap-1 animate-in slide-in-from-top-1">
+                                    <p className="text-xs text-red-300 flex items-center gap-1 animate-in slide-in-from-top-1">
                                         <X className="w-3 h-3" />
                                         {validationErrors.password}
                                     </p>
@@ -512,7 +512,7 @@ const Signup = () => {
                                 <Button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
+                                    className="w-full h-12 bg-white/90 hover:bg-white text-gray-900 font-semibold shadow-lg hover:shadow-xl transition-all border border-white/50 backdrop-blur-sm"
                                     size="lg"
                                 >
                                     {loading ? (
@@ -529,10 +529,10 @@ const Signup = () => {
                             {/* Divider */}
                             <div className="relative my-6">
                                 <div className="absolute inset-0 flex items-center">
-                                    <span className="w-full border-t border-gray-200" />
+                                    <span className="w-full border-t border-white/20" />
                                 </div>
                                 <div className="relative flex justify-center text-xs uppercase">
-                                    <span className="bg-white px-3 text-gray-500 font-semibold">Or continue with</span>
+                                    <span className="bg-white/10 backdrop-blur-sm px-3 text-white/70 font-semibold">Or continue with</span>
                                 </div>
                             </div>
 
@@ -541,7 +541,7 @@ const Signup = () => {
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    className="h-11 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all"
+                                    className="h-11 bg-white/5 border-white/40 hover:bg-white/15 text-white [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)] backdrop-blur-sm transition-all"
                                     onClick={() => window.location.href = `${API_BASE_URL}/auth/google`}
                                 >
                                     <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -556,7 +556,7 @@ const Signup = () => {
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    className="h-11 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all"
+                                    className="h-11 bg-white/5 border-white/40 hover:bg-white/15 text-white [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)] backdrop-blur-sm transition-all"
                                     onClick={() => window.location.href = `${API_BASE_URL}/auth/facebook`}
                                 >
                                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -568,14 +568,14 @@ const Signup = () => {
                         </form>
                     </CardContent>
 
-                    <CardFooter className="flex flex-col gap-2 pt-6 border-t">
-                        <p className="text-sm text-center text-gray-600">
+                    <CardFooter className="flex flex-col gap-2 pt-6 border-t border-white/20">
+                        <p className="text-sm text-center text-white/80">
                             Already have an account?{" "}
-                            <Link to="/login" className="font-semibold text-blue-600 hover:text-blue-700 hover:underline">
+                            <Link to="/login" className="font-semibold text-white hover:underline">
                                 Sign in
                             </Link>
                         </p>
-                        <p className="text-xs text-center text-gray-500">
+                        <p className="text-xs text-center text-white/60">
                             By signing up, you agree to our Terms of Service and Privacy Policy
                         </p>
                     </CardFooter>

@@ -243,7 +243,7 @@ export const useCart = () => {
   // Calculate cart summary
   const cartSummary = {
     itemCount: cartItems.reduce((sum, item) => sum + item.quantity, 0),
-    subtotal: cartItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0),
+    subtotal: cartItems.reduce((sum, item) => sum + item.quantity * (item.price || 0), 0),
     total: cart?.totalPrice || 0,
     discount: cart?.discountAmount || 0,
   };

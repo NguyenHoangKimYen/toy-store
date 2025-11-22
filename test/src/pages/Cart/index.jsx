@@ -72,7 +72,7 @@ const Cart = () => {
         <div className="cart-items-section">
           {cartItems.map((item) => (
             <CartItem
-              key={item._id}
+              key={item.id}
               item={item}
               onUpdateQuantity={handleUpdateQuantity}
               onRemove={handleRemoveItem}

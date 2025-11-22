@@ -25,13 +25,13 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
 
   const handleDecrement = () => {
     if (item.quantity > 1) {
-      onUpdateQuantity(item._id, item.quantity - 1);
+      onUpdateQuantity(item.id, item.quantity - 1);
     }
   };
 
   const handleIncrement = () => {
     if (item.quantity < stock) {
-      onUpdateQuantity(item._id, item.quantity + 1);
+      onUpdateQuantity(item.id, item.quantity + 1);
     }
   };
 
@@ -104,7 +104,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => onRemove(item._id)}
+        onClick={() => onRemove(item.id)}
         className="remove-btn"
       >
         <Trash2 size={20} />
