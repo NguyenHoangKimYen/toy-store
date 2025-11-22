@@ -21,7 +21,7 @@ router.use(authMiddleware);
 
 // Các route bên dưới sẽ yêu cầu đăng nhập
 router.post("/", uploadReviewImages, createReview);
-router.patch("/:reviewId", updateReview);
+router.patch("/:reviewId", uploadReviewImages, updateReview);
 router.delete("/:reviewId", deleteReview);
 
 module.exports = router;
