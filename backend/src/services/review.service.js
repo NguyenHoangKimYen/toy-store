@@ -5,89 +5,159 @@ const OrderItem = require("../models/order-item.model.js");
 const Variant = require("../models/variant.model.js");
 const { Types } = require("mongoose");
 
-class ReviewService {
+// Import helper upload S3 (Đảm bảo đường dẫn file này đúng trong project của bạn)
+const { uploadToS3, deleteFromS3 } = require("../utils/s3.helper.js");
 
-    static _generateVariantName(attributes) {
-        if (!attributes || attributes.length === 0) return "Original";
-        return attributes.map(attr => `${attr.name}: ${attr.value}`).join(', ');
+// --- Internal Utility Function ---
+const _generateVariantName = (attributes) => {
+    if (!attributes || attributes.length === 0) return "Original";
+    return attributes.map(attr => `${attr.name}: ${attr.value}`).join(', ');
+};
+
+// --- Main Service Functions ---
+
+const createReview = async ({ userId, productId, variantId, rating, comment, imgFiles }) => {
+    // validate input basic
+    if (!userId || !productId || !variantId) throw new Error('Missing required fields');
+    if (!Types.ObjectId.isValid(userId) || !Types.ObjectId.isValid(productId) || !Types.ObjectId.isValid(variantId)) {
+        throw new Error('Invalid ID format');
     }
 
-    // Xóa tham số imageUrls
-    static async createReview({ userId, productId, variantId, rating, comment }) {
+    // 1. Check Verified Purchase
+    const deliveredOrders = await Order.find({
+        userId: new Types.ObjectId(userId),
+        status: 'delivered'
+    }).select('_id');
 
-        // 1. Check Verified Purchase (Giữ nguyên)
-        const deliveredOrders = await Order.find({
-            userId: new Types.ObjectId(userId),
-            status: 'delivered'
-        }).select('_id');
+    if (!deliveredOrders || deliveredOrders.length === 0) {
+        throw new Error("You have not purchased or received any products to review.");
+    }
+    const deliveredOrderIds = deliveredOrders.map(order => order._id);
 
-        if (!deliveredOrders || deliveredOrders.length === 0) {
-            throw new Error("Bạn chưa mua hoặc chưa nhận được sản phẩm nào để đánh giá.");
-        }
-        const deliveredOrderIds = deliveredOrders.map(order => order._id);
+    const hasPurchasedItem = await OrderItem.findOne({
+        orderId: { $in: deliveredOrderIds },
+        productId: new Types.ObjectId(productId),
+        variantId: new Types.ObjectId(variantId)
+    });
 
-        const hasPurchasedItem = await OrderItem.findOne({
-            orderId: { $in: deliveredOrderIds },
-            productId: new Types.ObjectId(productId),
-            variantId: new Types.ObjectId(variantId)
-        });
-
-        if (!hasPurchasedItem) {
-            throw new Error("Bạn chưa mua biến thể sản phẩm này.");
-        }
-
-        // 2. Generate Name (Giữ nguyên)
-        const variant = await Variant.findById(variantId);
-        if (!variant) throw new Error("Biến thể sản phẩm không tồn tại.");
-        const generatedVariantName = ReviewService._generateVariantName(variant.attributes);
-
-        // 3. Check Spam (Giữ nguyên)
-        const existingReview = await reviewRepo.findReviewByUserAndProduct(userId, productId);
-        if (existingReview) throw new Error("Bạn đã đánh giá sản phẩm này rồi.");
-
-        // 4. Create Review (Bỏ imageUrls)
-        const newReview = await reviewRepo.createReview({
-            userId,
-            productId,
-            variantId,
-            variantName: generatedVariantName,
-            rating,
-            comment, // Chỉ lưu comment text
-            isPublished: true
-        });
-
-        return newReview;
+    if (!hasPurchasedItem) {
+        throw new Error("You have not purchased this product variant.");
     }
 
-    // Get Reviews (Giữ nguyên)
-    static async getReviewsByProductId({ productId, page, limit, sort, filterRating }) {
-        return await reviewRepo.getReviewsByProductId({ productId, page, limit, sort, filterRating });
+    // 2. Generate Variant Name
+    const variant = await Variant.findById(variantId);
+    if (!variant) throw new Error("Product variant does not exist.");
+    const generatedVariantName = _generateVariantName(variant.attributes);
+
+    // 3. Check Spam (Already Reviewed?)
+    const existingReview = await reviewRepo.findReviewByUserAndProduct(userId, productId);
+    if (existingReview) throw new Error("You have already reviewed this product.");
+
+    // 4. Upload Images to S3 (If any)
+    let imageUrls = [];
+    if (imgFiles && imgFiles.length > 0) {
+        // Folder trên S3 sẽ là "reviewImages"
+        imageUrls = await uploadToS3(imgFiles, "reviewImages");
     }
 
-    // Update Review (Bỏ imageUrls)
-    static async updateReview({ userId, reviewId, rating, comment }) {
-        const review = await reviewRepo.findReviewById(reviewId);
-        if (!review) throw new Error("Review không tồn tại");
-        if (review.userId.toString() !== userId) throw new Error("Không có quyền sửa");
+    // 5. Create Review
+    const newReview = await reviewRepo.createReview({
+        userId,
+        productId,
+        variantId,
+        variantName: generatedVariantName,
+        rating,
+        comment,
+        imageUrls: imageUrls,
+        isPublished: true
+    });
 
-        // Chỉ update text và rating
-        const updated = await reviewRepo.updateReviewById(reviewId, { rating, comment });
+    // 6. Recalculate Average Rating
+    await Review.calcAverageRatings(productId);
 
-        // Tính lại điểm
-        await Review.calcAverageRatings(review.productId);
-        return updated;
+    return newReview;
+};
+
+const getReviewsByProductId = async ({ productId, page, limit, sort, filterRating }) => {
+    return await reviewRepo.getReviewsByProductId({ productId, page, limit, sort, filterRating });
+};
+
+const updateReview = async ({ userId, reviewId, rating, comment, imgFiles, deletedImages }) => {
+    const review = await reviewRepo.findReviewById(reviewId);
+    if (!review) throw new Error("Review not found");
+
+    // Check ownership
+    if (review.userId.toString() !== userId) throw new Error("Permission denied to modify this review");
+
+    // --- LOGIC XỬ LÝ ẢNH UPDATE ---
+
+    // 1. Chuẩn hóa danh sách ảnh muốn xóa (ép về mảng)
+    let imagesToDelete = [];
+    if (deletedImages) {
+        imagesToDelete = Array.isArray(deletedImages) ? deletedImages : [deletedImages];
     }
 
-    // Delete Review (Giữ nguyên)
-    static async deleteReview({ userId, reviewId, isAdmin }) {
-        const review = await reviewRepo.findReviewById(reviewId);
-        if (!review) throw new Error("Review không tồn tại");
-        if (!isAdmin && review.userId.toString() !== userId) throw new Error("Không có quyền xóa");
+    // 2. Tính toán số lượng ảnh sẽ còn lại
+    // Giữ lại những ảnh cũ KHÔNG nằm trong danh sách xóa
+    const currentImagesKept = review.imageUrls.filter(url => !imagesToDelete.includes(url));
 
-        await reviewRepo.deleteReviewById(reviewId);
-        await Review.calcAverageRatings(review.productId);
-        return true;
+    // Số ảnh mới thêm vào
+    const newImageCount = imgFiles ? imgFiles.length : 0;
+    const totalImages = currentImagesKept.length + newImageCount;
+
+    // 3. Validate giới hạn 5 ảnh
+    if (totalImages > 5) {
+        throw new Error(`You can only have a maximum of 5 images. Current kept: ${currentImagesKept.length}, New: ${newImageCount}`);
     }
-}
 
-module.exports = ReviewService;
+    // 4. Xóa ảnh cũ trên S3 (Dọn rác)
+    if (imagesToDelete.length > 0) {
+        await deleteFromS3(imagesToDelete);
+    }
+
+    // 5. Upload ảnh mới lên S3
+    let newUploadedUrls = [];
+    if (imgFiles && imgFiles.length > 0) {
+        newUploadedUrls = await uploadToS3(imgFiles, "reviewImages");
+    }
+
+    // 6. Gộp ảnh cũ (giữ lại) + ảnh mới
+    const finalImageUrls = [...currentImagesKept, ...newUploadedUrls];
+
+    // --- CẬP NHẬT DB ---
+    const updated = await reviewRepo.updateReviewById(reviewId, {
+        rating,
+        comment,
+        imageUrls: finalImageUrls
+    });
+
+    await Review.calcAverageRatings(review.productId);
+    return updated;
+};
+
+const deleteReview = async ({ userId, reviewId, isAdmin }) => {
+    const review = await reviewRepo.findReviewById(reviewId);
+    if (!review) throw new Error("Review not found");
+
+    // Check perms
+    if (!isAdmin && review.userId.toString() !== userId) throw new Error("Permission denied to delete this review");
+
+    // 1. Xóa ảnh trên S3 trước (nếu có)
+    if (review.imageUrls && review.imageUrls.length > 0) {
+        await deleteFromS3(review.imageUrls);
+    }
+
+    // 2. Xóa trong DB
+    await reviewRepo.deleteReviewById(reviewId);
+
+    // 3. Tính lại rating
+    await Review.calcAverageRatings(review.productId);
+    return true;
+};
+
+module.exports = {
+    createReview,
+    getReviewsByProductId,
+    updateReview,
+    deleteReview,
+};
