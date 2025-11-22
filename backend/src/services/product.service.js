@@ -256,14 +256,11 @@ const createProduct = async (productData, imgFiles) => {
             
             createdVariantIds = createdVariants.map(v => v._id);
             
-            // e. Tính giá và totalStock
+            // e. Tính giá (totalStock sẽ được tự động cập nhật bởi variant middleware)
             if (prices.length > 0) {
                 minPrice = Math.min(...prices);
                 maxPrice = Math.max(...prices);
             }
-            
-            // Calculate totalStock from created variants
-            const totalStock = variantDocs.reduce((sum, v) => sum + (v.stockQuantity || 0), 0);
         }
 
         // 7. Cập nhật lại Product với thông tin variants vừa tạo
@@ -272,9 +269,12 @@ const createProduct = async (productData, imgFiles) => {
             variants: createdVariantIds,
             attributes: allAttributes,
             minPrice,
-            maxPrice,
-            totalStock
+            maxPrice
         }, { session });
+
+        // Recalculate totalStock within transaction (insertMany doesn't trigger save middleware)
+        const Variant = require('../models/variant.model');
+        await Variant.recalculateProductData(newProduct._id);
 
         // 8. Commit Transaction (Lưu tất cả)
         await session.commitTransaction();
@@ -304,8 +304,10 @@ const deleteProduct = async (id) => {
         await deleteFromS3(product.imageUrls);
     }
 
+    // Delete all variants (deleteMany doesn't trigger middleware per document)
     await variantRepository.deleteByProductId(id);
 
+    // Delete the product itself
     await productRepository.remove(id);
 
     return { message: "Product deleted successfully" };
