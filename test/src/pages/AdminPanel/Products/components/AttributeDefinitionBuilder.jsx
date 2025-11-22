@@ -149,7 +149,7 @@ const AttributeDefinitionBuilder = ({
             <div className='flex flex-wrap gap-2 p-2 bg-gray-100 dark:bg-gray-800 rounded'>
               {attr.values.map((value, valueIndex) => (
                 <Badge key={valueIndex} variant='secondary' className='flex items-center gap-1 text-sm'>
-                  {value}
+                  {typeof value === 'object' ? (value.value || value.name || JSON.stringify(value)) : value}
                   <button
                     type='button'
                     className='ml-1 hover:text-red-600 focus:outline-none pointer-events-auto'

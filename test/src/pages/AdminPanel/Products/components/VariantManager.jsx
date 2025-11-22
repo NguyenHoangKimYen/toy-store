@@ -378,7 +378,7 @@ const VariantManager = ({ productId, variants: initialVariants = [], onUpdate })
                             <div className='flex flex-wrap gap-2'>
                               {attr.values.map((value, valueIndex) => (
                                 <Badge key={valueIndex} variant='secondary' className='flex items-center gap-1'>
-                                  {value}
+                                  {typeof value === 'object' ? (value.value || value.name || JSON.stringify(value)) : value}
                                   <button
                                     onClick={() => removeValueFromAttribute(attrIndex, valueIndex)}
                                     className='hover:text-red-600'

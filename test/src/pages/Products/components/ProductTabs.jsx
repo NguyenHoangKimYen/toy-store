@@ -121,7 +121,7 @@ const ProductTabs = ({ product }) => {
                             {Object.entries(variant.attributes).map(([key, value]) => (
                               <div key={key} className="variant-attr-item">
                                 <span className="attr-key">{key}:</span>
-                                <span className="attr-value">{value}</span>
+                                <span className="attr-value">{typeof value === 'object' ? (value.value || value.name || JSON.stringify(value)) : value}</span>
                               </div>
                             ))}
                           </div>

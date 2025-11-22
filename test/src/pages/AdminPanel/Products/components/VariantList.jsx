@@ -31,7 +31,7 @@ const VariantList = ({ variants, onUpdatePrice, onUpdateStock, onRemove }) => {
                 {Object.entries(variant.attributes || {}).map(([key, value]) => (
                   <Badge key={key} variant='outline' className='text-sm font-medium'>
                     <span className='font-bold text-blue-600 dark:text-blue-400'>{key}:</span>
-                    <span className='ml-1'>{value}</span>
+                    <span className='ml-1'>{typeof value === 'object' ? (value.value || value.name || JSON.stringify(value)) : value}</span>
                   </Badge>
                 ))}
               </div>
