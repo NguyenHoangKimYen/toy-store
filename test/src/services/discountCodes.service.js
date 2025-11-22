@@ -1,120 +1,52 @@
-import { API_BASE_URL } from './config';
-import { handleResponse } from '../utils/apiHelpers';
-import { getAuthHeaders } from '../utils/authHelpers';
+import apiClient from './config';
 
 /**
- * Validate a discount code
- * @param {string} code - Discount code to validate
- * @param {number} orderTotal - Optional order total to calculate discount
- * @returns {Promise<Object>} - Validation result with discount details
+ * Discount Codes Service
+ * Handles all discount code-related API calls
  */
-export const validateDiscountCode = async (code, orderTotal = null) => {
-  const url = `${API_BASE_URL}/api/discount-codes/validate`;
-  
-  if (!code || typeof code !== 'string') {
-    throw new Error('Discount code is required');
-  }
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: getAuthHeaders(),
-    body: JSON.stringify({ 
-      code: code.trim().toUpperCase(),
-      orderTotal 
-    }),
-  });
-
-  return handleResponse(response);
+// Get all discount codes (admin)
+export const getAllDiscountCodes = async (params = {}) => {
+  const response = await apiClient.get('/discount-codes', { params });
+  return response;
 };
 
-/**
- * Get all discount codes
- * @param {boolean} availableOnly - Only get codes with remaining uses
- * @returns {Promise<Object>} - List of discount codes
- */
-export const getDiscountCodes = async (availableOnly = false) => {
-  const params = new URLSearchParams();
-  if (availableOnly) {
-    params.append('available', 'true');
-  }
-
-  const url = `${API_BASE_URL}/api/discount-codes${params.toString() ? '?' + params.toString() : ''}`;
-  
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: getAuthHeaders(),
-  });
-
-  return handleResponse(response);
+// Get single discount code by ID
+export const getDiscountCodeById = async (id) => {
+  const response = await apiClient.get(`/discount-codes/${id}`);
+  return response;
 };
 
-/**
- * Get a specific discount code by code string
- * @param {string} code - Discount code
- * @returns {Promise<Object>} - Discount code details
- */
-export const getDiscountCode = async (code) => {
-  if (!code) {
-    throw new Error('Discount code is required');
-  }
-
-  const url = `${API_BASE_URL}/api/discount-codes/${code.trim().toUpperCase()}`;
-  
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: getAuthHeaders(),
-  });
-
-  return handleResponse(response);
+// Create new discount code (admin)
+export const createDiscountCode = async (data) => {
+  const response = await apiClient.post('/discount-codes', data);
+  return response;
 };
 
-/**
- * Apply/use a discount code (increments usage count)
- * @param {string} codeId - Discount code ID
- * @returns {Promise<Object>} - Updated discount code
- */
-export const useDiscountCode = async (codeId) => {
-  if (!codeId) {
-    throw new Error('Discount code ID is required');
-  }
-
-  const url = `${API_BASE_URL}/api/discount-codes/${codeId}/use`;
-  
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: getAuthHeaders(),
-  });
-
-  return handleResponse(response);
+// Update discount code (admin)
+export const updateDiscountCode = async (id, data) => {
+  const response = await apiClient.patch(`/discount-codes/${id}`, data);
+  return response;
 };
 
-/**
- * Calculate discount amount
- * @param {number} discountValue - Discount value from code
- * @param {number} orderTotal - Order total amount
- * @returns {number} - Discount amount (cannot exceed order total)
- */
-export const calculateDiscount = (discountValue, orderTotal) => {
-  const discount = parseFloat(discountValue);
-  return Math.min(discount, orderTotal);
+// Delete discount code (admin)
+export const deleteDiscountCode = async (id) => {
+  const response = await apiClient.delete(`/discount-codes/${id}`);
+  return response;
 };
 
-/**
- * Format discount code for display
- * @param {string} code - Discount code
- * @returns {string} - Formatted code (uppercase, trimmed)
- */
-export const formatDiscountCode = (code) => {
-  if (!code) return '';
-  return code.trim().toUpperCase();
+// Validate discount code
+export const validateDiscountCode = async (code) => {
+  const response = await apiClient.post('/discount-codes/validate', { code });
+  return response;
 };
 
-/**
- * Check if discount code format is valid (5 alphanumeric characters)
- * @param {string} code - Discount code to check
- * @returns {boolean} - True if format is valid
- */
-export const isValidCodeFormat = (code) => {
-  if (!code || typeof code !== 'string') return false;
-  return /^[A-Z0-9]{5}$/i.test(code.trim());
+export default {
+  getAllDiscountCodes,
+  getDiscountCodeById,
+  createDiscountCode,
+  updateDiscountCode,
+  deleteDiscountCode,
+  validateDiscountCode,
 };
+

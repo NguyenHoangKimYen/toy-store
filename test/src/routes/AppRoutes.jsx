@@ -20,6 +20,8 @@ import AdminPanel from '../pages/AdminPanel'
 import Dashboard from '../pages/AdminPanel/layouts/Main'
 import Users from '../pages/AdminPanel/Users'
 import AdminProducts from '../pages/AdminPanel/Products'
+import AdminOrders from '../pages/AdminPanel/Orders'
+import DiscountCodes from '../pages/AdminPanel/DiscountCodes'
 import CarouselDemo from '../pages/CarouselDemo'
 import { ROUTES } from '../config/routes'
 
@@ -35,6 +37,8 @@ const AppRoutes = () => {
           <Route index element={<Dashboard />} />
           <Route path='users' element={<Users />} />
           <Route path='products' element={<AdminProducts />} />
+          <Route path='orders' element={<AdminOrders />} />
+          <Route path='discount-codes' element={<DiscountCodes />} />
         </Route>
 
         <Route element={<Layout />}>

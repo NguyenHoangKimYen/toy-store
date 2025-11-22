@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { House, User, Panda } from 'lucide-react'
+import { House, User, Panda, Package, Tag } from 'lucide-react'
 import Account from './Account'
 import TabBtns from './Tabs/TabBtns'
 import SearchField from './SearchField'
@@ -25,6 +25,16 @@ const Sidebar = () => {
       icon: <Panda />, 
       title: 'Products', 
       route: ADMIN_ROUTES.PRODUCTS 
+    },
+    { 
+      icon: <Package />, 
+      title: 'Orders', 
+      route: ADMIN_ROUTES.ORDERS 
+    },
+    { 
+      icon: <Tag />, 
+      title: 'Discount Codes', 
+      route: ADMIN_ROUTES.DISCOUNT_CODES 
     },
   ];
 
