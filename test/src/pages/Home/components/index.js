@@ -5,4 +5,4 @@ export { HeroSection, HeroSlide, HeroNavigation } from './Hero';
 export { FeaturedBanner, CTABanner } from './Banner';
 
 // Category Components
-export { ProductCategoriesSection, NewArrivalsSection } from './Category';
+export { NewArrivalsSection, CategorizedProductsSection } from './Category';
