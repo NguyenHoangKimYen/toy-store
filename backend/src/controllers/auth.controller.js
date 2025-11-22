@@ -94,6 +94,19 @@ const login = async (req, res, next) => {
             });
         }
 
+        // Merge guest cart into user cart if sessionId provided
+        const sessionId = req.headers['x-session-id'] || req.body.sessionId;
+        if (sessionId && user.id) {
+            try {
+                const cartService = require('../services/cart.service');
+                await cartService.mergeGuestCartIntoUserCart(user.id, sessionId);
+                // Clear the guest sessionId from client after merge
+            } catch (cartError) {
+                console.error('Error merging carts on login:', cartError);
+                // Don't fail login if cart merge fails
+            }
+        }
+
         return res.json({
             //Valid Login
             success: true,
