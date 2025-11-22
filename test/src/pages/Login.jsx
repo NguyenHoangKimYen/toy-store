@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { API_BASE_URL } from '@/services/config'
 import { AlertCircle, Mail, Eye, EyeOff, Loader2, ArrowLeft, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import authBg from '@/assets/images/auth/background.webp'
 
 const Login = () => {
   const navigate = useNavigate()
@@ -250,7 +251,20 @@ const Login = () => {
   }
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900">
+    <div 
+      className="flex h-screen items-center justify-center bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 relative overflow-hidden"
+      style={{
+        backgroundImage: `url(${authBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      {/* Overlay for better readability */}
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/70 via-purple-800/70 to-indigo-900/70 backdrop-blur-sm"></div>
+      
+      {/* Content */}
+      <div className="relative z-10">
       {showForgotPassword ? (
         // Forgot Password Modal
         <Card className="w-[480px] shadow-2xl border border-white/20 bg-white/10 backdrop-blur-xl animate-in fade-in duration-500">
@@ -518,6 +532,7 @@ const Login = () => {
           </CardFooter>
         </Card>
       )}
+      </div>
     </div>
   )
 }
