@@ -30,6 +30,31 @@ const CartItemSchema = new mongoose.Schema({
         required: true,
         min: 0,
     },
+}, {
+    toJSON: {
+        transform: function (doc, ret) {
+            ret.id = ret._id.toString();
+            delete ret._id;
+            delete ret.__v;
+            
+            // Convert Decimal128 to number for price
+            if (ret.price) {
+                ret.price = parseFloat(ret.price.toString());
+            }
+            
+            // Rename populated fields for frontend
+            if (ret.productId) {
+                ret.product = ret.productId;
+                delete ret.productId;
+            }
+            if (ret.variantId) {
+                ret.variant = ret.variantId;
+                delete ret.variantId;
+            }
+            
+            return ret;
+        },
+    },
 });
 
 CartItemSchema.index({ cartId: 1, variantId: 1 }, { unique: true });

@@ -64,7 +64,10 @@ const updateCartItem = async (cartItemId, updates) => {
     const { quantity } = updates;
 
     const item = await CartItem.findById(cartItemId);
+    if (!item) throw new Error("CartItem not found");
+    
     const variant = await Variant.findById(item.variantId).populate("productId");
+    if (!variant) throw new Error("Variant not found");
 
     const unitPrice = Number(variant.price);
 
@@ -79,6 +82,9 @@ const updateCartItem = async (cartItemId, updates) => {
     await CartRepository.update(item.cartId, {
         $inc: { totalPrice: unitPrice * differenceInQuantity }
     });
+
+    // Return the updated item
+    return await CartItem.findById(cartItemId).populate('productId').populate('variantId');
 };
 /**
  * Xoá item khỏi cart

@@ -8,7 +8,7 @@ const CartSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: false, // Cho phép null/undefined (khách vãng lai)
-            default: null,
+            // DON'T set default: null - omit the field entirely for guests
             // Nên tạo index độc nhất nếu userId tồn tại để 1 user chỉ có 1 cart
             // unique: true,
             // sparse: true,
@@ -44,11 +44,25 @@ const CartSchema = new mongoose.Schema(
     {
         timestamps: true,
         collection: "carts",
+        toJSON: {
+            transform: function (doc, ret) {
+                ret.id = ret._id.toString();
+                delete ret._id;
+                delete ret.__v;
+                // Convert Decimal128 to number for totalPrice
+                if (ret.totalPrice) {
+                    ret.totalPrice = parseFloat(ret.totalPrice.toString());
+                }
+                return ret;
+            },
+        },
     },
 );
 
 // Tạo index kết hợp để đảm bảo tính duy nhất:
-// 1. Nếu có userId, chỉ có 1 cart (unique index trên userId)
-// 2. Nếu không có userId, sessionId phải là duy nhất (unique index trên sessionId)
-// Tuy nhiên, việc quản lý tính duy nhất này thường phức tạp hơn và nên xử lý ở tầng logic.
+// 1. userId: sparse unique index - mỗi user chỉ có 1 cart, null values allowed
+// 2. sessionId: regular index for lookup (uniqueness enforced in application logic)
+CartSchema.index({ userId: 1 }, { unique: true, sparse: true });
+CartSchema.index({ sessionId: 1 }); // Not unique to allow nulls for user carts
+
 module.exports = mongoose.model("Cart", CartSchema);

@@ -1,4 +1,6 @@
 const orderService = require('../services/order.service');
+const loyaltyService = require('../services/loyalty.service');
+const badgeService = require('../services/badge.service');
 
 module.exports = {
     async create(req, res) {
@@ -13,7 +15,8 @@ module.exports = {
 
     async getDetail(req, res) {
         const order = await orderService.getOrderDetail(req.params.id);
-        if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+        if (!order) 
+            return res.status(404).json({ success: false, message: 'Order not found' });
 
         return res.json({ success: true, order });
     },
@@ -23,16 +26,18 @@ module.exports = {
         return res.json({ success: true, orders });
     },
 
-    //Checkout từ cart cho user đã đăng nhập
+    // Checkout từ cart cho user login
     async checkoutFromCartForUser(req, res, next) {
         try {
             const userId = req.user.id;
-            const { addressId, discountCodeId } = req.body;
+            const { addressId, discountCodeId, pointsToUse, voucherId } = req.body;
 
             const detail = await orderService.createOrderFromCart({
                 userId,
                 addressId,
                 discountCodeId: discountCodeId || null,
+                voucherId: voucherId || null,
+                pointsToUse: Number(pointsToUse) || 0,
             });
 
             res.status(201).json({ success: true, data: detail });
@@ -41,15 +46,16 @@ module.exports = {
         }
     },
 
-    //Checkout từ cart cho guest (dùng sessionId)
+    // Checkout từ cart cho guest (session)
     async checkoutFromCartForGuest(req, res, next) {
         try {
-            const { sessionId, guestInfo, discountCodeId } = req.body;
+            const { sessionId, guestInfo, discountCodeId, pointsToUse } = req.body;
 
             const detail = await orderService.createOrderFromCart({
                 sessionId,
                 guestInfo,
                 discountCodeId: discountCodeId || null,
+                pointsToUse: Number(pointsToUse) || 0,
             });
 
             res.status(201).json({ success: true, data: detail });
@@ -64,9 +70,20 @@ module.exports = {
     },
 
     async updateStatus(req, res) {
-        const updated = await orderService.updateStatus(req.params.id, req.body.status);
-        if (!updated) return res.status(404).json({ success: false, message: 'Order not found' });
+        try {
+            const updated = await orderService.updateStatus(req.params.id, req.body.status);
+            if (!updated)
+                return res.status(404).json({ success: false, message: 'Order not found' });
 
-        return res.json({ success: true, order: updated });
+            return res.json({
+                success: true,
+                order: updated,
+                newBadges: updated.newBadges || []
+            });
+
+        } catch (err) {
+            console.error("Update Order Status Error:", err);
+            return res.status(500).json({ success: false, message: err.message });
+        }
     }
 };
