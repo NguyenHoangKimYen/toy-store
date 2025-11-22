@@ -10,6 +10,7 @@ import Cart from '../pages/Cart/index'
 import Checkout from '../pages/Checkout'
 import Login from '../pages/Login'
 import Signup from '../pages/Signup'
+import VerifyEmail from '../pages/VerifyEmail'
 import PlaceOrder from '../pages/PlaceOrder'
 import Orders from '../pages/Orders'
 import OrderHistory from '../pages/OrderHistory'
@@ -27,6 +28,7 @@ const AppRoutes = () => {
     <Routes>
         <Route path={ROUTES.LOGIN} element={<Login/>}/>
         <Route path={ROUTES.REGISTER} element={<Signup />}></Route>
+        <Route path="/verify-email" element={<VerifyEmail />}></Route>
         
         {/* Admin routes with nested routing */}
         <Route path={ROUTES.ADMIN} element={<AdminPanel />}>
