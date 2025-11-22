@@ -4,7 +4,8 @@ const {
     getReviewsByProductId,
     createReview,
     updateReview,
-    deleteReview
+    deleteReview,
+    moderateReview
 } = require("../controllers/review.controller");
 
 const {
@@ -23,5 +24,7 @@ router.use(authMiddleware);
 router.post("/", uploadReviewImages, createReview);
 router.patch("/:reviewId", uploadReviewImages, updateReview);
 router.delete("/:reviewId", deleteReview);
+
+router.patch("/:reviewId/moderate", authMiddleware, moderateReview);
 
 module.exports = router;
