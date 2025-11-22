@@ -1,8 +1,9 @@
 const reviewRepo = require("../repositories/review.repository.js");
-const Review = require("../models/review.model.js");
-const Order = require("../models/order.model.js");
 const OrderItem = require("../models/order-item.model.js");
 const Variant = require("../models/variant.model.js");
+const Review = require("../models/review.model.js");
+const Order = require("../models/order.model.js");
+const AIService = require("./ai-moderation.service.js");
 const { Types } = require("mongoose");
 
 // Import helper upload S3 (Đảm bảo đường dẫn file này đúng trong project của bạn)
@@ -60,20 +61,39 @@ const createReview = async ({ userId, productId, variantId, rating, comment, img
         imageUrls = await uploadToS3(imgFiles, "reviewImages");
     }
 
+    const aiResult = await AIService.analyzeReviewContent(comment);
+
+    let initialStatus = 'pending';
+    if (aiResult.autoApprove) {
+        initialStatus = 'approved';
+    } else {
+        initialStatus = 'flagged';
+    }
+
     // 5. Create Review
     const newReview = await reviewRepo.createReview({
         userId,
         productId,
         variantId,
-        variantName: generatedVariantName,
+        variantName: generatedVariantName, // biến này lấy từ logic cũ
         rating,
         comment,
-        imageUrls: imageUrls,
-        isPublished: true
+        imageUrls,
+
+        // Field mới
+        status: initialStatus,
+        aiAnalysis: {
+            isSafe: aiResult.isSafe,
+            toxicScore: aiResult.toxicScore,
+            flaggedCategories: aiResult.flaggedCategories,
+            processedAt: new Date()
+        }
     });
 
     // 6. Recalculate Average Rating
-    await Review.calcAverageRatings(productId);
+    if (initialStatus === 'approved') {
+        await Review.calcAverageRatings(productId);
+    }
 
     return newReview;
 };
@@ -155,9 +175,32 @@ const deleteReview = async ({ userId, reviewId, isAdmin }) => {
     return true;
 };
 
+const moderateReview = async ({ reviewId, adminId, status, reason }) => {
+    const validStatus = ['approved', 'rejected'];
+    if (!validStatus.includes(status)) throw new Error("Invalid status. Use 'approved' or 'rejected'");
+
+    const review = await reviewRepo.findReviewById(reviewId);
+    if (!review) throw new Error("Review not found");
+
+    // Update review
+    const updatedReview = await reviewRepo.updateReviewById(reviewId, {
+        status: status,
+        moderatedBy: adminId,
+        moderatedAt: new Date(),
+        rejectionReason: reason || ""
+    });
+
+    // Luôn tính toán lại rating sau khi admin can thiệp
+    // (Nếu reject thì trừ điểm ra, approve thì cộng điểm vào)
+    await Review.calcAverageRatings(review.productId);
+
+    return updatedReview;
+};
+
 module.exports = {
     createReview,
     getReviewsByProductId,
     updateReview,
     deleteReview,
+    moderateReview
 };

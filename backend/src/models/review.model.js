@@ -28,7 +28,6 @@ const ReviewSchema = new mongoose.Schema(
             trim: true,
         },
 
-        // Field lưu danh sách link ảnh
         imageUrls: {
             type: [String],
             validate: [arrayLimit, '{PATH} exceeds the limit of 5 images'],
@@ -49,11 +48,28 @@ const ReviewSchema = new mongoose.Schema(
             maxlength: 500,
         },
 
-        isPublished: {
-            type: Boolean,
-            default: true,
-            index: true,
+        status: {
+            type: String,
+            enum: ["pending", "approved", "rejected", "flagged"],
+            default: "pending",
+            index: true
         },
+
+        aiAnalysis: {
+            isSafe: { type: Boolean, default: null }, // AI đánh giá an toàn không
+            toxicScore: { type: Number, default: 0 }, // Điểm độc hại (0-1)
+            flaggedCategories: [String], // Ví dụ: ["spam", "harassment"]
+            processedAt: Date
+        },
+
+        moderatedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User", // Admin nào duyệt
+            default: null
+        },
+
+        moderatedAt: Date,
+        rejectionReason: String,
     },
     {
         timestamps: true,
@@ -81,7 +97,7 @@ ReviewSchema.statics.calcAverageRatings = async function (productId) {
 
     if (stats.length > 0) {
         await mongoose.model("Product").findByIdAndUpdate(productId, {
-            averageRating: Math.round(stats[0].avgRating * 10) / 10, 
+            averageRating: Math.round(stats[0].avgRating * 10) / 10,
         });
     } else {
         await mongoose.model("Product").findByIdAndUpdate(productId, {
