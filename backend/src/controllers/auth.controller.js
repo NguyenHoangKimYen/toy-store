@@ -96,12 +96,12 @@ const login = async (req, res, next) => {
 
         // Merge guest cart into user cart if sessionId provided
         const sessionId = req.headers['x-session-id'] || req.body.sessionId;
-        console.log('🔑 Login - sessionId from header:', sessionId, 'userId:', user.id);
-        if (sessionId && user.id) {
+        console.log('🔑 Login - sessionId from header:', sessionId, 'userId:', user._id);
+        if (sessionId && user._id) {
             try {
                 const cartService = require('../services/cart.service');
                 console.log('📞 Calling mergeGuestCartIntoUserCart...');
-                await cartService.mergeGuestCartIntoUserCart(user.id, sessionId);
+                await cartService.mergeGuestCartIntoUserCart(user._id, sessionId);
                 console.log('✅ Cart merge completed successfully');
                 // Clear the guest sessionId from client after merge
             } catch (cartError) {
@@ -109,7 +109,7 @@ const login = async (req, res, next) => {
                 // Don't fail login if cart merge fails
             }
         } else {
-            console.log('⚠️ Skipping merge - sessionId:', !!sessionId, 'userId:', !!user.id);
+            console.log('⚠️ Skipping merge - sessionId:', !!sessionId, 'userId:', !!user._id);
         }
 
         return res.json({
