@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatPrice } from '@/utils/formatPrice';
@@ -6,6 +7,7 @@ import { parsePrice } from '@/utils/priceUtils';
 import './CartItem.css';
 
 const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
+  const navigate = useNavigate();
   const product = item.product;
   const variant = item.variant;
   
@@ -20,8 +22,24 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
   const stock = variant?.stockQuantity || product.stockQuantity || 999;
   const total = price * item.quantity;
   
-  // Get variant attributes for display
-  const variantAttributes = variant?.attributes?.map(attr => `${attr.name}: ${attr.value}`).join(', ') || '';
+  // Get variant attributes for display - handle both array and object formats
+  let variantAttributes = '';
+  if (variant?.attributes) {
+    if (Array.isArray(variant.attributes)) {
+      // Array format: [{name: "Color", value: "Red"}, {name: "Size", value: "L"}]
+      variantAttributes = variant.attributes
+        .map(attr => `${attr.name}: ${attr.value}`)
+        .join(' • ');
+    } else if (typeof variant.attributes === 'object') {
+      // Object format: {Color: "Red", Size: "L"}
+      variantAttributes = Object.entries(variant.attributes)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(' • ');
+    }
+  }
+
+  // Debug logging
+  console.log('Cart item:', { product: product.name, variant, variantAttributes });
 
   const handleDecrement = () => {
     if (item.quantity > 1) {
@@ -35,10 +53,14 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
     }
   };
 
+  const handleNavigateToProduct = () => {
+    navigate(`/products/${product._id}`);
+  };
+
   return (
     <div className="cart-item">
       {/* Product Image */}
-      <div className="cart-item-image-wrapper">
+      <div className="cart-item-image-wrapper" onClick={handleNavigateToProduct}>
         <img
           src={imageUrl}
           alt={product.name}
@@ -48,12 +70,15 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
 
       {/* Product Info */}
       <div className="cart-item-info">
-        <h3 className="cart-item-name">{product.name}</h3>
+        <h3 className="cart-item-name" onClick={handleNavigateToProduct}>{product.name}</h3>
         {product.categoryId?.[0]?.name && (
           <p className="cart-item-category">{product.categoryId[0].name}</p>
         )}
         {variantAttributes && (
-          <p className="cart-item-variant">{variantAttributes}</p>
+          <p className="cart-item-variant">
+            <span className="variant-label">Variant: </span>
+            <span className="variant-value">{variantAttributes}</span>
+          </p>
         )}
         {variant?.sku && (
           <p className="cart-item-sku">SKU: {variant.sku}</p>

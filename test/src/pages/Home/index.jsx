@@ -69,25 +69,31 @@ const Home = () => {
 
       {/* Best Sellers Section */}
       {categorizedProducts.bestSellers && categorizedProducts.bestSellers.length > 0 && (
-        <section className="px-[5%] py-16 bg-gradient-to-b from-slate-50 to-white">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 max-w-[1600px] mx-auto pb-6 border-b-2 border-slate-100">
-            <div>
-              <h2 className="text-3xl font-bold text-slate-800 mb-2">Best Sellers</h2>
-              <p className="text-sm text-slate-500">Customer favorites</p>
+        <section className="px-[5%] py-20 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 relative overflow-hidden">
+          {/* Decorative elements */}
+          <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-amber-300/20 to-orange-300/20 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tr from-rose-300/20 to-pink-300/20 rounded-full blur-3xl"></div>
+          
+          <div className="relative z-10">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10 max-w-[1600px] mx-auto">
+              <div>
+                <h2 className="text-4xl font-bold text-slate-800 mb-1">Best Sellers</h2>
+                <p className="text-sm text-slate-500">Customer favorites</p>
+              </div>
             </div>
-          </div>
-          <div className="relative">
-            <div className="products-horizontal-scroll">
-              {categorizedProducts.bestSellers.slice(0, 12).map((product) => (
-                <ProductCard
-                  key={product._id}
-                  product={product}
-                  showBadges={true}
-                  showCategory={false}
-                  showQuickView={false}
-                  onClick={(product) => navigate(`/products/${product._id}`)}
-                />
-              ))}
+            <div className="relative">
+              <div className="products-horizontal-scroll">
+                {categorizedProducts.bestSellers.slice(0, 12).map((product) => (
+                  <ProductCard
+                    key={product._id}
+                    product={product}
+                    showBadges={true}
+                    showCategory={false}
+                    showQuickView={false}
+                    onClick={(product) => navigate(`/products/${product._id}`)}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </section>

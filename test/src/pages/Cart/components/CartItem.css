@@ -22,6 +22,13 @@
   border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.cart-item-image-wrapper:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .cart-item-image {
@@ -42,6 +49,12 @@
   font-weight: 600;
   color: #1a1a1a;
   margin: 0;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.cart-item-name:hover {
+  color: #667eea;
 }
 
 .cart-item-category {
@@ -51,10 +64,19 @@
 }
 
 .cart-item-variant {
-  font-size: 0.875rem;
-  color: #ee4d2d;
+  font-size: 0.875rem !important;
+  margin: 0.25rem 0;
   font-weight: 500;
-  margin: 0;
+}
+
+.cart-item-variant .variant-label {
+  font-weight: 500 !important;
+  color: #64748b !important;
+}
+
+.cart-item-variant .variant-value {
+  font-weight: 600 !important;
+  color: #0f172a !important;
 }
 
 .cart-item-sku {

@@ -106,7 +106,7 @@ export const useCart = () => {
 
   // Add item to cart
   const addItem = useCallback(
-    async (productId, quantity = 1, variantId) => {
+    async (productId, quantity = 1, variantId = null) => {
       try {
         setLoading(true);
         setError(null);
@@ -114,22 +114,28 @@ export const useCart = () => {
         const currentCart = await ensureCart();
 
         // Check if item already exists with the same variant
-        const existingItem = cartItems.find((item) => 
-          item.productId === productId && item.variantId === variantId
-        );
+        // Important: Match both productId AND variantId for proper variant separation
+        const existingItem = cartItems.find((item) => {
+          // If variantId is provided, both product and variant must match
+          if (variantId) {
+            return item.productId === productId && item.variantId === variantId;
+          }
+          // If no variantId, only match product and ensure no variant exists
+          return item.productId === productId && !item.variantId;
+        });
 
         if (existingItem) {
-          // Update quantity
+          // Update quantity of existing item
           const updatedItem = await updateCartItem(existingItem.id, {
             quantity: existingItem.quantity + quantity,
           });
 
           setCartItems((prev) => prev.map((item) => (item.id === updatedItem.id ? updatedItem : item)));
         } else {
-          // Add new item
+          // Add new item with variant
           const newItem = await createCartItem({
             cartId: currentCart.id,
-            variantId,
+            variantId: variantId || undefined, // Only include if provided
             quantity,
           });
 

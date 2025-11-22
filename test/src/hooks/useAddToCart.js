@@ -25,12 +25,22 @@ export const useAddToCart = () => {
         return false;
       }
 
-      // Add to cart using the cart hook
-      await addItem(product._id, 1);
+      // Get variant ID if variant is provided
+      const variantId = variant?._id || variant?.id;
+
+      // Add to cart using the cart hook with variantId
+      await addItem(product._id, 1, variantId);
 
       // Show success message with variant info
       let variantInfo = '';
-      if (variant && variant.attributes) {
+      if (variant?.attributes && Array.isArray(variant.attributes)) {
+        // New format: attributes is an array of {name, value}
+        const attrs = variant.attributes
+          .map((attr) => `${attr.name}: ${attr.value}`)
+          .join(', ');
+        variantInfo = ` (${attrs})`;
+      } else if (variant?.attributes && typeof variant.attributes === 'object') {
+        // Old format: attributes is an object
         const attrs = Object.entries(variant.attributes)
           .map(([key, value]) => `${key}: ${value}`)
           .join(', ');
