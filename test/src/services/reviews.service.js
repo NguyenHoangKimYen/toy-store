@@ -1,83 +1,58 @@
-import { API_BASE_URL, ENDPOINTS } from './config';
-import { handleResponse, createUrl } from '../utils/apiHelpers';
-import { getAuthHeaders } from '../utils/authHelpers';
+import apiClient from './config';
 
 /**
  * Get reviews for a product
  * @param {string} productId - Product ID
- * @param {Object} params - Query parameters (limit, skip, sortBy, sortOrder)
+ * @param {Object} params - Query parameters (page, limit, sort, rating)
  * @returns {Promise<Object>} - Reviews data with pagination
  */
 export const getProductReviews = async (productId, params = {}) => {
-  const url = createUrl(`${API_BASE_URL}${ENDPOINTS.PRODUCTS}/${productId}/reviews`, params);
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: getAuthHeaders(),
-  });
-  return handleResponse(response);
-};
-
-/**
- * Get a single review by ID
- * @param {string} reviewId - Review ID
- * @returns {Promise<Object>} - Review object with populated user data
- */
-export const getReviewById = async (reviewId) => {
-  const url = `${API_BASE_URL}/api/reviews/${reviewId}`;
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: getAuthHeaders(),
-  });
-  return handleResponse(response);
+  const response = await apiClient.get(`/reviews/product/${productId}`, { params });
+  return response;
 };
 
 /**
  * Create a new review for a product
- * @param {string} productId - Product ID
- * @param {Object} reviewData - Review data { content, userId (optional) }
+ * @param {Object} reviewData - Review data { productId, variantId, rating, comment }
  * @returns {Promise<Object>} - Created review with populated user data
  */
-export const createReview = async (productId, reviewData) => {
-  const url = `${API_BASE_URL}${ENDPOINTS.PRODUCTS}/${productId}/reviews`;
-  
+export const createReview = async (reviewData) => {
   // Validate required fields
-  if (!reviewData.content || reviewData.content.trim().length === 0) {
-    throw new Error('Review content is required');
+  if (!reviewData.productId) {
+    throw new Error('Product ID is required');
+  }
+  if (!reviewData.variantId) {
+    throw new Error('Variant ID is required');
+  }
+  if (!reviewData.rating || reviewData.rating < 1 || reviewData.rating > 5) {
+    throw new Error('Rating must be between 1 and 5');
   }
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: getAuthHeaders(),
-    body: JSON.stringify({
-      content: reviewData.content.trim(),
-      userId: reviewData.userId || null,
-    }),
+  const response = await apiClient.post('/reviews', {
+    productId: reviewData.productId,
+    variantId: reviewData.variantId,
+    rating: reviewData.rating,
+    comment: reviewData.comment?.trim() || '',
   });
-  return handleResponse(response);
+  return response;
 };
 
 /**
  * Update a review
  * @param {string} reviewId - Review ID
- * @param {Object} reviewData - Updated review data { content }
+ * @param {Object} reviewData - Updated review data { rating, comment }
  * @returns {Promise<Object>} - Updated review with populated user data
  */
 export const updateReview = async (reviewId, reviewData) => {
-  const url = `${API_BASE_URL}/api/reviews/${reviewId}`;
-  
-  // Validate content if provided
-  if (reviewData.content !== undefined && reviewData.content.trim().length === 0) {
-    throw new Error('Review content cannot be empty');
+  if (reviewData.rating && (reviewData.rating < 1 || reviewData.rating > 5)) {
+    throw new Error('Rating must be between 1 and 5');
   }
 
-  const response = await fetch(url, {
-    method: 'PATCH',
-    headers: getAuthHeaders(),
-    body: JSON.stringify({
-      content: reviewData.content ? reviewData.content.trim() : undefined,
-    }),
+  const response = await apiClient.patch(`/reviews/${reviewId}`, {
+    rating: reviewData.rating,
+    comment: reviewData.comment?.trim(),
   });
-  return handleResponse(response);
+  return response;
 };
 
 /**
@@ -86,27 +61,8 @@ export const updateReview = async (reviewId, reviewData) => {
  * @returns {Promise<Object>} - Deletion confirmation
  */
 export const deleteReview = async (reviewId) => {
-  const url = `${API_BASE_URL}/api/reviews/${reviewId}`;
-  const response = await fetch(url, {
-    method: 'DELETE',
-    headers: getAuthHeaders(),
-  });
-  return handleResponse(response);
-};
-
-/**
- * Get all reviews by a specific user
- * @param {string} userId - User ID
- * @param {Object} params - Query parameters (limit, skip)
- * @returns {Promise<Object>} - User's reviews with product data
- */
-export const getUserReviews = async (userId, params = {}) => {
-  const url = createUrl(`${API_BASE_URL}/api/users/${userId}/reviews`, params);
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: getAuthHeaders(),
-  });
-  return handleResponse(response);
+  const response = await apiClient.delete(`/reviews/${reviewId}`);
+  return response;
 };
 
 /**
@@ -116,8 +72,8 @@ export const getUserReviews = async (userId, params = {}) => {
  */
 export const getReviewCount = async (productId) => {
   try {
-    const result = await getProductReviews(productId, { limit: 1, skip: 0 });
-    return result.total || 0;
+    const result = await getProductReviews(productId, { limit: 1, page: 1 });
+    return result.metadata?.total || 0;
   } catch (error) {
     console.error('Error getting review count:', error);
     return 0;
@@ -133,8 +89,8 @@ export const getReviewCount = async (productId) => {
 export const hasUserReviewedProduct = async (productId, userId) => {
   try {
     const result = await getProductReviews(productId);
-    const reviews = result.reviews || [];
-    return reviews.some(review => review.userId === userId);
+    const reviews = result.metadata?.reviews || [];
+    return reviews.some(review => review.userId?._id === userId || review.userId === userId);
   } catch (error) {
     console.error('Error checking user review:', error);
     return false;
@@ -144,34 +100,31 @@ export const hasUserReviewedProduct = async (productId, userId) => {
 /**
  * Get review statistics for a product
  * @param {string} productId - Product ID
- * @returns {Promise<Object>} - Review statistics (total, averageRating if applicable)
+ * @returns {Promise<Object>} - Review statistics (total, averageRating, distribution)
  */
 export const getReviewStats = async (productId) => {
   try {
-    const result = await getProductReviews(productId, { limit: 1000 });
-    const reviews = result.reviews || [];
+    const result = await getProductReviews(productId, { limit: 1000, page: 1 });
+    const reviews = result.metadata?.reviews || [];
     
-    // Calculate rating distribution (if reviews have ratings)
+    // Calculate rating distribution
     const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
     let totalRating = 0;
-    let ratedReviewsCount = 0;
     
     reviews.forEach(review => {
       if (review.rating && review.rating >= 1 && review.rating <= 5) {
         distribution[review.rating]++;
         totalRating += review.rating;
-        ratedReviewsCount++;
       }
     });
     
-    const averageRating = ratedReviewsCount > 0 ? (totalRating / ratedReviewsCount).toFixed(1) : 0;
+    const averageRating = reviews.length > 0 ? (totalRating / reviews.length).toFixed(1) : 0;
     
     return {
-      total: result.total || reviews.length,
+      total: result.metadata?.total || reviews.length,
       count: reviews.length,
       averageRating: parseFloat(averageRating),
       distribution,
-      ratedReviewsCount,
     };
   } catch (error) {
     console.error('Error getting review stats:', error);
@@ -180,7 +133,6 @@ export const getReviewStats = async (productId) => {
       count: 0,
       averageRating: 0,
       distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
-      ratedReviewsCount: 0,
     };
   }
 };
