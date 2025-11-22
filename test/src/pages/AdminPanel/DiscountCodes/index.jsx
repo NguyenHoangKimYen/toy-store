@@ -5,7 +5,7 @@ import { getAllDiscountCodes, createDiscountCode, updateDiscountCode, deleteDisc
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
+import Badge from '@/components/ui/badge'
 import DiscountCodeModal from './components/DiscountCodeModal'
 import DeleteConfirmDialog from './components/DeleteConfirmDialog'
 
@@ -28,8 +28,15 @@ const DiscountCodes = () => {
       const response = await getAllDiscountCodes()
       setCodes(response.discountCodes || response.data || [])
     } catch (error) {
-      toast.error('Failed to fetch discount codes: ' + error.message)
-      setCodes([]) // Set empty array on error
+      const errorMessage = error.message || 'Failed to fetch discount codes'
+      if (errorMessage.includes('404') || errorMessage.includes('Not Found')) {
+        toast.error('Discount codes feature not available yet. Backend endpoint missing.')
+      } else if (errorMessage.includes('Invalid token') || errorMessage.includes('401')) {
+        toast.error('Session expired. Please login again.')
+      } else {
+        toast.error('Failed to fetch discount codes: ' + errorMessage)
+      }
+      setCodes([])
     } finally {
       setLoading(false)
     }

@@ -3,7 +3,7 @@ import { X, Package, MapPin, CreditCard, Tag } from 'lucide-react'
 import { getOrderById } from '@/services/orders.service'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import Badge from '@/components/ui/badge'
 import {
   Dialog,
   DialogContent,

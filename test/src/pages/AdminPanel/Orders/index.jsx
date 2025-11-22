@@ -5,7 +5,7 @@ import { getAllOrders, updateOrderStatus } from '@/services/orders.service'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
+import Badge from '@/components/ui/badge'
 import OrderDetailModal from './components/OrderDetailModal'
 import OrderFilters from './components/OrderFilters'
 
@@ -28,7 +28,13 @@ const Orders = () => {
       const response = await getAllOrders()
       setOrders(response.orders || [])
     } catch (error) {
-      toast.error('Failed to fetch orders: ' + error.message)
+      const errorMessage = error.message || 'Failed to fetch orders'
+      if (errorMessage.includes('Invalid token') || errorMessage.includes('401')) {
+        toast.error('Session expired. Please login again.')
+      } else {
+        toast.error('Failed to fetch orders: ' + errorMessage)
+      }
+      setOrders([])
     } finally {
       setLoading(false)
     }
