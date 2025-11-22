@@ -31,9 +31,14 @@ const apiClient = {
 
     // Get auth token if exists
     const token = localStorage.getItem('token');
+    
+    // Get guest sessionId if user is not logged in
+    const sessionId = !token ? localStorage.getItem('guestSessionId') : null;
+    
     const defaultHeaders = {
       ...getDefaultHeaders(),
       ...(token && { Authorization: `Bearer ${token}` }),
+      ...(sessionId && { 'X-Session-Id': sessionId }),
       ...headers,
     };
 

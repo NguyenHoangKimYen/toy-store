@@ -103,11 +103,11 @@ const Navbar = () => {
                         {user ? (
                             <div className="mobile-user-info">
                                 <div className="user-avatar">
-                                    {user.fullname.charAt(0).toUpperCase()}
+                                    {user.fullname?.charAt(0)?.toUpperCase() || user.username?.charAt(0)?.toUpperCase() || 'U'}
                                 </div>
                                 <div className="mobile-user-details">
-                                    <div className="mobile-user-name">{user.fullname}</div>
-                                    <div className="mobile-user-email">{user.email}</div>
+                                    <div className="mobile-user-name">{user.fullname || user.username || 'User'}</div>
+                                    <div className="mobile-user-email">{user.email || ''}</div>
                                     {user.role === 'admin' && (
                                         <span className="mobile-user-role">Admin</span>
                                     )}
@@ -272,8 +272,8 @@ const Navbar = () => {
                             {user ? (
                                 <>
                                     <div className='px-4 py-3 border-b border-gray-100'>
-                                        <p className='text-sm font-semibold text-gray-900'>{user.fullname}</p>
-                                        <p className='text-xs text-gray-500 mt-1'>{user.email}</p>
+                                        <p className='text-sm font-semibold text-gray-900'>{user.fullname || user.username || 'User'}</p>
+                                        <p className='text-xs text-gray-500 mt-1'>{user.email || ''}</p>
                                         {user.role === 'admin' && (
                                             <span className='inline-block mt-1 px-2 py-0.5 text-xs font-semibold text-white bg-orange-500 rounded'>
                                                 Admin

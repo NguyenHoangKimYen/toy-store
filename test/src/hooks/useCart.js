@@ -17,7 +17,7 @@ import { useAuth } from './useAuth';
  * Handles both authenticated user carts and guest session carts
  */
 export const useCart = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [cart, setCart] = useState(null);
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -27,7 +27,7 @@ export const useCart = () => {
   const getSessionId = useCallback(() => {
     let sessionId = localStorage.getItem('guestSessionId');
     if (!sessionId) {
-      sessionId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      sessionId = crypto.randomUUID();
       localStorage.setItem('guestSessionId', sessionId);
     }
     return sessionId;
@@ -35,16 +35,21 @@ export const useCart = () => {
 
   // Fetch cart based on user authentication status
   const fetchCart = useCallback(async () => {
+    // Wait for auth to finish loading before fetching cart
+    if (authLoading) {
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
 
       let cartData;
       if (user?.id) {
-        // Authenticated user
+        // Authenticated user - fetch by userId
         cartData = await getCartByUser(user.id);
       } else {
-        // Guest user
+        // Guest user - fetch by sessionId
         const sessionId = getSessionId();
         cartData = await getCartBySession(sessionId);
       }
@@ -55,6 +60,8 @@ export const useCart = () => {
       if (cartData?.id) {
         const items = await getCartItems(cartData.id);
         setCartItems(items);
+      } else {
+        setCartItems([]);
       }
     } catch (err) {
       // If cart doesn't exist, that's okay - it will be created when items are added
@@ -68,7 +75,7 @@ export const useCart = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, getSessionId]);
+  }, [user, getSessionId, authLoading]);
 
   // Initialize cart on mount and when user changes
   useEffect(() => {
@@ -81,10 +88,17 @@ export const useCart = () => {
 
     try {
       const sessionId = user?.id ? undefined : getSessionId();
-      const newCart = await createCart({ userId: user?.id, sessionId });
+      // Only send userId OR sessionId, never both, never userId: undefined
+      const cartData = user?.id 
+        ? { userId: user.id } 
+        : { sessionId };
+      console.log('Creating cart with data:', cartData);
+      const newCart = await createCart(cartData);
+      console.log('Cart created:', newCart);
       setCart(newCart);
       return newCart;
     } catch (err) {
+      console.error('Error in ensureCart:', err);
       setError(err.message || 'Failed to create cart');
       throw err;
     }
@@ -92,15 +106,17 @@ export const useCart = () => {
 
   // Add item to cart
   const addItem = useCallback(
-    async (productId, quantity = 1) => {
+    async (productId, quantity = 1, variantId) => {
       try {
         setLoading(true);
         setError(null);
 
         const currentCart = await ensureCart();
 
-        // Check if item already exists
-        const existingItem = cartItems.find((item) => item.productId === productId);
+        // Check if item already exists with the same variant
+        const existingItem = cartItems.find((item) => 
+          item.productId === productId && item.variantId === variantId
+        );
 
         if (existingItem) {
           // Update quantity
@@ -113,7 +129,7 @@ export const useCart = () => {
           // Add new item
           const newItem = await createCartItem({
             cartId: currentCart.id,
-            productId,
+            variantId,
             quantity,
           });
 
@@ -232,6 +248,11 @@ export const useCart = () => {
     discount: cart?.discountAmount || 0,
   };
 
+  // Clear session ID (called after login)
+  const clearGuestSession = useCallback(() => {
+    localStorage.removeItem('guestSessionId');
+  }, []);
+
   return {
     cart,
     cartItems,
@@ -244,5 +265,7 @@ export const useCart = () => {
     removeItem,
     clearAllItems,
     deleteCurrentCart,
+    getSessionId,
+    clearGuestSession,
   };
 };

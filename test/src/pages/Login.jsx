@@ -68,9 +68,15 @@ const Login = () => {
     setCredentials({ emailOrPhoneOrUsername, password })
 
     try {
+      // Get guest sessionId if exists
+      const sessionId = localStorage.getItem('guestSessionId')
+      
       const res = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...(sessionId && { "X-Session-Id": sessionId })
+        },
         body: JSON.stringify({ emailOrPhoneOrUsername, password })
       })
 
@@ -111,6 +117,9 @@ const Login = () => {
       if (data.data?.token) {
         localStorage.setItem("token", data.data.token)
         localStorage.setItem("user", JSON.stringify(data.data.user))
+        
+        // Clear guest sessionId after successful login (cart has been merged)
+        localStorage.removeItem('guestSessionId')
 
         // Dispatch event to update navbar
         window.dispatchEvent(new Event('userLoggedIn'))
