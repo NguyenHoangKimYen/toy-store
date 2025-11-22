@@ -40,7 +40,17 @@ const ProductCard = ({
   const priceDisplay = hasVariants && minPrice ? formatPrice(minPrice) : formatPrice(singlePrice);
 
   const imageUrl = product.imageUrls?.[0] || '/placeholder.png';
-  const categoryName = product.categoryId?.[0]?.name || product.categoryId?.name || 'Uncategorized';
+  
+  // Safely extract category name
+  let categoryName = 'Uncategorized';
+  if (Array.isArray(product.categoryId)) {
+    categoryName = product.categoryId[0]?.name || 'Uncategorized';
+  } else if (product.categoryId && typeof product.categoryId === 'object') {
+    categoryName = product.categoryId.name || 'Uncategorized';
+  } else if (typeof product.categoryId === 'string') {
+    categoryName = product.categoryId;
+  }
+  
   const totalStock = product.totalStock ?? 0;
 
   const handleCardClick = () => {
