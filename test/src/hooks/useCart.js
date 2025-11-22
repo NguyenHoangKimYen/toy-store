@@ -45,9 +45,9 @@ export const useCart = () => {
       setError(null);
 
       let cartData;
-      if (user?.id) {
+      if (user?._id) {
         // Authenticated user - fetch by userId
-        cartData = await getCartByUser(user.id);
+        cartData = await getCartByUser(user._id);
       } else {
         // Guest user - fetch by sessionId
         const sessionId = getSessionId();
@@ -87,10 +87,10 @@ export const useCart = () => {
     if (cart?.id) return cart;
 
     try {
-      const sessionId = user?.id ? undefined : getSessionId();
+      const sessionId = user?._id ? undefined : getSessionId();
       // Only send userId OR sessionId, never both, never userId: undefined
-      const cartData = user?.id 
-        ? { userId: user.id } 
+      const cartData = user?._id 
+        ? { userId: user._id } 
         : { sessionId };
       console.log('Creating cart with data:', cartData);
       const newCart = await createCart(cartData);

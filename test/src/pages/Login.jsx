@@ -7,9 +7,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { API_BASE_URL } from '@/services/config'
 import { AlertCircle, Mail, Eye, EyeOff, Loader2, ArrowLeft, CheckCircle2 } from 'lucide-react'
+import { useAuth } from '@/hooks/useAuth'
 
 const Login = () => {
   const navigate = useNavigate()
+  const { login: authLogin } = useAuth()
   const [loading, setLoading] = useState(false)
   const [needsOtp, setNeedsOtp] = useState(false)
   const [otpLoading, setOtpLoading] = useState(false)
@@ -115,8 +117,8 @@ const Login = () => {
 
       // Successful login - backend returns { success, message, data: { user, token } }
       if (data.data?.token) {
-        localStorage.setItem("token", data.data.token)
-        localStorage.setItem("user", JSON.stringify(data.data.user))
+        // Use AuthProvider login to properly update user state
+        authLogin(data.data.user, data.data.token)
         
         // Clear guest sessionId after successful login (cart has been merged)
         localStorage.removeItem('guestSessionId')

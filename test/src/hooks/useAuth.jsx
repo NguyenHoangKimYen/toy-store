@@ -19,6 +19,18 @@ export const AuthProvider = ({ children }) => {
       }
     }
     setLoading(false);
+
+    // Listen for login events from other components
+    const handleUserLogin = () => {
+      const token = getAuthToken();
+      const storedUser = localStorage.getItem('user');
+      if (token && storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    };
+
+    window.addEventListener('userLoggedIn', handleUserLogin);
+    return () => window.removeEventListener('userLoggedIn', handleUserLogin);
   }, []);
 
   const login = (userData, token) => {
