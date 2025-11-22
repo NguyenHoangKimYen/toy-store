@@ -7,7 +7,7 @@ export { useResponsive } from './useResponsive';
 export { useProducts, useCategorizedProducts, useProductDetail } from './useProducts';
 
 // Review hooks - Manage product reviews and user reviews
-export { useReviews, useReview, useUserReviews } from './useReviews';
+export { useReviews } from './useReviews';
 export { useReviewPolling } from './useReviewPolling';
 
 // Discount code hooks - Validate and manage discount codes
