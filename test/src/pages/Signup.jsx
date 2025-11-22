@@ -221,8 +221,8 @@ const Signup = () => {
 
                         <div className="flex items-center justify-center gap-2 text-sm">
                             <Shield className="w-4 h-4 text-white/70" />
-                            <span className="text-white/80">
-                                Link expires in <span className="font-mono font-semibold text-white">{formatTime(countdown)}</span>
+                            <span className="text-white/80 [text-shadow:_0_1px_2px_rgb(0_0_0_/_40%)]">
+                                Link expires in <span className="font-mono font-semibold text-white [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)]">{formatTime(countdown)}</span>
                             </span>
                         </div>
 
@@ -246,7 +246,7 @@ const Signup = () => {
                         >
                             Go to Login
                         </Button>
-                        <p className="text-xs text-center text-white/60">
+                        <p className="text-xs text-center text-white/60 [text-shadow:_0_1px_2px_rgb(0_0_0_/_40%)]">
                             Check your spam folder if you don't see the email
                         </p>
                     </CardFooter>
@@ -527,16 +527,9 @@ const Signup = () => {
                             </div>
 
                             {/* Divider */}
-                            <div className="relative my-6">
-                                <div className="absolute inset-0 flex items-center">
-                                    <span className="w-full border-t border-white/20" />
-                                </div>
-                                <div className="relative flex justify-center text-xs uppercase">
-                                    <span className="bg-white/10 backdrop-blur-sm px-3 text-white/70 font-semibold">Or continue with</span>
-                                </div>
-                            </div>
-
-                            {/* OAuth Buttons */}
+              <div className="text-center text-xs uppercase my-6">
+                <span className="text-white/70 font-medium">Or continue with</span>
+              </div>                            {/* OAuth Buttons */}
                             <div className="grid grid-cols-2 gap-3">
                                 <Button
                                     type="button"
@@ -569,13 +562,13 @@ const Signup = () => {
                     </CardContent>
 
                     <CardFooter className="flex flex-col gap-2 pt-6 border-t border-white/20">
-                        <p className="text-sm text-center text-white/80">
+                        <p className="text-sm text-center text-white/80 [text-shadow:_0_1px_2px_rgb(0_0_0_/_40%)]">
                             Already have an account?{" "}
-                            <Link to="/login" className="font-semibold text-white hover:underline">
+                            <Link to="/login" className="font-semibold text-white hover:underline [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)]">
                                 Sign in
                             </Link>
                         </p>
-                        <p className="text-xs text-center text-white/60">
+                        <p className="text-xs text-center text-white/60 [text-shadow:_0_1px_2px_rgb(0_0_0_/_40%)]">
                             By signing up, you agree to our Terms of Service and Privacy Policy
                         </p>
                     </CardFooter>

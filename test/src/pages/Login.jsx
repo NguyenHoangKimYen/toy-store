@@ -257,7 +257,7 @@ const Login = () => {
           <CardHeader className="space-y-4 pb-6">
             <button
               onClick={() => setShowForgotPassword(false)}
-              className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors w-fit"
+              className="flex items-center gap-2 text-sm text-white/80 hover:text-white transition-colors w-fit [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)]"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Login
@@ -278,7 +278,7 @@ const Login = () => {
           <CardContent>
             <form onSubmit={handleForgotPassword} className="space-y-5">
               <div className='space-y-2'>
-                <Label htmlFor="forgotEmail" className="text-sm font-semibold text-white/90">Email Address</Label>
+                <Label htmlFor="forgotEmail" className="text-sm font-semibold text-white [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)]">Email Address</Label>
                 <Input
                   id="forgotEmail"
                   name="forgotEmail"
@@ -317,7 +317,7 @@ const Login = () => {
                 setCredentials({ emailOrPhoneOrUsername: '', password: '' })
                 setOtp(['', '', '', '', '', ''])
               }}
-              className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors w-fit"
+              className="flex items-center gap-2 text-sm text-white/80 hover:text-white transition-colors w-fit [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)]"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Login
@@ -342,7 +342,7 @@ const Login = () => {
           <CardContent className="space-y-6">
             <form onSubmit={handleOtpVerify} className="space-y-6">
               <div className='space-y-3'>
-                <Label className="text-sm font-semibold text-white/90 text-center block">Enter Verification Code</Label>
+                <Label className="text-sm font-semibold text-white [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)] text-center block">Enter Verification Code</Label>
                 <div className="flex gap-2 justify-center" onPaste={handleOtpPaste}>
                   {otp.map((digit, index) => (
                     <Input
@@ -422,11 +422,11 @@ const Login = () => {
 
               <div className='space-y-2'>
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-sm font-semibold text-white">Password</Label>
+                  <Label htmlFor="password" className="text-sm font-semibold text-white [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)]">Password</Label>
                   <button
                     type="button"
                     onClick={() => setShowForgotPassword(true)}
-                    className="text-sm text-white/80 hover:text-white hover:underline font-medium"
+                    className="text-sm text-white/80 hover:text-white hover:underline font-medium [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)]"
                   >
                     Forgot?
                   </button>
@@ -469,13 +469,8 @@ const Login = () => {
               </div>
 
               {/* Divider */}
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-white/20" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="px-3 text-white font-semibold">Or continue with</span>
-                </div>
+              <div className="text-center text-xs uppercase my-6">
+                <span className="text-white/70 font-medium">Or continue with</span>
               </div>
 
               {/* OAuth Buttons */}
@@ -514,9 +509,9 @@ const Login = () => {
           </CardContent>
 
           <CardFooter className="flex flex-col gap-2 pt-6 border-t border-white/20">
-            <p className="text-sm text-center text-white/80">
+            <p className="text-sm text-center text-white/80 [text-shadow:_0_1px_2px_rgb(0_0_0_/_40%)]">
               Don't have an account?{" "}
-              <Link to="/register" className="font-semibold text-white hover:underline">
+              <Link to="/register" className="font-semibold text-white hover:underline [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)]">
                 Create one now
               </Link>
             </p>
