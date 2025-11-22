@@ -1,21 +1,25 @@
-const router = require('express').Router();
-const ctrl = require('../controllers/order.controller');
-const auth = require('../middlewares/auth.middleware');
+const express = require("express");
+const router = express.Router();
+const orderController = require("../controllers/order.controller");
+const auth = require("../middlewares/auth.middleware");
+const adminOnly = require("../middlewares/auth.middleware");
 
-// Customer
-router.post('/', auth, ctrl.create);
-router.post('/guest', ctrl.create);
-router.get('/me', auth, ctrl.getMyOrders);
+// User tạo đơn
+router.post("/", orderController.create);
 
-// Admin
-router.get('/', auth, ctrl.adminGetAll);
-router.patch('/:id/status', auth, ctrl.updateStatus);
+// Admin thay đổi trạng thái đơn
+router.put("/:id/status", auth, adminOnly, orderController.updateStatus);
 
-// Checkout từ cart
-router.post('/checkout/cart', auth, ctrl.checkoutFromCartForUser);
-router.post('/guest/checkout/cart', ctrl.checkoutFromCartForGuest);
+// Lấy chi tiết đơn
+router.get("/:id", auth, orderController.getDetail);
 
-// Detail
-router.get('/:id', auth, ctrl.getDetail);
+// User xem đơn của mình
+router.get("/", auth, orderController.getMyOrders);
+
+// Checkout cart: User
+router.post("/checkout/cart", auth, orderController.checkoutFromCartForUser);
+
+// Checkout cart: Guest
+router.post("/checkout/cart/guest", orderController.checkoutFromCartForGuest);
 
 module.exports = router;

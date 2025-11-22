@@ -25,7 +25,8 @@ app.use(express.urlencoded({ extended: true })); // Cho phép phân tích cú ph
 
 app.use(cors({
   origin: [
-    process.env.FRONTEND_URL, 'http://localhost:5173',
+    'http://localhost:5173',
+    process.env.FRONTEND_URL,
     'https://milkybloomtoystore.id.vn',
     'https://d1qc4bz6yrxl8k.cloudfront.net',
   ],
@@ -70,7 +71,12 @@ const cartRoutes = require('./routes/cart.route.js');
 const categoryRoutes = require('./routes/category.route.js');
 const orderRoutes = require('./routes/order.route.js');
 const reviewRoutes = require('./routes/review.route.js');
-
+const loyaltyRoutes = require("./routes/loyalty.route.js");
+const discountRoutes = require("./routes/discount-code.routes.js");
+const monthlyJob = require("./utils/montly-loyalty.js");
+const voucherRoutes = require("./routes/voucher.route.js");
+require("./utils/event.cron.js");
+monthlyJob();
 
 // Gán các routes vào đường dẫn
 app.use(passportGoogle.initialize());
@@ -86,7 +92,8 @@ app.use('/api/carts', cartRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/reviews', reviewRoutes);
-
+app.use("/api/loyalty", loyaltyRoutes);
+app.use("/api/discount", discountRoutes);
 
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'MilkyBloom backend is running on AWS 🚀' });
