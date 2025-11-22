@@ -93,9 +93,37 @@ const deleteReview = async (req, res, next) => {
     } catch (error) { next(error); }
 };
 
+const moderateReview = async (req, res, next) => {
+    try {
+        // Check quyền Admin (nếu middleware auth chưa check kỹ)
+        // Giả sử req.user.roles chứa mảng roles
+        if (!req.user.roles || !req.user.roles.includes('admin')) {
+            return res.status(403).json({ message: "Access denied. Admin only." });
+        }
+
+        const { reviewId } = req.params;
+        const { status, reason } = req.body; // status: 'approved' | 'rejected'
+
+        const result = await ReviewService.moderateReview({
+            reviewId,
+            adminId: req.user._id,
+            status,
+            reason
+        });
+
+        return res.status(200).json({
+            message: `Review has been ${status}`,
+            metadata: result
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createReview,
     getReviewsByProductId,
     updateReview,
-    deleteReview
+    deleteReview,
+    moderateReview
 }
