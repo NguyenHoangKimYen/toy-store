@@ -1,9 +1,5 @@
 const mongoose = require("mongoose");
 
-// Import các model liên quan nếu cần thiết (để mongoose nhận diện ref)
-// require("./product.model.js"); 
-// require("./user.model.js");
-
 const ReviewSchema = new mongoose.Schema(
     {
         productId: {
@@ -20,18 +16,23 @@ const ReviewSchema = new mongoose.Schema(
             index: true,
         },
 
-        // Lưu ID biến thể để validate đơn hàng
         variantId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Variant", // Tham chiếu giống trong Product model của bạn
+            ref: "Variant",
             required: true,
         },
 
-        // Lưu snapshot tên biến thể để hiển thị frontend (VD: "Màu: Đỏ, Size: L")
         variantName: {
             type: String,
             required: true,
             trim: true,
+        },
+
+        // Field lưu danh sách link ảnh
+        imageUrls: {
+            type: [String],
+            validate: [arrayLimit, '{PATH} exceeds the limit of 5 images'],
+            default: []
         },
 
         rating: {
@@ -61,7 +62,6 @@ const ReviewSchema = new mongoose.Schema(
 );
 
 // --- INDEX ---
-// Đảm bảo 1 User chỉ review 1 Product một lần (tránh spam)
 ReviewSchema.index({ productId: 1, userId: 1 }, { unique: true });
 
 // --- STATICS: TÍNH TOÁN RATING TRUNG BÌNH ---
@@ -79,15 +79,11 @@ ReviewSchema.statics.calcAverageRatings = async function (productId) {
         },
     ]);
 
-    // Cập nhật vào Model Product
     if (stats.length > 0) {
         await mongoose.model("Product").findByIdAndUpdate(productId, {
-            averageRating: Math.round(stats[0].avgRating * 10) / 10, // Làm tròn 1 số thập phân (VD: 4.5)
-            // Nếu Product model của bạn sau này có thêm field totalReviews thì update ở đây luôn:
-            // totalReviews: stats[0].nRating 
+            averageRating: Math.round(stats[0].avgRating * 10) / 10, 
         });
     } else {
-        // Trường hợp xóa hết review
         await mongoose.model("Product").findByIdAndUpdate(productId, {
             averageRating: 0,
         });
@@ -95,13 +91,13 @@ ReviewSchema.statics.calcAverageRatings = async function (productId) {
 };
 
 // --- MIDDLEWARE ---
-// Gọi hàm tính toán sau khi TẠO review mới
 ReviewSchema.post("save", function () {
     this.constructor.calcAverageRatings(this.productId);
 });
 
-// Gọi hàm tính toán sau khi UPDATE hoặc DELETE (với query middleware)
-// Lưu ý: Cần cẩn thận khi dùng findByIdAndUpdate/Delete ở Controller để trigger cái này
-// Nếu controller dùng logic đơn giản, bạn có thể gọi thẳng Review.calcAverageRatings() trong Service cho dễ kiểm soát.
+// Validator giới hạn mảng
+function arrayLimit(val) {
+    return val.length <= 5;
+}
 
 module.exports = mongoose.model("Review", ReviewSchema);

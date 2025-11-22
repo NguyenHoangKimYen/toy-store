@@ -17,10 +17,12 @@ const upload = multer({
 
 const uploadAvatar = upload.single("avatar");
 const uploadProductImages = upload.array("images", 10);
-const uploadProductVariants = upload.array("variantImages", 10);
+const uploadVariantImages = upload.array("variantImages", 10);
+const uploadReviewImages = upload.array("reviewImages", 5);
 
 module.exports = {
     uploadAvatar,
     uploadProductImages,
-    uploadProductVariants
+    uploadVariantImages,
+    uploadReviewImages,
 };
