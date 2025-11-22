@@ -10,7 +10,7 @@ const { message } = require('statuses');
 const AWS = require('../config/aws.config.js');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://d1qc4bz6yrxl8k.cloudfront.net';
-const VERIFY_TTL_MINUTES = Number(process.env.VERIFY_TTL_MINUTES || 15);
+const VERIFY_TTL_MINUTES = Number(process.env.VERIFY_TTL_MINUTES || 1440);
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '30m';
 
