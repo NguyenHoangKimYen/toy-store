@@ -1,6 +1,8 @@
 const haversine = require('haversine-distance');
 const BRANCHES = require('../data/branches.js');
 const { getWeatherCondition } = require('./weather.service');
+const { applyLoyaltyToShipping } = require("../utils/loyalty-ship.helper.js");
+const User = require("../models/user.model");
 
 //Chuan hoa chu
 function normalizeVN(str = '') {
@@ -179,6 +181,24 @@ async function calculateShippingFee(
         }
     }
 
+    // ⭐⭐⭐ ÁP DỤNG LOYALTY TIER ⭐⭐⭐
+    let tier = "none";
+    let discountFromTier = 0;
+
+    if (address?.userId) {
+        const user = await User.findById(address.userId).select("loyaltyTier");
+        if (user) tier = user.loyaltyTier || "none";
+    }
+
+    // Nhận số tiền giảm từ helper
+    discountFromTier = applyLoyaltyToShipping(tier, baseFee, deliveryType);
+
+    // Trừ phí ship theo loyalty
+    baseFee = Math.max(baseFee - discountFromTier, 0);
+
+    // Ghi chú để FE hiển thị
+    notes.push(`LOYALTY_APPLIED: ${tier}`);
+
     return {
         nearestWarehouse: nearest,
         region,
@@ -187,7 +207,9 @@ async function calculateShippingFee(
         isExpressAllowed,
         fee: Math.round(baseFee),
         notes,
-        weather
+        weather,
+        loyaltyTier: tier,
+        loyaltyDiscount: discountFromTier
     };
 }
 

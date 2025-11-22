@@ -4,7 +4,6 @@ require('./address.model.js');
 const ROLE_ENUM = ["customer", "admin"];
 
 const userSchema = new mongoose.Schema({
-    //image url
     fullName: {
         type: String,
         required: true,
@@ -29,17 +28,15 @@ const userSchema = new mongoose.Schema({
     phone: {
         type: String,
         required: function () {
-            return !this.socialProvider; //đăng nhập mxh không bắt buộc phone
+            return !this.socialProvider;
         },
         sparse: true,
         default: null,
     },
 
-    // Mật khẩu (dạng hashed) - Không bắt buộc nếu đăng nhập bằng mxh
-    //Lưu hash
     password: {
         type: String,
-        select: false, // Mặc định không trả về trường này khi truy vấn
+        select: false,
     },
 
     avatar: {
@@ -48,48 +45,21 @@ const userSchema = new mongoose.Schema({
         default: process.env.DEFAULT_AVATAR_URL
     },
 
-    // reset token (link) – lưu dạng hash + hạn
-    resetTokenHash: {
-        type: String,
-        select: false,
-        default: null,
-    },
+    // Password reset
+    resetTokenHash: { type: String, select: false, default: null },
+    resetTokenExpiresAt: { type: Date, default: null },
+    resetOtpHash: { type: String, select: false, default: null },
+    resetOtpExpiresAt: { type: Date, default: null },
 
-    resetTokenExpiresAt: {
-        type: Date,
-        default: null
-    },
-
-    //otp để đặt lại mật khẩu 
-    resetOtpHash: {
-        type: String,
-        select: false,
-        default: null
-    },
-
-    resetOtpExpiresAt: {
-        type: Date,
-        default: null,
-    },
-
+    // Role
     role: {
         type: String,
         enum: ROLE_ENUM,
         default: "customer",
-        required: true,
-        set: (value) => {
-            const allowedRoles = ROLE_ENUM;
-            if (allowedRoles.includes(value)) {
-                return value;
-            }
-            return "customer"; // Mặc định là 'customer' nếu giá trị không hợp lệ
-        },
+        set: value => ROLE_ENUM.includes(value) ? value : "customer"
     },
 
-    isVerified: {
-        type: Boolean,
-        default: false,
-    },
+    isVerified: { type: Boolean, default: false },
 
     defaultAddressId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -102,67 +72,50 @@ const userSchema = new mongoose.Schema({
         enum: ['google', 'facebook', 'github', 'apple', null],
         default: null,
     },
+    socialId: { type: String, default: null, index: true },
 
-    socialId: {
+    //loyalty system
+    loyaltyRank: {
         type: String,
-        default: null,
-        index: true,
+        enum: ["none", "silver", "gold", "diamond"],
+        default: "none"
     },
 
-    // Điểm thưởng hiện tại
     loyaltyPoints: {
         type: Number,
         default: 0,
         min: 0,
     },
 
-    changeEmailOldOtpHash: {
-        type: String,
-        select: false,
-        default: null
-    },
-
-    changeEmailOldOtpExpiresAt: {
-        type: Date,
-        default: null
-    },
-
-    pendingNewEmail: {
-        type: String,
-        default: null
-    },
-
-    verifyNewEmailTokenHash: {
-        type: String,
-        select: false,
-        default: null
-    },
-
-    verifyNewEmailExpiresAt: {
-        type: Date,
-        default: null
-    },
-
-    changePhoneOtpHash: {
-        type: String,
-        select: false,
-        default: null
-    },
-
-    changePhoneOtpExpiresAt: {
-        type: Date,
-        default: null
-    },
-
-    pendingPhone: {
-        type: String,
-        default: null
-    },
-    // đăng nhập thất bại
-    failLoginAttempts: {
+    lifetimeSpent: {
         type: Number,
-        default: 0,
+        default: 0
     },
+
+    spentLast12Months: {
+        type: Number,
+        default: 0
+    },
+
+    badges: [
+        {
+            badgeId: { type: mongoose.Schema.Types.ObjectId, ref: "Badge" },
+            receivedAt: Date
+        }
+    ],
+
+    //Change Email / Phone
+    changeEmailOldOtpHash: { type: String, select: false, default: null },
+    changeEmailOldOtpExpiresAt: { type: Date, default: null },
+    pendingNewEmail: { type: String, default: null },
+    verifyNewEmailTokenHash: { type: String, select: false, default: null },
+    verifyNewEmailExpiresAt: { type: Date, default: null },
+
+    changePhoneOtpHash: { type: String, select: false, default: null },
+    changePhoneOtpExpiresAt: { type: Date, default: null },
+    pendingPhone: { type: String, default: null },
+
+    failLoginAttempts: { type: Number, default: 0 },
 },
     {
         timestamps: true,
@@ -170,6 +123,6 @@ const userSchema = new mongoose.Schema({
     },
 );
 
-userSchema.set("settersOnQuery", true); //cho phép sử dụng setter khi update
+userSchema.set("settersOnQuery", true);
 
 module.exports = mongoose.model('User', userSchema);
