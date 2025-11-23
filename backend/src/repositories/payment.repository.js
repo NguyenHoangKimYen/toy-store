@@ -1,4 +1,4 @@
-const Payment = require('../models/payment.model');
+const Payment = require("../models/payment.model");
 
 module.exports = {
     create(data) {

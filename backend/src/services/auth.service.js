@@ -1,25 +1,32 @@
-const userRepository = require('../repositories/user.repository.js');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const Joi = require('joi');
-const { generateToken, genOtp6, sha256 } = require('../utils/token.js');
-const User = require('../models/user.model.js');
-const { sendMail } = require('../libs/mailer.js');
-const { message } = require('statuses');
-const AWS = require('../config/aws.config.js');
+const userRepository = require("../repositories/user.repository.js");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const Joi = require("joi");
+const { generateToken, genOtp6, sha256 } = require("../utils/token.js");
+const User = require("../models/user.model.js");
+const { sendMail } = require("../libs/mailer.js");
+const { message } = require("statuses");
+const AWS = require("../config/aws.config.js");
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://d1qc4bz6yrxl8k.cloudfront.net';
+const FRONTEND_URL =
+    process.env.FRONTEND_URL || "https://d1qc4bz6yrxl8k.cloudfront.net";
 const VERIFY_TTL_MINUTES = Number(process.env.VERIFY_TTL_MINUTES || 1440);
 const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '30m';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "30m";
 
 //Trường hợp đăng nhập sai quá 5 lần thì phải nhập otp
 const MAX_FAILS = Number(process.env.LOGIN_MAX_FAILS || 5);
 const OTP_TTL_MINUTES = Number(process.env.LOGIN_OTP_TTL_MINUTES || 10);
-const CHANGE_EMAIL_OTP_TTL_MINUTES = Number(process.env.CHANGE_EMAIL_OTP_TTL_MINUTES || 10);
-const VERIFY_NEW_EMAIL_TOKEN_TTL_MINUTES = Number(process.env.VERIFY_NEW_EMAIL_TOKEN_TTL_MINUTES || 15);
-const CHANGE_EMAIL_CONFIRM_URL = process.env.CHANGE_EMAIL_CONFIRM_URL || 'https://milkybloomtoystore.id.vn/api/auth/change-email/confirm';
+const CHANGE_EMAIL_OTP_TTL_MINUTES = Number(
+    process.env.CHANGE_EMAIL_OTP_TTL_MINUTES || 10,
+);
+const VERIFY_NEW_EMAIL_TOKEN_TTL_MINUTES = Number(
+    process.env.VERIFY_NEW_EMAIL_TOKEN_TTL_MINUTES || 15,
+);
+const CHANGE_EMAIL_CONFIRM_URL =
+    process.env.CHANGE_EMAIL_CONFIRM_URL ||
+    "https://milkybloomtoystore.id.vn/api/auth/change-email/confirm";
 
 const userSchema = Joi.object({
     fullName: Joi.string().min(3).max(100).required(), // Họ và tên
@@ -156,13 +163,14 @@ const register = async (data) => {
     `,
         });
     } catch (err) {
-        console.error('[MAIL ERROR][VERIFY EMAIL]', err?.message || err);
+        console.error("[MAIL ERROR][VERIFY EMAIL]", err?.message || err);
     }
 
     return {
-        message: 'Registration successful! Please check your email to verify your account.',
+        message:
+            "Registration successful! Please check your email to verify your account.",
         user: toPublicUser(user),
-    }
+    };
 };
 
 const createLoginOtp = async (userId) => {
@@ -174,9 +182,11 @@ const createLoginOtp = async (userId) => {
 };
 
 const login = async (payload) => {
-    const { value, error } = loginSchema.validate(payload, { abortEarly: false });
+    const { value, error } = loginSchema.validate(payload, {
+        abortEarly: false,
+    });
     if (error) {
-        const message = error.details.map(d => d.message).join(', ');
+        const message = error.details.map((d) => d.message).join(", ");
         throw Object.assign(new Error(message), { status: 400 });
     }
 
@@ -184,20 +194,34 @@ const login = async (payload) => {
 
     // 1) Tìm user theo identifier (id)
     const found = await findUserByIdentifier(emailOrPhoneOrUsername);
-    if (!found) throw Object.assign(new Error('Incorrect Login'), { status: 401 });
+    if (!found)
+        throw Object.assign(new Error("Incorrect Login"), { status: 401 });
 
     // 2) Refetch với secrets để có password + resetOtp*
     const user = await userRepository.findByIdWithSecrets(found._id);
-    if (!user) throw Object.assign(new Error('Incorrect Login'), { status: 401 });
+    if (!user)
+        throw Object.assign(new Error("Incorrect Login"), { status: 401 });
 
     // 3) Nếu đang bị yêu cầu OTP thì buộc nhập OTP trước
-    if (user.resetOtpHash && user.resetOtpExpiresAt && user.resetOtpExpiresAt > new Date()) {
-        return { needOtp: true, message: 'The account requires OTP authentication.' };
+    if (
+        user.resetOtpHash &&
+        user.resetOtpExpiresAt &&
+        user.resetOtpExpiresAt > new Date()
+    ) {
+        return {
+            needOtp: true,
+            message: "The account requires OTP authentication.",
+        };
     }
 
     // 4) Phải có hash password
-    if (!user.password || typeof user.password !== 'string') {
-        throw Object.assign(new Error('Account has no password. Please set a password to login.'), { status: 400 });
+    if (!user.password || typeof user.password !== "string") {
+        throw Object.assign(
+            new Error(
+                "Account has no password. Please set a password to login.",
+            ),
+            { status: 400 },
+        );
     }
 
     // 5) So sánh mật khẩu
@@ -209,15 +233,20 @@ const login = async (payload) => {
         if ((updated.failLoginAttempts || 0) >= MAX_FAILS) {
             const otp = genOtp6();
             const otpHash = sha256(otp);
-            const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
+            const expiresAt = new Date(
+                Date.now() + OTP_TTL_MINUTES * 60 * 1000,
+            );
 
-            await userRepository.setLoginOtp(updated._id, { otpHash, expiresAt });
+            await userRepository.setLoginOtp(updated._id, {
+                otpHash,
+                expiresAt,
+            });
 
             // Gửi mail nhưng không để lỗi mailer phá flow
             try {
                 await sendMail({
                     to: updated.email,
-                    subject: 'OTP Verification Code',
+                    subject: "OTP Verification Code",
                     html: `
             <p>Xin chào ${updated.fullName || updated.username},</p>
             <p>Bạn đã nhập sai mật khẩu quá ${MAX_FAILS} lần. Mã OTP của bạn:</p>
@@ -226,13 +255,16 @@ const login = async (payload) => {
           `,
                 });
             } catch (e) {
-                console.error('[MAIL ERROR][LOGIN OTP]', e?.message || e);
+                console.error("[MAIL ERROR][LOGIN OTP]", e?.message || e);
             }
 
-            return { needOtp: true, message: `Incorrect ${MAX_FAILS} times. Please enter the OTP.` };
+            return {
+                needOtp: true,
+                message: `Incorrect ${MAX_FAILS} times. Please enter the OTP.`,
+            };
         }
 
-        throw Object.assign(new Error('Login is incorrect'), { status: 401 });
+        throw Object.assign(new Error("Login is incorrect"), { status: 401 });
     }
 
     // 7) Đúng mật khẩu → reset đếm sai
@@ -240,11 +272,18 @@ const login = async (payload) => {
 
     // 8) Nếu chưa verify
     if (!user.isVerified) {
-        throw Object.assign(new Error('Account is not verified. Please verify your account before logging in.'), { status: 403 });
+        throw Object.assign(
+            new Error(
+                "Account is not verified. Please verify your account before logging in.",
+            ),
+            { status: 403 },
+        );
     }
 
     if (!JWT_SECRET) {
-        throw Object.assign(new Error('JWT secret is not configured'), { status: 500 });
+        throw Object.assign(new Error("JWT secret is not configured"), {
+            status: 500,
+        });
     }
 
     const token = jwt.sign(
@@ -254,7 +293,7 @@ const login = async (payload) => {
             role: user.role,
         },
         JWT_SECRET,
-        { expiresIn: JWT_EXPIRES_IN }
+        { expiresIn: JWT_EXPIRES_IN },
     );
 
     return { user: toPublicUser(user), token };
@@ -262,33 +301,37 @@ const login = async (payload) => {
 
 const verifyLoginOtp = async ({ emailOrPhoneOrUsername, otp }) => {
     if (!otp || String(otp).length !== 6) {
-        throw Object.assign(new Error('Invalid OTP'), { status: 400 });
+        throw Object.assign(new Error("Invalid OTP"), { status: 400 });
     }
 
     const found = await findUserByIdentifier(emailOrPhoneOrUsername);
-    if (!found) throw Object.assign(new Error('Invalid User'), { status: 404 });
+    if (!found) throw Object.assign(new Error("Invalid User"), { status: 404 });
 
     const user = await userRepository.findByIdWithSecrets(found._id);
     if (!user?.resetOtpExpiresAt || user.resetOtpExpiresAt < new Date()) {
-        throw Object.assign(new Error('OTP expired'), { status: 400 });
+        throw Object.assign(new Error("OTP expired"), { status: 400 });
     }
 
     if (!user.resetOtpHash) {
-        throw Object.assign(new Error('OTP does not exist'), { status: 400 });
+        throw Object.assign(new Error("OTP does not exist"), { status: 400 });
     }
 
     if (sha256(otp) !== user.resetOtpHash) {
-        throw Object.assign(new Error('OTP incorrect'), { status: 400 });
+        throw Object.assign(new Error("OTP incorrect"), { status: 400 });
     }
 
     await userRepository.clearLoginOtp(user._id);
-    return { ok: true, message: 'OTP Verification Success. Please login again.' };
+    return {
+        ok: true,
+        message: "OTP Verification Success. Please login again.",
+    };
 };
 
-const profile = async (userId) => { //lấy thông tin hồ sơ người dùng
+const profile = async (userId) => {
+    //lấy thông tin hồ sơ người dùng
     const user = await userRepository.findById(userId);
     if (!user) {
-        throw new Error('User not found');
+        throw new Error("User not found");
     }
     return toPublicUser(user); //trả về user công khai
 };
@@ -296,11 +339,14 @@ const profile = async (userId) => { //lấy thông tin hồ sơ người dùng
 // === Change email multi-step flow ===
 const requestChangeEmailOldOtp = async (userId) => {
     const user = await userRepository.findByIdWithSecrets(userId);
-    if (!user) throw Object.assign(new Error("User not found"), { status: 404 });
+    if (!user)
+        throw Object.assign(new Error("User not found"), { status: 404 });
 
     const otp = genOtp6();
     const otpHash = sha256(otp);
-    const expiresAt = new Date(Date.now() + CHANGE_EMAIL_OTP_TTL_MINUTES * 60 * 1000);
+    const expiresAt = new Date(
+        Date.now() + CHANGE_EMAIL_OTP_TTL_MINUTES * 60 * 1000,
+    );
 
     await userRepository.setOldEmailOtp(userId, otpHash, expiresAt);
 
@@ -324,7 +370,8 @@ const requestChangeEmailOldOtp = async (userId) => {
 
 const verifyChangeEmailOldOtp = async (userId, otp) => {
     const user = await userRepository.findByIdWithSecrets(userId);
-    if (!user) throw Object.assign(new Error("User not found"), { status: 404 });
+    if (!user)
+        throw Object.assign(new Error("User not found"), { status: 404 });
 
     if (!user?.changeEmailOldOtpHash || !user?.changeEmailOldOtpExpiresAt) {
         throw Object.assign(new Error("OTP not requested"), { status: 400 });
@@ -335,7 +382,10 @@ const verifyChangeEmailOldOtp = async (userId, otp) => {
     }
 
     const normalizedOtp = String(otp ?? "").trim();
-    if (!normalizedOtp || sha256(normalizedOtp) !== user.changeEmailOldOtpHash) {
+    if (
+        !normalizedOtp ||
+        sha256(normalizedOtp) !== user.changeEmailOldOtpHash
+    ) {
         throw Object.assign(new Error("OTP incorrect"), { status: 400 });
     }
 
@@ -344,15 +394,22 @@ const verifyChangeEmailOldOtp = async (userId, otp) => {
 
 const requestNewEmailVerifyLink = async (userId, newEmail) => {
     const user = await userRepository.findByIdWithSecrets(userId);
-    if (!user) throw Object.assign(new Error("User not found"), { status: 404 });
+    if (!user)
+        throw Object.assign(new Error("User not found"), { status: 404 });
 
-    const normalized = String(newEmail ?? "").trim().toLowerCase();
+    const normalized = String(newEmail ?? "")
+        .trim()
+        .toLowerCase();
     if (!normalized) {
-        throw Object.assign(new Error("New email is required"), { status: 400 });
+        throw Object.assign(new Error("New email is required"), {
+            status: 400,
+        });
     }
 
     if (normalized === user.email) {
-        throw Object.assign(new Error("New email must be different"), { status: 400 });
+        throw Object.assign(new Error("New email must be different"), {
+            status: 400,
+        });
     }
 
     const existing = await userRepository.findByEmail(normalized);
@@ -362,9 +419,16 @@ const requestNewEmailVerifyLink = async (userId, newEmail) => {
 
     const token = generateToken();
     const tokenHash = sha256("change-email:" + token);
-    const expiresAt = new Date(Date.now() + VERIFY_NEW_EMAIL_TOKEN_TTL_MINUTES * 60 * 1000);
+    const expiresAt = new Date(
+        Date.now() + VERIFY_NEW_EMAIL_TOKEN_TTL_MINUTES * 60 * 1000,
+    );
 
-    await userRepository.setPendingNewEmail(userId, normalized, tokenHash, expiresAt);
+    await userRepository.setPendingNewEmail(
+        userId,
+        normalized,
+        tokenHash,
+        expiresAt,
+    );
 
     const verifyLink = `${CHANGE_EMAIL_CONFIRM_URL}?uid=${userId}&token=${token}`;
 
@@ -380,7 +444,10 @@ const requestNewEmailVerifyLink = async (userId, newEmail) => {
             `,
         });
     } catch (err) {
-        console.error("[MAIL ERROR] Change Email Verify Link", err?.message || err);
+        console.error(
+            "[MAIL ERROR] Change Email Verify Link",
+            err?.message || err,
+        );
     }
 
     return { message: "Verification link sent to new email" };
@@ -388,14 +455,19 @@ const requestNewEmailVerifyLink = async (userId, newEmail) => {
 
 const confirmNewEmail = async (userId, token) => {
     const user = await userRepository.findByIdWithSecrets(userId);
-    if (!user) throw Object.assign(new Error("User not found"), { status: 404 });
+    if (!user)
+        throw Object.assign(new Error("User not found"), { status: 404 });
 
     if (!user?.pendingNewEmail) {
-        throw Object.assign(new Error("No pending email change"), { status: 400 });
+        throw Object.assign(new Error("No pending email change"), {
+            status: 400,
+        });
     }
 
     if (!user?.verifyNewEmailTokenHash || !user?.verifyNewEmailExpiresAt) {
-        throw Object.assign(new Error("Verification token not requested"), { status: 400 });
+        throw Object.assign(new Error("Verification token not requested"), {
+            status: 400,
+        });
     }
 
     if (user.verifyNewEmailExpiresAt < new Date()) {
@@ -403,7 +475,11 @@ const confirmNewEmail = async (userId, token) => {
     }
 
     const normalizedToken = String(token ?? "").trim();
-    if (!normalizedToken || sha256("change-email:" + normalizedToken) !== user.verifyNewEmailTokenHash) {
+    if (
+        !normalizedToken ||
+        sha256("change-email:" + normalizedToken) !==
+            user.verifyNewEmailTokenHash
+    ) {
         throw Object.assign(new Error("Invalid token"), { status: 400 });
     }
 
@@ -415,10 +491,12 @@ const confirmNewEmail = async (userId, token) => {
 //request đổi sđt
 const requestChangePhone = async (userId, newPhone) => {
     const user = await userRepository.findByIdWithSecrets(userId);
-    if (!user) throw Object.assign(new Error("User not found"), { status: 404 });
+    if (!user)
+        throw Object.assign(new Error("User not found"), { status: 404 });
 
     const exists = await userRepository.findByPhone(newPhone);
-    if (exists) throw Object.assign(new Error("Phone already in use"), { status: 400 });
+    if (exists)
+        throw Object.assign(new Error("Phone already in use"), { status: 400 });
 
     const otp = genOtp6();
     const otpHash = sha256(otp);
@@ -427,7 +505,7 @@ const requestChangePhone = async (userId, newPhone) => {
     await userRepository.setChangePhoneOtp(userId, {
         otpHash,
         expiresAt,
-        pendingPhone: newPhone
+        pendingPhone: newPhone,
     });
 
     try {
@@ -439,7 +517,7 @@ const requestChangePhone = async (userId, newPhone) => {
                 <p>Mã OTP để đổi số điện thoại:</p>
                 <h2>${otp}</h2>
                 <p>Hạn sử dụng: ${OTP_TTL_MINUTES} phút.</p>
-            `
+            `,
         });
     } catch (err) {
         console.error("[MAIL ERROR] Change Phone OTP", err);
@@ -453,7 +531,8 @@ const requestChangePhone = async (userId, newPhone) => {
 const verifyChangePhone = async (userId, otp) => {
     const user = await userRepository.findByIdWithSecrets(userId);
 
-    if (!user?.pendingPhone) throw Object.assign(new Error("No pending phone"), { status: 400 });
+    if (!user?.pendingPhone)
+        throw Object.assign(new Error("No pending phone"), { status: 400 });
 
     if (!user?.changePhoneOtpHash || !user?.changePhoneOtpExpiresAt)
         throw Object.assign(new Error("OTP not requested"), { status: 400 });
@@ -461,7 +540,7 @@ const verifyChangePhone = async (userId, otp) => {
     if (user.changePhoneOtpExpiresAt < new Date())
         throw Object.assign(new Error("OTP expired"), { status: 400 });
 
-    const normalizedOtp = String(otp ?? '').trim();
+    const normalizedOtp = String(otp ?? "").trim();
     if (!normalizedOtp || sha256(normalizedOtp) !== user.changePhoneOtpHash)
         throw Object.assign(new Error("OTP incorrect"), { status: 400 });
 
@@ -469,8 +548,6 @@ const verifyChangePhone = async (userId, otp) => {
 
     return { message: "Phone updated successfully" };
 };
-
-
 
 module.exports = {
     register,

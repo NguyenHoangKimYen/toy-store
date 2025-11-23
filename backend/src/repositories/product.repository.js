@@ -27,27 +27,31 @@ const findAll = async (filter = {}, options = {}) => {
 };
 
 const findById = async (id) => {
-    return Product.findById(id).populate([
-        {
-            path: "categoryId",
-            select: "name slug description",
-        },
-        {
-            path: "variants",
-        },
-    ]).lean();
+    return Product.findById(id)
+        .populate([
+            {
+                path: "categoryId",
+                select: "name slug description",
+            },
+            {
+                path: "variants",
+            },
+        ])
+        .lean();
 };
 
 const findBySlug = async (slug) => {
-    return Product.findOne({ slug }).populate([
-        {
-            path: "categoryId",
-            select: "name slug description",
-        },
-        {
-            path: "variants",
-        },
-    ]).lean();
+    return Product.findOne({ slug })
+        .populate([
+            {
+                path: "categoryId",
+                select: "name slug description",
+            },
+            {
+                path: "variants",
+            },
+        ])
+        .lean();
 };
 
 const findByPrice = async (min, max) => {
@@ -70,7 +74,7 @@ const remove = async (id, options = {}) => {
 };
 
 const updatePriceRange = async (id, minPrice, maxPrice, options = {}) => {
-  return await Product.findByIdAndUpdate(id, { minPrice, maxPrice }, options);
+    return await Product.findByIdAndUpdate(id, { minPrice, maxPrice }, options);
 };
 
 module.exports = {

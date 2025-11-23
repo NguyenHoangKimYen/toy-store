@@ -17,9 +17,9 @@ const getAllProducts = async (query) => {
     // Phân trang
     const page = Math.max(1, parseInt(params.get("page") || "1", 10));
     const limit = Math.max(1, parseInt(params.get("limit") || "20", 10));
-    
+
     // Sắp xếp
-    const sortParam = params.get("sort") || null; 
+    const sortParam = params.get("sort") || null;
 
     // 2. Xây dựng đối tượng 'filter' (bộ lọc)
     const filter = {};
@@ -29,7 +29,7 @@ const getAllProducts = async (query) => {
     if (keyword) {
         filter.$or = [
             { name: { $regex: keyword, $options: "i" } },
-            { slug: { $regex: keyword, $options: "i" } }
+            { slug: { $regex: keyword, $options: "i" } },
         ];
     }
 
@@ -42,7 +42,7 @@ const getAllProducts = async (query) => {
     // --- Lọc theo Khoảng giá (Price Range) ---
     const minPrice = parseFloat(params.get("minPrice") || "0");
     const maxPrice = parseFloat(params.get("maxPrice") || "0");
-    
+
     if (minPrice > 0) {
         filter.maxPrice = { $gte: minPrice };
     }
@@ -57,14 +57,14 @@ const getAllProducts = async (query) => {
     }
 
     // --- Lọc theo Nổi bật (Featured) ---
-    if (params.get("isFeatured") === 'true') {
+    if (params.get("isFeatured") === "true") {
         filter.isFeatured = true;
     }
 
     // ================================================================
     // --- [MỚI] Lọc theo Ngày tạo (Date Range) ---
     // ================================================================
-    
+
     // (Lưu ý: filter.createdAt có thể được xây dựng từng phần)
     filter.createdAt = {};
 
@@ -75,9 +75,8 @@ const getAllProducts = async (query) => {
         const pastDate = new Date();
         pastDate.setDate(new Date().getDate() - daysAgo);
         pastDate.setHours(0, 0, 0, 0); // Đặt về đầu ngày
-        
+
         filter.createdAt.$gte = pastDate;
-    
     } else {
         // Nếu không có daysAgo, kiểm tra startDate
         const startDate = params.get("startDate") || null; // Dạng "YYYY-MM-DD"
@@ -93,7 +92,7 @@ const getAllProducts = async (query) => {
         // $lte: Nhỏ hơn hoặc bằng (đến 23:59:59 của ngày kết thúc)
         const endOfDay = new Date(endDate);
         endOfDay.setHours(23, 59, 59, 999);
-        
+
         filter.createdAt.$lte = endOfDay;
     }
 
@@ -113,7 +112,7 @@ const getAllProducts = async (query) => {
         sort: {},
     };
 
-    const defaultSort = { createdAt: -1 }; 
+    const defaultSort = { createdAt: -1 };
     if (sortParam) {
         const [key, order] = sortParam.split(":");
         options.sort[key] = order === "desc" ? -1 : 1;
@@ -122,7 +121,10 @@ const getAllProducts = async (query) => {
     }
 
     // 4. Gọi Repository
-    const { products, total } = await productRepository.findAll(filter, options);
+    const { products, total } = await productRepository.findAll(
+        filter,
+        options,
+    );
 
     // 5. Trả về kết quả
     return {
@@ -148,14 +150,14 @@ const getProductById = async (id) => {
 const getProductBySlug = async (slug) => {
     const product = await productRepository.findBySlug(slug);
     if (!product) {
-        throw new Error('Product not found');
+        throw new Error("Product not found");
     }
     return product;
-}
+};
 
 const getProductByPrice = (min, max) => {
     return productRepository.findByPrice(min, max);
-}
+};
 
 const createProduct = async (productData, imgFiles) => {
     const session = await mongoose.startSession();
@@ -168,11 +170,12 @@ const createProduct = async (productData, imgFiles) => {
         }
 
         // 2. Tạo Slug
-        const slugToCreate = productData.slug 
+        const slugToCreate = productData.slug
             ? slugify(productData.slug, { lower: true, strict: true })
             : slugify(productData.name, { lower: true, strict: true });
 
-        const existingProduct = await productRepository.findBySlug(slugToCreate);
+        const existingProduct =
+            await productRepository.findBySlug(slugToCreate);
         if (existingProduct) {
             throw new Error(`Slug '${slugToCreate}' already exists.`);
         }
@@ -188,29 +191,35 @@ const createProduct = async (productData, imgFiles) => {
         let variantsInput = [];
         if (productData.variants) {
             try {
-                variantsInput = typeof productData.variants === 'string' 
-                    ? JSON.parse(productData.variants) 
-                    : productData.variants;
+                variantsInput =
+                    typeof productData.variants === "string"
+                        ? JSON.parse(productData.variants)
+                        : productData.variants;
             } catch (e) {
-                throw new Error("Invalid variants data format. Must be a valid JSON array.");
+                throw new Error(
+                    "Invalid variants data format. Must be a valid JSON array.",
+                );
             }
         }
 
         // 5. Tạo Product Document (Tạm thời rỗng variants/attributes)
         // Lưu ý: Cần truyền session vào repository
-        const newProduct = await productRepository.create({
-            ...productData,
-            slug: slugToCreate,
-            imageUrls: imageUrls,
-            variants: [],
-            attributes: [],
-            minPrice: 0,
-            maxPrice: 0
-        }, { session }); // Quan trọng: Truyền session
+        const newProduct = await productRepository.create(
+            {
+                ...productData,
+                slug: slugToCreate,
+                imageUrls: imageUrls,
+                variants: [],
+                attributes: [],
+                minPrice: 0,
+                maxPrice: 0,
+            },
+            { session },
+        ); // Quan trọng: Truyền session
 
         // 6. Xử lý Variants & Attributes
         let createdVariantIds = [];
-        let allAttributes = []; 
+        let allAttributes = [];
         let minPrice = 0;
         let maxPrice = 0;
 
@@ -221,29 +230,36 @@ const createProduct = async (productData, imgFiles) => {
             for (const v of variantsInput) {
                 // a. Xử lý Attributes cho từng variant
                 const attrs = v.attributes || [];
-                
+
                 // b. Gộp vào danh sách Attributes tổng của Product
-                attrs.forEach(attr => {
-                    const existing = allAttributes.find(a => a.name === attr.name);
+                attrs.forEach((attr) => {
+                    const existing = allAttributes.find(
+                        (a) => a.name === attr.name,
+                    );
                     if (existing) {
                         if (!existing.values.includes(attr.value)) {
                             existing.values.push(attr.value);
                         }
                     } else {
-                        allAttributes.push({ name: attr.name, values: [attr.value] });
+                        allAttributes.push({
+                            name: attr.name,
+                            values: [attr.value],
+                        });
                     }
                 });
 
                 // c. Chuẩn bị object Variant
                 variantDocs.push({
                     productId: newProduct._id,
-                    name: v.name || `${productData.name} - ${attrs.map(a=>a.value).join(' ')}`,
+                    name:
+                        v.name ||
+                        `${productData.name} - ${attrs.map((a) => a.value).join(" ")}`,
                     sku: v.sku,
                     weight: parseInt(v.weight || 100),
                     price: parseFloat(v.price || 0),
                     stock: parseInt(v.stock || 0),
                     attributes: attrs,
-                    imageUrls: [] // Chưa có ảnh
+                    imageUrls: [], // Chưa có ảnh
                 });
 
                 prices.push(parseFloat(v.price || 0));
@@ -252,10 +268,13 @@ const createProduct = async (productData, imgFiles) => {
             // d. Lưu Variants vào DB (Batch Insert)
             // Lưu ý: Repository cần hỗ trợ insertMany hoặc tạo vòng lặp create với session
             // Giả sử variantRepository.createMany hỗ trợ session
-            const createdVariants = await variantRepository.createMany(variantDocs, { session });
-            
-            createdVariantIds = createdVariants.map(v => v._id);
-            
+            const createdVariants = await variantRepository.createMany(
+                variantDocs,
+                { session },
+            );
+
+            createdVariantIds = createdVariants.map((v) => v._id);
+
             // e. Tính giá (totalStock sẽ được tự động cập nhật bởi variant middleware)
             if (prices.length > 0) {
                 minPrice = Math.min(...prices);
@@ -265,31 +284,34 @@ const createProduct = async (productData, imgFiles) => {
 
         // 7. Cập nhật lại Product với thông tin variants vừa tạo
         // Dùng findByIdAndUpdate hoặc update của repo, nhớ truyền session
-        await productRepository.update(newProduct._id, {
-            variants: createdVariantIds,
-            attributes: allAttributes,
-            minPrice,
-            maxPrice
-        }, { session });
+        await productRepository.update(
+            newProduct._id,
+            {
+                variants: createdVariantIds,
+                attributes: allAttributes,
+                minPrice,
+                maxPrice,
+            },
+            { session },
+        );
 
         // Recalculate totalStock within transaction (insertMany doesn't trigger save middleware)
-        const Variant = require('../models/variant.model');
+        const Variant = require("../models/variant.model");
         await Variant.recalculateProductData(newProduct._id);
 
         // 8. Commit Transaction (Lưu tất cả)
         await session.commitTransaction();
-        
+
         // Trả về sản phẩm hoàn chỉnh
         // Có thể cần gọi lại getById để lấy data đầy đủ populate
         return await productRepository.findById(newProduct._id);
-
     } catch (error) {
         // 9. Rollback (Hủy tất cả thao tác DB)
         await session.abortTransaction();
-        
+
         // Nếu đã lỡ upload ảnh lên S3 thì xóa đi (dọn rác)
         // (Bạn cần implement logic lấy array url vừa upload để xóa tại đây)
-        
+
         throw error;
     } finally {
         session.endSession();
@@ -317,34 +339,31 @@ const deleteProduct = async (id) => {
  * Cập nhật thông tin sản phẩm (chỉ các trường được phép trong whitelist)
  */
 const updateProduct = async (id, updateData) => {
-    
     const existingProduct = await productRepository.findById(id);
-    if (!existingProduct) throw new Error('Product not found');
+    if (!existingProduct) throw new Error("Product not found");
 
     const validStatuses = ["Draft", "Published", "Archived", "Disabled"];
 
     const allowedUpdates = [
-        'name',
-        'slug',
-        'description',
-        'status',
-        'isFeatured',
-        'categoryId'
+        "name",
+        "slug",
+        "description",
+        "status",
+        "isFeatured",
+        "categoryId",
     ];
 
     const updatePayload = {};
 
-    Object.keys(updateData).forEach(key => {
+    Object.keys(updateData).forEach((key) => {
         if (allowedUpdates.includes(key)) {
-            
             const value = updateData[key];
 
             if (value !== undefined) {
-                
-                if (key === 'status') {
+                if (key === "status") {
                     if (!validStatuses.includes(value)) {
                         throw new Error(
-                            `Invalid status: '${value}'. Must be one of: ${validStatuses.join(', ')}`
+                            `Invalid status: '${value}'. Must be one of: ${validStatuses.join(", ")}`,
                         );
                     }
                 }
@@ -355,7 +374,9 @@ const updateProduct = async (id, updateData) => {
     });
 
     if (updateData.attributes || updateData.variants || updateData.imageUrls) {
-        console.warn(`[WARN] Attempted to update restricted fields (attributes, variants, imageUrls) on product ${id}. These fields must be updated via their dedicated endpoints.`);
+        console.warn(
+            `[WARN] Attempted to update restricted fields (attributes, variants, imageUrls) on product ${id}. These fields must be updated via their dedicated endpoints.`,
+        );
     }
 
     const updatedProduct = await productRepository.update(id, updatePayload);
@@ -394,15 +415,21 @@ const removeImagesFromProduct = async (id, urlsToRemove) => {
 const updateProductPriceRange = async (productId) => {
     const variants = await variantRepository.find({ productId });
     if (variants.length === 0) {
-        await productRepository.findByIdAndUpdate(productId, { minPrice: 0, maxPrice: 0 });
+        await productRepository.findByIdAndUpdate(productId, {
+            minPrice: 0,
+            maxPrice: 0,
+        });
         return;
     }
 
-    const prices = variants.map(v => v.price);
+    const prices = variants.map((v) => v.price);
     const min = Math.min(...prices);
     const max = Math.max(...prices);
 
-    await productRepository.findByIdAndUpdate(productId, { minPrice: min, maxPrice: max });
+    await productRepository.findByIdAndUpdate(productId, {
+        minPrice: min,
+        maxPrice: max,
+    });
 };
 
 module.exports = {

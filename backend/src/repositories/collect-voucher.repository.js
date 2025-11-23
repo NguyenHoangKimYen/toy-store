@@ -15,5 +15,5 @@ module.exports = {
 
     markUsed(id) {
         return CollectVoucher.findByIdAndUpdate(id, { used: true });
-    }
+    },
 };
