@@ -17,14 +17,15 @@ const ProductActions = ({
     <>
       {/* Quantity Selector */}
       {selectedVariant && inStock && (
-        <div className="quantity-selector">
-          <h3 className="quantity-title">Quantity</h3>
-          <div className="quantity-controls">
+        <div className="my-4">
+          <h3 className="text-base font-semibold mb-3 text-slate-800">Quantity</h3>
+          <div className="flex items-center gap-4">
             <Button
               variant="outline"
               size="icon"
               onClick={() => onQuantityChange(-1)}
               disabled={quantity <= 1}
+              className="rounded-none"
             >
               <Minus size={16} />
             </Button>
@@ -44,13 +45,14 @@ const ProductActions = ({
                 if (value < 1) onQuantityChange(1 - quantity);
                 if (value > stock) onQuantityChange(stock - quantity);
               }}
-              className="quantity-input"
+              className="quantity-input w-16 text-xl font-semibold text-center border border-slate-200 rounded-md px-2 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
             <Button
               variant="outline"
               size="icon"
               onClick={() => onQuantityChange(1)}
               disabled={quantity >= stock}
+              className="rounded-none"
             >
               <Plus size={16} />
             </Button>
@@ -59,12 +61,12 @@ const ProductActions = ({
       )}
 
       {/* Action Buttons */}
-      <div className="product-actions">
+      <div className="flex gap-4 mt-6 max-md:hidden">
         <Button
           size="lg"
           onClick={onAddToCart}
           disabled={!selectedVariant || !inStock || loading}
-          className="add-to-cart-btn flex-1"
+          className="flex-1 text-base font-semibold rounded-none"
         >
           <ShoppingCart size={20} className="mr-2" />
           {!selectedVariant ? 'Select Options' : 'Add to Cart'}
@@ -74,7 +76,7 @@ const ProductActions = ({
           variant="default"
           onClick={onBuyNow}
           disabled={!selectedVariant || !inStock || loading}
-          className="buy-now-btn flex-1"
+          className="flex-1 text-base font-semibold rounded-none"
         >
           Buy Now
         </Button>

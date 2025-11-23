@@ -37,7 +37,6 @@ const ProductDetail = () => {
     handleVariantChange,
   } = useProductDetail(id);
 
-  const [isFavorite, setIsFavorite] = React.useState(false);
   const [addingToCart, setAddingToCart] = React.useState(false);
 
   const handleAddToCart = async () => {
@@ -127,23 +126,6 @@ const ProductDetail = () => {
     }
   };
 
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: product.name,
-          text: product.shortDescription,
-          url: window.location.href,
-        });
-      } catch {
-        // User cancelled share
-      }
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast.success('Link copied to clipboard!');
-    }
-  };
-
   if (loading) {
     return (
       <div className="product-detail-loading">
@@ -166,22 +148,22 @@ const ProductDetail = () => {
   }
 
   return (
-    <div className="product-detail-page">
-      <div className="product-detail-container">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-4">
+      <div className="max-w-[1400px] mx-auto px-4">
         {/* Back Button */}
         <Button
           variant="ghost"
           onClick={() => navigate('/products')}
-          className="back-button mb-6"
+          className="mb-3 rounded-none"
         >
           <ChevronLeft size={20} />
           Back to Products
         </Button>
 
         {/* Product Main Section */}
-        <div className="product-main-section">
+        <div className="grid grid-cols-1 lg:grid-cols-[45%_55%] gap-8 mb-8 items-start">
           {/* Image Gallery */}
-          <div className="product-gallery-section">
+          <div className="sticky top-20 max-h-[calc(100vh-100px)] overflow-hidden">
             <ProductImageGallery 
               images={selectedVariant?.imageUrls || product.imageUrls || []} 
               productName={product.name} 
@@ -218,9 +200,6 @@ const ProductDetail = () => {
               onQuantityChange={handleQuantityChange}
               onAddToCart={handleAddToCart}
               onBuyNow={handleBuyNow}
-              isFavorite={isFavorite}
-              onToggleFavorite={() => setIsFavorite(!isFavorite)}
-              onShare={handleShare}
               selectedVariant={selectedVariant}
               loading={addingToCart}
             />
@@ -235,24 +214,22 @@ const ProductDetail = () => {
       </div>
 
       {/* Mobile Bottom Action Bar */}
-      <div className="mobile-action-bar">
-        <div className="mobile-action-buttons">
-          <button
-            className="mobile-cart-btn"
-            onClick={handleAddToCart}
-            disabled={!selectedVariant || !inStock || addingToCart}
-          >
-            <ShoppingCart size={20} />
-            Add to Cart
-          </button>
-          <button
-            className="mobile-buy-btn"
-            onClick={handleBuyNow}
-            disabled={!selectedVariant || !inStock || addingToCart}
-          >
-            Buy Now
-          </button>
-        </div>
+      <div className="hidden max-md:flex fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] gap-3">
+        <button
+          className="flex-1 h-12 font-semibold rounded-none bg-slate-100 text-slate-800 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+          onClick={handleAddToCart}
+          disabled={!selectedVariant || !inStock || addingToCart}
+        >
+          <ShoppingCart size={20} />
+          Add to Cart
+        </button>
+        <button
+          className="flex-1 h-12 font-semibold rounded-none bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+          onClick={handleBuyNow}
+          disabled={!selectedVariant || !inStock || addingToCart}
+        >
+          Buy Now
+        </button>
       </div>
     </div>
   );
