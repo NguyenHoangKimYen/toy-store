@@ -41,6 +41,8 @@ const ProductDetail = () => {
   const [addingToCart, setAddingToCart] = React.useState(false);
 
   const handleAddToCart = async () => {
+    const startTime = performance.now();
+    
     if (!selectedVariant) {
       toast.error('Please select a variant');
       return;
@@ -53,22 +55,50 @@ const ProductDetail = () => {
 
     try {
       setAddingToCart(true);
-      await addItem(product._id, quantity, selectedVariant._id);
       
-      // Show success message with variant details
+      // Show loading toast immediately
       const variantInfo = selectedVariant.attributes
         ?.map(attr => `${attr.name}: ${attr.value}`)
         .join(', ');
       
-      toast.success(`${product.name} added to cart!`, {
+      const toastId = toast.loading(`Adding ${product.name} to cart...`, {
         description: `${variantInfo} • Quantity: ${quantity}`,
       });
+      
+      console.log('[PRODUCT DETAIL] Adding to cart...', { 
+        productId: product._id, 
+        variantId: selectedVariant._id,
+        quantity 
+      });
+      
+      const apiStartTime = performance.now();
+      
+      // Add to cart and update toast based on result
+      addItem(product._id, quantity, selectedVariant._id)
+        .then(() => {
+          console.log('[PRODUCT DETAIL] Background API call completed in', (performance.now() - apiStartTime).toFixed(0), 'ms');
+          toast.success(`${product.name} added to cart!`, {
+            id: toastId,
+            description: `${variantInfo} • Quantity: ${quantity}`,
+          });
+        })
+        .catch(err => {
+          console.error('[PRODUCT DETAIL] Background API failed:', err);
+          toast.error('Failed to add to cart', {
+            id: toastId,
+            description: err.message || 'Please try again.',
+          });
+        })
+        .finally(() => {
+          setAddingToCart(false);
+        });
+      
+      console.log('[PRODUCT DETAIL] Toast shown in:', (performance.now() - startTime).toFixed(0), 'ms');
     } catch (err) {
-      console.error('Error adding to cart:', err);
+      console.error('[PRODUCT DETAIL] Error after', (performance.now() - startTime).toFixed(0), 'ms:', err);
       toast.error('Failed to add to cart', {
         description: 'Please try again.',
       });
-    } finally {
       setAddingToCart(false);
     }
   };

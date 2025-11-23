@@ -105,11 +105,17 @@ export const useCart = () => {
   // Add item to cart
   const addItem = useCallback(
     async (productId, quantity = 1, variantId = null) => {
+      const startTime = performance.now();
+      
       try {
         setLoading(true);
         setError(null);
 
+        console.log('[CART] addItem called', { productId, quantity, variantId });
+        
+        const ensureCartStart = performance.now();
         const currentCart = await ensureCart();
+        console.log('[CART] ensureCart took', (performance.now() - ensureCartStart).toFixed(0), 'ms', { cartId: currentCart?.id });
 
         // Check if item already exists with the same variant
         // Important: Match both productId AND variantId for proper variant separation
@@ -123,34 +129,59 @@ export const useCart = () => {
         });
 
         if (existingItem) {
+          console.log('[CART] Updating existing item', existingItem.id);
+          const updateStart = performance.now();
+          
           // Update quantity of existing item
           const updatedItem = await updateCartItem(existingItem.id, {
             quantity: existingItem.quantity + quantity,
           });
+          
+          console.log('[CART] updateCartItem took', (performance.now() - updateStart).toFixed(0), 'ms');
 
           setCartItems((prev) => prev.map((item) => (item.id === updatedItem.id ? updatedItem : item)));
+          
+          // Update cart totals without extra API calls
+          if (cart) {
+            setCart((prev) => ({
+              ...prev,
+              itemCount: (prev.itemCount || 0) + quantity,
+            }));
+          }
         } else {
+          console.log('[CART] Creating new item');
+          const createStart = performance.now();
+          
           // Add new item with variant
           const newItem = await createCartItem({
             cartId: currentCart.id,
             variantId: variantId || undefined, // Only include if provided
             quantity,
           });
+          
+          console.log('[CART] createCartItem took', (performance.now() - createStart).toFixed(0), 'ms');
 
           setCartItems((prev) => [...prev, newItem]);
+          
+          // Update cart totals without extra API calls
+          if (cart) {
+            setCart((prev) => ({
+              ...prev,
+              itemCount: (prev.itemCount || 0) + quantity,
+            }));
+          }
         }
-
-        // Refresh cart to get updated totals
-        await fetchCart();
+        
+        console.log('[CART] addItem completed in', (performance.now() - startTime).toFixed(0), 'ms');
       } catch (err) {
+        console.error('[CART] addItem failed after', (performance.now() - startTime).toFixed(0), 'ms:', err);
         setError(err.message || 'Failed to add item to cart');
-        console.error('Error adding item to cart:', err);
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [ensureCart, cartItems, fetchCart]
+    [ensureCart, cartItems, cart]
   );
 
   // Remove item from cart
@@ -160,11 +191,17 @@ export const useCart = () => {
         setLoading(true);
         setError(null);
 
+        const itemToRemove = cartItems.find(item => item.id === itemId);
         await deleteCartItem(itemId);
         setCartItems((prev) => prev.filter((item) => item.id !== itemId));
 
-        // Refresh cart to get updated totals
-        await fetchCart();
+        // Update cart totals without extra API calls
+        if (cart && itemToRemove) {
+          setCart((prev) => ({
+            ...prev,
+            itemCount: Math.max(0, (prev.itemCount || 0) - (itemToRemove.quantity || 1)),
+          }));
+        }
       } catch (err) {
         setError(err.message || 'Failed to remove item from cart');
         console.error('Error removing item from cart:', err);
@@ -173,7 +210,7 @@ export const useCart = () => {
         setLoading(false);
       }
     },
-    [fetchCart]
+    [cartItems, cart]
   );
 
   // Update item quantity
@@ -188,11 +225,18 @@ export const useCart = () => {
           return;
         }
 
+        const oldItem = cartItems.find(item => item.id === itemId);
         const updatedItem = await updateCartItem(itemId, { quantity });
         setCartItems((prev) => prev.map((item) => (item.id === updatedItem.id ? updatedItem : item)));
 
-        // Refresh cart to get updated totals
-        await fetchCart();
+        // Update cart totals without extra API calls
+        if (cart && oldItem) {
+          const quantityDiff = quantity - oldItem.quantity;
+          setCart((prev) => ({
+            ...prev,
+            itemCount: Math.max(0, (prev.itemCount || 0) + quantityDiff),
+          }));
+        }
       } catch (err) {
         setError(err.message || 'Failed to update item quantity');
         console.error('Error updating item quantity:', err);
@@ -201,7 +245,7 @@ export const useCart = () => {
         setLoading(false);
       }
     },
-    [fetchCart, removeItem]
+    [cartItems, cart, removeItem]
   );
 
   // Clear all items from cart
