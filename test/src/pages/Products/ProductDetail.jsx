@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
@@ -6,13 +6,15 @@ import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { useProductDetail, useCart } from '@/hooks';
 import { ROUTES } from '@/config/routes';
-import ProductImageGallery from './components/ProductImageGallery';
-import ProductInfo from './components/ProductInfo';
-import ProductVariantSelector from './components/ProductVariantSelector';
-import ProductActions from './components/ProductActions';
-import ProductTabs from './components/ProductTabs';
-import ReviewSection from './components/ReviewSection';
 import './ProductDetail.css';
+
+// Lazy load below-the-fold components
+const ProductImageGallery = lazy(() => import('./components/ProductImageGallery'));
+const ProductInfo = lazy(() => import('./components/ProductInfo'));
+const ProductVariantSelector = lazy(() => import('./components/ProductVariantSelector'));
+const ProductActions = lazy(() => import('./components/ProductActions'));
+const ProductTabs = lazy(() => import('./components/ProductTabs'));
+const ReviewSection = lazy(() => import('./components/ReviewSection'));
 
 const ProductDetail = () => {
   const { id } = useParams();

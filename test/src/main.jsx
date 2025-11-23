@@ -5,9 +5,13 @@ import App from './App.jsx'
 import AppRoutes from './routes/AppRoutes'
 import { AuthProvider } from './hooks/useAuth'
 import { initAPIPreconnect } from './utils/prefetch'
+import { initPerformanceTracking } from './utils/performance'
 
 // Initialize API preconnection for faster requests
 initAPIPreconnect();
+
+// Initialize performance monitoring (dev only)
+initPerformanceTracking();
 
 // Start MSW when in development with mock data enabled
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';

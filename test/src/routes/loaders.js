@@ -26,67 +26,47 @@ const dedupedFetch = async (key, fetchFn) => {
 };
 
 /**
- * Home page loader - fetches all data needed for home page
+ * Home page loader - fetches only critical above-the-fold data
+ * Optimized for instant navigation - only loads featured products initially
  */
 export async function homeLoader() {
   try {
-    // Fetch categories first
-    const categories = await getCategories();
-    
-    // Build category config for the first 4 categories
-    const categoryConfig = categories.slice(0, 4).map(cat => ({
-      key: cat.slug,
-      categoryId: cat._id,
-      name: cat.name,
-      limit: 12
-    }));
-
-    // Fetch all products in parallel with deduplication
+    // Fetch ONLY critical above-the-fold data in parallel
+    // Don't wait for everything - let components load rest progressively
     const [
       featuredResponse,
       newProductsResponse,
-      bestSellersResponse,
-      ...categoryResponses
     ] = await Promise.all([
-      // Featured products
+      // Featured products for hero carousel (critical)
       dedupedFetch('featured-6', () => getProducts({ isFeatured: true, limit: 6 })),
-      // New arrivals
+      // New arrivals (above the fold)
       dedupedFetch('new-8', () => getProducts({ isNew: true, limit: 8 })),
-      // Best sellers
-      dedupedFetch('bestsellers-8', () => getProducts({ isBestSeller: true, limit: 8 })),
-      // Products by category
-      ...categoryConfig.map(cat => 
-        dedupedFetch(`cat-${cat.categoryId}-${cat.limit}`, () => 
-          getProducts({ categoryId: cat.categoryId, limit: cat.limit })
-        )
-      )
     ]);
 
     // Extract products arrays from responses
     const featuredProducts = featuredResponse.products || featuredResponse || [];
     const newProducts = newProductsResponse.products || newProductsResponse || [];
-    const bestSellers = bestSellersResponse.products || bestSellersResponse || [];
 
-    // Map category products back to their configs
-    const categorizedByCategory = {};
-    categoryConfig.forEach((cat, index) => {
-      const response = categoryResponses[index];
-      categorizedByCategory[cat.key] = response.products || response || [];
-    });
-
+    // Return minimal data for instant render
+    // Best sellers and category products will load in components
     return {
-      categories,
-      categoryConfig,
       categorizedProducts: {
         featured: featuredProducts,
         newProducts,
-        bestSellers,
-        ...categorizedByCategory
+        // These will be loaded by components after initial render
+        bestSellers: [],
       }
     };
   } catch (error) {
     console.error('Error loading home page data:', error);
-    throw new Response('Failed to load home page', { status: 500, statusText: error.message });
+    // Don't block navigation on error - let page render with fallbacks
+    return {
+      categorizedProducts: {
+        featured: [],
+        newProducts: [],
+        bestSellers: [],
+      }
+    };
   }
 }
 

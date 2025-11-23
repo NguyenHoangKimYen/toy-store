@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { useProductCatalog } from './hooks';
-import ProductToolbar from './components/ProductToolbar';
-import ProductFilterSidebar from './components/ProductFilterSidebar';
-import ProductGrid from './components/ProductGrid';
 import './Products.css';
+
+// Lazy load heavy components
+const ProductToolbar = lazy(() => import('./components/ProductToolbar'));
+const ProductFilterSidebar = lazy(() => import('./components/ProductFilterSidebar'));
+const ProductGrid = lazy(() => import('./components/ProductGrid'));
 
 const Products = () => {
   const [showFilters, setShowFilters] = useState(false);
@@ -44,40 +46,46 @@ const Products = () => {
         </div>
 
         {/* Toolbar */}
-        <ProductToolbar
-          showFilters={showFilters}
-          setShowFilters={setShowFilters}
-          hasActiveFilters={hasActiveFilters}
-          clearFilters={clearFilters}
-          totalProducts={totalProducts}
-          sortBy={filters.sortBy}
-          sortOrder={filters.sortOrder}
-          onSortChange={handleSortChange}
-        />
+        <Suspense fallback={<div className="h-[60px] bg-gray-100 animate-pulse rounded" />}>
+          <ProductToolbar
+            showFilters={showFilters}
+            setShowFilters={setShowFilters}
+            hasActiveFilters={hasActiveFilters}
+            clearFilters={clearFilters}
+            totalProducts={totalProducts}
+            sortBy={filters.sortBy}
+            sortOrder={filters.sortOrder}
+            onSortChange={handleSortChange}
+          />
+        </Suspense>
 
         <div className={`products-content ${!showFilters ? 'filters-hidden' : ''}`}>
           {/* Filters Sidebar */}
-          <ProductFilterSidebar
-            showFilters={showFilters}
-            setShowFilters={setShowFilters}
-            categories={categories}
-            brands={brands}
-            filters={filters}
-            onFilterChange={handleFilterChange}
-          />
+          <Suspense fallback={<div className="w-[280px] h-screen bg-gray-100 animate-pulse" />}>
+            <ProductFilterSidebar
+              showFilters={showFilters}
+              setShowFilters={setShowFilters}
+              categories={categories}
+              brands={brands}
+              filters={filters}
+              onFilterChange={handleFilterChange}
+            />
+          </Suspense>
 
           {/* Products Grid */}
           <main className="products-main">
-            <ProductGrid
-              products={products}
-              loading={loading}
-              error={error}
-              hasActiveFilters={hasActiveFilters}
-              clearFilters={clearFilters}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
+            <Suspense fallback={<div className="h-[600px] bg-gray-50 animate-pulse rounded-lg" />}>
+              <ProductGrid
+                products={products}
+                loading={loading}
+                error={error}
+                hasActiveFilters={hasActiveFilters}
+                clearFilters={clearFilters}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </Suspense>
           </main>
         </div>
       </div>

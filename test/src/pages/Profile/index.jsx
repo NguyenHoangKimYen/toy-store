@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { User, Mail, Phone, MapPin, Camera, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/common';
 import { toast } from 'sonner';
 import { useProfile } from './hooks/useProfile';
-import PersonalInfoSection from './components/PersonalInfoSection';
-import AddressSection from './components/AddressSection';
-import SecuritySection from './components/SecuritySection';
 import './Profile.css';
+
+const PersonalInfoSection = lazy(() => import('./components/PersonalInfoSection'));
+const AddressSection = lazy(() => import('./components/AddressSection'));
+const SecuritySection = lazy(() => import('./components/SecuritySection'));
 
 const Profile = () => {
   const { user, loading, error, updateProfile, updateAvatar } = useProfile();

@@ -1,70 +1,83 @@
-import React from 'react'
+import React, { lazy, Suspense } from 'react'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import Layout from '../components/Layout'
 import ErrorBoundary from '../components/ErrorBoundary'
-import Home from '../pages/Home'
-import Collection from '../pages/Collection'
-import { Products, ProductDetail } from '../pages/Products'
-import About from '../pages/About'
-import Contact from '../pages/Contact'
-import Cart from '../pages/Cart/index'
-import Checkout from '../pages/Checkout'
-import Login from '../pages/Login'
-import Signup from '../pages/Signup'
-import VerifyEmail from '../pages/VerifyEmail'
-import PlaceOrder from '../pages/PlaceOrder'
-import Orders from '../pages/Orders'
-import OrderHistory from '../pages/OrderHistory'
-import Payment from '../pages/Payment'
-import Profile from '../pages/Profile'
-import AdminPanel from '../pages/AdminPanel'
-import Dashboard from '../pages/AdminPanel/layouts/Main'
-import Users from '../pages/AdminPanel/Users'
-import AdminProducts from '../pages/AdminPanel/Products'
-import AdminOrders from '../pages/AdminPanel/Orders'
-import DiscountCodes from '../pages/AdminPanel/DiscountCodes'
-import CarouselDemo from '../pages/CarouselDemo'
 import { ROUTES } from '../config/routes'
 import { homeLoader, categoriesLoader } from './loaders'
+
+// Lazy load route components for code splitting
+const Home = lazy(() => import('../pages/Home'));
+const Collection = lazy(() => import('../pages/Collection'));
+const Products = lazy(() => import('../pages/Products').then(m => ({ default: m.Products })));
+const ProductDetail = lazy(() => import('../pages/Products').then(m => ({ default: m.ProductDetail })));
+const About = lazy(() => import('../pages/About'));
+const Contact = lazy(() => import('../pages/Contact'));
+const Cart = lazy(() => import('../pages/Cart/index'));
+const Checkout = lazy(() => import('../pages/Checkout'));
+const Login = lazy(() => import('../pages/Login'));
+const Signup = lazy(() => import('../pages/Signup'));
+const VerifyEmail = lazy(() => import('../pages/VerifyEmail'));
+const PlaceOrder = lazy(() => import('../pages/PlaceOrder'));
+const Orders = lazy(() => import('../pages/Orders'));
+const OrderHistory = lazy(() => import('../pages/OrderHistory'));
+const Payment = lazy(() => import('../pages/Payment'));
+const Profile = lazy(() => import('../pages/Profile'));
+const AdminPanel = lazy(() => import('../pages/AdminPanel'));
+const Dashboard = lazy(() => import('../pages/AdminPanel/layouts/Main'));
+const Users = lazy(() => import('../pages/AdminPanel/Users'));
+const AdminProducts = lazy(() => import('../pages/AdminPanel/Products'));
+const AdminOrders = lazy(() => import('../pages/AdminPanel/Orders'));
+const DiscountCodes = lazy(() => import('../pages/AdminPanel/DiscountCodes'));
+const CarouselDemo = lazy(() => import('../pages/CarouselDemo'));
+
+// Loading component for Suspense fallback
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="text-center">
+      <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-violet-600 border-r-transparent"></div>
+      <p className="mt-4 text-gray-600">Loading...</p>
+    </div>
+  </div>
+);
 
 const router = createBrowserRouter([
   {
     path: ROUTES.LOGIN,
-    element: <Login />
+    element: <Suspense fallback={<PageLoader />}><Login /></Suspense>
   },
   {
     path: ROUTES.REGISTER,
-    element: <Signup />
+    element: <Suspense fallback={<PageLoader />}><Signup /></Suspense>
   },
   {
     path: "/verify-email",
-    element: <VerifyEmail />
+    element: <Suspense fallback={<PageLoader />}><VerifyEmail /></Suspense>
   },
   
   // Admin routes with nested routing
   {
     path: ROUTES.ADMIN,
-    element: <AdminPanel />,
+    element: <Suspense fallback={<PageLoader />}><AdminPanel /></Suspense>,
     children: [
       {
         index: true,
-        element: <Dashboard />
+        element: <Suspense fallback={<PageLoader />}><Dashboard /></Suspense>
       },
       {
         path: 'users',
-        element: <Users />
+        element: <Suspense fallback={<PageLoader />}><Users /></Suspense>
       },
       {
         path: 'products',
-        element: <AdminProducts />
+        element: <Suspense fallback={<PageLoader />}><AdminProducts /></Suspense>
       },
       {
         path: 'orders',
-        element: <AdminOrders />
+        element: <Suspense fallback={<PageLoader />}><AdminOrders /></Suspense>
       },
       {
         path: 'discount-codes',
-        element: <DiscountCodes />
+        element: <Suspense fallback={<PageLoader />}><DiscountCodes /></Suspense>
       }
     ]
   },
@@ -76,63 +89,63 @@ const router = createBrowserRouter([
     children: [
       {
         path: ROUTES.HOME,
-        element: <Home />,
+        element: <Suspense fallback={<PageLoader />}><Home /></Suspense>,
         loader: homeLoader,
         errorElement: <ErrorBoundary />
       },
       {
         path: ROUTES.COLLECTION,
-        element: <Collection />,
+        element: <Suspense fallback={<PageLoader />}><Collection /></Suspense>,
         loader: categoriesLoader,
         errorElement: <ErrorBoundary />
       },
       {
         path: ROUTES.PRODUCTS,
-        element: <Products />
+        element: <Suspense fallback={<PageLoader />}><Products /></Suspense>
       },
       {
         path: ROUTES.PRODUCT_DETAIL,
-        element: <ProductDetail />
+        element: <Suspense fallback={<PageLoader />}><ProductDetail /></Suspense>
       },
       {
         path: ROUTES.ABOUT,
-        element: <About />
+        element: <Suspense fallback={<PageLoader />}><About /></Suspense>
       },
       {
         path: ROUTES.CONTACT,
-        element: <Contact />
+        element: <Suspense fallback={<PageLoader />}><Contact /></Suspense>
       },
       {
         path: ROUTES.CART,
-        element: <Cart />
+        element: <Suspense fallback={<PageLoader />}><Cart /></Suspense>
       },
       {
         path: ROUTES.CHECKOUT,
-        element: <Checkout />
+        element: <Suspense fallback={<PageLoader />}><Checkout /></Suspense>
       },
       {
         path: ROUTES.PLACE_ORDER,
-        element: <PlaceOrder />
+        element: <Suspense fallback={<PageLoader />}><PlaceOrder /></Suspense>
       },
       {
         path: ROUTES.PAYMENT,
-        element: <Payment />
+        element: <Suspense fallback={<PageLoader />}><Payment /></Suspense>
       },
       {
         path: ROUTES.ORDERS,
-        element: <Orders />
+        element: <Suspense fallback={<PageLoader />}><Orders /></Suspense>
       },
       {
         path: ROUTES.ORDER_HISTORY,
-        element: <OrderHistory />
+        element: <Suspense fallback={<PageLoader />}><OrderHistory /></Suspense>
       },
       {
         path: ROUTES.PROFILE,
-        element: <Profile />
+        element: <Suspense fallback={<PageLoader />}><Profile /></Suspense>
       },
       {
         path: '/carousel-demo',
-        element: <CarouselDemo />
+        element: <Suspense fallback={<PageLoader />}><CarouselDemo /></Suspense>
       }
     ]
   }
