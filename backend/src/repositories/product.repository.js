@@ -19,7 +19,7 @@ const findAll = async (filter = {}, options = {}) => {
         .sort(sort)
         .exec();
 
-    const totalQuery = Product.countDocuments(filter).exec();
+    const totalQuery = Product.countDocuments(filter).lean().exec();
 
     const [products, total] = await Promise.all([productsQuery, totalQuery]);
 
@@ -35,7 +35,7 @@ const findById = async (id) => {
         {
             path: "variants",
         },
-    ]);
+    ]).lean();
 };
 
 const findBySlug = async (slug) => {
@@ -47,13 +47,13 @@ const findBySlug = async (slug) => {
         {
             path: "variants",
         },
-    ]);
+    ]).lean();
 };
 
 const findByPrice = async (min, max) => {
     return Product.find({
         price: { $gte: min, $lte: max },
-    });
+    }).lean();
 };
 
 const create = async (data, options = {}) => {
