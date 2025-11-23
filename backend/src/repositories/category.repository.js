@@ -6,16 +6,16 @@ const create = async (data) => {
 };
 
 const findAll = async () => {
-    return await Category.find({});
+    return await Category.find({}).lean();
 };
 
 const findById = async (id) => {
-    return await Category.findById(id);
+    return await Category.findById(id).lean();
 };
 
 /** Tìm category theo Slug */
 const findBySlug = async (slug) => {
-    return await Category.findOne({ slug: slug });
+    return await Category.findOne({ slug: slug }).lean();
 };
 
 const update = async (id, data) => {

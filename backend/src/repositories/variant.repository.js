@@ -5,7 +5,7 @@ const findByProductId = async (productId) => {
 };
 
 const findById = async (id) => {
-    return await Variant.findById(id);
+    return await Variant.findById(id).lean();
 };
 
 /**
