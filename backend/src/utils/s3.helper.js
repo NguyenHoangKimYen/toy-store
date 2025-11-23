@@ -37,7 +37,6 @@ const deleteFromS3 = async (urls) => {
             };
 
             await s3.deleteObject(params).promise();
-            console.log("✅ Successfully deleted from S3:", decodedKey);
         } catch (error) {
             console.error("❌ Error deleting image from S3:", error.message);
         }
