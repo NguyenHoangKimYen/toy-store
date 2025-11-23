@@ -157,6 +157,7 @@ const Navbar = () => {
 
                 {/* Navigation Links */}
                 <ul className="mobile-nav-links">
+                    {/* eslint-disable-next-line no-unused-vars */}
                     {NAV_LINKS.map(({ to, label, icon: Icon }) => (
                         <li key={to}>
                             <NavLink to={to} onClick={closeMobileMenu}>
@@ -171,6 +172,7 @@ const Navbar = () => {
                     <>
                         <div className="mobile-divider" />
                         <ul className="mobile-nav-links">
+                            {/* eslint-disable-next-line no-unused-vars */}
                             {USER_MENU_LINKS.map(({ to, label, icon: Icon }) => (
                                 <li key={to}>
                                     <NavLink to={to} onClick={closeMobileMenu}>
@@ -264,6 +266,7 @@ const Navbar = () => {
                                 )}
                             </div>
                             <div className='py-1'>
+                                {/* eslint-disable-next-line no-unused-vars */}
                                 {USER_MENU_LINKS.map(({ to, label, icon: Icon }) => (
                                     <Link key={to} to={to} className='flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors'>
                                         <Icon className='w-4 h-4' />

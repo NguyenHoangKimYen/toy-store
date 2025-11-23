@@ -138,17 +138,18 @@
 }
 
 .categorized-products-list::-webkit-scrollbar {
-  height: 8px;
+  height: 3px;
 }
 
 .categorized-products-list::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  border-radius: 2px;
 }
 
 .categorized-products-list::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
+  border-radius: 2px;
+  max-width: 60px;
 }
 
 .categorized-products-list::-webkit-scrollbar-thumb:hover {
@@ -157,8 +158,8 @@
 
 /* Product Card */
 .categorized-product-card {
-  min-width: 280px;
-  max-width: 280px;
+  min-width: 320px;
+  max-width: 320px;
   flex-shrink: 0;
   background: transparent;
   transition: all 0.3s ease;
@@ -259,8 +260,8 @@
 /* Responsive Design */
 @media (max-width: 1200px) {
   .categorized-product-card {
-    min-width: 240px;
-    max-width: 240px;
+    min-width: 280px;
+    max-width: 280px;
   }
 
   .categorized-products-title {
@@ -299,8 +300,8 @@
   }
 
   .categorized-product-card {
-    min-width: 200px;
-    max-width: 200px;
+    min-width: 220px;
+    max-width: 220px;
   }
 
   .categorized-products-list {
@@ -324,8 +325,8 @@
   }
 
   .categorized-product-card {
-    min-width: 180px;
-    max-width: 180px;
+    min-width: 190px;
+    max-width: 190px;
   }
 
   .categorized-products-list {

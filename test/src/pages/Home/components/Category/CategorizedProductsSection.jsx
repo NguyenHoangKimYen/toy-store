@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
-import { ProductCard } from '@/components/common';
+import { ArrowRight } from 'lucide-react';
+import { ProductCard, ScrollArrows } from '@/components/common';
 import { useProducts } from '@/hooks';
 import { getCategories } from '@/services/categories.service';
 import './CategorizedProductsSection.css';
@@ -57,7 +57,7 @@ const CategorizedProductsSection = () => {
 
   const scroll = (direction) => {
     if (scrollRef.current) {
-      const scrollAmount = 400;
+      const scrollAmount = 800;
       scrollRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth'
@@ -134,26 +134,12 @@ const CategorizedProductsSection = () => {
 
         {/* Animated Product List */}
         <div className="categorized-products-list-wrapper">
-          {/* Left Arrow */}
+          {/* Scroll Arrows */}
           {activeCategory.products.length >= 5 && (
-            <button
-              onClick={() => scroll('left')}
-              className="categorized-scroll-arrow categorized-scroll-arrow-left"
-              aria-label="Scroll left"
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
-          )}
-
-          {/* Right Arrow */}
-          {activeCategory.products.length >= 5 && (
-            <button
-              onClick={() => scroll('right')}
-              className="categorized-scroll-arrow categorized-scroll-arrow-right"
-              aria-label="Scroll right"
-            >
-              <ChevronRight className="w-6 h-6" />
-            </button>
+            <ScrollArrows 
+              onScrollLeft={() => scroll('left')}
+              onScrollRight={() => scroll('right')}
+            />
           )}
 
           <AnimatePresence mode="wait">

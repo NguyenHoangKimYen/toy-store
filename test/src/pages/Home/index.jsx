@@ -1,16 +1,12 @@
 ﻿import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ProductCard } from '@/components/common';
 import { getProducts } from '@/services';
-import './components/Category/NewArrivalsSection.css';
 
 // Lazy load sections below the fold for faster initial render
 const HeroSection = lazy(() => import('./components/Hero').then(m => ({ default: m.HeroSection })));
-const NewArrivalsSection = lazy(() => import('./components/Category').then(m => ({ default: m.NewArrivalsSection })));
+const ProductShowcaseSection = lazy(() => import('./components/Category').then(m => ({ default: m.ProductShowcaseSection })));
 const CategorizedProductsSection = lazy(() => import('./components/Category').then(m => ({ default: m.CategorizedProductsSection })));
 
 const Home = () => {
-  const navigate = useNavigate();
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [newProducts, setNewProducts] = useState([]);
   const [bestSellers, setBestSellers] = useState([]);
@@ -87,7 +83,7 @@ const Home = () => {
       ) : null}
 
       {/* New Arrivals Section - Above Everything */}
-      {loadingNew ? (
+      <Suspense fallback={
         <div className="h-[500px] bg-white animate-pulse px-[5%] py-20">
           <div className="h-10 w-64 bg-gray-200 rounded mb-10"></div>
           <div className="flex gap-4">
@@ -96,52 +92,42 @@ const Home = () => {
             ))}
           </div>
         </div>
-      ) : (
-        <Suspense fallback={<div className="h-[500px] bg-white animate-pulse" />}>
-          <NewArrivalsSection newProducts={categorizedProducts.newProducts} />
-        </Suspense>
-      )}
+      }>
+        <ProductShowcaseSection
+          title="New Arrivals"
+          subtitle="Fresh drops you can't miss"
+          products={categorizedProducts.newProducts}
+          viewAllLink="/products?filter=new"
+          bgGradient="from-violet-50 via-purple-50 to-indigo-50"
+          decorativeGradient1="from-violet-300/20 to-purple-300/20"
+          decorativeGradient2="from-indigo-300/20 to-blue-300/20"
+          loading={loadingNew}
+        />
+      </Suspense>
 
       {/* Best Sellers Section */}
-      {(loadingBestSellers || (categorizedProducts.bestSellers && categorizedProducts.bestSellers.length > 0)) && (
-        <section className="px-[5%] py-20 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 relative overflow-hidden">
-          {/* Decorative elements */}
-          <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-amber-300/20 to-orange-300/20 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tr from-rose-300/20 to-pink-300/20 rounded-full blur-3xl"></div>
-          
-          <div className="relative z-10">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10 max-w-[1600px] mx-auto">
-              <div>
-                <h2 className="text-4xl font-bold text-slate-800 mb-1">Best Sellers</h2>
-                <p className="text-sm text-slate-500">Customer favorites</p>
-              </div>
-            </div>
-            <div className="relative">
-              <div className="products-horizontal-scroll">
-                {loadingBestSellers ? (
-                  // Show shimmer skeletons while loading
-                  Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="w-[280px] flex-shrink-0">
-                      <div className="animate-pulse bg-gray-200 rounded-lg h-[380px]"></div>
-                    </div>
-                  ))
-                ) : (
-                  categorizedProducts.bestSellers.slice(0, 12).map((product) => (
-                    <ProductCard
-                      key={product._id}
-                      product={product}
-                      showBadges={true}
-                      showCategory={false}
-                      showQuickView={false}
-                      onClick={(product) => navigate(`/products/${product._id}`)}
-                    />
-                  ))
-                )}
-              </div>
-            </div>
+      <Suspense fallback={
+        <div className="h-[500px] bg-white animate-pulse px-[5%] py-20">
+          <div className="h-10 w-64 bg-gray-200 rounded mb-10"></div>
+          <div className="flex gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="w-[280px] h-[380px] bg-gray-200 rounded-lg"></div>
+            ))}
           </div>
-        </section>
-      )}
+        </div>
+      }>
+        <ProductShowcaseSection
+          title="Best Sellers"
+          subtitle="Customer favorites"
+          products={categorizedProducts.bestSellers}
+          viewAllLink="/products?filter=bestseller"
+          bgGradient="from-amber-50 via-orange-50 to-rose-50"
+          decorativeGradient1="from-amber-300/20 to-orange-300/20"
+          decorativeGradient2="from-rose-300/20 to-pink-300/20"
+          loading={loadingBestSellers}
+          showViewAll={false}
+        />
+      </Suspense>
 
       {/* Categorized Products Section */}
       <div className="px-[5%]">
