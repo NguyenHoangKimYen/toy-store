@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { API_BASE_URL } from '@/services/config'
-import { AuthLayout } from '../components/auth/AuthLayout'
-import { AuthCard, AuthHeader, AuthContent } from '../components/auth/AuthCard'
-import { SignupForm } from '../components/auth/signup/SignupForm'
-import { VerificationNotice } from '../components/auth/signup/VerificationNotice'
+import { AuthLayout } from '../common/AuthLayout'
+import { AuthCard, AuthHeader, AuthContent } from '../common/AuthCard'
+import { SignupForm } from './SignupForm'
+import { VerificationNotice } from './VerificationNotice'
 
 const Signup = () => {
     const [loading, setLoading] = useState(false)

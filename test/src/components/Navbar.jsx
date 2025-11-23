@@ -11,6 +11,8 @@ const Navbar = () => {
     const [showSearch, setShowSearch] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [showMobileMenu, setShowMobileMenu] = useState(false)
+    const [isVisible, setIsVisible] = useState(true)
+    const [lastScrollY, setLastScrollY] = useState(0)
 
     const updateCartCount = () => {
         const cart = JSON.parse(localStorage.getItem('cart') || '[]');
@@ -30,6 +32,25 @@ const Navbar = () => {
             setUser(null)
         }
     }
+
+    const handleScroll = () => {
+        const currentScrollY = window.scrollY;
+        
+        // Always show at the very top
+        if (currentScrollY < 10) {
+            setIsVisible(true);
+        } 
+        // Hide when scrolling down (with small threshold to avoid jitter)
+        else if (currentScrollY > lastScrollY + 5) {
+            setIsVisible(false);
+        } 
+        // Show when scrolling up (even slightly)
+        else if (currentScrollY < lastScrollY - 5) {
+            setIsVisible(true);
+        }
+        
+        setLastScrollY(currentScrollY);
+    };
 
     const handleLogout = () => {
         localStorage.removeItem('token')
@@ -74,12 +95,15 @@ const Navbar = () => {
         // Listen for cart updates
         window.addEventListener('cartUpdated', updateCartCount);
         window.addEventListener('userLoggedIn', loadUser);
+        window.addEventListener('scroll', handleScroll, { passive: true });
 
         return () => {
             window.removeEventListener('cartUpdated', updateCartCount);
             window.removeEventListener('userLoggedIn', loadUser);
+            window.removeEventListener('scroll', handleScroll);
         };
-    }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [lastScrollY]);
 
     return (
         <>
@@ -213,7 +237,9 @@ const Navbar = () => {
                 </div>
             </div>
 
-        <div className='flex items-center justify-between py-5 font-medium'>
+            <nav className={`navbar-wrapper ${isVisible ? 'navbar-visible' : 'navbar-hidden'}`}>
+                <div className='px-2 sm:px-4 md:px-[5vw] lg:px-[7vw] xl:px-[9vw]'>
+                    <div className='flex items-center justify-between py-5 font-medium'>
             {/* Mobile Menu Toggle */}
             <button className="mobile-menu-toggle" onClick={() => setShowMobileMenu(true)}>
                 <Menu size={24} />
@@ -330,9 +356,9 @@ const Navbar = () => {
                     )}
                 </Link>
             </div>
-
-
-        </div>
+                </div>
+                </div>
+            </nav>
         </>
     )
 }

@@ -4,7 +4,7 @@ import { SignupStepIndicator } from './SignupStepIndicator'
 import { Step1BasicInfo } from './Step1BasicInfo'
 import { Step2ContactInfo } from './Step2ContactInfo'
 import { Step3Password } from './Step3Password'
-import { OAuthButtons } from '../OAuthButtons'
+import { OAuthButtons } from '../common/OAuthButtons'
 
 export const SignupForm = ({ 
   formData, 

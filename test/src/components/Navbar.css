@@ -1,4 +1,26 @@
 /* Navbar Responsive Styles */
+
+/* Navbar scroll behavior */
+.navbar-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 1000;
+  transition: transform 0.3s ease-in-out;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-wrapper.navbar-visible {
+  transform: translateY(0);
+}
+
+.navbar-wrapper.navbar-hidden {
+  transform: translateY(-100%);
+}
+
 .navbar {
   position: relative;
 }

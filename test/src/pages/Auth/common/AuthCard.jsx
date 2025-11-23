@@ -1,5 +1,5 @@
 import React from 'react'
-import { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from '../ui/card'
+import { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 
 export const AuthCard = ({ children, className = "w-[500px]" }) => {
   return (

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button } from '../../ui/button'
-import { AuthCard, AuthHeader, AuthContent, AuthFooter } from '../AuthCard'
+import { Button } from '@/components/ui/button'
+import { AuthCard, AuthHeader, AuthContent, AuthFooter } from '../common/AuthCard'
 import { Mail, Shield } from 'lucide-react'
 
 export const VerificationNotice = ({ userEmail }) => {

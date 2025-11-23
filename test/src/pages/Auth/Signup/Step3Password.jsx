@@ -1,7 +1,7 @@
 import React from 'react'
-import { Button } from '../../ui/button'
+import { Button } from '@/components/ui/button'
 import { Check, X, ArrowLeft } from 'lucide-react'
-import { PasswordInput } from '../PasswordInput'
+import { PasswordInput } from '../common/PasswordInput'
 import { LoadingSpinner } from '@/components/common'
 
 export const Step3Password = ({ 

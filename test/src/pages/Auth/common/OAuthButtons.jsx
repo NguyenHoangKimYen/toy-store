@@ -1,5 +1,5 @@
 import React from 'react'
-import { Button } from '../ui/button'
+import { Button } from '@/components/ui/button'
 import { API_BASE_URL } from '@/services/config'
 
 export const OAuthButtons = () => {
