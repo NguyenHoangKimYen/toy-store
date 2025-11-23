@@ -72,9 +72,10 @@ const userSchema = new mongoose.Schema({
         enum: ['google', 'facebook', 'github', 'apple', null],
         default: null,
     },
+
     socialId: { type: String, default: null, index: true },
 
-    //loyalty system
+    // Loyalty system
     loyaltyRank: {
         type: String,
         enum: ["none", "silver", "gold", "diamond"],
@@ -104,7 +105,7 @@ const userSchema = new mongoose.Schema({
         }
     ],
 
-    //Change Email / Phone
+    // Change Email / Phone
     changeEmailOldOtpHash: { type: String, select: false, default: null },
     changeEmailOldOtpExpiresAt: { type: Date, default: null },
     pendingNewEmail: { type: String, default: null },
@@ -123,6 +124,15 @@ const userSchema = new mongoose.Schema({
     },
 );
 
+// Cho phép setters chạy khi dùng update
 userSchema.set("settersOnQuery", true);
+
+// 🔥 TEXT INDEX - bắt buộc để /users?keyword hoạt động
+userSchema.index({
+    fullName: "text",
+    username: "text",
+    email: "text",
+    phone: "text",
+});
 
 module.exports = mongoose.model('User', userSchema);
