@@ -6,5 +6,5 @@ module.exports = {
     },
     findActive() {
         return Voucher.find({ isActive: true });
-    }
+    },
 };

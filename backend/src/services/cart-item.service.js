@@ -19,17 +19,19 @@ const createCartItem = async (cartId, variantId, quantity) => {
         const newQuantity = existingItem.quantity + quantity;
 
         if (newQuantity > variant.stockQuantity) {
-            throw new Error(`Not enough stock. Only ${variant.stockQuantity} available.`);
+            throw new Error(
+                `Not enough stock. Only ${variant.stockQuantity} available.`,
+            );
         }
 
         existingItem.quantity = newQuantity;
-        existingItem.price = unitPrice;  // luôn unitPrice
+        existingItem.price = unitPrice; // luôn unitPrice
 
         await existingItem.save();
 
         // Update subtotal cart
         await CartRepository.update(cartId, {
-            $inc: { totalPrice: unitPrice * quantity }  // chỉ + thêm cái mới
+            $inc: { totalPrice: unitPrice * quantity }, // chỉ + thêm cái mới
         });
 
         return existingItem;
@@ -37,21 +39,23 @@ const createCartItem = async (cartId, variantId, quantity) => {
 
     // Nếu item chưa tồn tại
     if (quantity > variant.stockQuantity) {
-        throw new Error(`Not enough stock. Only ${variant.stockQuantity} available.`);
+        throw new Error(
+            `Not enough stock. Only ${variant.stockQuantity} available.`,
+        );
     }
 
     const newItem = await CartItemRepository.create({
         cartId,
         variantId,
-        productId: variant.productId._id,  // ĐÚNG
+        productId: variant.productId._id, // ĐÚNG
         quantity,
-        price: unitPrice                  // LUÔN UNIT PRICE
+        price: unitPrice, // LUÔN UNIT PRICE
     });
 
     // Cộng subtotal vào cart
     await CartRepository.update(cartId, {
         $push: { items: newItem._id },
-        $inc: { totalPrice: unitPrice * quantity }
+        $inc: { totalPrice: unitPrice * quantity },
     });
 
     return newItem;
@@ -65,8 +69,10 @@ const updateCartItem = async (cartItemId, updates) => {
 
     const item = await CartItem.findById(cartItemId);
     if (!item) throw new Error("CartItem not found");
-    
-    const variant = await Variant.findById(item.variantId).populate("productId");
+
+    const variant = await Variant.findById(item.variantId).populate(
+        "productId",
+    );
     if (!variant) throw new Error("Variant not found");
 
     const unitPrice = Number(variant.price);
@@ -75,16 +81,18 @@ const updateCartItem = async (cartItemId, updates) => {
 
     await CartItemRepository.update(cartItemId, {
         quantity,
-        price: unitPrice
+        price: unitPrice,
     });
 
     // Update totalPrice bằng phần chênh lệch
     await CartRepository.update(item.cartId, {
-        $inc: { totalPrice: unitPrice * differenceInQuantity }
+        $inc: { totalPrice: unitPrice * differenceInQuantity },
     });
 
     // Return the updated item
-    return await CartItem.findById(cartItemId).populate('productId').populate('variantId');
+    return await CartItem.findById(cartItemId)
+        .populate("productId")
+        .populate("variantId");
 };
 /**
  * Xoá item khỏi cart
@@ -105,5 +113,5 @@ module.exports = {
     createCartItem,
     updateCartItem,
     deleteCartItem,
-    getItemsByCartId
+    getItemsByCartId,
 };

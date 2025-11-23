@@ -20,18 +20,21 @@ async function checkAndAssignBadges(user) {
 
         if (achieved) {
             const already = user.badges.some(
-                b => b.badgeId.toString() === badge._id.toString()
+                (b) => b.badgeId.toString() === badge._id.toString(),
             );
 
             if (!already) {
-                user.badges.push({ badgeId: badge._id, receivedAt: new Date() });
+                user.badges.push({
+                    badgeId: badge._id,
+                    receivedAt: new Date(),
+                });
 
                 // Badge mới unlock → push vào list
                 unlocked.push({
                     id: badge._id,
                     name: badge.name,
                     icon: badge.icon,
-                    description: badge.description
+                    description: badge.description,
                 });
             }
         }

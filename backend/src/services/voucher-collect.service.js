@@ -3,7 +3,6 @@ const DiscountRepo = require("../repositories/discount-code.repository");
 
 module.exports = {
     async collectVoucher(userId, voucherId) {
-
         const voucher = await DiscountRepo.findById(voucherId);
         if (!voucher) throw new Error("Voucher not found");
 
@@ -13,7 +12,10 @@ module.exports = {
         }
 
         // Check limit
-        const exist = await CollectVoucherRepo.findByUserAndVoucher(userId, voucherId);
+        const exist = await CollectVoucherRepo.findByUserAndVoucher(
+            userId,
+            voucherId,
+        );
         if (exist) throw new Error("Already collected");
 
         return await CollectVoucherRepo.create({
@@ -26,5 +28,5 @@ module.exports = {
 
     async getUserVouchers(userId) {
         return CollectVoucherRepo.findByUser(userId);
-    }
+    },
 };
