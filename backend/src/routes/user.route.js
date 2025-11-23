@@ -1,17 +1,12 @@
 const express = require("express");
 const auth = require("../middlewares/auth.middleware.js");
 const adminOnly = require("../middlewares/admin.middleware.js");
-
 const {
     uploadAvatar: uploadAvatarMiddleware,
 } = require("../middlewares/upload.middleware.js");
 
 const {
     getAllUsers,
-    getUserById,
-    getUserByEmail,
-    getUserByPhone,
-    getUserByUsername,
     createUser,
     verifyUser,
     setUserPassword,
@@ -23,60 +18,50 @@ const {
 
 const router = express.Router();
 
-/**
- * User chỉ được chỉnh tài khoản của chính họ
- * Admin có thể chỉnh tất cả
- */
+// Chỉ owner hoặc admin được sửa user
 const ownerOrAdmin = (req, res, next) => {
     if (req.user.role === "admin") return next();
-    if (req.user.id === req.params.id) return next();
-
+    if (req.user.id === req.query.id) return next();
     return res.status(403).json({
         success: false,
         message: "Forbidden: You cannot modify another user.",
     });
 };
-// ADMIN ROUTE
 
-// Get all users
+// ============ ADMIN ============
+
+// GET: tất cả user hoặc search theo param
 router.get("/", auth, adminOnly, getAllUsers);
 
-// Admin create new user
+// Admin tạo user
 router.post("/", auth, adminOnly, createUser);
 
 // Admin update user
-router.put("/:id", auth, adminOnly, updateUser);
+router.put("/", auth, adminOnly, updateUser);
 
 // Admin delete user
-router.delete("/:id", auth, adminOnly, deleteUser);
+router.delete("/", auth, adminOnly, deleteUser);
 
-// Admin lookup user by email/phone/username
-router.get("/email/:email", auth, adminOnly, getUserByEmail);
-router.get("/phone/:phone", auth, adminOnly, getUserByPhone);
-router.get("/username/:username", auth, adminOnly, getUserByUsername);
-// USER ROUTE
+// ============ USER ============
 
-// Get user info (owner or admin)
-router.get("/:id", auth, ownerOrAdmin, getUserById);
+// Verify user (owner hoặc admin)
+router.patch("/verify", auth, ownerOrAdmin, verifyUser);
 
-// Verify user
-router.patch("/:id/verify", auth, ownerOrAdmin, verifyUser);
+// Set password
+router.patch("/set-password", auth, ownerOrAdmin, setUserPassword);
 
-// User change password
-router.patch("/:id/set-password", auth, ownerOrAdmin, setUserPassword);
-
-// User upload new avatar
+// Upload avatar
 router.post(
-    "/:id/avatar",
+    "/avatar",
     auth,
     ownerOrAdmin,
     uploadAvatarMiddleware,
     uploadAvatarController
 );
 
-// User update avatar
+// Update avatar
 router.patch(
-    "/:id/avatar",
+    "/avatar",
     auth,
     ownerOrAdmin,
     uploadAvatarMiddleware,

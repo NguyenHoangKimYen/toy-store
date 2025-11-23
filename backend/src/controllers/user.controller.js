@@ -1,171 +1,153 @@
-const { mongo } = require("mongoose");
 const userService = require("../services/user.service.js");
 const userRepository = require("../repositories/user.repository.js");
-const { message } = require("statuses");
 const { uploadToS3 } = require("../utils/s3.helper.js");
 
+// GET USERS (GỘP PARAM)
 const getAllUsers = async (req, res, next) => {
     try {
         const users = await userService.getAllUsers(req.query);
         res.json({ success: true, data: users });
     } catch (error) {
-        return next(error); //lỗi middleware sẽ xử lý
+        next(error);
     }
 };
 
-const getUserById = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        if (!mongo.ObjectId.isValid(id)) {
-            return res
-                .status(400)
-                .json({ success: false, message: "Invalid user ID" });
-        }
-        const user = await userService.getUserById(id);
-        if (!user) {
-            return res
-                .status(404)
-                .json({ success: false, message: "User not found" });
-        }
-        return res.json({ success: true, data: user });
-    } catch (error) {
-        return next(error);
-    }
-};
-
-const getUserByEmail = async (req, res, next) => {
-    try {
-        const { email } = req.params;
-        const user = await userService.getUserByEmail(email);
-        if (!user) {
-            return res
-                .status(404)
-                .json({ success: false, message: "User not found" });
-        }
-        return res.json({ success: true, data: user });
-    } catch (error) {
-        return next(error);
-    }
-};
-
-const getUserByPhone = async (req, res, next) => {
-    try {
-        const { phone } = req.params;
-        const user = await userService.getUserByPhone(phone);
-        if (!user) {
-            return res
-                .status(404)
-                .json({ success: false, message: "User not found" });
-        }
-        return res.json({ success: true, data: user });
-    } catch (error) {
-        return next(error);
-    }
-};
-
-const getUserByUsername = async (req, res, next) => {
-    try {
-        const { username } = req.params;
-        const user = await userService.getUserByUsername(username);
-        if (!user) {
-            return res
-                .status(404)
-                .json({ success: false, message: "User not found" });
-        }
-        return res.json({ success: true, data: user });
-    } catch (error) {
-        return next(error);
-    }
-};
-
+// CREATE USER (ADMIN ONLY)
 const createUser = async (req, res, next) => {
     try {
         const user = await userService.createUser(req.body);
         res.status(201).json({ success: true, data: user });
     } catch (error) {
-        return next(error);
+        next(error);
     }
 };
 
+// VERIFY USER
 const verifyUser = async (req, res, next) => {
     try {
-        const { token } = req.body;
-        const { id } = req.params;
+        const { id, token } = req.query;
+
+        if (!id || !token) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing id or token",
+            });
+        }
 
         const user = await userRepository.findById(id);
         if (!user) {
-            return res
-                .status(404)
-                .json({ success: false, message: "User not found" });
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
         }
 
         if (user.verificationCode !== token) {
-            return res
-                .status(400)
-                .json({ success: false, message: "Invalid verification code" });
+            return res.status(400).json({
+                success: false,
+                message: "Invalid verification code",
+            });
         }
 
         const verifiedUser = await userService.setUserVerified(id, true);
+
         res.json({
             success: true,
             message: "User verified successfully",
-            user: verifiedUser,
+            data: verifiedUser,
         });
     } catch (error) {
-        return next(error);
+        next(error);
     }
 };
 
+// SET USER PASSWORD
 const setUserPassword = async (req, res, next) => {
     try {
-        const { id } = req.params;
+        const { id } = req.query;
         const { password, confirmPassword } = req.body;
-        if (!mongo.ObjectId.isValid(id)) {
-            return res
-                .status(400)
-                .json({ success: false, message: "Invalid user ID" });
+
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing user id",
+            });
         }
-        if (
-            !password ||
-            typeof password !== "string" ||
-            !password.trim() ||
-            password.length < 8 ||
-            password.length > 32
-        ) {
-            //kiểm tra tính hợp lệ của mật khẩu
-            return res
-                .status(400)
-                .json({ success: false, message: "Invalid password" });
+
+        if (!password || password.length < 8 || password.length > 32) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid password",
+            });
         }
 
         if (confirmPassword !== undefined && password !== confirmPassword) {
-            //kiểm tra xác nhận mật khẩu
-            return res
-                .status(400)
-                .json({
-                    success: false,
-                    message: "Password confirmation does not match",
-                });
+            return res.status(400).json({
+                success: false,
+                message: "Password confirmation does not match",
+            });
         }
 
-        const user = await userService.setUserPassword(id, password); //cập nhật mật khẩu
-        if (!user) {
-            return res
-                .status(404)
-                .json({
-                    success: false,
-                    message: "User not found or password update failed",
-                });
-        }
-        return res.json({ success: true, data: user });
+        const updated = await userService.setUserPassword(id, password);
+
+        res.json({ success: true, data: updated });
     } catch (error) {
-        return next(error);
+        next(error);
     }
 };
 
+// UPDATE USER
+const updateUser = async (req, res, next) => {
+    try {
+        const { id } = req.query;
+
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing user id",
+            });
+        }
+
+        const updated = await userService.updateUser(id, req.body);
+
+        res.json({ success: true, data: updated });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// DELETE USER
+const deleteUser = async (req, res, next) => {
+    try {
+        const { id } = req.query;
+
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing user id",
+            });
+        }
+
+        const deleted = await userService.deleteUser(id);
+
+        res.json({ success: true, data: deleted });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// UPLOAD AVATAR (POST)
 const uploadAvatar = async (req, res, next) => {
     try {
-        const { id } = req.params;
+        const { id } = req.query;
+
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing user id",
+            });
+        }
+
         if (!req.file) {
             return res.status(400).json({
                 success: false,
@@ -174,44 +156,39 @@ const uploadAvatar = async (req, res, next) => {
         }
 
         const [url] = await uploadToS3([req.file], "avatarImages");
-        const user = await userRepository.update(id, { avatar: url });
+        const updated = await userRepository.update(id, { avatar: url });
+
         res.json({
             success: true,
             message: "Avatar uploaded successfully",
-            data: user,
+            data: updated,
         });
     } catch (error) {
         next(error);
     }
 };
 
+// UPDATE AVATAR (PATCH)
 const updateAvatar = async (req, res, next) => {
     try {
-        const { id } = req.params;
+        const { id } = req.query;
 
-        if (!mongo.ObjectId.isValid(id)) {
-            return res
-                .status(400)
-                .json({ success: false, message: "Invalid user ID" });
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing user id",
+            });
         }
 
         if (!req.file) {
-            return res
-                .status(400)
-                .json({ success: false, message: "No file uploaded" });
+            return res.status(400).json({
+                success: false,
+                message: "No file uploaded",
+            });
         }
 
-        // Upload file lên S3
         const [url] = await uploadToS3([req.file], "avatars");
-
-        // Cập nhật avatar trong MongoDB
         const updatedUser = await userRepository.update(id, { avatar: url });
-
-        if (!updatedUser) {
-            return res
-                .status(404)
-                .json({ success: false, message: "User not found" });
-        }
 
         res.json({
             success: true,
@@ -223,58 +200,8 @@ const updateAvatar = async (req, res, next) => {
     }
 };
 
-const updateUser = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        if (!mongo.ObjectId.isValid(id)) {
-            return res
-                .status(400)
-                .json({ success: false, message: "Invalid user ID" });
-        }
-        const user = await userService.updateUser(id, req.body);
-        if (!user) {
-            return res
-                .status(404)
-                .json({
-                    success: false,
-                    message: "User not found or update failed",
-                });
-        }
-        return res.json({ success: true, data: user });
-    } catch (error) {
-        return next(error);
-    }
-};
-
-const deleteUser = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        if (!mongo.ObjectId.isValid(id)) {
-            return res
-                .status(400)
-                .json({ success: false, message: "Invalid user ID" });
-        }
-        const user = await userService.deleteUser(id);
-        if (!user) {
-            return res
-                .status(404)
-                .json({
-                    success: false,
-                    message: "User not found or delete failed",
-                });
-        }
-        return res.json({ success: true, data: user });
-    } catch (error) {
-        return next(error);
-    }
-};
-
 module.exports = {
     getAllUsers,
-    getUserById,
-    getUserByEmail,
-    getUserByPhone,
-    getUserByUsername,
     createUser,
     verifyUser,
     setUserPassword,
