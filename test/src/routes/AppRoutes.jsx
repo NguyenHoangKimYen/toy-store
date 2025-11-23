@@ -2,6 +2,7 @@ import React, { lazy, Suspense } from 'react'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import Layout from '../components/Layout'
 import ErrorBoundary from '../components/ErrorBoundary'
+import ProtectedRoute from '../components/ProtectedRoute'
 import { ROUTES } from '../config/routes'
 import { LoadingSpinner } from '../components/common'
 
@@ -54,7 +55,13 @@ const router = createBrowserRouter([
   // Admin routes with nested routing
   {
     path: ROUTES.ADMIN,
-    element: <Suspense fallback={<PageLoader />}><AdminPanel /></Suspense>,
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <ProtectedRoute adminOnly={true}>
+          <AdminPanel />
+        </ProtectedRoute>
+      </Suspense>
+    ),
     children: [
       {
         index: true,

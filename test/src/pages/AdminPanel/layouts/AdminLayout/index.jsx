@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SearchBar } from '@/components/common';
+import { SearchBar, LoadingSpinner } from '@/components/common';
 
 /**
  * Reusable Admin Panel Layout with sticky header behavior
