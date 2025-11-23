@@ -38,10 +38,12 @@ const uploadVariantImages = upload.array("variantImages", 10);
 
 // Upload images cho review
 const uploadReviewImages = upload.array("reviewImages", 5);
+const uploadCategoryImages = upload.array("categoryImages", 1);
 
 module.exports = {
     uploadAvatar,
     uploadProductImages,
     uploadVariantImages,
     uploadReviewImages,
+    uploadCategoryImages,
 };

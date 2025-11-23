@@ -76,6 +76,10 @@ const discountRoutes = require("./routes/discount-code.routes.js");
 const monthlyJob = require("./utils/montly-loyalty.js");
 const voucherRoutes = require("./routes/voucher.route.js");
 const dashboardRoutes = require("./routes/dashboard.routes.js");
+
+const errorHandler = require("./middlewares/error.middleware");
+
+
 require("./utils/event.cron.js");
 monthlyJob();
 
@@ -97,6 +101,8 @@ app.use("/api/loyalty", loyaltyRoutes);
 app.use("/api/discount", discountRoutes);
 app.use("/api/vouchers", voucherRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+
+app.use(errorHandler);
 
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'MilkyBloom backend is running on AWS 🚀' });
