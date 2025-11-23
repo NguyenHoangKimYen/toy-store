@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingCart, Heart, Share2 } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Minus, Plus } from 'lucide-react';
 
@@ -10,9 +10,6 @@ const ProductActions = ({
   onQuantityChange,
   onAddToCart,
   onBuyNow,
-  isFavorite,
-  onToggleFavorite,
-  onShare,
   selectedVariant,
   loading,
 }) => {
@@ -31,7 +28,24 @@ const ProductActions = ({
             >
               <Minus size={16} />
             </Button>
-            <span className="quantity-value">{quantity}</span>
+            <input
+              type="number"
+              min="1"
+              max={stock}
+              value={quantity}
+              onChange={(e) => {
+                const value = parseInt(e.target.value) || 1;
+                if (value >= 1 && value <= stock) {
+                  onQuantityChange(value - quantity);
+                }
+              }}
+              onBlur={(e) => {
+                const value = parseInt(e.target.value) || 1;
+                if (value < 1) onQuantityChange(1 - quantity);
+                if (value > stock) onQuantityChange(stock - quantity);
+              }}
+              className="quantity-input"
+            />
             <Button
               variant="outline"
               size="icon"
@@ -63,28 +77,6 @@ const ProductActions = ({
           className="buy-now-btn flex-1"
         >
           Buy Now
-        </Button>
-      </div>
-
-      {/* Secondary Actions */}
-      <div className="secondary-actions">
-        <Button
-          variant="outline"
-          size="lg"
-          onClick={onToggleFavorite}
-          className="flex-1"
-        >
-          <Heart size={20} className={`mr-2 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
-          {isFavorite ? 'Saved' : 'Save'}
-        </Button>
-        <Button
-          variant="outline"
-          size="lg"
-          onClick={onShare}
-          className="flex-1"
-        >
-          <Share2 size={20} className="mr-2" />
-          Share
         </Button>
       </div>
     </>
