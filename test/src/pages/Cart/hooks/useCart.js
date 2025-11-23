@@ -28,8 +28,8 @@ export const useCart = () => {
       window.dispatchEvent(new Event('cartUpdated'));
     } catch (err) {
       console.error('Error updating quantity:', err);
-      toast.error('Update failed', {
-        description: err.message || 'Failed to update quantity',
+      toast.error('Failed to update quantity', {
+        description: err.message || 'Please try again',
       });
     }
   };

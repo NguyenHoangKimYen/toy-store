@@ -41,7 +41,7 @@ const ProductInfo = ({ product, rating, reviewCount, price, originalPrice, inSto
         {selectedVariant ? (
           <>
             <div className="flex items-center gap-2 md:gap-3 flex-wrap">
-              <span className="text-2xl md:text-3xl">{formatPrice(price)}</span>
+              <span className="text-2xl md:text-2xl font-medium text-red-500">{formatPrice(price)}</span>
               {originalPrice && originalPrice > price && (
                 <>
                   <span className="text-base md:text-lg text-slate-400 line-through">{formatPrice(originalPrice)}</span>
@@ -68,7 +68,7 @@ const ProductInfo = ({ product, rating, reviewCount, price, originalPrice, inSto
           </>
         ) : (
           <div className="flex items-center gap-3">
-            <span className="text-lg md:text-2xl font-bold text-gray-400">Select all options to see price</span>
+            <span className="text-lg md:text-2xl font-semibold text-gray-400">Select all options to see price</span>
           </div>
         )}
       </div>
