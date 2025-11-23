@@ -8,8 +8,6 @@ import { formatPrice } from '@/utils/formatPrice';
 const ProductInfo = ({ product, rating, reviewCount, price, originalPrice, inStock, stock, discount, selectedVariant }) => {
   return (
     <div className="product-info-section">
-      {/* Badges */}
-      <ProductBadges product={product} discount={discount} />
 
       {/* Title & Brand */}
       <h1 className="product-title">{product.name}</h1>

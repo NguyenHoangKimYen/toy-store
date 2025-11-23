@@ -25,7 +25,7 @@
 /* Main Section */
 .product-main-section {
   display: grid;
-  grid-template-columns: 55% 45%;
+  grid-template-columns: 45% 55%;
   gap: 2rem;
   margin-bottom: 2rem;
   align-items: start;
@@ -94,9 +94,9 @@
 }
 
 .detail-current-price {
-  font-size: 2.5rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: #ef4444;
+
 }
 
 .detail-original-price {
@@ -271,6 +271,7 @@
 .buy-now-btn {
   font-size: 1rem;
   font-weight: 600;
+  border-radius: 0 !important;
 }
 
 .secondary-actions {
