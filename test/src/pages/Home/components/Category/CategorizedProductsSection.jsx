@@ -159,7 +159,6 @@ const CategorizedProductsSection = () => {
                     showBadges={false}
                     showCategory={false}
                     showQuickView={false}
-                    showAddToCart={false}
                     onClick={() => handleProductClick(product)}
                   />
                 </div>

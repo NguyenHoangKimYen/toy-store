@@ -59,7 +59,7 @@ const ProductGrid = ({
             key={product._id}
             product={product}
             showQuickView={false}
-            showAddToCart={false}
+            showRating={true}
             onClick={handleProductClick}
           />
         ))}

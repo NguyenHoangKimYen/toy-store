@@ -15,7 +15,7 @@ import './ProductCard.css';
  * @param {boolean} showBadges - Show product badges (New, Featured, etc.)
  * @param {boolean} showCategory - Show category name below product name
  * @param {boolean} showQuickView - Show quick view overlay button on hover
- * @param {boolean} showAddToCart - Show add to cart button
+ * @param {boolean} showRating - Show rating instead of add to cart button
  * @param {string} className - Additional CSS classes for custom styling
  * @param {React.ReactNode} children - Optional additional content (for custom buttons, badges, etc.)
  */
@@ -27,7 +27,7 @@ const ProductCard = ({
   showBadges = true,
   showCategory = true,
   showQuickView = true,
-  showAddToCart = true,
+  showRating = false,
   className = '',
   children
 }) => {
@@ -100,7 +100,7 @@ const ProductCard = ({
             <span className="current-price">{priceDisplay}</span>
           </div>
           
-          {showAddToCart && onAddToCart ? (
+          {onAddToCart ? (
             <button 
               className="add-to-cart-btn" 
               onClick={handleAddToCart}
@@ -108,12 +108,12 @@ const ProductCard = ({
             >
               <ShoppingCart size={18} />
             </button>
-          ) : (
+          ) : showRating ? (
             <div className="product-rating" style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', color: '#64748b', marginRight: '8px' }}>
               <Star size={16} fill="#fbbf24" stroke="#fbbf24" />
               <span>{product.averageRating?.toFixed(1) || '0.0'}</span>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
 
