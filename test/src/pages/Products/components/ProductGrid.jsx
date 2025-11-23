@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProductCard from '@/components/common/ProductCard';
-import { useAddToCart } from '@/hooks';
 import { ErrorMessage, Pagination, LoadingSpinner } from '@/components/common';
 import { Button } from '@/components/ui/button';
 
@@ -16,7 +15,6 @@ const ProductGrid = ({
   onPageChange,
 }) => {
   const navigate = useNavigate();
-  const { handleAddToCart } = useAddToCart();
 
   const handleProductClick = (product) => {
     navigate(`/products/${product._id}`);
@@ -61,8 +59,8 @@ const ProductGrid = ({
             key={product._id}
             product={product}
             showQuickView={false}
+            showAddToCart={false}
             onClick={handleProductClick}
-            onAddToCart={handleAddToCart}
           />
         ))}
       </div>

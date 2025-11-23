@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Star } from 'lucide-react';
 import { formatPrice } from '@/utils/formatPrice';
 import { parsePrice } from '@/utils/priceUtils';
 import './ProductCard.css';
@@ -100,7 +100,7 @@ const ProductCard = ({
             <span className="current-price">{priceDisplay}</span>
           </div>
           
-          {showAddToCart && onAddToCart && (
+          {showAddToCart && onAddToCart ? (
             <button 
               className="add-to-cart-btn" 
               onClick={handleAddToCart}
@@ -108,6 +108,11 @@ const ProductCard = ({
             >
               <ShoppingCart size={18} />
             </button>
+          ) : (
+            <div className="product-rating" style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', color: '#64748b', marginRight: '8px' }}>
+              <Star size={16} fill="#fbbf24" stroke="#fbbf24" />
+              <span>{product.averageRating?.toFixed(1) || '0.0'}</span>
+            </div>
           )}
         </div>
       </div>

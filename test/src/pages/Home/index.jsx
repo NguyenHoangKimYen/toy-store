@@ -97,7 +97,7 @@ const Home = () => {
           title="New Arrivals"
           subtitle="Fresh drops you can't miss"
           products={categorizedProducts.newProducts}
-          viewAllLink="/products?filter=new"
+          viewAllLink="/products?sortBy=createdAt&sortOrder=desc"
           bgGradient="from-violet-50 via-purple-50 to-indigo-50"
           decorativeGradient1="from-violet-300/20 to-purple-300/20"
           decorativeGradient2="from-indigo-300/20 to-blue-300/20"
@@ -120,12 +120,11 @@ const Home = () => {
           title="Best Sellers"
           subtitle="Customer favorites"
           products={categorizedProducts.bestSellers}
-          viewAllLink="/products?filter=bestseller"
+          viewAllLink="/products?sortBy=totalUnitsSold&sortOrder=desc"
           bgGradient="from-amber-50 via-orange-50 to-rose-50"
           decorativeGradient1="from-amber-300/20 to-orange-300/20"
           decorativeGradient2="from-rose-300/20 to-pink-300/20"
           loading={loadingBestSellers}
-          showViewAll={false}
         />
       </Suspense>
 
