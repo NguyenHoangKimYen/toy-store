@@ -25,8 +25,8 @@ const CategorySchema = new mongoose.Schema(
         imageUrl: {
             type: String,
             default: null,
-            trim: true
-        }
+            trim: true,
+        },
     },
     {
         timestamps: true,
@@ -35,8 +35,3 @@ const CategorySchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model("Category", CategorySchema);
-
-// Validator giới hạn mảng
-function arrayLimit(val) {
-    return val.length <= 5;
-}

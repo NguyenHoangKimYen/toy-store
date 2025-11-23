@@ -11,5 +11,5 @@ module.exports = {
 
     getUserVouchers(userId) {
         return UserVoucher.find({ userId }).populate("voucherId");
-    }
+    },
 };

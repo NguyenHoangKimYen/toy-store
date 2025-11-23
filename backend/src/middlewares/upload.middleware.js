@@ -4,11 +4,7 @@ const multer = require("multer");
 const storage = multer.memoryStorage();
 
 // Các định dạng ảnh được cho phép
-const allowedMimeTypes = new Set([
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-]);
+const allowedMimeTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 // Cấu hình Multer
 const upload = multer({

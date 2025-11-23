@@ -4,7 +4,9 @@ const { mongo } = require("mongoose");
 /** Lấy danh sách variant theo product */
 const getVariantsByProduct = async (req, res, next) => {
     try {
-        const variants = await variantService.getVariantsByProduct(req.params.productId);
+        const variants = await variantService.getVariantsByProduct(
+            req.params.productId,
+        );
         res.json({ success: true, data: variants });
     } catch (err) {
         next(err);
@@ -16,11 +18,13 @@ const getVariantById = async (req, res, next) => {
         const { id } = req.params;
 
         if (!mongo.ObjectId.isValid(id)) {
-            return res.status(400).json({ success: false, message: "Invalid ID format" });
+            return res
+                .status(400)
+                .json({ success: false, message: "Invalid ID format" });
         }
 
         const variant = await variantService.getVariantById(id);
-    
+
         res.json({ success: true, data: variant });
     } catch (err) {
         next(err);
@@ -29,16 +33,16 @@ const getVariantById = async (req, res, next) => {
 
 const createVariant = async (req, res, next) => {
     try {
-        const { productId } = req.params; 
+        const { productId } = req.params;
 
-        const variantData = req.body; 
+        const variantData = req.body;
 
         const imgFiles = req.files;
 
         const newVariant = await variantService.createVariant(
             productId,
-            variantData, 
-            imgFiles
+            variantData,
+            imgFiles,
         );
 
         res.json({ success: true, data: newVariant });
@@ -49,7 +53,10 @@ const createVariant = async (req, res, next) => {
 
 const updateVariant = async (req, res, next) => {
     try {
-        const variant = await variantService.updateVariant(req.params.id, req.body);
+        const variant = await variantService.updateVariant(
+            req.params.id,
+            req.body,
+        );
         res.json({ success: true, data: variant });
     } catch (err) {
         next(err);
@@ -89,7 +96,10 @@ const removeVariantImages = async (req, res, next) => {
         if (!Array.isArray(removeImages) || !removeImages.length)
             return res.status(400).json({ message: "No image URLs provided" });
 
-        const updated = await variantService.removeVariantImages(id, removeImages);
+        const updated = await variantService.removeVariantImages(
+            id,
+            removeImages,
+        );
         res.json({ success: true, data: updated });
     } catch (err) {
         next(err);

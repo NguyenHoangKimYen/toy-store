@@ -60,12 +60,15 @@ const updateCategory = async (id, data, imgFiles) => {
         // 1.2. Upload ảnh mới
         const uploadedUrls = await uploadToS3(imgFiles, "categoryImages");
         newImageUrl = uploadedUrls[0];
-    } 
+    }
     // Trường hợp 2: Không upload ảnh mới, nhưng muốn xóa ảnh cũ
     else if (data.deletedImages) {
         // data.deletedImages nhận từ form-data (thường là string URL)
         // Check xem url gửi lên có khớp với url trong DB không
-        if (category.imageUrl && data.deletedImages.includes(category.imageUrl)) {
+        if (
+            category.imageUrl &&
+            data.deletedImages.includes(category.imageUrl)
+        ) {
             await deleteFromS3([category.imageUrl]);
             newImageUrl = null;
         }
@@ -78,10 +81,15 @@ const updateCategory = async (id, data, imgFiles) => {
 };
 
 const deleteCategory = async (id) => {
-    const { total } = await productRepository.findAll({ categoryId: id }, { limit: 1 });
+    const { total } = await productRepository.findAll(
+        { categoryId: id },
+        { limit: 1 },
+    );
 
     if (total > 0) {
-        throw new Error(`Cannot delete category. It is in use by ${total} product(s).`);
+        throw new Error(
+            `Cannot delete category. It is in use by ${total} product(s).`,
+        );
     }
 
     const deleted = await categoryRepository.remove(id);
