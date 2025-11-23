@@ -1,4 +1,5 @@
 const CartService = require("../services/cart.service");
+const socket = require("../socket/index");
 
 const getAllCarts = async (req, res) => {
     try {
@@ -45,42 +46,96 @@ const createCart = async (req, res) => {
 };
 
 const addItem = async (req, res, next) => {
-  try {
-    const cartId = req.params.cartId;
-    const itemData = req.body;
+    try {
+        const cartId = req.params.cartId;
+        const itemData = req.body;
 
-    const updatedCart = await CartService.addItem(cartId, itemData);
+        // 1. Lưu vào DB
+        const updatedCart = await CartService.addItem(cartId, itemData);
 
-    return res.status(200).json({
-      success: true,
-      data: updatedCart,
-    });
-  } catch (error) {
-    next(error);
-  }
+        // 2. [SOCKET] Bắn tin cập nhật cho user này
+        // Kiểm tra xem user có đăng nhập không (có req.user) để gửi đúng room
+        if (req.user && req.user._id) {
+            try {
+                const io = socket.getIO();
+                const userId = req.user._id.toString();
+
+                console.log(
+                    `🔌 Emitting 'cart_updated' to room: user_${userId}`,
+                );
+
+                io.to(`user_${userId}`).emit("cart_updated", {
+                    action: "add_item",
+                    totalItems: updatedCart.totalItems, // Giả sử service trả về field này
+                    cart: updatedCart,
+                });
+            } catch (socketErr) {
+                console.error("Socket emit error:", socketErr.message);
+                // Không throw error để tránh làm hỏng luồng mua hàng chính
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: updatedCart,
+        });
+    } catch (error) {
+        next(error);
+    }
 };
 
-const removeItem = async (req, res) => {
+const removeItem = async (req, res, next) => {
+    // Nhớ thêm next để bắt lỗi chuẩn
     try {
         const { cartId } = req.params;
         const { cartItemId, itemPrice } = req.body;
+
         const updated = await CartService.removeItem(
             cartId,
             cartItemId,
             itemPrice,
         );
+
+        // [SOCKET] Cũng nên bắn tin khi xóa để đồng bộ
+        if (req.user && req.user._id) {
+            try {
+                const io = socket.getIO();
+                io.to(`user_${req.user._id}`).emit("cart_updated", {
+                    action: "remove_item",
+                    cart: updated,
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
         res.status(200).json(updated);
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        // res.status(500).json({ message: err.message }); -> Nên dùng next(err) cho đồng bộ
+        next(err);
     }
 };
 
-const clearCart = async (req, res) => {
+const clearCart = async (req, res, next) => {
     try {
         const updated = await CartService.clearCart(req.params.cartId);
+
+        // [SOCKET] Bắn tin khi xóa sạch giỏ
+        if (req.user && req.user._id) {
+            try {
+                const io = socket.getIO();
+                io.to(`user_${req.user._id}`).emit("cart_updated", {
+                    action: "clear_cart",
+                    cart: updated,
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
         res.status(200).json(updated);
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        next(err);
     }
 };
 
