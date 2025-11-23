@@ -50,7 +50,6 @@ const ProductReviews = ({ productId, rating = 0, reviewCount = 0 }) => {
 
   const handleWriteReview = () => {
     // TODO: Implement write review functionality
-    console.log('Write review for product:', productId);
   };
 
   return (

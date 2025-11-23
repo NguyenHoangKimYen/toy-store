@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { useNavigate, useLoaderData } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ProductCard } from '@/components/common';
 import { getProducts } from '@/services';
 import './components/Category/NewArrivalsSection.css';
@@ -8,13 +8,49 @@ import './components/Category/NewArrivalsSection.css';
 const HeroSection = lazy(() => import('./components/Hero').then(m => ({ default: m.HeroSection })));
 const NewArrivalsSection = lazy(() => import('./components/Category').then(m => ({ default: m.NewArrivalsSection })));
 const CategorizedProductsSection = lazy(() => import('./components/Category').then(m => ({ default: m.CategorizedProductsSection })));
-const FeaturedBanner = lazy(() => import('./components/Banner').then(m => ({ default: m.FeaturedBanner })));
 
 const Home = () => {
   const navigate = useNavigate();
-  const { categorizedProducts: initialData } = useLoaderData();
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [newProducts, setNewProducts] = useState([]);
   const [bestSellers, setBestSellers] = useState([]);
+  const [loadingFeatured, setLoadingFeatured] = useState(true);
+  const [loadingNew, setLoadingNew] = useState(true);
   const [loadingBestSellers, setLoadingBestSellers] = useState(true);
+
+  // Load featured products immediately (critical)
+  useEffect(() => {
+    const loadFeatured = async () => {
+      try {
+        const response = await getProducts({ isFeatured: true, limit: 6 });
+        const products = response.products || response || [];
+        setFeaturedProducts(products);
+      } catch (error) {
+        console.error('Error loading featured products:', error);
+      } finally {
+        setLoadingFeatured(false);
+      }
+    };
+    
+    loadFeatured();
+  }, []);
+
+  // Load new products (above fold)
+  useEffect(() => {
+    const loadNew = async () => {
+      try {
+        const response = await getProducts({ isNew: true, limit: 8 });
+        const products = response.products || response || [];
+        setNewProducts(products);
+      } catch (error) {
+        console.error('Error loading new products:', error);
+      } finally {
+        setLoadingNew(false);
+      }
+    };
+    
+    loadNew();
+  }, []);
 
   // Load best sellers after initial render (progressive enhancement)
   useEffect(() => {
@@ -34,28 +70,37 @@ const Home = () => {
   }, []);
 
   const categorizedProducts = {
-    ...initialData,
+    featured: featuredProducts,
+    newProducts,
     bestSellers,
   };
 
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
       {/* Hero Section with Featured Products Carousel */}
-      {categorizedProducts.featured && categorizedProducts.featured.length > 0 && (
+      {loadingFeatured ? (
+        <div className="h-[600px] bg-gradient-to-br from-violet-50 to-purple-50 animate-pulse" />
+      ) : categorizedProducts.featured && categorizedProducts.featured.length > 0 ? (
         <Suspense fallback={<div className="h-[600px] bg-gradient-to-br from-violet-50 to-purple-50 animate-pulse" />}>
           <HeroSection featuredProducts={categorizedProducts.featured} />
         </Suspense>
-      )}
-
-      {/* Featured Banner */}
-      <Suspense fallback={<div className="h-[200px] bg-gray-100 animate-pulse" />}>
-        <FeaturedBanner />
-      </Suspense>
+      ) : null}
 
       {/* New Arrivals Section - Above Everything */}
-      <Suspense fallback={<div className="h-[500px] bg-white animate-pulse" />}>
-        <NewArrivalsSection newProducts={categorizedProducts.newProducts} />
-      </Suspense>
+      {loadingNew ? (
+        <div className="h-[500px] bg-white animate-pulse px-[5%] py-20">
+          <div className="h-10 w-64 bg-gray-200 rounded mb-10"></div>
+          <div className="flex gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="w-[280px] h-[380px] bg-gray-200 rounded-lg"></div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <Suspense fallback={<div className="h-[500px] bg-white animate-pulse" />}>
+          <NewArrivalsSection newProducts={categorizedProducts.newProducts} />
+        </Suspense>
+      )}
 
       {/* Best Sellers Section */}
       {(loadingBestSellers || (categorizedProducts.bestSellers && categorizedProducts.bestSellers.length > 0)) && (

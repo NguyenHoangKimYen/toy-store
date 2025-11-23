@@ -56,7 +56,6 @@ const ProductDetailModal = ({ product, onClose, onEdit, onDelete }) => {
 
   const handleViewReviews = () => {
     // TODO: Implement reviews view
-    console.log('View reviews for product:', product._id);
   };
 
   return (

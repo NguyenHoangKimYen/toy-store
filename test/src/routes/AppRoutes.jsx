@@ -3,7 +3,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import Layout from '../components/Layout'
 import ErrorBoundary from '../components/ErrorBoundary'
 import { ROUTES } from '../config/routes'
-import { homeLoader, categoriesLoader } from './loaders'
+import { LoadingSpinner } from '../components/common'
 
 // Lazy load route components for code splitting
 const Home = lazy(() => import('../pages/Home'));
@@ -33,10 +33,7 @@ const CarouselDemo = lazy(() => import('../pages/CarouselDemo'));
 // Loading component for Suspense fallback
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-    <div className="text-center">
-      <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-violet-600 border-r-transparent"></div>
-      <p className="mt-4 text-gray-600">Loading...</p>
-    </div>
+    <LoadingSpinner size="lg" />
   </div>
 );
 
@@ -90,13 +87,11 @@ const router = createBrowserRouter([
       {
         path: ROUTES.HOME,
         element: <Suspense fallback={<PageLoader />}><Home /></Suspense>,
-        loader: homeLoader,
         errorElement: <ErrorBoundary />
       },
       {
         path: ROUTES.COLLECTION,
         element: <Suspense fallback={<PageLoader />}><Collection /></Suspense>,
-        loader: categoriesLoader,
         errorElement: <ErrorBoundary />
       },
       {
@@ -157,10 +152,7 @@ const AppRoutes = () => {
       router={router}
       fallbackElement={
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-          <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-violet-600 border-r-transparent"></div>
-            <p className="mt-4 text-gray-600">Loading...</p>
-          </div>
+          <LoadingSpinner size="lg" />
         </div>
       }
     />

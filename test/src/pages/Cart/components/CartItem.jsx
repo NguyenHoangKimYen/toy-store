@@ -38,9 +38,6 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
     }
   }
 
-  // Debug logging
-  console.log('Cart item:', { product: product.name, variant, variantAttributes });
-
   const handleDecrement = () => {
     if (item.quantity > 1) {
       onUpdateQuantity(item.id, item.quantity - 1);

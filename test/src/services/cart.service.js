@@ -49,7 +49,6 @@ export const updateCartItem = async (cartItemId, cartItemData) => {
 };
 
 export const deleteCartItem = async (cartItemId) => {
-  console.log('🗑️ Deleting cart item:', cartItemId);
   return await apiClient.delete(`/cart-items/${cartItemId}`);
 };
 

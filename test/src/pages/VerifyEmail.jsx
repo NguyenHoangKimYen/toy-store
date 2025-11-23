@@ -3,8 +3,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '../components/ui/button'
 import { AuthLayout } from '../components/auth/AuthLayout'
 import { AuthCard, AuthHeader, AuthContent, AuthFooter } from '../components/auth/AuthCard'
-import { CheckCircle2, XCircle, Loader2, ArrowRight } from 'lucide-react'
+import { CheckCircle2, XCircle, ArrowRight } from 'lucide-react'
 import { API_BASE_URL } from '@/services/config'
+import { LoadingSpinner } from '@/components/common'
 
 const VerifyEmail = () => {
     const [searchParams] = useSearchParams()
@@ -75,7 +76,7 @@ const VerifyEmail = () => {
                             <div className="relative">
                                 <div className="absolute inset-0 bg-blue-500 rounded-full blur-xl opacity-30 animate-pulse"></div>
                                 <div className="relative p-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full shadow-lg">
-                                    <Loader2 className="w-16 h-16 text-white animate-spin" />
+                                    <LoadingSpinner size="xl" variant="button" />
                                 </div>
                             </div>
                         </div>

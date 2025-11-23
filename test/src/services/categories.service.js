@@ -33,7 +33,6 @@ export const getCategories = async () => {
     return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error('Categories service error:', error);
-    console.error('Request URL:', `${API_BASE_URL}${ENDPOINTS.CATEGORIES}`);
     throw error;
   }
 };

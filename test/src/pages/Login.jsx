@@ -6,9 +6,10 @@ import { Label } from '../components/ui/label'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { API_BASE_URL } from '@/services/config'
-import { AlertCircle, Mail, Eye, EyeOff, Loader2, ArrowLeft, CheckCircle2 } from 'lucide-react'
+import { AlertCircle, Mail, Eye, EyeOff, ArrowLeft, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { AuthLayout } from '../components/auth/AuthLayout'
+import { LoadingSpinner } from '@/components/common'
 
 const Login = () => {
   const navigate = useNavigate()
@@ -298,7 +299,7 @@ const Login = () => {
               >
                 {forgotPasswordLoading ? (
                   <span className="flex items-center gap-2">
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <LoadingSpinner size="sm" variant="button" />
                     Sending...
                   </span>
                 ) : (
@@ -374,7 +375,7 @@ const Login = () => {
                 >
                   {otpLoading ? (
                     <span className="flex items-center gap-2">
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <LoadingSpinner size="sm" variant="button" />
                       Verifying...
                     </span>
                   ) : (
@@ -460,7 +461,7 @@ const Login = () => {
                 >
                   {loading ? (
                     <span className="flex items-center gap-2">
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <LoadingSpinner size="sm" variant="button" />
                       Signing in...
                     </span>
                   ) : (

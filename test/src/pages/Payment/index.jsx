@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle, Clock, XCircle, QrCode, Loader2 } from 'lucide-react';
+import { CheckCircle, Clock, XCircle, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import { useOrders } from '@/hooks';
@@ -236,8 +236,8 @@ const Payment = () => {
             >
               {confirming ? (
                 <>
-                  <Loader2 className="animate-spin" size={16} />
-                  Confirming...
+                  <LoadingSpinner size="xs" variant="button" />
+                  <span className="ml-2">Confirming...</span>
                 </>
               ) : (
                 "I've Transferred"

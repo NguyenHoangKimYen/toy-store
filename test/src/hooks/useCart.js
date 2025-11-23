@@ -92,9 +92,7 @@ export const useCart = () => {
       const cartData = user?._id 
         ? { userId: user._id } 
         : { sessionId };
-      console.log('Creating cart with data:', cartData);
       const newCart = await createCart(cartData);
-      console.log('Cart created:', newCart);
       setCart(newCart);
       return newCart;
     } catch (err) {

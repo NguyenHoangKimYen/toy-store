@@ -19,8 +19,6 @@ const VariantSelector = ({
 }) => {
   const [selectedAttributes, setSelectedAttributes] = useState({});
 
-  console.log('VariantSelector render:', { variants, attributes, controlledVariant });
-
   // Initialize with controlled variant only (don't auto-select first variant)
   useEffect(() => {
     if (controlledVariant) {

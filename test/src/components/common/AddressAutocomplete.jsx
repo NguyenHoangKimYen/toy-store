@@ -96,7 +96,7 @@ const AddressAutocomplete = ({ value, onChange, placeholder, name, id }) => {
       {/* Loading indicator */}
       {loading && (
         <div className='absolute right-3 top-1/2 -translate-y-1/2'>
-          <div className='w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin' />
+          <LoadingSpinner size="xs" variant="button" />
         </div>
       )}
     </div>

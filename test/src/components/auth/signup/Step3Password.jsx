@@ -1,7 +1,8 @@
 import React from 'react'
 import { Button } from '../../ui/button'
-import { Check, X, Loader2, ArrowLeft } from 'lucide-react'
+import { Check, X, ArrowLeft } from 'lucide-react'
 import { PasswordInput } from '../PasswordInput'
+import { LoadingSpinner } from '@/components/common'
 
 export const Step3Password = ({ 
   formData, 
@@ -140,8 +141,8 @@ export const Step3Password = ({
         >
           {loading ? (
             <>
-              <Loader2 className="w-5 h-5 animate-spin mr-2" />
-              Creating...
+              <LoadingSpinner size="sm" variant="button" />
+              <span className="ml-2">Creating...</span>
             </>
           ) : (
             'Create Account'

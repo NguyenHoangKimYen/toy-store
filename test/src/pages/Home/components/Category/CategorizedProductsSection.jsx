@@ -26,9 +26,6 @@ const CategorizedProductsSection = () => {
           ? categoriesResponse
           : (categoriesResponse.categories || categoriesResponse.data || []);
         
-        console.log('All categories fetched:', allCategories);
-        console.log('Total categories count:', allCategories.length);
-        
         // Create category data with products
         const categoryData = allCategories.slice(0, 4).map((category) => {
           const categoryProducts = allProducts.filter(p => 
@@ -46,9 +43,6 @@ const CategorizedProductsSection = () => {
             bgImageUrl: category.backgroundImage || '', // Add background images later
           };
         }).filter(cat => cat.products.length > 0);
-        
-        console.log('Categories with products:', categoryData);
-        console.log('Categories with products count:', categoryData.length);
         
         setCategories(categoryData);
       } catch (error) {

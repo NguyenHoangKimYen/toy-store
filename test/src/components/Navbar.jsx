@@ -16,7 +16,6 @@ const Navbar = () => {
         const cart = JSON.parse(localStorage.getItem('cart') || '[]');
         const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
         setCartCount(totalItems);
-        console.log('Cart count updated:', totalItems, 'from', cart.length, 'items');
     };
 
     const loadUser = () => {

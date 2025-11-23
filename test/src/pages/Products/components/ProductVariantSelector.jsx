@@ -6,10 +6,7 @@ import { VariantSelector } from '@/components/common';
  * Adapts product data structure for the generic VariantSelector
  */
 const ProductVariantSelector = ({ product, variants, selectedVariant, onVariantChange }) => {
-  console.log('ProductVariantSelector:', { product, variants, selectedVariant });
-  
   if (!variants || variants.length === 0) {
-    console.log('No variants to display');
     return null;
   }
 

@@ -44,16 +44,12 @@ export const useProductCatalog = () => {
   const abortControllerRef = useRef(null);
   
   useEffect(() => {
-    console.log('[useProductCatalog] useEffect triggered!', { currentPage, filters });
-    
     // Cancel previous request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
     
     const fetchProducts = async () => {
-      console.log('[useProductCatalog] fetchProducts called, currentPage:', currentPage, 'PRODUCTS_PER_PAGE:', PRODUCTS_PER_PAGE);
-      
       // Create new abort controller for this request
       abortControllerRef.current = new AbortController();
       
@@ -65,8 +61,6 @@ export const useProductCatalog = () => {
           page: currentPage,
           limit: PRODUCTS_PER_PAGE, // Explicit limit to override backend default (20)
         };
-        
-        console.log('[useProductCatalog] Params to send:', params);
 
         // Add sort parameter (backend expects "field:order" format)
         if (filters.sortBy && filters.sortOrder) {
@@ -83,9 +77,6 @@ export const useProductCatalog = () => {
         if (filters.rating) params.minRating = filters.rating;
 
         const response = await getProducts(params);
-        
-        console.log('[useProductCatalog] Response:', response);
-        console.log('[useProductCatalog] Pagination:', response.pagination);
         
         // Mock returns { products: [...], pagination: { total, totalPages, page, limit, hasMore } }
         // Backend returns { products: [...], pagination: { totalProducts, totalPages, currentPage, limit } }
