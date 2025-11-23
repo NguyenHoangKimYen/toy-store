@@ -1,6 +1,7 @@
 const CartService = require("../services/cart.service");
 const socket = require("../socket/index");
 
+// Get all carts
 const getAllCarts = async (req, res) => {
     try {
         const carts = await CartService.getAllCarts();
@@ -10,32 +11,35 @@ const getAllCarts = async (req, res) => {
     }
 };
 
+// Get cart by user ID
 const getCartByUser = async (req, res) => {
     try {
         const cart = await CartService.getCartByUserOrSession({
             userId: req.params.userId,
         });
         if (!cart)
-            return res.status(404).json({ message: "Không tìm thấy giỏ hàng" });
+            return res.status(404).json({ message: "Cart not found" });
         res.status(200).json(cart);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 };
 
+// Get cart by session ID
 const getCartBySession = async (req, res) => {
     try {
         const cart = await CartService.getCartByUserOrSession({
             sessionId: req.params.sessionId,
         });
         if (!cart)
-            return res.status(404).json({ message: "Không tìm thấy giỏ hàng" });
+            return res.status(404).json({ message: "Cart not found" });
         res.status(200).json(cart);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 };
 
+// Create a new cart
 const createCart = async (req, res) => {
     try {
         const cart = await CartService.createCart(req.body);
@@ -45,16 +49,16 @@ const createCart = async (req, res) => {
     }
 };
 
+// Add an item to the cart and notify the user via Socket.IO
 const addItem = async (req, res, next) => {
     try {
         const cartId = req.params.cartId;
         const itemData = req.body;
 
-        // 1. Lưu vào DB
+        // 1. Save to DB
         const updatedCart = await CartService.addItem(cartId, itemData);
 
-        // 2. [SOCKET] Bắn tin cập nhật cho user này
-        // Kiểm tra xem user có đăng nhập không (có req.user) để gửi đúng room
+        // 2. [SOCKET] Emit update to the user's room
         if (req.user && req.user._id) {
             try {
                 const io = socket.getIO();
@@ -66,12 +70,12 @@ const addItem = async (req, res, next) => {
 
                 io.to(`user_${userId}`).emit("cart_updated", {
                     action: "add_item",
-                    totalItems: updatedCart.totalItems, // Giả sử service trả về field này
+                    totalItems: updatedCart.totalItems, // Assuming service returns this field
                     cart: updatedCart,
                 });
             } catch (socketErr) {
                 console.error("Socket emit error:", socketErr.message);
-                // Không throw error để tránh làm hỏng luồng mua hàng chính
+                // Do not throw error to avoid disrupting the main flow
             }
         }
 
@@ -84,8 +88,8 @@ const addItem = async (req, res, next) => {
     }
 };
 
+// Remove an item from the cart and notify the user via Socket.IO
 const removeItem = async (req, res, next) => {
-    // Nhớ thêm next để bắt lỗi chuẩn
     try {
         const { cartId } = req.params;
         const { cartItemId, itemPrice } = req.body;
@@ -96,7 +100,7 @@ const removeItem = async (req, res, next) => {
             itemPrice,
         );
 
-        // [SOCKET] Cũng nên bắn tin khi xóa để đồng bộ
+        // [SOCKET] Also emit a message when removing to sync
         if (req.user && req.user._id) {
             try {
                 const io = socket.getIO();
@@ -111,16 +115,16 @@ const removeItem = async (req, res, next) => {
 
         res.status(200).json(updated);
     } catch (err) {
-        // res.status(500).json({ message: err.message }); -> Nên dùng next(err) cho đồng bộ
         next(err);
     }
 };
 
+// Clear all items from the cart and notify the user via Socket.IO
 const clearCart = async (req, res, next) => {
     try {
         const updated = await CartService.clearCart(req.params.cartId);
 
-        // [SOCKET] Bắn tin khi xóa sạch giỏ
+        // [SOCKET] Emit a message when clearing the entire cart
         if (req.user && req.user._id) {
             try {
                 const io = socket.getIO();
@@ -139,12 +143,13 @@ const clearCart = async (req, res, next) => {
     }
 };
 
+// Delete the cart entirely
 const deleteCart = async (req, res) => {
     try {
         const deleted = await CartService.deleteCart(req.params.cartId);
         if (!deleted)
-            return res.status(404).json({ message: "Không tìm thấy giỏ hàng" });
-        res.status(200).json({ message: "Đã xóa giỏ hàng thành công" });
+            return res.status(404).json({ message: "Cart not found" });
+        res.status(200).json({ message: "Cart deleted successfully" });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
