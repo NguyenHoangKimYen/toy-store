@@ -43,7 +43,14 @@ const ProductInfo = ({ product, rating, reviewCount, price, originalPrice, inSto
             <div className="price-main">
               <span className="detail-current-price">{formatPrice(price)}</span>
               {originalPrice && originalPrice > price && (
-                <span className="detail-original-price">{formatPrice(originalPrice)}</span>
+                <>
+                  <span className="detail-original-price">{formatPrice(originalPrice)}</span>
+                  {discount > 0 && (
+                    <Badge variant="destructive" className="discount-badge">
+                      -{discount}%
+                    </Badge>
+                  )}
+                </>
               )}
             </div>
             <div className="stock-info">
@@ -56,9 +63,6 @@ const ProductInfo = ({ product, rating, reviewCount, price, originalPrice, inSto
                 <Badge variant="destructive" className="stock-badge">
                   Out of Stock
                 </Badge>
-              )}
-              {selectedVariant?.sku && (
-                <span className="product-sku">SKU: {selectedVariant.sku}</span>
               )}
             </div>
           </>
