@@ -109,19 +109,28 @@ const updateReview = async ({ userId, reviewId, rating, comment, imgFiles, delet
     // Check ownership
     if (review.userId.toString() !== userId) throw new Error("Permission denied to modify this review");
 
+    // --- [MỚI] BỔ SUNG AI CHECK KHI UPDATE ---
+    // Dù chỉ sửa rating hay sửa comment, ta cũng nên quét lại comment (vì comment được gửi lên lại)
+    const aiResult = await AIService.analyzeReviewContent(comment);
+
+    let newStatus = 'pending';
+    if (aiResult.autoApprove) {
+        newStatus = 'approved'; // Nếu AI thấy ổn thì cho hiện
+    } else {
+        newStatus = 'flagged';  // Nếu sửa thành nội dung xấu -> Chặn lại chờ Admin
+    }
+    // -----------------------------------------
+
     // --- LOGIC XỬ LÝ ẢNH UPDATE ---
 
-    // 1. Chuẩn hóa danh sách ảnh muốn xóa (ép về mảng)
+    // 1. Chuẩn hóa danh sách ảnh muốn xóa
     let imagesToDelete = [];
     if (deletedImages) {
         imagesToDelete = Array.isArray(deletedImages) ? deletedImages : [deletedImages];
     }
 
     // 2. Tính toán số lượng ảnh sẽ còn lại
-    // Giữ lại những ảnh cũ KHÔNG nằm trong danh sách xóa
     const currentImagesKept = review.imageUrls.filter(url => !imagesToDelete.includes(url));
-
-    // Số ảnh mới thêm vào
     const newImageCount = imgFiles ? imgFiles.length : 0;
     const totalImages = currentImagesKept.length + newImageCount;
 
@@ -130,7 +139,7 @@ const updateReview = async ({ userId, reviewId, rating, comment, imgFiles, delet
         throw new Error(`You can only have a maximum of 5 images. Current kept: ${currentImagesKept.length}, New: ${newImageCount}`);
     }
 
-    // 4. Xóa ảnh cũ trên S3 (Dọn rác)
+    // 4. Xóa ảnh cũ trên S3
     if (imagesToDelete.length > 0) {
         await deleteFromS3(imagesToDelete);
     }
@@ -141,17 +150,27 @@ const updateReview = async ({ userId, reviewId, rating, comment, imgFiles, delet
         newUploadedUrls = await uploadToS3(imgFiles, "reviewImages");
     }
 
-    // 6. Gộp ảnh cũ (giữ lại) + ảnh mới
+    // 6. Gộp ảnh
     const finalImageUrls = [...currentImagesKept, ...newUploadedUrls];
 
     // --- CẬP NHẬT DB ---
     const updated = await reviewRepo.updateReviewById(reviewId, {
         rating,
         comment,
-        imageUrls: finalImageUrls
+        imageUrls: finalImageUrls,
+        
+        // [MỚI] Cập nhật trạng thái và kết quả AI
+        status: newStatus,
+        aiAnalysis: {
+            isSafe: aiResult.isSafe,
+            toxicScore: aiResult.toxicScore,
+            flaggedCategories: aiResult.flaggedCategories,
+            processedAt: new Date()
+        }
     });
 
     await Review.calcAverageRatings(review.productId);
+    
     return updated;
 };
 
