@@ -12,16 +12,16 @@ module.exports = {
                 $group: {
                     _id: "$items.productId",
                     quantitySold: { $sum: "$items.quantity" },
-                    revenue: { $sum: "$items.subtotal" }
-                }
+                    revenue: { $sum: "$items.subtotal" },
+                },
             },
             {
                 $lookup: {
                     from: "products",
                     localField: "_id",
                     foreignField: "_id",
-                    as: "product"
-                }
+                    as: "product",
+                },
             },
             { $unwind: "$product" },
             { $sort: { quantitySold: -1 } },
@@ -32,9 +32,9 @@ module.exports = {
                     name: "$product.name",
                     image: "$product.thumbnail",
                     quantitySold: 1,
-                    revenue: 1
-                }
-            }
+                    revenue: 1,
+                },
+            },
         ]);
     },
 
@@ -46,21 +46,21 @@ module.exports = {
                     from: "variants",
                     localField: "variants",
                     foreignField: "_id",
-                    as: "variantList"
-                }
+                    as: "variantList",
+                },
             },
             {
                 $addFields: {
-                    totalStock: { $sum: "$variantList.stockQuantity" }
-                }
+                    totalStock: { $sum: "$variantList.stockQuantity" },
+                },
             },
             { $match: { totalStock: { $gte: minStock } } },
             {
                 $project: {
                     name: 1,
                     totalStock: 1,
-                    thumbnail: 1
-                }
+                    thumbnail: 1,
+                },
             },
             { $sort: { totalStock: -1 } },
         ]);
@@ -74,21 +74,21 @@ module.exports = {
                     from: "variants",
                     localField: "variants",
                     foreignField: "_id",
-                    as: "variantList"
-                }
+                    as: "variantList",
+                },
             },
             {
                 $addFields: {
-                    totalStock: { $sum: "$variantList.stockQuantity" }
-                }
+                    totalStock: { $sum: "$variantList.stockQuantity" },
+                },
             },
             { $match: { totalStock: { $lte: maxStock } } },
             {
                 $project: {
                     name: 1,
                     totalStock: 1,
-                    thumbnail: 1
-                }
+                    thumbnail: 1,
+                },
             },
             { $sort: { totalStock: 1 } },
         ]);
@@ -103,16 +103,16 @@ module.exports = {
                 $group: {
                     _id: "$items.productId",
                     revenue: { $sum: "$items.subtotal" },
-                    totalQuantity: { $sum: "$items.quantity" }
-                }
+                    totalQuantity: { $sum: "$items.quantity" },
+                },
             },
             {
                 $lookup: {
                     from: "products",
                     localField: "_id",
                     foreignField: "_id",
-                    as: "product"
-                }
+                    as: "product",
+                },
             },
             { $unwind: "$product" },
             {
@@ -121,10 +121,10 @@ module.exports = {
                     name: "$product.name",
                     revenue: 1,
                     totalQuantity: 1,
-                    thumbnail: "$product.thumbnail"
-                }
+                    thumbnail: "$product.thumbnail",
+                },
             },
-            { $sort: { revenue: -1 } }
+            { $sort: { revenue: -1 } },
         ]);
     },
 
@@ -138,24 +138,24 @@ module.exports = {
                     from: "products",
                     localField: "items.productId",
                     foreignField: "_id",
-                    as: "product"
-                }
+                    as: "product",
+                },
             },
             { $unwind: "$product" },
             {
                 $group: {
                     _id: "$product.categoryId",
                     totalSold: { $sum: "$items.quantity" },
-                    revenue: { $sum: "$items.subtotal" }
-                }
+                    revenue: { $sum: "$items.subtotal" },
+                },
             },
             {
                 $lookup: {
                     from: "categories",
                     localField: "_id",
                     foreignField: "_id",
-                    as: "category"
-                }
+                    as: "category",
+                },
             },
             { $unwind: "$category" },
             {
@@ -163,10 +163,10 @@ module.exports = {
                     _id: 1,
                     name: "$category.name",
                     totalSold: 1,
-                    revenue: 1
-                }
+                    revenue: 1,
+                },
             },
-            { $sort: { revenue: -1 } }
+            { $sort: { revenue: -1 } },
         ]);
-    }
+    },
 };

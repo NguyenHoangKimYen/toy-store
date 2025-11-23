@@ -1,37 +1,37 @@
 const Review = require("../models/review.model");
 const { Types } = require("mongoose");
 
-
 const createReview = async (data) => {
     return await Review.create(data);
 };
 
 const findReviewByUserAndProduct = async (userId, productId) => {
-    return await Review.findOne({ 
-        userId: new Types.ObjectId(userId), 
-        productId: new Types.ObjectId(productId) 
+    return await Review.findOne({
+        userId: new Types.ObjectId(userId),
+        productId: new Types.ObjectId(productId),
     });
 };
 
-const getReviewsByProductId = async ({ 
-    productId, 
-    page = 1, 
-    limit = 10, 
-    sort = "newest", 
-    filterRating = null 
+const getReviewsByProductId = async ({
+    productId,
+    page = 1,
+    limit = 10,
+    sort = "newest",
+    filterRating = null,
 }) => {
     const skip = (page - 1) * limit;
-    
-    const query = { 
+
+    const query = {
         productId: new Types.ObjectId(productId),
-        isPublished: true 
+        isPublished: true,
     };
 
     if (filterRating) {
         query.rating = filterRating;
     }
 
-    const sortCondition = sort === "oldest" ? { createdAt: 1 } : { createdAt: -1 };
+    const sortCondition =
+        sort === "oldest" ? { createdAt: 1 } : { createdAt: -1 };
 
     const reviews = await Review.find(query)
         .populate("userId", "name avatar email")
@@ -71,5 +71,5 @@ module.exports = {
     getReviewsByProductId,
     findReviewById,
     updateReviewById,
-    deleteReviewById
+    deleteReviewById,
 };

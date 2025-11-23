@@ -56,7 +56,7 @@ router.post(
     auth,
     ownerOrAdmin,
     uploadAvatarMiddleware,
-    uploadAvatarController
+    uploadAvatarController,
 );
 
 // Update avatar
@@ -65,7 +65,7 @@ router.patch(
     auth,
     ownerOrAdmin,
     uploadAvatarMiddleware,
-    updateAvatarController
+    updateAvatarController,
 );
 
 module.exports = router;

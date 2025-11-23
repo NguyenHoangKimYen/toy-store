@@ -1,0 +1,30 @@
+# Đánh dấu đây là file gốc, không cần tìm kiếm ở thư mục cha nữa
+# npx prettier --write .
+root = true
+
+# === QUY TẮC CHUNG CHO TẤT CẢ FILE ===
+[*]
+indent_style = space            # Luôn dùng dấu cách (spaces) thay vì tab
+end_of_line = lf                # Dùng ký tự xuống dòng kiểu Unix
+charset = utf-8                 # Định dạng file UTF-8
+trim_trailing_whitespace = true # Tự động xóa khoảng trắng thừa ở cuối dòng
+insert_final_newline = true     # Luôn thêm một dòng trống ở cuối file
+
+# === QUY TẮC RIÊNG CHO FRONTEND ===
+# Áp dụng cho mọi file trong thư mục 'frontend'
+[frontend/**]
+indent_size = 4                 # Thụt lề 4 dấu cách
+
+# === QUY TẮC RIÊNG CHO BACKEND ===
+# Áp dụng cho mọi file trong thư mục 'backend'
+[backend/**]
+indent_size = 4                 # Thụt lề 4 dấu cách
+
+# Định nghĩa theo loại file (nếu cần)
+[*.py]
+indent_style = space
+indent_size = 4
+
+[*.{js,jsx,ts,tsx,css,scss,html,json}]
+indent_style = space
+indent_size = 4

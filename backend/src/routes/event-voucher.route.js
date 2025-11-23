@@ -12,12 +12,21 @@ router.post("/events", auth, adminOnly, eventVoucherController.createEvent);
 router.put("/events/:id", auth, adminOnly, eventVoucherController.updateEvent);
 
 // Admin xoá event
-router.delete("/events/:id", auth, adminOnly, eventVoucherController.deleteEvent);
+router.delete(
+    "/events/:id",
+    auth,
+    adminOnly,
+    eventVoucherController.deleteEvent,
+);
 
 // Admin xem danh sách event
 router.get("/events", auth, adminOnly, eventVoucherController.getEvents);
 
 // User xem voucher từ event (những voucher hợp lệ / đang chạy)
-router.get("/events/active-vouchers", auth, eventVoucherController.getActiveVouchers);
+router.get(
+    "/events/active-vouchers",
+    auth,
+    eventVoucherController.getActiveVouchers,
+);
 
 module.exports = router;

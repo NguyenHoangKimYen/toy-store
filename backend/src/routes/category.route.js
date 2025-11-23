@@ -9,7 +9,7 @@ const {
     deleteCategory,
 } = require("../controllers/category.controller.js");
 
-const { uploadCategoryImages } = require("../middlewares/upload.middleware.js"); 
+const { uploadCategoryImages } = require("../middlewares/upload.middleware.js");
 
 router.post("/", uploadCategoryImages, createCategory);
 

@@ -10,7 +10,7 @@ const updateProductPriceRange = async (productId) => {
         return;
     }
 
-    const prices = variants.map(v => v.price || 0);
+    const prices = variants.map((v) => v.price || 0);
     const min = Math.min(...prices);
     const max = Math.max(...prices);
 
@@ -38,11 +38,13 @@ const createVariant = async (productId, variantData, imgFiles) => {
     const allowedAttributes = product.attributes;
 
     let variantAttributesArray;
-    if (typeof variantData.attributes === 'string') {
+    if (typeof variantData.attributes === "string") {
         try {
             variantAttributesArray = JSON.parse(variantData.attributes);
         } catch (e) {
-            throw new Error("Invalid attributes JSON format. Please send an array.");
+            throw new Error(
+                "Invalid attributes JSON format. Please send an array.",
+            );
         }
     } else {
         variantAttributesArray = variantData.attributes;
@@ -50,15 +52,14 @@ const createVariant = async (productId, variantData, imgFiles) => {
 
     for (const variantAttr of variantAttributesArray) {
         const definition = allowedAttributes.find(
-            (attr) => attr.name === variantAttr.name
+            (attr) => attr.name === variantAttr.name,
         );
-        
+
         if (!definition) {
             allowedAttributes.push({
                 name: variantAttr.name,
-                values: [variantAttr.value]
+                values: [variantAttr.value],
             });
-            
         } else {
             if (!definition.values.includes(variantAttr.value)) {
                 definition.values.push(variantAttr.value);
@@ -70,18 +71,18 @@ const createVariant = async (productId, variantData, imgFiles) => {
     if (imgFiles && imgFiles.length > 0) {
         imageUrls = await uploadToS3(imgFiles, "variantImages");
     }
-    
+
     const newVariant = {
         ...variantData,
-        attributes: variantAttributesArray, 
+        attributes: variantAttributesArray,
         imageUrls: imageUrls,
-        productId: productId
-    }
-    
+        productId: productId,
+    };
+
     const createdVariant = await variantRepository.create(newVariant);
-    
+
     product.variants.push(createdVariant._id);
-    
+
     await product.save();
 
     await updateProductPriceRange(productId);

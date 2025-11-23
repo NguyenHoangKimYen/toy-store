@@ -44,7 +44,10 @@ const analyzeReviewContent = async (text) => {
         let textResponse = response.text();
 
         // Clean string (xóa markdown ```json nếu có)
-        textResponse = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+        textResponse = textResponse
+            .replace(/```json/g, "")
+            .replace(/```/g, "")
+            .trim();
 
         const jsonResult = JSON.parse(textResponse);
 
@@ -53,21 +56,21 @@ const analyzeReviewContent = async (text) => {
             toxicScore: jsonResult.toxicScore || 0,
             flaggedCategories: jsonResult.flaggedCategories || [],
             // Auto-approve nếu an toàn VÀ toxicScore thấp
-            autoApprove: jsonResult.isSafe && (jsonResult.toxicScore || 0) < 0.3 
+            autoApprove:
+                jsonResult.isSafe && (jsonResult.toxicScore || 0) < 0.3,
         };
-
     } catch (error) {
         console.error("Gemini AI Error:", error);
         // Fallback: Nếu AI lỗi, chặn lại để Admin duyệt tay
         return {
-            isSafe: false, 
-            toxicScore: 0, 
+            isSafe: false,
+            toxicScore: 0,
             flaggedCategories: ["ai_error"],
-            autoApprove: false 
+            autoApprove: false,
         };
     }
 };
 
 module.exports = {
-    analyzeReviewContent
+    analyzeReviewContent,
 };

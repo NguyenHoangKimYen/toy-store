@@ -5,14 +5,12 @@ const {
     createReview,
     updateReview,
     deleteReview,
-    moderateReview
+    moderateReview,
 } = require("../controllers/review.controller");
 
-const {
-    uploadReviewImages
-} = require('../middlewares/upload.middleware.js');
+const { uploadReviewImages } = require("../middlewares/upload.middleware.js");
 
-const authMiddleware = require("../middlewares/auth.middleware"); 
+const authMiddleware = require("../middlewares/auth.middleware");
 
 // --- PUBLIC ROUTES ---
 router.get("/product/:productId", getReviewsByProductId);

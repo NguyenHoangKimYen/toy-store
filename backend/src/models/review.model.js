@@ -30,8 +30,8 @@ const ReviewSchema = new mongoose.Schema(
 
         imageUrls: {
             type: [String],
-            validate: [arrayLimit, '{PATH} exceeds the limit of 5 images'],
-            default: []
+            validate: [arrayLimit, "{PATH} exceeds the limit of 5 images"],
+            default: [],
         },
 
         rating: {
@@ -52,20 +52,20 @@ const ReviewSchema = new mongoose.Schema(
             type: String,
             enum: ["pending", "approved", "rejected", "flagged"],
             default: "pending",
-            index: true
+            index: true,
         },
 
         aiAnalysis: {
             isSafe: { type: Boolean, default: null }, // AI đánh giá an toàn không
             toxicScore: { type: Number, default: 0 }, // Điểm độc hại (0-1)
             flaggedCategories: [String], // Ví dụ: ["spam", "harassment"]
-            processedAt: Date
+            processedAt: Date,
         },
 
         moderatedBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User", // Admin nào duyệt
-            default: null
+            default: null,
         },
 
         moderatedAt: Date,
@@ -74,7 +74,7 @@ const ReviewSchema = new mongoose.Schema(
     {
         timestamps: true,
         collection: "reviews",
-    }
+    },
 );
 
 // --- INDEX ---

@@ -1,33 +1,33 @@
 const axios = require("axios");
-const orderRepository = require('../repositories/order.repository');
+const orderRepository = require("../repositories/order.repository");
 
 async function pollBankTransactions() {
-  try {
-    const res = await axios.get(process.env.BANK_HISTORY_URL, {
-      headers: { Authorization: `Bearer ${process.env.BANK_API_KEY}` }
-    });
+    try {
+        const res = await axios.get(process.env.BANK_HISTORY_URL, {
+            headers: { Authorization: `Bearer ${process.env.BANK_API_KEY}` },
+        });
 
-    const transactions = res.data.data || [];
+        const transactions = res.data.data || [];
 
-    for (const tx of transactions) {
-      if (!tx.description) continue;
+        for (const tx of transactions) {
+            if (!tx.description) continue;
 
-      const match = tx.description.match(/MB_(\w{24})/);
-      if (!match) continue;
+            const match = tx.description.match(/MB_(\w{24})/);
+            if (!match) continue;
 
-      const orderId = match[1];
+            const orderId = match[1];
 
-      const order = await orderRepository.findById(orderId);
-      if (!order || order.status === "paid") continue;
+            const order = await orderRepository.findById(orderId);
+            if (!order || order.status === "paid") continue;
 
-      // UPDATE ORDER THÀNH PAID
-      await orderRepository.update(orderId, { status: "paid" });
+            // UPDATE ORDER THÀNH PAID
+            await orderRepository.update(orderId, { status: "paid" });
 
-      console.log("✔ Auto-paid order:", orderId, " → PAID");
+            console.log("✔ Auto-paid order:", orderId, " → PAID");
+        }
+    } catch (e) {
+        console.error("Error checking transactions", e.message);
     }
-  } catch (e) {
-    console.error("Error checking transactions", e.message);
-  }
 }
 
 setInterval(pollBankTransactions, 10 * 1000);
