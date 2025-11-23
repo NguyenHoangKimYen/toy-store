@@ -148,22 +148,22 @@ const ProductDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-4">
-      <div className="max-w-[1400px] mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-2 md:py-4">
+      <div className="max-w-[1400px] mx-auto px-2 md:px-4">
         {/* Back Button */}
         <Button
           variant="ghost"
           onClick={() => navigate('/products')}
-          className="mb-3 rounded-none"
+          className="mb-2 md:mb-3 rounded-none text-sm md:text-base h-9 md:h-10"
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={18} className="md:w-5 md:h-5" />
           Back to Products
         </Button>
 
         {/* Product Main Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-[45%_55%] gap-8 mb-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[45%_55%] gap-4 md:gap-8 mb-6 md:mb-8 items-start">
           {/* Image Gallery */}
-          <div className="sticky top-20 max-h-[calc(100vh-100px)] overflow-hidden">
+          <div className="lg:sticky lg:top-20 lg:max-h-[calc(100vh-100px)] overflow-hidden">
             <ProductImageGallery 
               images={selectedVariant?.imageUrls || product.imageUrls || []} 
               productName={product.name} 
@@ -214,17 +214,17 @@ const ProductDetail = () => {
       </div>
 
       {/* Mobile Bottom Action Bar */}
-      <div className="hidden max-md:flex fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] gap-3">
+      <div className="hidden max-md:flex fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-2 md:p-3 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] gap-2">
         <button
-          className="flex-1 h-12 font-semibold rounded-none bg-slate-100 text-slate-800 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+          className="flex-1 h-11 text-sm font-semibold rounded-none bg-slate-100 text-slate-800 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
           onClick={handleAddToCart}
           disabled={!selectedVariant || !inStock || addingToCart}
         >
-          <ShoppingCart size={20} />
+          <ShoppingCart size={18} />
           Add to Cart
         </button>
         <button
-          className="flex-1 h-12 font-semibold rounded-none bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+          className="flex-1 h-11 text-sm font-semibold rounded-none bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
           onClick={handleBuyNow}
           disabled={!selectedVariant || !inStock || addingToCart}
         >

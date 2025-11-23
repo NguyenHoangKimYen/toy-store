@@ -12,8 +12,8 @@
 }
 
 /* Mobile padding compensation for fixed action bar */
-@media (max-width: 768px) {
-  .product-detail-container {
-    padding-bottom: 100px;
+@media (max-width: 767px) {
+  .max-w-\[1400px\] {
+    padding-bottom: 80px;
   }
 }
