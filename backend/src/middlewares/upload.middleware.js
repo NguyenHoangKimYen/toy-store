@@ -19,10 +19,12 @@ const uploadAvatar = upload.single("avatar");
 const uploadProductImages = upload.array("images", 10);
 const uploadVariantImages = upload.array("variantImages", 10);
 const uploadReviewImages = upload.array("reviewImages", 5);
+const uploadCategoryImages = upload.array("categoryImages", 1);
 
 module.exports = {
     uploadAvatar,
     uploadProductImages,
     uploadVariantImages,
     uploadReviewImages,
+    uploadCategoryImages,
 };
