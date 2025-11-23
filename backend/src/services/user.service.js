@@ -1,84 +1,80 @@
 const bcrypt = require("bcrypt");
 const userRepository = require("../repositories/user.repository.js");
 
+/**
+ * GỘP GET USER:
+ * - /users?id=...
+ * - /users?email=...
+ * - /users?phone=...
+ * - /users?username=...
+ * - /users?keyword=...
+ * - phân trang, filter role
+ */
 const getAllUsers = async (query) => {
-    const { page = 1, limit = 20, role, keyword } = query;
+    const {
+        page = 1,
+        limit = 20,
+        id,
+        email,
+        phone,
+        username,
+        role,
+        keyword,
+    } = query;
+
     const filter = {};
 
-    if (role) filter.role = role; //lọc theo vai trò người dùng
-    // if (keyword) filter.$text = { $search: keyword }; //tìm kiếm toàn văn bản trên các trường được đánh chỉ mục văn bản
+    // === 1. Search trực tiếp theo ID/email/phone/username ===
+    if (id) filter._id = id;
+    if (email) filter.email = email;
+    if (phone) filter.phone = phone;
+    if (username) filter.username = username;
+
+    // === 2. Lọc theo role ===
+    if (role) filter.role = role;
+
+    // === 3. Keyword search (full-text) ===
+    if (keyword) {
+        filter.$text = { $search: keyword };
+    }
+
+    // Nếu tìm 1 kết quả -> không cần phân trang
+    const isSingleSearch = id || email || phone || username;
+
     const options = {
-        skip: (page - 1) * limit,
-        limit: parseInt(limit),
+        skip: isSingleSearch ? 0 : (page - 1) * limit,
+        limit: isSingleSearch ? 1 : parseInt(limit),
     };
-    return userRepository.findAll(filter, options); //truy xuất người dùng với bộ lọc và tùy chọn phân trang
+
+    return userRepository.findAll(filter, options);
 };
 
-const getUserById = async (id) => {
-    const user = await userRepository.findById(id);
-    if (!user) {
-        throw new Error("User not found");
-    }
-    return user;
-};
-
-const getUserByEmail = async (email) => {
-    const user = await userRepository.findByEmail(email);
-    if (!user) {
-        throw new Error("User not found");
-    }
-    return user;
-};
-
-const getUserByPhone = async (phone) => {
-    const user = await userRepository.findByPhone(phone);
-    if (!user) {
-        throw new Error("User not found");
-    }
-    return user;
-};
-
-const getUserByUsername = async (username) => {
-    const user = await userRepository.findByUsername(username);
-    if (!user) {
-        throw new Error("User not found");
-    }
-    return user;
-};
-
+// Tạo user (admin hoặc hệ thống dùng)
 const createUser = async (userData) => {
     const { password, role, ...rest } = userData;
-    const allowedRoles = ['customer', 'admin'];
-    const safeRole = allowedRoles.includes(role) ? role : 'customer';
+    const allowedRoles = ["customer", "admin"];
+    const safeRole = allowedRoles.includes(role) ? role : "customer";
 
     if (password) {
-        const saltRound = 10;
-        const hashedPassword = await bcrypt.hash(password, saltRound);
-        rest.password = hashedPassword;
+        rest.password = await bcrypt.hash(password, 10);
     }
 
-    const newUserData = { //merge data
+    return userRepository.create({
         ...rest,
-        role: safeRole
-    };
-
-    const user = await userRepository.create(newUserData);
-    return user;
+        role: safeRole,
+    });
 };
 
+// Xác minh user
 const setUserVerified = async (id, isVerified = true) => {
-    //Cập nhật trạng thái xác minh của người dùng
     const verifiedUser = await userRepository.setVerified(id, isVerified);
-    if (!verifiedUser) {
-        //nếu không tìm thấy người dùng hoặc cập nhật thất bại
-        throw new Error("User not found or verification update failed");
-    }
+    if (!verifiedUser) throw new Error("User not found or verification update failed");
     return verifiedUser;
 };
 
+// Đặt mật khẩu mới
 const setUserPassword = async (id, plainPassword) => {
     if (
-        //kiểm tra tính hợp lệ của mật khẩu
         !plainPassword ||
         typeof plainPassword !== "string" ||
         !plainPassword.trim() ||
@@ -88,38 +84,30 @@ const setUserPassword = async (id, plainPassword) => {
         throw new Error("Invalid password");
     }
 
-    const saltRound = 10;
-    const hashedPassword = await bcrypt.hash(plainPassword, saltRound); //băm mật khẩu
+    const hashedPassword = await bcrypt.hash(plainPassword, 10);
+    const updated = await userRepository.setPassword(id, hashedPassword);
 
-    const updated = await userRepository.setPassword(id, hashedPassword); //cập nhật mật khẩu đã băm vào cơ sở dữ liệu
-    if (!updated) {
-        throw new Error("User not found or password update failed");
-    }
+    if (!updated) throw new Error("User not found or password update failed");
+
     return updated;
 };
 
+// Update user
 const updateUser = async (id, userData) => {
-    const updatedUser = await userRepository.update(id, userData);
-    if (!updatedUser) {
-        throw new Error("User not found or update failed");
-    }
-    return updatedUser;
+    const updated = await userRepository.update(id, userData);
+    if (!updated) throw new Error("User not found or update failed");
+    return updated;
 };
 
+// Delete user
 const deleteUser = async (id) => {
-    const deletedUser = await userRepository.remove(id);
-    if (!deletedUser) {
-        throw new Error("User not found or delete failed");
-    }
-    return deletedUser;
+    const deleted = await userRepository.remove(id);
+    if (!deleted) throw new Error("User not found or delete failed");
+    return deleted;
 };
 
 module.exports = {
     getAllUsers,
-    getUserById,
-    getUserByEmail,
-    getUserByPhone,
-    getUserByUsername,
     createUser,
     setUserVerified,
     setUserPassword,
