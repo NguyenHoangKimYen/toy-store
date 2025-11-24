@@ -26,6 +26,7 @@ const Navbar = () => {
     const [showSearch, setShowSearch] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [showMobileMenu, setShowMobileMenu] = useState(false)
+    const [showMobileCategoryMenu, setShowMobileCategoryMenu] = useState(false)
     const [isVisible, setIsVisible] = useState(true)
     const [lastScrollY, setLastScrollY] = useState(0)
     const [categories, setCategories] = useState([])
@@ -103,6 +104,27 @@ const Navbar = () => {
         setShowMobileMenu(false)
     }
 
+    const handleCategoryClick = (categoryId, categoryName) => {
+        toast.success(`Browsing ${categoryName}`, {
+            position: "top-center",
+            duration: 2000,
+        });
+        
+        // Navigate first
+        navigate(`/products?category=${categoryId}`);
+        
+        // Then scroll to products grid after short delay
+        setTimeout(() => {
+            const productsGrid = document.querySelector('.products-main');
+            if (productsGrid) {
+                productsGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 100);
+        
+        // Close mobile menu if open
+        setShowMobileCategoryMenu(false);
+    }
+
     useEffect(() => {
         // Initial load
         updateCartCount();
@@ -131,6 +153,40 @@ const Navbar = () => {
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [lastScrollY]);
+
+    // Render mobile category menu
+    const renderMobileCategoryMenu = () => (
+        <div className={`mobile-category-menu ${showMobileCategoryMenu ? 'open' : ''}`}>
+            <div className="mobile-category-header">
+                <span className="category-menu-title">Categories</span>
+                <button className="mobile-category-close" onClick={() => setShowMobileCategoryMenu(false)}>
+                    <X size={20} />
+                </button>
+            </div>
+            <div className="mobile-category-content">
+                <div className="category-grid">
+                    {categories.map((category) => (
+                        <button
+                            key={category._id}
+                            onClick={() => handleCategoryClick(category._id, category.name)}
+                            className="category-item"
+                        >
+                            <div className="category-image">
+                                <img
+                                    src={category.imageUrl || category.image || 'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?w=400&h=300&fit=crop'}
+                                    alt={category.name}
+                                    onError={(e) => {
+                                        e.target.src = 'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?w=400&h=300&fit=crop';
+                                    }}
+                                />
+                            </div>
+                            <p className="category-name">{category.name}</p>
+                        </button>
+                    ))}
+                </div>
+            </div>
+        </div>
+    )
 
     // Render mobile menu
     const renderMobileMenu = () => (
@@ -170,7 +226,7 @@ const Navbar = () => {
                 {/* Navigation Links */}
                 <ul className="mobile-nav-links">
                     {/* eslint-disable-next-line no-unused-vars */}
-                    {NAV_LINKS.map(({ to, label, icon: Icon }) => (
+                    {NAV_LINKS.filter(link => link.label !== 'CATEGORIES').map(({ to, label, icon: Icon }) => (
                         <li key={to}>
                             <NavLink to={to} onClick={closeMobileMenu}>
                                 <Icon size={20} />
@@ -178,6 +234,18 @@ const Navbar = () => {
                             </NavLink>
                         </li>
                     ))}
+                    <li>
+                        <button
+                            onClick={() => {
+                                closeMobileMenu();
+                                setShowMobileCategoryMenu(true);
+                            }}
+                            className="mobile-nav-button"
+                        >
+                            <Layers size={20} />
+                            Categories
+                        </button>
+                    </li>
                 </ul>
 
                 {user && (
@@ -241,15 +309,15 @@ const Navbar = () => {
                             
                             {/* Mega Dropdown Menu */}
                             <div className='group-hover:block hidden absolute top-full left-1/2 -translate-x-1/2 pt-4 z-50'>
-                                <div className='bg-white rounded-xl shadow-2xl border border-gray-100 p-6 min-w-[600px] max-w-[800px]'>
-                                    <div className='grid grid-cols-3 gap-4'>
-                                        {categories.slice(0, 9).map((category) => (
-                                            <Link
+                                <div className='bg-white rounded-xl shadow-2xl border border-gray-100 p-6 min-w-[800px] max-w-[1000px]'>
+                                    <div className='grid grid-cols-4 gap-3'>
+                                        {categories.slice(0, 12).map((category) => (
+                                            <button
                                                 key={category._id}
-                                                to={`/products?category=${category._id}`}
-                                                className='group/item flex flex-col gap-2 p-3 rounded-lg hover:bg-gray-50 transition-all'
+                                                className='group/item flex flex-col gap-2 p-2 rounded-lg hover:bg-orange-50 transition-all text-left'
+                                                onClick={() => handleCategoryClick(category._id, category.name)}
                                             >
-                                                <div className='w-full h-24 rounded-md overflow-hidden bg-gray-100'>
+                                                <div className='w-full h-20 rounded-md overflow-hidden bg-gray-100'>
                                                     <img
                                                         src={category.imageUrl || category.image || 'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?w=400&h=300&fit=crop'}
                                                         alt={category.name}
@@ -262,17 +330,18 @@ const Navbar = () => {
                                                 <p className='font-semibold text-xs text-gray-900 group-hover/item:text-orange-600 transition-colors text-center'>
                                                     {category.name}
                                                 </p>
-                                            </Link>
+                                            </button>
                                         ))}
                                     </div>
                                     
-                                    {categories.length > 9 && (
+                                    {categories.length > 12 && (
                                         <div className='mt-4 pt-4 border-t border-gray-100 text-center'>
                                             <Link
                                                 to='/products'
                                                 className='text-xs font-semibold text-orange-600 hover:text-orange-700 transition-colors'
+                                                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                                             >
-                                                View more →
+                                                View all categories →
                                             </Link>
                                         </div>
                                     )}
@@ -391,8 +460,16 @@ const Navbar = () => {
                 <div className="mobile-menu-overlay" onClick={closeMobileMenu} />
             )}
 
+            {/* Mobile Category Menu Overlay */}
+            {showMobileCategoryMenu && (
+                <div className="mobile-menu-overlay" onClick={() => setShowMobileCategoryMenu(false)} />
+            )}
+
             {/* Mobile Menu */}
             {renderMobileMenu()}
+
+            {/* Mobile Category Menu */}
+            {renderMobileCategoryMenu()}
 
             {/* Main Navbar */}
             <nav className={`navbar-wrapper ${isVisible ? 'navbar-visible' : 'navbar-hidden'}`}>
