@@ -1,6 +1,7 @@
 import React, { useState, lazy, Suspense } from 'react';
 import { useProductCatalog } from './hooks';
 import './Products.css';
+import catalogBanner from '@/assets/images/catalog_banner.webp';
 
 // Lazy load heavy components
 const ProductToolbar = lazy(() => import('./components/ProductToolbar'));
@@ -37,18 +38,18 @@ const Products = () => {
       <div className="products-container">
         {/* Header */}
         <div className="products-header">
-          <div className="products-header-content">
-            <h1 className="products-title">Our Products</h1>
-            <p className="products-subtitle">
-              {filters.search ? (
-                <>
-                  Showing results for <strong className="text-orange-600">"{filters.search}"</strong>
-                  {totalProducts > 0 && <span className="ml-2">({totalProducts} {totalProducts === 1 ? 'product' : 'products'})</span>}
-                </>
-              ) : (
-                `Discover our collection of ${totalProducts} amazing products`
-              )}
-            </p>
+          <div className="products-header-banner">
+            <img 
+              src={catalogBanner} 
+              alt="Product Catalog Banner" 
+              className="products-banner-image"
+            />
+            {filters.search && (
+              <p className="products-search-info">
+                Showing results for <strong className="text-orange-600">"{filters.search}"</strong>
+                {totalProducts > 0 && <span className="ml-2">({totalProducts} {totalProducts === 1 ? 'product' : 'products'})</span>}
+              </p>
+            )}
           </div>
         </div>
 

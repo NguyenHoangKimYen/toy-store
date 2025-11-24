@@ -15,20 +15,24 @@
   margin-bottom: 2rem;
 }
 
-.products-header-content {
+.products-header-banner {
+  width: 100%;
   text-align: center;
 }
 
-.products-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 0.5rem;
+.products-banner-image {
+  width: 100%;
+  max-width: 1400px;
+  height: auto;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
 }
 
-.products-subtitle {
+.products-search-info {
   font-size: 1.125rem;
   color: #64748b;
+  margin-top: 1rem;
 }
 
 /* Toolbar */
