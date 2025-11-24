@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import { Search, ShoppingCart, User, UserCircle, Package, LogOut, Settings, X, Menu, Home, Box, Layers, Info, Phone } from 'lucide-react'
+import { Search, ShoppingCart, User, UserCircle, Package, LogOut, Settings, X, Menu, Home, Box, Layers, Info, Phone, ChevronDown } from 'lucide-react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+import { getCategories } from '@/services/categories.service'
 import './Navbar.css'
 
 // Navigation links configuration
 const NAV_LINKS = [
-    { to: '/', label: 'HOME', icon: Home },
     { to: '/products', label: 'PRODUCTS', icon: Box },
-    { to: '/collection', label: 'COLLECTION', icon: Layers },
+    { to: '/products', label: 'CATEGORIES', icon: Layers },
     { to: '/about', label: 'ABOUT', icon: Info },
     { to: '/contact', label: 'CONTACT', icon: Phone }
 ]
@@ -28,6 +28,7 @@ const Navbar = () => {
     const [showMobileMenu, setShowMobileMenu] = useState(false)
     const [isVisible, setIsVisible] = useState(true)
     const [lastScrollY, setLastScrollY] = useState(0)
+    const [categories, setCategories] = useState([])
 
     const updateCartCount = () => {
         const cart = JSON.parse(localStorage.getItem('cart') || '[]');
@@ -106,6 +107,17 @@ const Navbar = () => {
         // Initial load
         updateCartCount();
         loadUser();
+        
+        // Fetch categories
+        const fetchCategories = async () => {
+            try {
+                const data = await getCategories();
+                setCategories(data || []);
+            } catch (error) {
+                console.error('Failed to fetch categories:', error);
+            }
+        };
+        fetchCategories();
 
         // Listen for cart updates
         window.addEventListener('cartUpdated', updateCartCount);
@@ -216,12 +228,68 @@ const Navbar = () => {
     // Render desktop navigation links
     const renderDesktopNav = () => (
         <ul className='hidden sm:flex gap-5 text-sm text-gray-700'>
-            {NAV_LINKS.map(({ to, label }) => (
-                <NavLink key={to} to={to} className='flex flex-col items-center gap-1'>
-                    <p>{label}</p>
-                    <hr className='w-2/4 border-none h-[1.5px] bg-gray-700 hidden' />
-                </NavLink>
-            ))}
+            {NAV_LINKS.map(({ to, label }) => {
+                // Special handling for CATEGORIES with dropdown
+                if (label === 'CATEGORIES') {
+                    return (
+                        <li key={to} className='group relative flex flex-col items-center gap-1'>
+                            <div className='flex items-center gap-1 cursor-pointer'>
+                                <p>{label}</p>
+                                <ChevronDown size={14} className='transition-transform group-hover:rotate-180' />
+                            </div>
+                            <hr className='w-2/4 border-none h-[1.5px] bg-gray-700 hidden' />
+                            
+                            {/* Mega Dropdown Menu */}
+                            <div className='group-hover:block hidden absolute top-full left-1/2 -translate-x-1/2 pt-4 z-50'>
+                                <div className='bg-white rounded-xl shadow-2xl border border-gray-100 p-6 min-w-[600px] max-w-[800px]'>
+                                    <div className='grid grid-cols-3 gap-4'>
+                                        {categories.slice(0, 9).map((category) => (
+                                            <Link
+                                                key={category._id}
+                                                to={`/products?category=${category._id}`}
+                                                className='group/item flex flex-col gap-2 p-3 rounded-lg hover:bg-gray-50 transition-all'
+                                            >
+                                                <div className='w-full h-24 rounded-md overflow-hidden bg-gray-100'>
+                                                    <img
+                                                        src={category.imageUrl || category.image || 'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?w=400&h=300&fit=crop'}
+                                                        alt={category.name}
+                                                        className='w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-300'
+                                                        onError={(e) => {
+                                                            e.target.src = 'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?w=400&h=300&fit=crop';
+                                                        }}
+                                                    />
+                                                </div>
+                                                <p className='font-semibold text-xs text-gray-900 group-hover/item:text-orange-600 transition-colors text-center'>
+                                                    {category.name}
+                                                </p>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                    
+                                    {categories.length > 9 && (
+                                        <div className='mt-4 pt-4 border-t border-gray-100 text-center'>
+                                            <Link
+                                                to='/products'
+                                                className='text-xs font-semibold text-orange-600 hover:text-orange-700 transition-colors'
+                                            >
+                                                View more →
+                                            </Link>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </li>
+                    );
+                }
+                
+                // Regular nav links
+                return (
+                    <NavLink key={to} to={to} className='flex flex-col items-center gap-1'>
+                        <p>{label}</p>
+                        <hr className='w-2/4 border-none h-[1.5px] bg-gray-700 hidden' />
+                    </NavLink>
+                );
+            })}
         </ul>
     )
 

@@ -33,35 +33,93 @@
   padding: 56px 48px;
 }
 
-/* Tabs */
+/* Tabs Wrapper with Scroll */
+.categorized-products-tabs-wrapper {
+  position: relative;
+  margin-bottom: 40px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Tabs Container */
 .categorized-products-tabs {
   display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 4px 0;
+  flex: 1;
+  /* Fade effect on edges */
+  mask-image: linear-gradient(to right, transparent 0%, black 20px, black calc(100% - 20px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 20px, black calc(100% - 20px), transparent 100%);
+}
+
+.categorized-products-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+/* Tabs Scroll Buttons */
+.categorized-tabs-scroll-btn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 24px;
-  margin-bottom: 40px;
-  flex-wrap: wrap;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 15;
+}
+
+.categorized-tabs-scroll-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+}
+
+.categorized-tabs-scroll-btn:active {
+  transform: scale(0.95);
 }
 
 .categorized-products-tab {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
-  color: #d1d5db;
-  padding: 12px 24px;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 10px 24px;
   border: none;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
   cursor: pointer;
   transition: all 0.3s ease;
-  border-bottom: 2px solid transparent;
-  position: relative;
+  border-radius: 24px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .categorized-products-tab:hover {
   color: white;
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .categorized-products-tab.active {
-  color: white;
-  border-bottom-color: white;
+  color: #1f2937;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.categorized-more-tab {
+  opacity: 0.9;
 }
 
 /* Header */
@@ -274,17 +332,24 @@
     padding: 40px 24px;
   }
 
+  .categorized-products-tabs-wrapper {
+    margin-bottom: 32px;
+  }
+
+  .categorized-tabs-scroll-btn {
+    display: none;
+  }
+
   .categorized-products-tabs {
-    gap: 16px;
-    overflow-x: auto;
-    justify-content: flex-start;
-    padding-bottom: 8px;
+    gap: 10px;
+    padding-bottom: 4px;
+    mask-image: none;
+    -webkit-mask-image: none;
   }
 
   .categorized-products-tab {
-    font-size: 16px;
-    padding: 10px 20px;
-    white-space: nowrap;
+    font-size: 14px;
+    padding: 8px 18px;
   }
 
   .categorized-products-title {

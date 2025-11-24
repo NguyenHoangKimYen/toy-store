@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 import { ProductCard, ScrollArrows } from '@/components/common';
 import { useProducts } from '@/hooks';
 import { getCategories } from '@/services/categories.service';
@@ -11,7 +11,9 @@ const CategorizedProductsSection = () => {
   const [categories, setCategories] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [showAllCategories, setShowAllCategories] = useState(false);
   const scrollRef = useRef(null);
+  const tabsScrollRef = useRef(null);
   const navigate = useNavigate();
   
   const { products: allProducts, loading: productsLoading } = useProducts();
@@ -27,7 +29,7 @@ const CategorizedProductsSection = () => {
           : (categoriesResponse.categories || categoriesResponse.data || []);
         
         // Create category data with products
-        const categoryData = allCategories.slice(0, 4).map((category) => {
+        const categoryData = allCategories.map((category) => {
           const categoryProducts = allProducts.filter(p => 
             Array.isArray(p.categoryId) 
               ? p.categoryId.some(catId => catId === category._id || catId._id === category._id)
@@ -65,6 +67,16 @@ const CategorizedProductsSection = () => {
     }
   };
 
+  const scrollTabs = (direction) => {
+    if (tabsScrollRef.current) {
+      const scrollAmount = 300;
+      tabsScrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   const handleProductClick = (product) => {
     navigate(`/products/${product._id}`);
   };
@@ -88,6 +100,9 @@ const CategorizedProductsSection = () => {
   }
 
   const activeCategory = categories[activeIndex];
+  const MAX_VISIBLE_TABS = 6;
+  const visibleCategories = showAllCategories ? categories : categories.slice(0, MAX_VISIBLE_TABS);
+  const hasMoreCategories = categories.length > MAX_VISIBLE_TABS;
 
   return (
     <div className="categorized-products-showcase">
@@ -113,17 +128,50 @@ const CategorizedProductsSection = () => {
 
       {/* Content Layer */}
       <div className="categorized-products-content">
-        {/* Tabs */}
-        <div className="categorized-products-tabs">
-          {categories.map((cat, idx) => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveIndex(idx)}
-              className={`categorized-products-tab ${idx === activeIndex ? 'active' : ''}`}
+        {/* Tabs with Scroll */}
+        <div className="categorized-products-tabs-wrapper">
+          {categories.length > 4 && (
+            <button 
+              onClick={() => scrollTabs('left')} 
+              className="categorized-tabs-scroll-btn categorized-tabs-scroll-left"
+              aria-label="Scroll tabs left"
             >
-              {cat.name}
+              <ChevronLeft size={20} />
             </button>
-          ))}
+          )}
+          
+          <div className="categorized-products-tabs" ref={tabsScrollRef}>
+            {visibleCategories.map((cat, idx) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveIndex(idx)}
+                className={`categorized-products-tab ${idx === activeIndex ? 'active' : ''}`}
+              >
+                {cat.name}
+              </button>
+            ))}
+            
+            {hasMoreCategories && !showAllCategories && (
+              <button
+                onClick={() => setShowAllCategories(true)}
+                className="categorized-products-tab categorized-more-tab"
+                title="Show all categories"
+              >
+                <MoreHorizontal size={20} />
+                <span className="ml-1">More</span>
+              </button>
+            )}
+          </div>
+          
+          {categories.length > 4 && (
+            <button 
+              onClick={() => scrollTabs('right')} 
+              className="categorized-tabs-scroll-btn categorized-tabs-scroll-right"
+              aria-label="Scroll tabs right"
+            >
+              <ChevronRight size={20} />
+            </button>
+          )}
         </div>
 
         {/* Title & Description */}
