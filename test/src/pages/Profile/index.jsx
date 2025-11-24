@@ -25,7 +25,14 @@ const Profile = () => {
   if (error || !user) {
     return (
       <div className="profile-error">
-        <p>{error || 'Failed to load profile'}</p>
+        <div className="error-content">
+          <User size={48} className="error-icon" />
+          <h2>An error occurred</h2>
+          <p>{error || 'Failed to load profile'}</p>
+          {error && (error.includes('404') || error.includes('not found')) && (
+            <p className="error-hint">Your session may have expired. Redirecting to login...</p>
+          )}
+        </div>
       </div>
     );
   }

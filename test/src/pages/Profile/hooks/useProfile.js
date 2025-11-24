@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 import * as usersService from '@/services/users.service';
 import { useAuth } from '@/hooks/useAuth';
 import { useUser } from '@/hooks'; // Using global user hook
 
 export const useProfile = () => {
-  const { user: authUser } = useAuth();
+  const navigate = useNavigate();
+  const { user: authUser, logout } = useAuth();
   const [error, setError] = useState(null);
 
   // Get user ID from auth context
@@ -19,6 +21,27 @@ export const useProfile = () => {
     updateUser: updateUserFromHook,
     refreshUser 
   } = useUser(currentUserId);
+
+  // Handle 404 errors (user not found in database)
+  useEffect(() => {
+    if (fetchError && (fetchError.includes('404') || fetchError.includes('not found'))) {
+      // User ID in localStorage is invalid - clear auth and redirect
+      toast.error('Your session is invalid. Please login again.', {
+        duration: 5000,
+      });
+      
+      // Clear all auth data
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      localStorage.removeItem('guestSessionId');
+      
+      // Logout and redirect to login
+      setTimeout(() => {
+        logout();
+        navigate('/login');
+      }, 1500);
+    }
+  }, [fetchError, logout, navigate]);
 
   const updateProfile = async (updates) => {
     try {

@@ -38,11 +38,15 @@ const Cart = () => {
   }
 
   if (error) {
-    return (
-      <div className="cart-error">
-        <ErrorMessage message={error} />
-      </div>
-    );
+    // Don't show error page for "cart not found" - it's normal
+    if (!error.includes('not found') && !error.includes('404')) {
+      return (
+        <div className="cart-error">
+          <ErrorMessage message={error} />
+        </div>
+      );
+    }
+    // Treat "not found" as empty cart
   }
 
   if (!cartItems || cartItems.length === 0) {

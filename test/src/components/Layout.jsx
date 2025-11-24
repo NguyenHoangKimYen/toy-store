@@ -6,7 +6,7 @@ import { Toaster } from './ui/sonner'
 
 const Layout = () => {
     return (
-        <div className='min-h-screen overflow-x-hidden w-full'>
+        <div className='overflow-x-hidden w-full'>
             <Navbar />
             
             <main className='w-full relative pt-[73px]'>

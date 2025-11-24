@@ -1,7 +1,7 @@
 /* Products Page Styles */
 .products-page {
   min-height: 100vh;
-  background: linear-gradient(to bottom, #f1f5f9, #f8fafc);
+  background: transparent;
 }
 
 .products-container {
@@ -24,7 +24,6 @@
   width: 100%;
   max-width: 1400px;
   height: auto;
-  border-radius: 1rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   margin-bottom: 1rem;
 }

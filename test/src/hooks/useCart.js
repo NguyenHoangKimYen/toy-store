@@ -68,8 +68,32 @@ export const useCart = () => {
       setError(null);
 
       let cartData;
+      
       if (user?._id) {
-        cartData = await getCartByUser(user._id);
+        try {
+          cartData = await getCartByUser(user._id);
+        } catch (userErr) {
+          // If user cart fetch fails with 404, the user ID might be invalid
+          // Fall back to guest session cart
+          if (userErr.response?.status === 404 || userErr.message?.includes('not found') || userErr.message?.includes('404')) {
+            console.warn('User cart not found, falling back to guest session');
+            
+            // Try guest cart as fallback
+            const sessionId = getSessionId();
+            try {
+              cartData = await getCartBySession(sessionId);
+            } catch (sessionErr) {
+              // Both failed - treat as no cart
+              if (sessionErr.response?.status === 404 || sessionErr.message?.includes('not found') || sessionErr.message?.includes('404')) {
+                cartData = null;
+              } else {
+                throw sessionErr;
+              }
+            }
+          } else {
+            throw userErr;
+          }
+        }
       } else {
         const sessionId = getSessionId();
         cartData = await getCartBySession(sessionId);
@@ -85,9 +109,11 @@ export const useCart = () => {
         setCartItems([]);
       }
     } catch (err) {
-      if (err.response?.status === 404 || err.message?.includes('not found')) {
+      if (err.response?.status === 404 || err.message?.includes('not found') || err.message?.includes('404')) {
+        // Cart not found is normal for new users or after clearing
         setCart(null);
         setCartItems([]);
+        setError(null); // Don't show error for missing cart
       } else {
         setError(err.message || 'Failed to fetch cart');
         console.error('Error fetching cart:', err);

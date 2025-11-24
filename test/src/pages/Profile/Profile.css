@@ -12,6 +12,39 @@
   min-height: 400px;
 }
 
+.profile-error .error-content {
+  text-align: center;
+  padding: 3rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+}
+
+.profile-error .error-icon {
+  color: #ef4444;
+  margin-bottom: 1rem;
+}
+
+.profile-error h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #1f2937;
+}
+
+.profile-error p {
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.profile-error .error-hint {
+  color: #f59e0b;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: 1rem;
+}
+
 .profile-header {
   background: white;
   border-radius: 12px;
