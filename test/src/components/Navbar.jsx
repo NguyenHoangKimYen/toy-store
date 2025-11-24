@@ -104,12 +104,7 @@ const Navbar = () => {
         setShowMobileMenu(false)
     }
 
-    const handleCategoryClick = (categoryId, categoryName) => {
-        toast.success(`Browsing ${categoryName}`, {
-            position: "top-center",
-            duration: 2000,
-        });
-        
+    const handleCategoryClick = (categoryId) => {
         // Navigate first
         navigate(`/products?category=${categoryId}`);
         
@@ -168,7 +163,7 @@ const Navbar = () => {
                     {categories.map((category) => (
                         <button
                             key={category._id}
-                            onClick={() => handleCategoryClick(category._id, category.name)}
+                            onClick={() => handleCategoryClick(category._id)}
                             className="category-item"
                         >
                             <div className="category-image">
@@ -314,10 +309,10 @@ const Navbar = () => {
                                         {categories.slice(0, 12).map((category) => (
                                             <button
                                                 key={category._id}
-                                                className='group/item flex flex-col gap-2 p-2 rounded-lg hover:bg-orange-50 transition-all text-left'
-                                                onClick={() => handleCategoryClick(category._id, category.name)}
+                                                className='group/item flex flex-col gap-2 p-2 hover:bg-orange-50 transition-all text-left'
+                                                onClick={() => handleCategoryClick(category._id)}
                                             >
-                                                <div className='w-full h-20 rounded-md overflow-hidden bg-gray-100'>
+                                                <div className='w-full h-20 overflow-hidden bg-gray-100'>
                                                     <img
                                                         src={category.imageUrl || category.image || 'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?w=400&h=300&fit=crop'}
                                                         alt={category.name}
@@ -332,6 +327,38 @@ const Navbar = () => {
                                                 </p>
                                             </button>
                                         ))}
+                                        
+                                        {/* View All Button */}
+                                        <Link
+                                            to='/products'
+                                            className='group/item flex flex-col gap-2 p-2 hover:bg-orange-50 transition-all'
+                                            onClick={() => {
+                                                setTimeout(() => {
+                                                    const productsGrid = document.querySelector('.products-main');
+                                                    if (productsGrid) {
+                                                        productsGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                                    }
+                                                }, 100);
+                                            }}
+                                        >
+                                            <div className='w-full h-20 overflow-hidden bg-gray-50 flex items-center justify-center'>
+                                                <svg 
+                                                    className='w-10 h-10 text-gray-700 group-hover/item:text-orange-600 group-hover/item:scale-110 transition-all duration-300' 
+                                                    fill="currentColor" 
+                                                    viewBox="0 0 606.877 606.877"
+                                                >
+                                                    <g>
+                                                        <path d="M58.64,280.154h162.654c32.058,0,58.14-26.082,58.14-58.14V59.36c0-32.059-26.082-58.14-58.14-58.14H58.64 C26.582,1.22,0.5,27.301,0.5,59.36v162.654C0.5,254.072,26.582,280.154,58.64,280.154z M43.34,59.36c0-8.45,6.85-15.3,15.3-15.3 h162.654c8.45,0,15.3,6.85,15.3,15.3v162.654c0,8.45-6.85,15.3-15.3,15.3H58.64c-8.45,0-15.3-6.85-15.3-15.3V59.36z"/>
+                                                        <path d="M548.238,1.22H385.584c-32.059,0-58.141,26.082-58.141,58.14v162.654c0,32.058,26.082,58.14,58.141,58.14h162.654 c32.059,0,58.139-26.082,58.139-58.14V59.36C606.377,27.301,580.297,1.22,548.238,1.22z M563.537,222.014 c0,8.45-6.85,15.3-15.299,15.3H385.584c-8.449,0-15.301-6.85-15.301-15.3V59.36c0-8.45,6.852-15.3,15.301-15.3h162.654 c8.449,0,15.299,6.85,15.299,15.3V222.014z"/>
+                                                        <path d="M58.64,605.657h162.654c32.058,0,58.14-26.08,58.14-58.139V384.864c0-32.059-26.082-58.141-58.14-58.141H58.64 c-32.058,0-58.14,26.082-58.14,58.141v162.654C0.5,579.577,26.582,605.657,58.64,605.657z M43.34,384.864 c0-8.449,6.85-15.301,15.3-15.301h162.654c8.45,0,15.3,6.852,15.3,15.301v162.654c0,8.449-6.85,15.299-15.3,15.299H58.64 c-8.45,0-15.3-6.85-15.3-15.299V384.864z"/>
+                                                        <path d="M548.238,326.724H385.584c-32.059,0-58.141,26.082-58.141,58.141v162.654c0,32.059,26.082,58.139,58.141,58.139h162.654 c32.059,0,58.139-26.08,58.139-58.139V384.864C606.377,352.806,580.297,326.724,548.238,326.724z M563.537,547.519 c0,8.449-6.85,15.299-15.299,15.299H385.584c-8.449,0-15.301-6.85-15.301-15.299V384.864c0-8.449,6.852-15.301,15.301-15.301 h162.654c8.449,0,15.299,6.852,15.299,15.301V547.519z"/>
+                                                    </g>
+                                                </svg>
+                                            </div>
+                                            <p className='font-semibold text-xs text-gray-900 group-hover/item:text-orange-600 transition-colors text-center'>
+                                                View All
+                                            </p>
+                                        </Link>
                                     </div>
                                     
                                     {categories.length > 12 && (

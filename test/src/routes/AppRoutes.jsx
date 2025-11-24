@@ -3,6 +3,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import Layout from '../components/Layout'
 import ErrorBoundary from '../components/ErrorBoundary'
 import ProtectedRoute from '../components/ProtectedRoute'
+import GuestRoute from '../components/GuestRoute'
 import { ROUTES } from '../config/routes'
 import { LoadingSpinner } from '../components/common'
 
@@ -41,11 +42,23 @@ const PageLoader = () => (
 const router = createBrowserRouter([
   {
     path: ROUTES.LOGIN,
-    element: <Suspense fallback={<PageLoader />}><Login /></Suspense>
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <GuestRoute>
+          <Login />
+        </GuestRoute>
+      </Suspense>
+    )
   },
   {
     path: ROUTES.REGISTER,
-    element: <Suspense fallback={<PageLoader />}><Signup /></Suspense>
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <GuestRoute>
+          <Signup />
+        </GuestRoute>
+      </Suspense>
+    )
   },
   {
     path: "/verify-email",
