@@ -262,10 +262,77 @@ const moderateReview = async ({ reviewId, adminId, status, reason }) => {
     return updatedReview;
 };
 
+/**
+ * Lấy danh sách sản phẩm cần đánh giá của User
+ */
+const getProductsToReview = async (userId) => {
+    // 1. Lấy danh sách ProductId mà user ĐÃ đánh giá
+    const reviewedProductIds = await reviewRepo.getReviewedProductIdsByUser(userId);
+
+    // 2. Tìm tất cả các đơn hàng đã giao thành công của user
+    const deliveredOrders = await Order.find({
+        userId: userId,
+        status: 'delivered'
+    }).select('_id createdAt'); // Lấy thêm ngày mua để hiển thị nếu cần
+
+    if (!deliveredOrders.length) return [];
+
+    const deliveredOrderIds = deliveredOrders.map(o => o._id);
+
+    // 3. Lấy chi tiết sản phẩm trong các đơn hàng đó
+    // Populate để lấy tên, ảnh sản phẩm hiển thị ra Frontend
+    const purchasedItems = await OrderItem.find({
+        orderId: { $in: deliveredOrderIds }
+    })
+        .populate({
+            path: "productId",
+            select: "name imageUrls slug" // Chỉ lấy thông tin cần thiết hiển thị
+        })
+        .populate({
+            path: "variantId",
+            select: "attributes" // Lấy màu sắc/size
+        })
+        .sort({ createdAt: -1 }) // Mới mua xếp lên đầu
+        .lean();
+
+    // 4. Lọc: Chỉ giữ lại món nào CHƯA có trong danh sách đã review
+    // Logic: Nếu productId của item KHÔNG nằm trong mảng reviewedProductIds -> Giữ lại
+
+    const pendingReviews = [];
+    const seenProducts = new Set(); // Dùng để tránh duplicate (VD: mua 1 món 2 lần thì chỉ hiện 1 lần nhắc review)
+
+    for (const item of purchasedItems) {
+        if (!item.productId) continue; // Phòng trường hợp sản phẩm bị xóa
+
+        const prodIdStr = item.productId._id.toString();
+
+        // Nếu chưa review VÀ chưa được thêm vào list pending lần này
+        if (!reviewedProductIds.includes(prodIdStr) && !seenProducts.has(prodIdStr)) {
+
+            seenProducts.add(prodIdStr); // Đánh dấu đã xử lý sản phẩm này
+
+            // Format dữ liệu trả về cho Frontend đẹp đẽ
+            pendingReviews.push({
+                orderId: item.orderId,
+                productId: item.productId._id,
+                productName: item.productId.name,
+                productImage: item.productId.imageUrls?.[0] || "", // Lấy ảnh đầu tiên
+                productSlug: item.productId.slug,
+                variantId: item.variantId?._id,
+                variantName: _generateVariantName(item.variantId?.attributes), // Hàm cũ của bạn
+                purchasedAt: deliveredOrders.find(o => o._id.equals(item.orderId))?.createdAt
+            });
+        }
+    }
+
+    return pendingReviews;
+};
+
 module.exports = {
     createReview,
     getReviewsByProductId,
     updateReview,
     deleteReview,
     moderateReview,
+    getProductsToReview
 };
