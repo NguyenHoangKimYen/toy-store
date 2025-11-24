@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, X, TrendingUp, Clock } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { searchProducts } from '@/services/products.service';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,8 @@ const AdvancedSearchBar = ({
   placeholder = 'Search products...',
   className = ''
 }) => {
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [isExpanded, setIsExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -23,6 +25,17 @@ const AdvancedSearchBar = ({
   const [originalPosition, setOriginalPosition] = useState(null);
   const searchRef = useRef(null);
   const navigate = useNavigate();
+
+  // Sync search query with URL params when on products page
+  useEffect(() => {
+    if (location.pathname === '/products') {
+      const urlSearch = searchParams.get('search');
+      if (urlSearch && urlSearch !== searchQuery) {
+        setSearchQuery(urlSearch);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, searchParams]);
 
   // Popular/Trending searches
   const trendingSearches = ['Pikachu Plush', 'Pokemon Keychain', 'Anime Figure', 'Stickers'];
@@ -57,7 +70,7 @@ const AdvancedSearchBar = ({
     const timer = setTimeout(async () => {
       setIsLoading(true);
       try {
-        const response = await searchProducts({ search: searchQuery, limit: 6 });
+        const response = await searchProducts({ keyword: searchQuery, limit: 6 });
         setSearchResults(response.products || response || []);
       } catch (error) {
         console.error('Search error:', error);

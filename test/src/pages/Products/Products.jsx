@@ -40,7 +40,14 @@ const Products = () => {
           <div className="products-header-content">
             <h1 className="products-title">Our Products</h1>
             <p className="products-subtitle">
-              Discover our collection of {totalProducts} amazing products
+              {filters.search ? (
+                <>
+                  Showing results for <strong className="text-orange-600">"{filters.search}"</strong>
+                  {totalProducts > 0 && <span className="ml-2">({totalProducts} {totalProducts === 1 ? 'product' : 'products'})</span>}
+                </>
+              ) : (
+                `Discover our collection of ${totalProducts} amazing products`
+              )}
             </p>
           </div>
         </div>

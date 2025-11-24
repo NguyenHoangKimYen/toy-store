@@ -56,7 +56,7 @@ export const prefetchOnHover = (fetchFn, delay = 200) => {
 
 // Initialize API preconnection on app load
 export const initAPIPreconnect = () => {
-  const apiUrl = import.meta.env.VITE_API_URL || 'https://milkybloomtoystore.id.vn';
+  const apiUrl = import.meta.env.VITE_API_URL || 'https://api.milkybloomtoystore.id.vn';
   const apiDomain = new URL(apiUrl).origin;
   
   // Preconnect to API domain
