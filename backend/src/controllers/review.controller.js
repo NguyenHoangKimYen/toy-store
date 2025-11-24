@@ -132,10 +132,26 @@ const moderateReview = async (req, res, next) => {
     }
 };
 
+const getPendingReviews = async (req, res, next) => {
+    try {
+        const userId = req.user._id;
+        const result = await ReviewService.getProductsToReview(userId);
+        
+        return res.status(200).json({
+            success: true,
+            message: "Lấy danh sách chờ đánh giá thành công",
+            data: result
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createReview,
     getReviewsByProductId,
     updateReview,
     deleteReview,
     moderateReview,
+    getPendingReviews
 };
