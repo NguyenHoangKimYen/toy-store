@@ -11,7 +11,7 @@ const {
 
 const { uploadReviewImages } = require("../middlewares/upload.middleware.js");
 const authMiddleware = require("../middlewares/auth.middleware.js");
-const adminMiddlewares = require("../middlewares/admin.middleware.js")
+const adminMiddlewares = require("../middlewares/admin.middleware.js");
 
 router.get("/product/:productId", getReviewsByProductId);
 

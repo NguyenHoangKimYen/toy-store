@@ -1,4 +1,5 @@
 const express = require("express");
+const router = express.Router();
 const {
     getAllProducts,
     getProductById,
@@ -16,20 +17,20 @@ const {
 } = require("../controllers/variant.controller.js");
 
 const { uploadProductImages } = require("../middlewares/upload.middleware.js");
-
-const router = express.Router();
+const adminMiddlewares = require("../middlewares/admin.middleware.js");
 
 router.get("/", getAllProducts);
 router.get("/slug/:slug", getProductBySlug);
 router.get("/price/range", getProductByPrice);
+router.get("/:productId/variants", getVariantsByProduct);
 router.get("/:id", getProductById);
+
+router.use(adminMiddlewares);
 router.post("/", uploadProductImages, createProduct);
 router.delete("/:id", deleteProduct);
-
 router.patch("/:id", updateProduct);
 router.post("/:id/images", uploadProductImages, addProductImages);
 router.delete("/:id/images", removeProductImages);
 
-router.get("/:productId/variants", getVariantsByProduct);
 
 module.exports = router;
