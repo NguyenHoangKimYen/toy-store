@@ -16,6 +16,10 @@ const AddressSelector = ({ userId, selectedAddressId, onSelectAddress }) => {
   } = useAddresses(userId);
 
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [guestAddresses, setGuestAddresses] = useState([]);
+  
+  // Combine real addresses with guest addresses
+  const allAddresses = userId ? addresses : [...addresses, ...guestAddresses];
 
   // Auto-select default address if no address is selected
   useEffect(() => {
@@ -33,7 +37,14 @@ const AddressSelector = ({ userId, selectedAddressId, onSelectAddress }) => {
     // Auto-select the newly created address
     // Backend returns the address object directly
     if (newAddress && newAddress._id) {
-      onSelectAddress(newAddress._id);
+      // If it's a guest address, store it locally
+      if (newAddress.isGuest) {
+        setGuestAddresses(prev => [...prev, newAddress]);
+        // For guest checkout, pass the entire address object
+        onSelectAddress(newAddress);
+      } else {
+        onSelectAddress(newAddress._id);
+      }
     }
   };
 
@@ -70,7 +81,7 @@ const AddressSelector = ({ userId, selectedAddressId, onSelectAddress }) => {
         </Button>
       </div>
 
-      {addresses.length === 0 ? (
+      {allAddresses.length === 0 ? (
         <Card className='p-8 text-center'>
           <MapPin className='w-12 h-12 mx-auto text-gray-400 mb-4' />
           <p className='text-gray-600 dark:text-gray-400 mb-2'>No saved addresses</p>
@@ -84,20 +95,20 @@ const AddressSelector = ({ userId, selectedAddressId, onSelectAddress }) => {
         </Card>
       ) : (
         <div className='space-y-3'>
-          {addresses.map((address) => (
+          {allAddresses.map((address) => (
             <Card
               key={address._id}
               className={`p-4 cursor-pointer transition-all ${
-                selectedAddressId === address._id
+                (typeof selectedAddressId === 'object' ? selectedAddressId?._id : selectedAddressId) === address._id
                   ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                   : 'hover:border-gray-400'
               }`}
-              onClick={() => onSelectAddress(address._id)}
+              onClick={() => address.isGuest ? onSelectAddress(address) : onSelectAddress(address._id)}
             >
               <div className='flex items-start gap-3'>
                 {/* Radio/Check Indicator */}
                 <div className='flex-shrink-0 mt-1'>
-                  {selectedAddressId === address._id ? (
+                  {(typeof selectedAddressId === 'object' ? selectedAddressId?._id : selectedAddressId) === address._id ? (
                     <div className='w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center'>
                       <Check className='w-3 h-3 text-white' />
                     </div>

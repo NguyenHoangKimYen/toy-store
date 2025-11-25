@@ -45,6 +45,18 @@ export const useAddresses = (userId) => {
   // Create a new address
   const createAddress = async (addressData) => {
     try {
+      // If no userId (guest user), return address data without saving to backend
+      if (!userId) {
+        // For guest users, just return the address data with a temporary ID
+        const guestAddress = {
+          ...addressData,
+          _id: `guest_${Date.now()}`,
+          isGuest: true,
+        };
+        toast.success('Address added');
+        return guestAddress;
+      }
+      
       const response = await addressesService.createAddress({
         ...addressData,
         userId,

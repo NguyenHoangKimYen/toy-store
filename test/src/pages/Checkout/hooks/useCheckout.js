@@ -33,6 +33,9 @@ export const useCheckout = () => {
   };
 
   const handleSubmitOrder = async (addressId) => {
+    // Handle both addressId (string) and address object (for guests)
+    const isGuestAddress = typeof addressId === 'object';
+    
     if (!addressId) {
       toast.error('Please select a delivery address');
       return;
@@ -50,11 +53,24 @@ export const useCheckout = () => {
       // Prepare checkout data
       const checkoutData = {
         cartId: cart.id,
-        addressId,
         paymentMethod,
         discountCodeId: discountInfo.appliedCode?.id || null,
         pointsUsed: loyaltyPointsUsed,
       };
+      
+      // For guest checkout, send address data directly
+      // For logged-in users, send addressId
+      if (isGuestAddress) {
+        checkoutData.addressData = {
+          fullNameOfReceiver: addressId.fullNameOfReceiver,
+          phone: addressId.phone,
+          addressLine: addressId.addressLine,
+          city: addressId.city || '',
+          postalCode: addressId.postalCode || '',
+        };
+      } else {
+        checkoutData.addressId = addressId;
+      }
 
       // Submit order via cart checkout
       const order = await checkoutCart(checkoutData);
