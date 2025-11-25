@@ -1,4 +1,4 @@
-const OrderItem = require('../models/order-item.model');
+const OrderItem = require("../models/order-item.model");
 
 module.exports = {
     createMany(items) {
@@ -7,5 +7,5 @@ module.exports = {
 
     findByOrder(orderId) {
         return OrderItem.find({ orderId }).lean();
-    }
+    },
 };

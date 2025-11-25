@@ -55,7 +55,10 @@ module.exports = {
         }
 
         // Kiểm tra user đã collect chưa
-        const userVoucher = await userVoucherRepository.findByUserAndVoucher(userId, voucherId);
+        const userVoucher = await userVoucherRepository.findByUserAndVoucher(
+            userId,
+            voucherId,
+        );
         if (!userVoucher) {
             throw new Error("Bạn chưa thu thập voucher này");
         }
@@ -94,14 +97,14 @@ module.exports = {
     async getUsableVouchers(userId) {
         const list = await userVoucherRepository.findUsableByUser(userId);
 
-        return list.map(uv => ({
+        return list.map((uv) => ({
             voucherId: uv.voucherId._id,
             name: uv.voucherId.name,
             type: uv.voucherId.type,
             value: uv.voucherId.value,
             maxDiscount: uv.voucherId.maxDiscount,
             expiredAt: uv.voucherId.expiredAt,
-            used: uv.used
+            used: uv.used,
         }));
     },
 
@@ -109,11 +112,14 @@ module.exports = {
      * Đánh dấu voucher đã dùng
      */
     async markVoucherUsed(userId, voucherId) {
-        const uv = await userVoucherRepository.findByUserAndVoucher(userId, voucherId);
+        const uv = await userVoucherRepository.findByUserAndVoucher(
+            userId,
+            voucherId,
+        );
         if (!uv) throw new Error("User chưa collect voucher này");
 
         if (uv.used) throw new Error("Voucher đã dùng rồi");
 
         return await userVoucherRepository.markUsed(userId, voucherId);
-    }
+    },
 };

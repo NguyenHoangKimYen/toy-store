@@ -18,18 +18,18 @@ module.exports = {
             {
                 $group: {
                     _id: "$paymentMethod",
-                    total: { $sum: "$totalAmount" }
-                }
-            }
+                    total: { $sum: "$totalAmount" },
+                },
+            },
         ]);
 
         return {
-            website: raw.find(x => x._id === "website")?.total || 0,
-            mobile: raw.find(x => x._id === "mobile")?.total || 0,
-            cod: raw.find(x => x._id === "cod")?.total || 0,
+            website: raw.find((x) => x._id === "website")?.total || 0,
+            mobile: raw.find((x) => x._id === "mobile")?.total || 0,
+            cod: raw.find((x) => x._id === "cod")?.total || 0,
             ewallet: raw
-                .filter(x => ["momo", "vnpay", "zalopay"].includes(x._id))
-                .reduce((s, x) => s + x.total, 0)
+                .filter((x) => ["momo", "vnpay", "zalopay"].includes(x._id))
+                .reduce((s, x) => s + x.total, 0),
         };
     },
 
@@ -41,19 +41,21 @@ module.exports = {
                     from: "orders",
                     localField: "_id",
                     foreignField: "userId",
-                    as: "orders"
-                }
+                    as: "orders",
+                },
             },
             {
                 $project: {
                     totalSpend: { $sum: "$orders.totalAmount" },
-                }
-            }
+                },
+            },
         ]);
 
-        let high = 0, medium = 0, low = 0;
+        let high = 0,
+            medium = 0,
+            low = 0;
 
-        users.forEach(u => {
+        users.forEach((u) => {
             if (!u.totalSpend || u.totalSpend < 1000000) low++;
             else if (u.totalSpend < 4000000) medium++;
             else high++;
@@ -71,12 +73,14 @@ module.exports = {
             { $match: { paymentStatus: "paid", createdAt: { $gte: d } } },
             {
                 $group: {
-                    _id: { $dateToString: { date: "$createdAt", format: "%d-%m" } },
+                    _id: {
+                        $dateToString: { date: "$createdAt", format: "%d-%m" },
+                    },
                     total: { $sum: "$totalAmount" },
-                    orders: { $sum: 1 }
-                }
+                    orders: { $sum: 1 },
+                },
             },
-            { $sort: { _id: 1 } }
+            { $sort: { _id: 1 } },
         ]);
     },
 
@@ -88,17 +92,17 @@ module.exports = {
                     paymentStatus: "paid",
                     createdAt: {
                         $gte: new Date(`${year}-01-01`),
-                        $lte: new Date(`${year}-12-31`)
-                    }
-                }
+                        $lte: new Date(`${year}-12-31`),
+                    },
+                },
             },
             {
                 $group: {
                     _id: { $month: "$createdAt" },
-                    revenue: { $sum: "$totalAmount" }
-                }
+                    revenue: { $sum: "$totalAmount" },
+                },
             },
-            { $sort: { _id: 1 } }
+            { $sort: { _id: 1 } },
         ]);
     },
 
@@ -109,11 +113,11 @@ module.exports = {
                 $group: {
                     _id: {
                         city: "$defaultAddress.city",
-                        district: "$defaultAddress.district"
+                        district: "$defaultAddress.district",
                     },
-                    userCount: { $sum: 1 }
-                }
-            }
+                    userCount: { $sum: 1 },
+                },
+            },
         ]);
     },
 
@@ -123,16 +127,16 @@ module.exports = {
             {
                 $group: {
                     _id: "$paymentMethod",
-                    total: { $sum: "$totalAmount" }
-                }
-            }
+                    total: { $sum: "$totalAmount" },
+                },
+            },
         ]);
 
         return {
-            momo: raw.find(x => x._id === "momo")?.total || 0,
-            vnpay: raw.find(x => x._id === "vnpay")?.total || 0,
-            zalopay: raw.find(x => x._id === "zalopay")?.total || 0,
-            cod: raw.find(x => x._id === "cod")?.total || 0,
+            momo: raw.find((x) => x._id === "momo")?.total || 0,
+            vnpay: raw.find((x) => x._id === "vnpay")?.total || 0,
+            zalopay: raw.find((x) => x._id === "zalopay")?.total || 0,
+            cod: raw.find((x) => x._id === "cod")?.total || 0,
         };
-    }
+    },
 };

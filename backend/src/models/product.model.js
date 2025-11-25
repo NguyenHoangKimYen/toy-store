@@ -24,7 +24,7 @@ const ProductSchema = new mongoose.Schema(
                 ref: "Category",
                 required: true,
                 index: true,
-            }
+            },
         ],
 
         description: {
@@ -42,11 +42,11 @@ const ProductSchema = new mongoose.Schema(
         minPrice: { type: Number, default: 0 },
         maxPrice: { type: Number, default: 0 },
 
-        totalStock: { 
-            type: Number, 
+        totalStock: {
+            type: Number,
             default: 0,
             min: 0,
-            index: true
+            index: true,
         },
 
         imageUrls: [
@@ -87,13 +87,13 @@ const ProductSchema = new mongoose.Schema(
             type: Number,
             default: 0,
             min: 0,
-            index: true
+            index: true,
         },
     },
     {
         timestamps: true,
         collection: "products",
-    }
+    },
 );
 
 module.exports = mongoose.model("Product", ProductSchema);

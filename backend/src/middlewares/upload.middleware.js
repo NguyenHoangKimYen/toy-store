@@ -4,11 +4,7 @@ const multer = require("multer");
 const storage = multer.memoryStorage();
 
 // Các định dạng ảnh được cho phép
-const allowedMimeTypes = new Set([
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-]);
+const allowedMimeTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 // Cấu hình Multer
 const upload = multer({
@@ -38,10 +34,12 @@ const uploadVariantImages = upload.array("variantImages", 10);
 
 // Upload images cho review
 const uploadReviewImages = upload.array("reviewImages", 5);
+const uploadCategoryImages = upload.array("categoryImages", 1);
 
 module.exports = {
     uploadAvatar,
     uploadProductImages,
     uploadVariantImages,
     uploadReviewImages,
+    uploadCategoryImages,
 };

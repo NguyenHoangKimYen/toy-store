@@ -29,17 +29,25 @@ router.post("/vietqr/customer-confirm/:orderId", customerConfirmVietQR);
 router.get("/vietqr/admin/pending", auth, adminOnly, getPendingVietQROrders);
 
 // ADMIN xác nhận đã nhận tiền
-router.post("/vietqr/admin/:orderId/confirm", auth, adminOnly, adminConfirmVietQR);
+router.post(
+    "/vietqr/admin/:orderId/confirm",
+    auth,
+    adminOnly,
+    adminConfirmVietQR,
+);
 
 // ADMIN từ chối thanh toán
-router.post("/vietqr/admin/:orderId/reject", auth, adminOnly, adminRejectVietQR);
-
+router.post(
+    "/vietqr/admin/:orderId/reject",
+    auth,
+    adminOnly,
+    adminRejectVietQR,
+);
 
 // ===================== MOMO =====================
 router.post("/momo/:orderId", createMomoPayment);
 router.post("/momo/ipn", momoIpn);
 router.get("/momo/return", momoReturn);
-
 
 // ===================== ZALOPAY =====================
 router.post("/zalopay/:orderId", createZaloPayOrder);

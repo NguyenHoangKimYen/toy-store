@@ -5,7 +5,7 @@ const findByProductId = async (productId) => {
 };
 
 const findById = async (id) => {
-    return await Variant.findById(id);
+    return await Variant.findById(id).lean();
 };
 
 /**
@@ -29,7 +29,10 @@ const createMany = async (dataArray, options = {}) => {
  * Updated: Thêm options
  */
 const update = async (id, updateData, options = {}) => {
-    return await Variant.findByIdAndUpdate(id, updateData, { new: true, ...options });
+    return await Variant.findByIdAndUpdate(id, updateData, {
+        new: true,
+        ...options,
+    });
 };
 
 const deleteById = async (id, options = {}) => {
@@ -47,5 +50,5 @@ module.exports = {
     createMany, // Đừng quên export hàm mới này
     update,
     deleteById,
-    deleteByProductId
+    deleteByProductId,
 };

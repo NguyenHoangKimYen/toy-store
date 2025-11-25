@@ -1,10 +1,10 @@
-const path = require('path');
-require('dotenv').config({
-    path: path.resolve(__dirname, '../../.env'),
+const path = require("path");
+require("dotenv").config({
+    path: path.resolve(__dirname, "../../.env"),
 });
 
-const axios = require('axios');
-const qs = require('qs');
+const axios = require("axios");
+const qs = require("qs");
 
 const orderRepository = require('../repositories/order.repository');
 const { buildRawSignature, generateSignature } = require('../utils/momo.helper');
@@ -69,7 +69,9 @@ async function createMomoPayment(orderId) {
     const data = res.data;
 
     if (!data || data.resultCode !== 0) {
-        throw new Error(`MoMo payment failed: ${data.message || "Unknown error"}`);
+        throw new Error(
+            `MoMo payment failed: ${data.message || "Unknown error"}`,
+        );
     }
 
     return {
@@ -125,7 +127,7 @@ async function createZaloPayOrderService(order) {
     const appuser = (order.userId || "guest_user").toString();
     const embeddata = JSON.stringify({
         redirecturl: redirectUrl,
-        orderId: order._id.toString()
+        orderId: order._id.toString(),
     });
 
     const item = JSON.stringify([]);

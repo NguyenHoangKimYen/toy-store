@@ -19,7 +19,7 @@ const findAll = async (filter = {}, options = {}) => {
         .sort(sort)
         .exec();
 
-    const totalQuery = Product.countDocuments(filter).exec();
+    const totalQuery = Product.countDocuments(filter).lean().exec();
 
     const [products, total] = await Promise.all([productsQuery, totalQuery]);
 
@@ -27,33 +27,37 @@ const findAll = async (filter = {}, options = {}) => {
 };
 
 const findById = async (id) => {
-    return Product.findById(id).populate([
-        {
-            path: "categoryId",
-            select: "name slug description",
-        },
-        {
-            path: "variants",
-        },
-    ]);
+    return Product.findById(id)
+        .populate([
+            {
+                path: "categoryId",
+                select: "name slug description",
+            },
+            {
+                path: "variants",
+            },
+        ])
+        .lean();
 };
 
 const findBySlug = async (slug) => {
-    return Product.findOne({ slug }).populate([
-        {
-            path: "categoryId",
-            select: "name slug description",
-        },
-        {
-            path: "variants",
-        },
-    ]);
+    return Product.findOne({ slug })
+        .populate([
+            {
+                path: "categoryId",
+                select: "name slug description",
+            },
+            {
+                path: "variants",
+            },
+        ])
+        .lean();
 };
 
 const findByPrice = async (min, max) => {
     return Product.find({
         price: { $gte: min, $lte: max },
-    });
+    }).lean();
 };
 
 const create = async (data, options = {}) => {
@@ -70,7 +74,7 @@ const remove = async (id, options = {}) => {
 };
 
 const updatePriceRange = async (id, minPrice, maxPrice, options = {}) => {
-  return await Product.findByIdAndUpdate(id, { minPrice, maxPrice }, options);
+    return await Product.findByIdAndUpdate(id, { minPrice, maxPrice }, options);
 };
 
 module.exports = {

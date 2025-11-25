@@ -108,5 +108,5 @@ module.exports = {
 
     async markUsed(discountCodeId) {
         await discountRepo.increaseUsedCount(discountCodeId);
-    }
+    },
 };

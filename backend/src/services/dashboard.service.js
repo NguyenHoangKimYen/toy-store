@@ -11,7 +11,7 @@ module.exports = {
             byWebsite: channel.website,
             byMobile: channel.mobile,
             byCOD: channel.cod,
-            byEwallet: channel.ewallet
+            byEwallet: channel.ewallet,
         };
     },
 
@@ -41,5 +41,5 @@ module.exports = {
     // chi nhánh cửa hàng
     async getBranchesMap() {
         return branchRepository.getBranchesWithOrderStats();
-    }
+    },
 };

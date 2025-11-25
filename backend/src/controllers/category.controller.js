@@ -4,7 +4,10 @@ const { mongo } = require("mongoose");
 /** Tạo mới */
 const createCategory = async (req, res, next) => {
     try {
-        const category = await categoryService.createCategory(req.body);
+        const category = await categoryService.createCategory(
+            req.body,
+            req.files,
+        );
         res.status(201).json({ success: true, data: category });
     } catch (err) {
         next(err); // Chuyển lỗi cho error handler
@@ -26,7 +29,9 @@ const getCategoryById = async (req, res, next) => {
     try {
         const { id } = req.params;
         if (!mongo.ObjectId.isValid(id)) {
-            return res.status(400).json({ success: false, message: "Invalid ID format" });
+            return res
+                .status(400)
+                .json({ success: false, message: "Invalid ID format" });
         }
         const category = await categoryService.getCategoryById(id);
         res.status(200).json({ success: true, data: category });
@@ -51,9 +56,16 @@ const updateCategory = async (req, res, next) => {
     try {
         const { id } = req.params;
         if (!mongo.ObjectId.isValid(id)) {
-            return res.status(400).json({ success: false, message: "Invalid ID format" });
+            return res
+                .status(400)
+                .json({ success: false, message: "Invalid ID format" });
         }
-        const category = await categoryService.updateCategory(id, req.body);
+
+        const category = await categoryService.updateCategory(
+            id,
+            req.body,
+            req.files,
+        );
         res.status(200).json({ success: true, data: category });
     } catch (err) {
         next(err);
@@ -65,7 +77,9 @@ const deleteCategory = async (req, res, next) => {
     try {
         const { id } = req.params;
         if (!mongo.ObjectId.isValid(id)) {
-            return res.status(400).json({ success: false, message: "Invalid ID format" });
+            return res
+                .status(400)
+                .json({ success: false, message: "Invalid ID format" });
         }
         const result = await categoryService.deleteCategory(id);
         res.status(200).json({ success: true, message: result.message });
