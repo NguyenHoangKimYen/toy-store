@@ -125,8 +125,13 @@ async function createZaloPayOrderService(order) {
     const amount = parseInt(order.totalAmount?.toString() || "0", 10);
     const apptime = Date.now();
     const appuser = (order.userId || "guest_user").toString();
+    
+    // Build dynamic redirect URL with order ID
+    const baseUrl = redirectUrl.replace(/\/payment\/success$/, '');
+    const dynamicRedirectUrl = `${baseUrl}/payment/${order._id}`;
+    
     const embeddata = JSON.stringify({
-        redirecturl: redirectUrl,
+        redirecturl: dynamicRedirectUrl,
         orderId: order._id.toString(),
     });
 
