@@ -32,7 +32,8 @@ const OrderDetailModal = ({ order, onClose, onStatusUpdate }) => {
     try {
       setLoading(true)
       const response = await getOrderById(order._id)
-      setOrderDetails(response.order)
+      // Backend returns { success: true, order: {...} }
+      setOrderDetails(response?.order || null)
     } catch {
       toast.error('Failed to fetch order details')
     } finally {
@@ -98,7 +99,7 @@ const OrderDetailModal = ({ order, onClose, onStatusUpdate }) => {
           {/* Customer Info */}
           <div className="border rounded-lg p-4 space-y-2">
             <h3 className="font-semibold mb-2">Customer Information</h3>
-            <p className="text-sm"><strong>Name:</strong> {orderData.userId?.fullname || 'Guest'}</p>
+            <p className="text-sm"><strong>Name:</strong> {orderData.userId?.fullName || 'Guest'}</p>
             <p className="text-sm"><strong>Email:</strong> {orderData.userId?.email || 'N/A'}</p>
             <p className="text-sm"><strong>Phone:</strong> {orderData.userId?.phone || 'N/A'}</p>
           </div>
@@ -110,11 +111,20 @@ const OrderDetailModal = ({ order, onClose, onStatusUpdate }) => {
                 <MapPin size={18} />
                 Delivery Address
               </h3>
-              <p className="text-sm">
-                {typeof orderData.addressId === 'object' 
-                  ? `${orderData.addressId.street}, ${orderData.addressId.city}, ${orderData.addressId.state} ${orderData.addressId.zipCode}`
-                  : 'Address details not available'}
-              </p>
+              <div className="text-sm space-y-1">
+                {typeof orderData.addressId === 'object' ? (
+                  <>
+                    <p><strong>Recipient:</strong> {orderData.addressId.fullNameOfReceiver || 'N/A'}</p>
+                    <p><strong>Phone:</strong> {orderData.addressId.phone || 'N/A'}</p>
+                    <p><strong>Address:</strong> {orderData.addressId.addressLine || 'N/A'}</p>
+                    {orderData.addressId.lat && orderData.addressId.lng && (
+                      <p><strong>Coordinates:</strong> {orderData.addressId.lat}, {orderData.addressId.lng}</p>
+                    )}
+                  </>
+                ) : (
+                  <p>Address details not available</p>
+                )}
+              </div>
             </div>
           )}
 
@@ -122,17 +132,26 @@ const OrderDetailModal = ({ order, onClose, onStatusUpdate }) => {
           <div className="border rounded-lg p-4">
             <h3 className="font-semibold mb-3">Order Items</h3>
             <div className="space-y-3">
-              {orderData.items?.map((item, index) => (
-                <div key={index} className="flex justify-between items-center py-2 border-b last:border-b-0">
-                  <div>
-                    <p className="font-medium">{item.productId?.name || 'Product'}</p>
-                    <p className="text-sm text-muted-foreground">Quantity: {item.quantity}</p>
+              {orderData.items?.map((item, index) => {
+                const itemSubtotal = item.subtotal?.$numberDecimal 
+                  ? parseFloat(item.subtotal.$numberDecimal) 
+                  : parseFloat(item.subtotal || 0);
+                
+                return (
+                  <div key={index} className="flex justify-between items-center py-2 border-b last:border-b-0">
+                    <div>
+                      <p className="font-medium">{item.productId?.name || 'Product'}</p>
+                      {item.variantId && (
+                        <p className="text-xs text-muted-foreground">
+                          Variant: {item.variantId.color || ''} {item.variantId.size || ''}
+                        </p>
+                      )}
+                      <p className="text-sm text-muted-foreground">Quantity: {item.quantity}</p>
+                    </div>
+                    <p className="font-semibold">${itemSubtotal.toFixed(2)}</p>
                   </div>
-                  <p className="font-semibold">
-                    ${parseFloat(item.subtotal?.$numberDecimal || item.subtotal || 0).toFixed(2)}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -149,30 +168,49 @@ const OrderDetailModal = ({ order, onClose, onStatusUpdate }) => {
               </div>
               <div className="flex justify-between">
                 <span>Shipping Fee:</span>
-                <span className="font-medium">${parseFloat(orderData.shippingFee || 0).toFixed(2)}</span>
+                <span className="font-medium">
+                  ${parseFloat(orderData.shippingFee?.$numberDecimal || orderData.shippingFee || 0).toFixed(2)}
+                </span>
               </div>
-              {orderData.discountCodeId && (
+              {orderData.discountAmount && parseFloat(orderData.discountAmount?.$numberDecimal || orderData.discountAmount || 0) > 0 && (
                 <div className="flex justify-between text-green-600">
                   <span className="flex items-center gap-1">
                     <Tag size={14} />
-                    Discount Applied:
+                    Discount Code:
                   </span>
                   <span className="font-medium">
-                    {typeof orderData.discountCodeId === 'object' 
-                      ? orderData.discountCodeId.code 
-                      : 'Discount'}
+                    -${parseFloat(orderData.discountAmount?.$numberDecimal || orderData.discountAmount || 0).toFixed(2)}
+                  </span>
+                </div>
+              )}
+              {orderData.voucherDiscount && parseFloat(orderData.voucherDiscount?.$numberDecimal || orderData.voucherDiscount || 0) > 0 && (
+                <div className="flex justify-between text-green-600">
+                  <span className="flex items-center gap-1">
+                    <Tag size={14} />
+                    Voucher Discount:
+                  </span>
+                  <span className="font-medium">
+                    -${parseFloat(orderData.voucherDiscount?.$numberDecimal || orderData.voucherDiscount || 0).toFixed(2)}
                   </span>
                 </div>
               )}
               {orderData.pointsUsed > 0 && (
-                <div className="flex justify-between">
+                <div className="flex justify-between text-green-600">
                   <span>Points Used:</span>
-                  <span className="font-medium">{orderData.pointsUsed} pts</span>
+                  <span className="font-medium">{orderData.pointsUsed} pts (-${orderData.pointsUsed.toFixed(2)})</span>
+                </div>
+              )}
+              {orderData.pointsEarned > 0 && (
+                <div className="flex justify-between text-blue-600">
+                  <span>Points Earned:</span>
+                  <span className="font-medium">+{orderData.pointsEarned} pts</span>
                 </div>
               )}
               <div className="flex justify-between pt-2 border-t font-bold text-lg">
                 <span>Total:</span>
-                <span>${parseFloat(orderData.totalAmount?.$numberDecimal || orderData.totalAmount || 0).toFixed(2)}</span>
+                <span>
+                  ${parseFloat(orderData.totalAmount?.$numberDecimal || orderData.totalAmount || 0).toFixed(2)}
+                </span>
               </div>
             </div>
           </div>

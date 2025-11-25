@@ -26,9 +26,10 @@ const Orders = () => {
     try {
       setLoading(true)
       const response = await getAllOrders()
-      setOrders(response.orders || [])
+      // Backend returns { success: true, orders: [...] }
+      setOrders(response?.orders || [])
     } catch (error) {
-      const errorMessage = error.message || 'Failed to fetch orders'
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch orders'
       if (errorMessage.includes('Invalid token') || errorMessage.includes('401')) {
         toast.error('Session expired. Please login again.')
       } else {
@@ -75,7 +76,7 @@ const Orders = () => {
     const matchesSearch = 
       order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.userId?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.userId?.fullname?.toLowerCase().includes(searchTerm.toLowerCase())
+      order.userId?.fullName?.toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter
 
@@ -149,7 +150,7 @@ const Orders = () => {
                           {getStatusBadge(order.status)}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          <p>Customer: {order.userId?.fullname || 'Guest'}</p>
+                          <p>Customer: {order.userId?.fullName || 'Guest'}</p>
                           <p>Email: {order.userId?.email || 'N/A'}</p>
                           <p>Date: {new Date(order.createdAt).toLocaleDateString()}</p>
                         </div>
