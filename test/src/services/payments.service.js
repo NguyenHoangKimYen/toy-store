@@ -10,7 +10,7 @@ import apiClient from './config';
 // Get VietQR code for an order
 export const getVietQR = async (orderId) => {
   const response = await apiClient.get(`/payments/vietqr/${orderId}`);
-  return response.data;
+  return response;
 };
 
 // Customer confirms payment (clicked "I've transferred")
@@ -42,7 +42,7 @@ export const adminRejectVietQR = async (orderId) => {
 // Create MoMo payment
 export const createMomoPayment = async (orderId) => {
   const response = await apiClient.post(`/payments/momo/${orderId}`);
-  return response.data;
+  return response;
 };
 
 // MoMo IPN (backend callback)
@@ -62,7 +62,7 @@ export const momoReturn = async (params) => {
 // Create ZaloPay order
 export const createZaloPayOrder = async (orderId) => {
   const response = await apiClient.post(`/payments/zalopay/${orderId}`);
-  return response.data;
+  return response;
 };
 
 // ZaloPay callback (backend callback)

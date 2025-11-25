@@ -15,50 +15,57 @@ import apiClient from './config';
 // Get all orders for authenticated user
 export const getMyOrders = async (params = {}) => {
   const response = await apiClient.get('/orders', { params });
-  return response.data;
+  return response;
 };
 
 // Get all orders (admin only) - using query params to differentiate
 export const getAllOrders = async (params = {}) => {
   const response = await apiClient.get('/orders', { params });
-  return response.data;
+  return response;
 };
 
 // Get single order detail
 export const getOrderById = async (orderId) => {
-  const response = await apiClient.get(`/orders/${orderId}`);
-  return response.data;
+  // Check if user is authenticated
+  const token = localStorage.getItem('authToken');
+  
+  // Use guest endpoint if not authenticated
+  const endpoint = token ? `/orders/${orderId}` : `/orders/${orderId}/guest`;
+  
+  const response = await apiClient.get(endpoint);
+  return response;
 };
 
 // Create order directly
 export const createOrder = async (orderData) => {
   const response = await apiClient.post('/orders', orderData);
-  return response.data;
+  return response;
 };
 
 // Checkout from cart (authenticated user)
 export const checkoutFromCart = async (checkoutData) => {
   // checkoutData should include: addressId, discountCodeId, pointsToUse, voucherId, paymentMethod, deliveryType
   const response = await apiClient.post('/orders/checkout/cart', checkoutData);
-  return response.data;
+  return response;
 };
 
 // Checkout from cart (guest)
 export const guestCheckoutFromCart = async (checkoutData) => {
   // checkoutData should include: sessionId, guestInfo (fullName, email, phone, addressLine, lat, lng), discountCodeId, pointsToUse
   const response = await apiClient.post('/orders/checkout/cart/guest', checkoutData);
-  return response.data;
+  return response;
 };
 
 // Update order status (admin only)
 export const updateOrderStatus = async (orderId, status) => {
   const response = await apiClient.put(`/orders/${orderId}/status`, { status });
-  return response.data;
+  return response;
 };
 
-// Cancel order
+// Cancel order (user/guest can cancel their own pending orders)
 export const cancelOrder = async (orderId) => {
-  return updateOrderStatus(orderId, 'cancelled');
+  const response = await apiClient.put(`/orders/${orderId}/cancel`);
+  return response;
 };
 
 export default {

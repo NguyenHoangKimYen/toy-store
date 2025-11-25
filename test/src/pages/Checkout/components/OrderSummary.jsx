@@ -35,7 +35,7 @@ const OrderSummary = ({
           const imageUrl = item.variant?.imageUrls?.[0] || item.product?.imageUrls?.[0] || '/placeholder.png';
           const variantInfo = item.variant?.attributes?.length > 0 ? (
             item.variant.attributes.map((attr, idx) => (
-              <React.Fragment key={idx}>
+              <React.Fragment key={`${attr.name}-${idx}`}>
                 {attr.name}: {attr.value}{idx < item.variant.attributes.length - 1 ? ', ' : ''}
               </React.Fragment>
             ))

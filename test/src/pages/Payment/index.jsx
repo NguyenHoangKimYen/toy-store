@@ -44,28 +44,45 @@ const Payment = () => {
         return;
       }
 
+      // Get payment method, default to 'cod' if not set
+      const orderPaymentMethod = order.paymentMethod || 'cod';
+
       // Handle payment based on method
-      if (order.paymentMethod === 'vietqr' && !order.isPaid) {
+      if (orderPaymentMethod === 'vietqr' && !order.isPaid) {
         // Get QR code for VietQR
         const qrData = await getVietQR(orderId);
-        setQrCode(qrData);
-      } else if (order.paymentMethod === 'momo' && !order.isPaid) {
-        // Redirect to MoMo
+        if (qrData.success && qrData.qr) {
+          setQrCode(qrData.qr);
+        }
+        setLoading(false);
+      } else if (orderPaymentMethod === 'momo' && !order.isPaid) {
+        // Redirect to MoMo - keep loading true to prevent "not supported" message
         const momoData = await createMomoPayment(orderId);
-        if (momoData.payUrl) {
-          window.location.href = momoData.payUrl;
+        if (momoData.success && momoData.momo?.payUrl) {
+          window.location.href = momoData.momo.payUrl;
+          // Keep loading state true during redirect
+          return;
         }
-      } else if (order.paymentMethod === 'zalopay' && !order.isPaid) {
-        // Redirect to ZaloPay
+        setLoading(false);
+      } else if (orderPaymentMethod === 'zalopay' && !order.isPaid) {
+        // Redirect to ZaloPay - keep loading true to prevent "not supported" message
         const zaloPayData = await createZaloPayOrder(orderId);
-        if (zaloPayData.order_url) {
-          window.location.href = zaloPayData.order_url;
+        if (zaloPayData.success && zaloPayData.zaloPay) {
+          const url = zaloPayData.zaloPay.order_url || zaloPayData.zaloPay.orderurl;
+          if (url) {
+            window.location.href = url;
+            // Keep loading state true during redirect
+            return;
+          }
         }
+        setLoading(false);
+      } else {
+        // For COD or already paid orders
+        setLoading(false);
       }
     } catch (err) {
       console.error('Error loading payment info:', err);
       setError(err.message || 'Failed to load payment information');
-    } finally {
       setLoading(false);
     }
   };
@@ -147,6 +164,9 @@ const Payment = () => {
     );
   }
 
+  // Get payment method, default to 'cod' if not set
+  const paymentMethod = currentOrder.paymentMethod || 'cod';
+
   // Already paid
   if (currentOrder.isPaid) {
     return (
@@ -164,7 +184,7 @@ const Payment = () => {
   }
 
   // COD orders
-  if (currentOrder.paymentMethod === 'cod') {
+  if (paymentMethod === 'cod') {
     return (
       <div className="payment-result">
         <div className="payment-result-card info">
@@ -186,7 +206,7 @@ const Payment = () => {
   }
 
   // VietQR payment
-  if (currentOrder.paymentMethod === 'vietqr' && qrCode) {
+  if (paymentMethod === 'vietqr' && qrCode) {
     return (
       <div className="payment-container">
         <div className="payment-card">

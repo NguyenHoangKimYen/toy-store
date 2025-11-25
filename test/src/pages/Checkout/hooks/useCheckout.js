@@ -90,20 +90,21 @@ export const useCheckout = () => {
       // Clear cart after successful order
       await clearAllItems();
 
-      // Show success toast
-      toast.success('Order placed successfully!', {
-        description: `Order #${order.id}`,
-      });
+      // Get order ID - handle both _id and id formats
+      const orderId = order._id || order.id;
 
       // Redirect based on payment method
       if (paymentMethod === 'cod') {
-        // COD - go to order detail
-        navigate(`/orders/${order.id}`, {
+        // COD - show success and go to order detail
+        toast.success('Order placed successfully!', {
+          description: `Order #${orderId}`,
+        });
+        navigate(`/orders/${orderId}`, {
           state: { orderSuccess: true },
         });
       } else {
-        // Online payment - go to payment page
-        navigate(`/payment/${order.id}`);
+        // Online payment - redirect to payment page without showing success toast yet
+        navigate(`/payment/${orderId}`);
       }
     } catch (err) {
       console.error('Error submitting order:', err);
