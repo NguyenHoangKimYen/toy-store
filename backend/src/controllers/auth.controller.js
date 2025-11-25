@@ -5,6 +5,7 @@ const { generateToken, sha256 } = require("../utils/token.js");
 const userRepository = require("../repositories/user.repository.js");
 const { mongo } = require("mongoose");
 const { message } = require("statuses");
+const jwt = require("jsonwebtoken");
 
 const resolveUserId = (req) =>
     req.user?.id || req.params?.id || req.body?.userId;
@@ -70,10 +71,38 @@ const verifyEmail = async (req, res, next) => {
         }
 
         await userRepository.accountIsVerified(uid);
-        return res.json({
-            success: true,
-            message: "Email verified successfully! You can now login.",
+
+        if (!process.env.JWT_SECRET) {
+            return res.status(500).json({
+                success: false,
+                message: "JWT secret is not configured",
+            });
+        }
+
+        const loginToken = jwt.sign(
+            {
+                id: user._id,
+                email: user.email,
+                role: user.role,
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" },
+        );
+
+        const target = new URL("https://www.milkybloomtoystore.id.vn");
+        target.searchParams.set("verified", "true");
+        target.searchParams.set("token", loginToken);
+
+        res.cookie("token", loginToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none", // cho phép dùng giữa api.milkybloom... và www.milkybloom...
+            domain: ".milkybloomtoystore.id.vn",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            path: "/",
         });
+
+        return res.redirect(target.toString());
     } catch (err) {
         next(err);
     }
