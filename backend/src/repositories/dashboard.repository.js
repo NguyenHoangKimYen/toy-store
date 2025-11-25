@@ -5,7 +5,7 @@ module.exports = {
     // 1. Tổng doanh thu (status = PAID)
     async getTotalRevenue() {
         const r = await Order.aggregate([
-            { $match: { paymentStatus: "PAID" } },
+            { $match: { paymentStatus: "paid" } },
             { $group: { _id: null, total: { $sum: "$totalAmount" } } }
         ]);
         return r[0]?.total || 0;
@@ -14,7 +14,7 @@ module.exports = {
     // 2. Doanh thu theo kênh (website/mobile/cod/e-wallet)
     async getRevenueByChannel() {
         const raw = await Order.aggregate([
-            { $match: { paymentStatus: "PAID" } },
+            { $match: { paymentStatus: "paid" } },
             {
                 $group: {
                     _id: "$paymentMethod",
@@ -68,7 +68,7 @@ module.exports = {
         d.setDate(d.getDate() - 7);
 
         return Order.aggregate([
-            { $match: { paymentStatus: "PAID", createdAt: { $gte: d } } },
+            { $match: { paymentStatus: "paid", createdAt: { $gte: d } } },
             {
                 $group: {
                     _id: { $dateToString: { date: "$createdAt", format: "%d-%m" } },
@@ -85,7 +85,7 @@ module.exports = {
         return Order.aggregate([
             {
                 $match: {
-                    paymentStatus: "PAID",
+                    paymentStatus: "paid",
                     createdAt: {
                         $gte: new Date(`${year}-01-01`),
                         $lte: new Date(`${year}-12-31`)

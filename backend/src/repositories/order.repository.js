@@ -9,6 +9,23 @@ module.exports = {
     return Order.findById(id).lean();
   },
 
+  findByZaloAppTransId(apptransid) {
+    return Order.findOne({ zaloAppTransId: apptransid }).lean();
+  },
+
+  // Tìm đơn ZaloPay chưa paid theo số tiền (lấy đơn mới nhất trong vòng 24h)
+  async findRecentUnpaidZaloByAmount(amount, hours = 24) {
+    const since = new Date(Date.now() - hours * 3600 * 1000);
+    return Order.findOne({
+      paymentMethod: "zalopay",
+      paymentStatus: { $ne: "paid" },
+      totalAmount: amount,
+      createdAt: { $gte: since },
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+  },
+
   findByUser(userId) {
     return Order.find({ userId }).sort({ createdAt: -1 }).lean();
   },
@@ -31,11 +48,16 @@ module.exports = {
     return Order.findByIdAndUpdate(orderId, update, { new: true });
   },
 
-  // 🔹 update riêng paymentStatus (cho tiện nếu muốn dùng)
+  // 🔹 update riêng paymentStatus (hoặc kèm status)
   updatePaymentStatus(orderId, paymentStatus) {
+    const update =
+      typeof paymentStatus === "string"
+        ? { paymentStatus }
+        : paymentStatus;
+
     return Order.findByIdAndUpdate(
       orderId,
-      { paymentStatus },
+      update,
       { new: true }
     );
   },

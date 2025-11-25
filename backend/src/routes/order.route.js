@@ -17,9 +17,9 @@ router.get("/:id", auth, orderController.getDetail);
 router.get("/", auth, orderController.getMyOrders);
 
 // Checkout cart: User
-router.post("/checkout/cart", auth, orderController.checkoutFromCartForUser);
+router.post("/checkout/cart", auth, orderController.checkoutFromCartForUser); //tạo đơn
 
 // Checkout cart: Guest
-router.post("/checkout/cart/guest", orderController.checkoutFromCartForGuest);
+router.post("/checkout/cart/guest", orderController.checkoutFromCartForGuest); //tạo đơn
 
 module.exports = router;

@@ -4,6 +4,10 @@ const findById = (id) => {
   return DiscountCode.findById(id);
 };
 
+const findByCode = (code) => {
+  return DiscountCode.findOne({ code: code.toUpperCase().trim() });
+};
+
 const increaseUsedCount = async (id) => {
   return DiscountCode.findByIdAndUpdate(
     id,
@@ -14,5 +18,6 @@ const increaseUsedCount = async (id) => {
 
 module.exports = {
   findById,
+  findByCode,
   increaseUsedCount,
 };
