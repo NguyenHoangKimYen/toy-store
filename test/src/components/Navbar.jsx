@@ -3,6 +3,7 @@ import { Search, ShoppingCart, User, UserCircle, Package, LogOut, Settings, X, M
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { getCategories } from '@/services/categories.service'
+import { useAuth } from '@/hooks/useAuth'
 import './Navbar.css'
 
 // Navigation links configuration
@@ -21,8 +22,8 @@ const USER_MENU_LINKS = [
 
 const Navbar = () => {
     const navigate = useNavigate()
+    const { user, logout: authLogout } = useAuth()
     const [cartCount, setCartCount] = useState(0)
-    const [user, setUser] = useState(null)
     const [showSearch, setShowSearch] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [showMobileMenu, setShowMobileMenu] = useState(false)
@@ -35,19 +36,6 @@ const Navbar = () => {
         const cart = JSON.parse(localStorage.getItem('cart') || '[]');
         const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
         setCartCount(totalItems);
-    };
-
-    const loadUser = () => {
-        const userData = localStorage.getItem('user')
-        if (userData) {
-            try {
-                setUser(JSON.parse(userData))
-            } catch {
-                setUser(null)
-            }
-        } else {
-            setUser(null)
-        }
     }
 
     const handleScroll = () => {
@@ -70,9 +58,7 @@ const Navbar = () => {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
-        setUser(null)
+        authLogout()
         toast('Logged out successfully', {
             position: "top-center",
             className: "!bg-green-600 !text-white border border-green-700",
@@ -123,7 +109,6 @@ const Navbar = () => {
     useEffect(() => {
         // Initial load
         updateCartCount();
-        loadUser();
         
         // Fetch categories
         const fetchCategories = async () => {
@@ -138,12 +123,10 @@ const Navbar = () => {
 
         // Listen for cart updates
         window.addEventListener('cartUpdated', updateCartCount);
-        window.addEventListener('userLoggedIn', loadUser);
         window.addEventListener('scroll', handleScroll, { passive: true });
 
         return () => {
             window.removeEventListener('cartUpdated', updateCartCount);
-            window.removeEventListener('userLoggedIn', loadUser);
             window.removeEventListener('scroll', handleScroll);
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps

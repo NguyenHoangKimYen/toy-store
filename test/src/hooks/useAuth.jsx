@@ -10,14 +10,23 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // Check if user is logged in on mount
     const token = getAuthToken();
-    if (token) {
-      // TODO: Fetch user data from token or API
-      // For now, we'll just set a placeholder
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
+    const storedUser = localStorage.getItem('user');
+    
+    if (token && storedUser) {
+      try {
         setUser(JSON.parse(storedUser));
+      } catch (err) {
+        // Invalid user data - clear everything
+        console.error('Invalid user data in localStorage:', err);
+        removeAuthToken();
+        localStorage.removeItem('user');
+        setUser(null);
       }
+    } else {
+      // No token or no user - ensure clean state
+      setUser(null);
     }
+    
     setLoading(false);
 
     // Listen for login events from other components
@@ -25,7 +34,12 @@ export const AuthProvider = ({ children }) => {
       const token = getAuthToken();
       const storedUser = localStorage.getItem('user');
       if (token && storedUser) {
-        setUser(JSON.parse(storedUser));
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch (err) {
+          console.error('Invalid user data:', err);
+          setUser(null);
+        }
       }
     };
 
@@ -42,7 +56,11 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     removeAuthToken();
     localStorage.removeItem('user');
+    localStorage.removeItem('guestSessionId');
     setUser(null);
+    
+    // Dispatch logout event for other components
+    window.dispatchEvent(new Event('userLoggedOut'));
   };
 
   const updateUser = (userData) => {

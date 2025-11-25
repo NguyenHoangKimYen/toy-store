@@ -72,13 +72,15 @@ const Login = () => {
     setCredentials({ emailOrPhoneOrUsername, password })
 
     try {
-      // Get guest sessionId if exists
+      // Get guest sessionId for cart merging
       const sessionId = localStorage.getItem('guestSessionId')
       
       const res = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
+        credentials: 'include',  // Send/receive cookies
         headers: { 
           "Content-Type": "application/json",
+          // Send sessionId so backend can merge guest cart
           ...(sessionId && { "X-Session-Id": sessionId })
         },
         body: JSON.stringify({ emailOrPhoneOrUsername, password })
@@ -117,12 +119,15 @@ const Login = () => {
         return
       }
 
-      // Successful login - backend returns { success, message, data: { user, token } }
-      if (data.data?.token) {
-        // Use AuthProvider login to properly update user state
-        authLogin(data.data.user, data.data.token)
+      // Successful login
+      if (data.data?.user) {
+        // Store only user data (token is in httpOnly cookie)
+        localStorage.setItem('user', JSON.stringify(data.data.user))
         
-        // Clear guest sessionId after successful login (cart has been merged)
+        // Update auth context
+        authLogin(data.data.user, null)
+        
+        // Clear guest sessionId AFTER successful login (cart has been merged by backend)
         localStorage.removeItem('guestSessionId')
 
         // Dispatch event to update navbar
@@ -481,7 +486,7 @@ const Login = () => {
                   type="button"
                   variant="outline"
                   className="h-11 bg-white/5 border-white/40 hover:bg-white/15 text-white [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)] backdrop-blur-sm transition-all"
-                  onClick={() => window.location.href = `${API_BASE_URL}/auth/google`}
+                  onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`}
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -496,7 +501,7 @@ const Login = () => {
                   type="button"
                   variant="outline"
                   className="h-11 bg-white/5 border-white/40 hover:bg-white/15 text-white [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)] backdrop-blur-sm transition-all"
-                  onClick={() => window.location.href = `${API_BASE_URL}/auth/facebook`}
+                  onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/facebook`}
                 >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
