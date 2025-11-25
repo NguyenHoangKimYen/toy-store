@@ -7,7 +7,7 @@ const auth = require("../middlewares/auth.middleware");
 //admin route
 router.get("/", adminOnly, cartController.getAllCarts);
 router.get("/user/:userId", auth, cartController.getCartByUser);
-router.get("/session/:sessionId", auth, cartController.getCartBySession);
+router.get("/session/:sessionId", cartController.getCartBySession);
 
 //user route
 router.post("/", cartController.createCart);
