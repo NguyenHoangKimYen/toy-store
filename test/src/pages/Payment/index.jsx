@@ -21,8 +21,8 @@ const Payment = () => {
   const [confirming, setConfirming] = useState(false);
 
   // Check for payment callback (MoMo, ZaloPay return)
-  const resultCode = searchParams.get('resultCode');
-  const paymentStatus = searchParams.get('status');
+  const resultCode = searchParams.get('resultCode'); // MoMo uses resultCode
+  const paymentStatus = searchParams.get('status'); // ZaloPay uses status (1 = success, -1 = failed)
 
   useEffect(() => {
     if (orderId) {
@@ -47,6 +47,10 @@ const Payment = () => {
       // Get payment method, default to 'cod' if not set
       const orderPaymentMethod = order.paymentMethod || 'cod';
 
+      // Check if we're returning from a payment gateway
+      const isReturningFromPayment = resultCode || paymentStatus || 
+        searchParams.get('apptransid') || searchParams.get('orderId');
+
       // Handle payment based on method
       if (orderPaymentMethod === 'vietqr' && !order.isPaid) {
         // Get QR code for VietQR
@@ -55,7 +59,7 @@ const Payment = () => {
           setQrCode(qrData.qr);
         }
         setLoading(false);
-      } else if (orderPaymentMethod === 'momo' && !order.isPaid) {
+      } else if (orderPaymentMethod === 'momo' && !order.isPaid && !isReturningFromPayment) {
         // Redirect to MoMo - keep loading true to prevent "not supported" message
         const momoData = await createMomoPayment(orderId);
         if (momoData.success && momoData.momo?.payUrl) {
@@ -64,7 +68,7 @@ const Payment = () => {
           return;
         }
         setLoading(false);
-      } else if (orderPaymentMethod === 'zalopay' && !order.isPaid) {
+      } else if (orderPaymentMethod === 'zalopay' && !order.isPaid && !isReturningFromPayment) {
         // Redirect to ZaloPay - keep loading true to prevent "not supported" message
         const zaloPayData = await createZaloPayOrder(orderId);
         if (zaloPayData.success && zaloPayData.zaloPay) {
@@ -77,7 +81,7 @@ const Payment = () => {
         }
         setLoading(false);
       } else {
-        // For COD or already paid orders
+        // For COD or already paid orders, or returning from payment
         setLoading(false);
       }
     } catch (err) {
@@ -121,9 +125,15 @@ const Payment = () => {
     );
   }
 
+  // Check if returning from payment gateway
+  const isReturningFromPayment = resultCode || paymentStatus || 
+    searchParams.get('apptransid') || searchParams.get('orderId');
+
   // Show success/failure based on payment callback
   if (resultCode || paymentStatus) {
-    const isSuccess = resultCode === '0' || paymentStatus === 'success';
+    // MoMo: resultCode === '0' means success
+    // ZaloPay: status === '1' means success
+    const isSuccess = resultCode === '0' || paymentStatus === '1';
     
     return (
       <div className="payment-result">
@@ -149,6 +159,27 @@ const Payment = () => {
                 Try Again
               </Button>
             )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If returning from payment without explicit status, show processing state
+  if (isReturningFromPayment && !currentOrder?.isPaid) {
+    return (
+      <div className="payment-result">
+        <div className="payment-result-card info">
+          <Clock size={64} className="result-icon info" />
+          <h1>Processing Payment</h1>
+          <p>Your payment is being processed. This may take a few moments.</p>
+          <div className="result-actions">
+            <Button onClick={() => loadPaymentInfo()}>
+              Refresh Status
+            </Button>
+            <Button variant="outline" onClick={() => navigate(`/orders/${orderId}`)}>
+              View Order
+            </Button>
           </div>
         </div>
       </div>
