@@ -35,8 +35,12 @@ async function createZaloPayOrder(order) {
     const apptime = Date.now();
     const appuser = order.userId?.toString() || "guest";
 
+    // Build dynamic redirect URL with order ID
+    const baseUrl = ZALOPAY_CONFIG.redirectUrl.replace(/\/payment\/success$/, '');
+    const dynamicRedirectUrl = `${baseUrl}/payment/${order._id}`;
+
     const embeddata = JSON.stringify({
-        redirecturl: ZALOPAY_CONFIG.redirectUrl,
+        redirecturl: dynamicRedirectUrl,
     });
 
     const item = JSON.stringify([]);

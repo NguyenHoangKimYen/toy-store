@@ -13,6 +13,7 @@ const {
 
   createZaloPayOrder,
   zaloPayCallback,
+  zaloPayReturn,
   paymentSuccess,
 } = require("../controllers/payment.controller.js");
 
@@ -52,6 +53,7 @@ router.get("/momo/return", momoReturn);
 // ===================== ZALOPAY =====================
 router.post("/zalopay/:orderId", createZaloPayOrder);
 router.post("/zalopay/callback", zaloPayCallback);
+router.get("/zalopay/return", zaloPayReturn);
 
 router.get("/success", paymentSuccess);
 

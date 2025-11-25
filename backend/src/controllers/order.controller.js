@@ -34,7 +34,7 @@ module.exports = {
     async checkoutFromCartForUser(req, res, next) {
         try {
             const userId = req.user.id;
-            const { addressId, discountCodeId, pointsToUse, voucherId } =
+            const { addressId, discountCodeId, pointsToUse, voucherId, paymentMethod, deliveryType } =
                 req.body;
 
             const detail = await orderService.createOrderFromCart({
@@ -43,6 +43,8 @@ module.exports = {
                 discountCodeId: discountCodeId || null,
                 voucherId: voucherId || null,
                 pointsToUse: Number(pointsToUse) || 0,
+                paymentMethod: paymentMethod || 'cod',
+                deliveryType: deliveryType || 'standard',
             });
 
             res.status(201).json({ success: true, data: detail });
@@ -54,7 +56,7 @@ module.exports = {
     // Checkout từ cart cho guest (session)
     async checkoutFromCartForGuest(req, res, next) {
         try {
-            const { sessionId, guestInfo, discountCodeId, pointsToUse } =
+            const { sessionId, guestInfo, discountCodeId, pointsToUse, paymentMethod, deliveryType } =
                 req.body;
 
             const detail = await orderService.createOrderFromCart({
@@ -62,6 +64,8 @@ module.exports = {
                 guestInfo,
                 discountCodeId: discountCodeId || null,
                 pointsToUse: Number(pointsToUse) || 0,
+                paymentMethod: paymentMethod || 'cod',
+                deliveryType: deliveryType || 'standard',
             });
 
             res.status(201).json({ success: true, data: detail });

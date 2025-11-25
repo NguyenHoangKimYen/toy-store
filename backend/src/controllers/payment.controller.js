@@ -485,3 +485,43 @@ exports.paymentSuccess = async (req, res) => {
     return res.status(500).send("Có lỗi xảy ra khi xử lý kết quả thanh toán.");
   }
 };
+
+// ZaloPay return URL handler (when user is redirected back from ZaloPay)
+exports.zaloPayReturn = async (req, res) => {
+  try {
+    const { status, apptransid, amount } = req.query;
+    
+    // Find order by apptransid
+    let orderId = null;
+    if (apptransid) {
+      const order = await orderRepository.findByZaloAppTransId(apptransid);
+      if (order) {
+        orderId = order._id.toString();
+      }
+    }
+
+    // If status is 1, payment successful
+    if (orderId && status === '1') {
+      await orderRepository.updatePaymentStatus(orderId, {
+        paymentStatus: "paid",
+        status: "confirmed",
+        paymentMethod: "zalopay",
+        isPaid: true,
+      });
+      
+      return res.json({ 
+        success: true, 
+        orderId,
+        message: "Payment confirmed" 
+      });
+    }
+
+    return res.json({ 
+      success: false, 
+      message: "Payment not confirmed" 
+    });
+  } catch (err) {
+    console.error("ZaloPay return error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
