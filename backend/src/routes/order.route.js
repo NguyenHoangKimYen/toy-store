@@ -13,6 +13,9 @@ router.put("/:id/status", auth, adminOnly, orderController.updateStatus);
 // Lấy chi tiết đơn
 router.get("/:id", auth, orderController.getDetail);
 
+// Lấy chi tiết đơn
+router.get("/:id/guest", orderController.getDetail);
+
 // User xem đơn của mình
 router.get("/", auth, orderController.getMyOrders);
 
