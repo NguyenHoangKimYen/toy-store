@@ -138,6 +138,10 @@ export const useOrders = () => {
           ? await checkoutFromCart(checkoutData) 
           : await guestCheckoutFromCart(checkoutData);
 
+        console.log('Checkout response:', response);
+        console.log('Response has success?', response?.success);
+        console.log('Response has data?', response?.data);
+
         // Backend returns { success: true, data: {...} }
         if (response.success && response.data) {
           setCurrentOrder(response.data);
