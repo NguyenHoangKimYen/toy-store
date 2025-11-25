@@ -71,6 +71,12 @@ export const zaloPayCallback = async (data) => {
   return response.data;
 };
 
+// ZaloPay return URL handler
+export const zaloPayReturn = async (params) => {
+  const response = await apiClient.get('/payments/zalopay/return', { params });
+  return response;
+};
+
 export default {
   getVietQR,
   customerConfirmVietQR,
@@ -82,4 +88,5 @@ export default {
   momoReturn,
   createZaloPayOrder,
   zaloPayCallback,
+  zaloPayReturn,
 };

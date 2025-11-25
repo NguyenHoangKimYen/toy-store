@@ -4,7 +4,7 @@ import { CheckCircle, Clock, XCircle, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import { useOrders } from '@/hooks';
-import { getVietQR, customerConfirmVietQR, createMomoPayment, createZaloPayOrder } from '@/services';
+import { getVietQR, customerConfirmVietQR, createMomoPayment, createZaloPayOrder, zaloPayReturn } from '@/services';
 import { formatPrice } from '@/utils';
 import { ROUTES } from '@/config/routes';
 import './Payment.css';
@@ -30,6 +30,32 @@ const Payment = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
+
+  // Handle ZaloPay return - confirm payment status
+  useEffect(() => {
+    const confirmZaloPayPayment = async () => {
+      const status = searchParams.get('status');
+      const apptransid = searchParams.get('apptransid');
+      
+      if (status === '1' && apptransid) {
+        try {
+          await zaloPayReturn({ 
+            status, 
+            apptransid,
+            amount: searchParams.get('amount')
+          });
+          // Refresh order details after confirming payment
+          if (orderId) {
+            await fetchOrderById(orderId);
+          }
+        } catch (err) {
+          console.error('Error confirming ZaloPay payment:', err);
+        }
+      }
+    };
+
+    confirmZaloPayPayment();
+  }, [searchParams, orderId, fetchOrderById]);
 
   const loadPaymentInfo = async () => {
     try {
