@@ -6,6 +6,7 @@ const userRepository = require("../repositories/user.repository.js");
 const addressRepo = require("../repositories/address.repository");
 const paymentRepo = require("../repositories/payment.repository");
 const { sendMail } = require("../libs/mailer.js");
+const { generateToken, sha256 } = require("../utils/token.js");
 const { calculateShippingFee } = require("../services/shipping.service");
 const { getWeatherCondition } = require("../services/weather.service");
 const cartRepository = require("../repositories/cart.repository");
@@ -17,6 +18,36 @@ const discountCodeService = require("../services/discount-code.service");
 const { checkAndAssignBadges } = require("../services/badge.service");
 const voucherRepository = require("../repositories/voucher.repository");
 const userVoucherRepository = require("../repositories/user-voucher.repository");
+
+const VERIFY_TTL_MINUTES = Number(process.env.VERIFY_TTL_MINUTES || 1440);
+const BACKEND_URL =
+    process.env.BACKEND_URL ||
+    process.env.BASE_URL ||
+    "https://api.milkybloomtoystore.id.vn";
+
+async function sendVerifyEmail(user) {
+    const token = generateToken();
+    const tokenHash = sha256("verify:" + token);
+    const expiresAt = new Date(Date.now() + VERIFY_TTL_MINUTES * 60 * 1000);
+
+    await userRepository.setResetToken(user._id, { tokenHash, expiresAt });
+
+    const verifyLink = `${BACKEND_URL}/api/auth/verify-email?uid=${user._id}&token=${token}`;
+    try {
+        await sendMail({
+            to: user.email,
+            subject: "Xác thực email đặt hàng MilkyBloom",
+            html: `
+                <p>Xin chào ${user.fullName || "bạn"},</p>
+                <p>Vui lòng xác thực email trước khi hoàn tất đặt hàng:</p>
+                <p><a href="${verifyLink}">${verifyLink}</a></p>
+                <p>Liên kết có hiệu lực ${VERIFY_TTL_MINUTES} phút.</p>
+            `,
+        });
+    } catch (err) {
+        console.error("[MAIL ERROR][VERIFY EMAIL GUEST]", err?.message || err);
+    }
+}
 
 module.exports = {
     async createOrGetUserForGuest({ fullName, email, phone }) {
@@ -189,6 +220,15 @@ module.exports = {
 
             addressId = addr._id;
             shippingAddress = addr;
+
+            // Yêu cầu xác thực email trước khi tiếp tục
+            if (!user.isVerified) {
+                await sendVerifyEmail(user);
+                throw Object.assign(
+                    new Error("Vui lòng xác thực email trước khi đặt hàng."),
+                    { status: 400, code: "EMAIL_NOT_VERIFIED" },
+                );
+            }
         }
 
         if (!shippingAddress) throw new Error("SHIPPING_ADDRESS_NOT_FOUND");
