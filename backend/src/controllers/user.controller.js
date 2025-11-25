@@ -12,6 +12,32 @@ const getAllUsers = async (req, res, next) => {
     }
 };
 
+// GET USER BY ID (ADMIN ONLY)
+const getUserById = async (req, res, next) => {
+    try {
+        const { userId } = req.params;
+
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing user id",
+            });
+        }
+
+        const user = await userRepository.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        res.json({ success: true, data: user });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // CREATE USER (ADMIN ONLY)
 const createUser = async (req, res, next) => {
     try {
@@ -202,6 +228,7 @@ const updateAvatar = async (req, res, next) => {
 
 module.exports = {
     getAllUsers,
+    getUserById,
     createUser,
     verifyUser,
     setUserPassword,

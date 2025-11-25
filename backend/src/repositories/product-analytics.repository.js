@@ -1,18 +1,37 @@
-const Order = require("../models/order.model");
+const OrderItem = require("../models/order-item.model");
 const Product = require("../models/product.model");
 const Variant = require("../models/variant.model");
+
+// Chỉ tính các đơn không bị hủy/trả và không failed thanh toán
+const ACTIVE_ORDER_MATCH = {
+    "order.status": { $nin: ["cancelled", "returned"] },
+    "order.paymentStatus": { $ne: "failed" },
+};
+
+// Lookup Order để biết trạng thái thanh toán
+const withOrderLookup = [
+    {
+        $lookup: {
+            from: "orders",
+            localField: "orderId",
+            foreignField: "_id",
+            as: "order",
+        },
+    },
+    { $unwind: "$order" },
+    { $match: ACTIVE_ORDER_MATCH },
+];
 
 module.exports = {
     // 1. TOP SELLING PRODUCTS
     async getTopSelling(limit = 10) {
-        return Order.aggregate([
-            { $match: { paymentStatus: "paid" } },
-            { $unwind: "$items" },
+        return OrderItem.aggregate([
+            ...withOrderLookup,
             {
                 $group: {
-                    _id: "$items.productId",
-                    quantitySold: { $sum: "$items.quantity" },
-                    revenue: { $sum: "$items.subtotal" },
+                    _id: "$productId",
+                    quantitySold: { $sum: "$quantity" },
+                    revenue: { $sum: { $toDouble: "$subtotal" } },
                 },
             },
             {
@@ -96,14 +115,13 @@ module.exports = {
 
     // 4. PRODUCT REVENUE
     async getProductRevenue() {
-        return Order.aggregate([
-            { $match: { paymentStatus: "paid" } },
-            { $unwind: "$items" },
+        return OrderItem.aggregate([
+            ...withOrderLookup,
             {
                 $group: {
-                    _id: "$items.productId",
-                    revenue: { $sum: "$items.subtotal" },
-                    totalQuantity: { $sum: "$items.quantity" },
+                    _id: "$productId",
+                    revenue: { $sum: { $toDouble: "$subtotal" } },
+                    totalQuantity: { $sum: "$quantity" },
                 },
             },
             {
@@ -130,13 +148,12 @@ module.exports = {
 
     // 5. CATEGORY SALES
     async getCategoryStats() {
-        return Order.aggregate([
-            { $match: { paymentStatus: "paid" } },
-            { $unwind: "$items" },
+        return OrderItem.aggregate([
+            ...withOrderLookup,
             {
                 $lookup: {
                     from: "products",
-                    localField: "items.productId",
+                    localField: "productId",
                     foreignField: "_id",
                     as: "product",
                 },
@@ -145,8 +162,8 @@ module.exports = {
             {
                 $group: {
                     _id: "$product.categoryId",
-                    totalSold: { $sum: "$items.quantity" },
-                    revenue: { $sum: "$items.subtotal" },
+                    totalSold: { $sum: "$quantity" },
+                    revenue: { $sum: { $toDouble: "$subtotal" } },
                 },
             },
             {

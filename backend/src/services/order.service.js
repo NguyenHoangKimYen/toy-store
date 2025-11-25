@@ -266,10 +266,13 @@ module.exports = {
             }
 
             const voucher = await voucherRepository.findById(voucherId);
+            if (!voucher) throw new Error("Voucher không tồn tại.");
 
-            if (!voucher || voucher.expiredAt < new Date()) {
-                throw new Error("Voucher đã hết hạn.");
-            }
+            const now = new Date();
+            const startAt = voucher.startDate || voucher.createdAt || now;
+            const endAt = voucher.endDate || voucher.expiredAt;
+            if (startAt && startAt > now) throw new Error("Voucher chưa bắt đầu.");
+            if (endAt && endAt < now) throw new Error("Voucher đã hết hạn.");
 
             // Tính giảm giá
             if (voucher.type === "fixed") {
