@@ -2,7 +2,7 @@ const ReviewService = require("../services/review.service");
 
 const createReview = async (req, res, next) => {
     try {
-        const userId = req.user._id;
+        const userId = req.user._id || req.user.id;
         // Lấy text data từ body
         const { productId, variantId, rating, comment } = req.body;
 
