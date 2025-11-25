@@ -5,7 +5,7 @@ const badgeSchema = new mongoose.Schema({
     description: String,
     icon: String, // URL icon
     type: { type: String, enum: ["spent", "orders"], required: true },
-    threshold: { type: Number, required: true }
+    threshold: { type: Number, required: true },
 });
 
 module.exports = mongoose.model("Badge", badgeSchema);

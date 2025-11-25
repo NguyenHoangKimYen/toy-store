@@ -1,7 +1,7 @@
 const DiscountCode = require("../models/discount-code.model");
 
 const findById = (id) => {
-  return DiscountCode.findById(id);
+    return DiscountCode.findById(id);
 };
 
 const findByCode = (code) => {
@@ -9,11 +9,11 @@ const findByCode = (code) => {
 };
 
 const increaseUsedCount = async (id) => {
-  return DiscountCode.findByIdAndUpdate(
-    id,
-    { $inc: { usedCount: 1 } },
-    { new: true }
-  );
+    return DiscountCode.findByIdAndUpdate(
+        id,
+        { $inc: { usedCount: 1 } },
+        { new: true },
+    );
 };
 
 module.exports = {

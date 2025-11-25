@@ -87,16 +87,14 @@ const handleOrderCompleted = async (userId, orderAmount, orderId) => {
         tier: user.loyaltyTier,
         earnedCoins,
         currentPoints: user.loyaltyPoints,
-        newBadges            // <-- ⭐ trả về cho controller
+        newBadges, // <-- ⭐ trả về cho controller
     };
 };
-
-
 
 //Lấy thông tin loyalty của user
 const getMyLoyaltyInfo = async (userId) => {
     const user = await User.findById(userId).select(
-        "loyaltyTier loyaltyPoints lifetimeSpent spentLast12Months"
+        "loyaltyTier loyaltyPoints lifetimeSpent spentLast12Months",
     );
     if (!user) throw new Error("User not found");
     return user;
@@ -112,7 +110,7 @@ const getMyCoinTransactions = async (userId, limit = 50) => {
 const MONTHLY_VOUCHERS = {
     silver: { value: 5 },
     gold: { value: 10 },
-    diamond: { value: 15 }
+    diamond: { value: 15 },
 };
 
 async function giveMonthlyVoucher(user) {
@@ -123,7 +121,12 @@ async function giveMonthlyVoucher(user) {
     const month = now.getMonth() + 1;
     const year = now.getFullYear();
 
-    const already = await UserVoucherLog.findOne({ userId: user._id, month, year, tier });
+    const already = await UserVoucherLog.findOne({
+        userId: user._id,
+        month,
+        year,
+        tier,
+    });
     if (already) return null;
 
     const valueInfo = MONTHLY_VOUCHERS[tier];

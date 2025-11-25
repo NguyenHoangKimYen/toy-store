@@ -17,16 +17,19 @@ async function migrateTotalStock() {
 
         let updated = 0;
         for (const product of products) {
-            const variants = await Variant.find({ 
-                productId: product._id, 
-                isActive: true 
+            const variants = await Variant.find({
+                productId: product._id,
+                isActive: true,
             });
 
-            const totalStock = variants.reduce((sum, v) => sum + (v.stockQuantity || 0), 0);
-            
+            const totalStock = variants.reduce(
+                (sum, v) => sum + (v.stockQuantity || 0),
+                0,
+            );
+
             await Product.updateOne(
                 { _id: product._id },
-                { $set: { totalStock: totalStock } }
+                { $set: { totalStock: totalStock } },
             );
 
             console.log(`Updated ${product.name}: totalStock = ${totalStock}`);

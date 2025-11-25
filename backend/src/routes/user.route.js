@@ -29,43 +29,42 @@ const ownerOrAdmin = (req, res, next) => {
 };
 
 // ============ ADMIN ============
+router.use(auth);
 
 // GET: tất cả user hoặc search theo param
-router.get("/", auth, adminOnly, getAllUsers);
+router.get("/", adminOnly, getAllUsers);
 
 // Admin tạo user
-router.post("/", auth, adminOnly, createUser);
+router.post("/", adminOnly, createUser);
 
 // Admin update user
-router.put("/", auth, adminOnly, updateUser);
+router.put("/", adminOnly, updateUser);
 
 // Admin delete user
-router.delete("/", auth, adminOnly, deleteUser);
+router.delete("/", adminOnly, deleteUser);
 
 // ============ USER ============
 
 // Verify user (owner hoặc admin)
-router.patch("/verify", auth, ownerOrAdmin, verifyUser);
+router.patch("/verify", ownerOrAdmin, verifyUser);
 
 // Set password
-router.patch("/set-password", auth, ownerOrAdmin, setUserPassword);
+router.patch("/set-password", ownerOrAdmin, setUserPassword);
 
 // Upload avatar
 router.post(
     "/avatar",
-    auth,
     ownerOrAdmin,
     uploadAvatarMiddleware,
-    uploadAvatarController
+    uploadAvatarController,
 );
 
 // Update avatar
 router.patch(
     "/avatar",
-    auth,
     ownerOrAdmin,
     uploadAvatarMiddleware,
-    updateAvatarController
+    updateAvatarController,
 );
 
 module.exports = router;

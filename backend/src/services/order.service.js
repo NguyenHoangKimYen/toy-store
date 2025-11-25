@@ -1,17 +1,17 @@
-const orderRepository = require('../repositories/order.repository');
-const itemRepo = require('../repositories/order-item.repository');
-const historyRepo = require('../repositories/order-status-history.repository');
-const bcrypt = require('bcrypt');
-const userRepository = require('../repositories/user.repository.js');
-const addressRepo = require('../repositories/address.repository');
-const paymentRepo = require('../repositories/payment.repository');
-const { sendMail } = require('../libs/mailer.js');
-const { calculateShippingFee } = require('../services/shipping.service');
-const { getWeatherCondition } = require('../services/weather.service');
-const cartRepository = require('../repositories/cart.repository');
-const cartItemRepository = require('../repositories/cart-item.repository');
-const loyaltyService = require('../services/loyalty.service');
-const badgeService = require('../services/badge.service');
+const orderRepository = require("../repositories/order.repository");
+const itemRepo = require("../repositories/order-item.repository");
+const historyRepo = require("../repositories/order-status-history.repository");
+const bcrypt = require("bcrypt");
+const userRepository = require("../repositories/user.repository.js");
+const addressRepo = require("../repositories/address.repository");
+const paymentRepo = require("../repositories/payment.repository");
+const { sendMail } = require("../libs/mailer.js");
+const { calculateShippingFee } = require("../services/shipping.service");
+const { getWeatherCondition } = require("../services/weather.service");
+const cartRepository = require("../repositories/cart.repository");
+const cartItemRepository = require("../repositories/cart-item.repository");
+const loyaltyService = require("../services/loyalty.service");
+const badgeService = require("../services/badge.service");
 const CoinTransactionRepository = require("../repositories/coin-transaction.repository");
 const discountCodeService = require("../services/discount-code.service");
 const { checkAndAssignBadges } = require("../services/badge.service");
@@ -24,7 +24,10 @@ module.exports = {
         const baseUsername = normalizedEmail.split("@")[0];
         const randomSuffix = Math.floor(1000 + Math.random() * 9000);
         const autoUsername = `${baseUsername}_${randomSuffix}`;
-        const existing = await userRepository.findByEmailOrPhone(normalizedEmail, phone);
+        const existing = await userRepository.findByEmailOrPhone(
+            normalizedEmail,
+            phone,
+        );
         if (existing) return existing;
 
         const randomPass = Math.random().toString(36).slice(-8);
@@ -37,7 +40,7 @@ module.exports = {
             username: autoUsername,
             password: hash,
             isVerified: false,
-            role: 'customer'
+            role: "customer",
         });
 
         try {
@@ -49,7 +52,7 @@ module.exports = {
                 <p>Chúng tôi đã tạo tài khoản cho bạn.</p>
                 <p>Email: <b>${normalizedEmail}</b></p>
                 <p>Password: <b>${randomPass}</b></p>
-            `
+            `,
             });
         } catch (err) {
             console.error("SendMail guest error:", err);
@@ -59,7 +62,15 @@ module.exports = {
     },
 
     async createOrderFromCart(payload) {
-        const { userId, sessionId, addressId, discountCodeId, guestInfo, paymentMethod, deliveryType } = payload;
+        const {
+            userId,
+            sessionId,
+            addressId,
+            discountCodeId,
+            guestInfo,
+            paymentMethod,
+            deliveryType,
+        } = payload;
 
         let finalDeliveryType = deliveryType;
         if (!["standard", "express"].includes(finalDeliveryType)) {
@@ -69,16 +80,18 @@ module.exports = {
         // Lấy cart theo user hoặc session
         let cart = null;
         if (userId) cart = await cartRepository.findCartByUserId(userId);
-        else if (sessionId) cart = await cartRepository.findCartBySessionId(sessionId);
+        else if (sessionId)
+            cart = await cartRepository.findCartBySessionId(sessionId);
 
-        if (!cart) throw new Error('Cart not found');
+        if (!cart) throw new Error("Cart not found");
 
         const cartItems = await cartItemRepository.getAllByCartId(cart._id);
-        if (!cartItems || cartItems.length === 0) throw new Error('Cart is empty');
+        if (!cartItems || cartItems.length === 0)
+            throw new Error("Cart is empty");
 
         // Convert CartItem -> OrderItems
         let totalAmount = 0;
-        const items = cartItems.map(ci => {
+        const items = cartItems.map((ci) => {
             totalAmount += Number(ci.variantId.price) * ci.quantity;
             return {
                 productId: ci.productId._id,
@@ -106,7 +119,7 @@ module.exports = {
         await cartRepository.update(cart._id, {
             items: [],
             totalPrice: 0,
-            discountCodeId: null
+            discountCodeId: null,
         });
 
         return await this.getOrderDetail(order._id);
@@ -114,15 +127,26 @@ module.exports = {
 
     // Tạo đơn hàng
     async createOrder(data) {
-        let { userId, guestInfo, addressId, items, discountCodeId, voucherId, paymentMethod, deliveryType } = data;
+        let {
+            userId,
+            guestInfo,
+            addressId,
+            items,
+            discountCodeId,
+            voucherId,
+            paymentMethod,
+            deliveryType,
+        } = data;
         let shippingAddress = null;
 
-        if (!["standard", "express"].includes(deliveryType)) deliveryType = "standard";
+        if (!["standard", "express"].includes(deliveryType))
+            deliveryType = "standard";
 
         // CASE USER LOGIN
         if (userId && !guestInfo) {
             if (!addressId) {
-                const defaultAddr = await addressRepo.findDefaultByUserId(userId);
+                const defaultAddr =
+                    await addressRepo.findDefaultByUserId(userId);
                 if (!defaultAddr) throw new Error("NO_DEFAULT_ADDRESS");
                 addressId = defaultAddr._id;
                 shippingAddress = defaultAddr;
@@ -143,7 +167,8 @@ module.exports = {
 
             if (!user.loyaltyPoints) user.loyaltyPoints = 0;
 
-            const existingDefault = await addressRepo.findDefaultByUserId(userId);
+            const existingDefault =
+                await addressRepo.findDefaultByUserId(userId);
             const isFirstAddress = !existingDefault;
 
             const addr = await addressRepo.create({
@@ -153,11 +178,13 @@ module.exports = {
                 addressLine: guestInfo.addressLine,
                 lat: guestInfo.lat,
                 lng: guestInfo.lng,
-                isDefault: isFirstAddress
+                isDefault: isFirstAddress,
             });
 
             if (isFirstAddress) {
-                await userRepository.update(userId, { defaultAddressId: addr._id });
+                await userRepository.update(userId, {
+                    defaultAddressId: addr._id,
+                });
             }
 
             addressId = addr._id;
@@ -221,12 +248,14 @@ module.exports = {
         let voucherDiscount = 0;
 
         if (voucherId) {
-
             if (!userId) {
                 throw new Error("Voucher chỉ áp dụng cho user đã đăng nhập.");
             }
 
-            const uv = await userVoucherRepository.findByUserAndVoucher(userId, voucherId);
+            const uv = await userVoucherRepository.findByUserAndVoucher(
+                userId,
+                voucherId,
+            );
 
             if (!uv) {
                 throw new Error("Bạn chưa thu thập voucher này.");
@@ -248,9 +277,14 @@ module.exports = {
             }
 
             if (voucher.type === "percent") {
-                voucherDiscount = Math.floor(goodsTotal * (voucher.value / 100));
+                voucherDiscount = Math.floor(
+                    goodsTotal * (voucher.value / 100),
+                );
                 if (voucher.maxDiscount) {
-                    voucherDiscount = Math.min(voucherDiscount, voucher.maxDiscount);
+                    voucherDiscount = Math.min(
+                        voucherDiscount,
+                        voucher.maxDiscount,
+                    );
                 }
             }
 
@@ -272,12 +306,12 @@ module.exports = {
                 lat: shippingAddress.lat,
                 lng: shippingAddress.lng,
                 addressLine: shippingAddress.addressLine,
-                userId: userId
+                userId: userId,
             },
             500,
             goodsAfterDiscount,
             false,
-            deliveryType
+            deliveryType,
         );
 
         const shippingFee = Number(ship.fee);
@@ -302,14 +336,14 @@ module.exports = {
 
         // CREATE ORDER ITEMS
         await itemRepo.createMany(
-            items.map(i => ({
+            items.map((i) => ({
                 orderId: order._id,
                 productId: i.productId,
                 variantId: i.variantId,
                 quantity: i.quantity,
                 unitPrice: i.unitPrice,
-                subtotal: i.subtotal
-            }))
+                subtotal: i.subtotal,
+            })),
         );
 
         await historyRepo.add(order._id, "pending");
@@ -347,10 +381,10 @@ module.exports = {
                 addressLine: address.addressLine,
                 userId: order.userId,
             },
-            500,                             // tạm thời: trọng lượng mặc định
-            goodsAmount,                     // tổng tiền hàng (không gồm ship)
-            false,                           // freeship hay không
-            order.deliveryType               // loại giao hàng
+            500, // tạm thời: trọng lượng mặc định
+            goodsAmount, // tổng tiền hàng (không gồm ship)
+            false, // freeship hay không
+            order.deliveryType, // loại giao hàng
         );
 
         // Ghi đè phí ship thực tế + thêm weather thông tin
@@ -366,7 +400,7 @@ module.exports = {
             items,
             history,
             shipping,
-            payment
+            payment,
         };
     },
 
@@ -388,11 +422,10 @@ module.exports = {
 
         // Nếu đơn hoàn tất
         if (newStatus === "completed" || newStatus === "delivered") {
-
             if (updated.userId && updated.totalAmount) {
-
                 const goodsAmount =
-                    (updated.totalAmount - updated.shippingFee) +
+                    updated.totalAmount -
+                    updated.shippingFee +
                     (updated.discountAmount || 0) +
                     (updated.pointsUsed || 0);
 
@@ -401,7 +434,7 @@ module.exports = {
                     const result = await loyaltyService.handleOrderCompleted(
                         updated.userId,
                         goodsAmount,
-                        updated._id
+                        updated._id,
                     );
 
                     // lưu coin
@@ -414,13 +447,13 @@ module.exports = {
 
                     if (user) {
                         // ⭐ Trả về list huy hiệu mới unlock
-                        const newBadges = await badgeService.checkAndAssignBadges(user);
+                        const newBadges =
+                            await badgeService.checkAndAssignBadges(user);
 
                         if (newBadges && newBadges.length > 0) {
                             updated.newBadges = newBadges;
                         }
                     }
-
                 } catch (err) {
                     console.error("Loyalty/Badge update error:", err);
                 }
