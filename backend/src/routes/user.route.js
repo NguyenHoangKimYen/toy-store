@@ -14,6 +14,7 @@ const {
     deleteUser,
     uploadAvatar: uploadAvatarController,
     updateAvatar: updateAvatarController,
+    getUserById,
 } = require("../controllers/user.controller.js");
 
 const router = express.Router();
@@ -33,6 +34,8 @@ router.use(auth);
 
 // GET: tất cả user hoặc search theo param
 router.get("/", adminOnly, getAllUsers);
+
+router.get("/:userId", auth, getUserById);
 
 // Admin tạo user
 router.post("/", adminOnly, createUser);
