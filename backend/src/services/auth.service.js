@@ -7,13 +7,16 @@ const { generateToken, genOtp6, sha256 } = require("../utils/token.js");
 const User = require("../models/user.model.js");
 const { sendMail } = require("../libs/mailer.js");
 const { message } = require("statuses");
-const AWS = require("../config/aws.config.js");
 
 const FRONTEND_URL =
     process.env.FRONTEND_URL || "https://d1qc4bz6yrxl8k.cloudfront.net";
 const VERIFY_TTL_MINUTES = Number(process.env.VERIFY_TTL_MINUTES || 1440);
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "30m";
+const BACKEND_URL =
+    process.env.BACKEND_URL ||
+    process.env.BACKEND_BASE_URL ||
+    "https://api.milkybloomtoystore.id.vn";
 
 //Trường hợp đăng nhập sai quá 5 lần thì phải nhập otp
 const MAX_FAILS = Number(process.env.LOGIN_MAX_FAILS || 5);
@@ -26,7 +29,7 @@ const VERIFY_NEW_EMAIL_TOKEN_TTL_MINUTES = Number(
 );
 const CHANGE_EMAIL_CONFIRM_URL =
     process.env.CHANGE_EMAIL_CONFIRM_URL ||
-    "https://milkybloomtoystore.id.vn/api/auth/change-email/confirm";
+    "https://api.milkybloomtoystore.id.vn/api/auth/change-email/confirm";
 
 const userSchema = Joi.object({
     fullName: Joi.string().min(3).max(100).required(), // Họ và tên
@@ -74,6 +77,30 @@ const toPublicUser = (userDoc) => {
     const obj = userDoc.toObject ? userDoc.toObject() : { ...userDoc };
     const { password, __v, ...publicUser } = obj;
     return publicUser;
+};
+
+const sendVerificationEmail = async (user) => {
+    const token = generateToken();
+    const tokenHash = sha256("verify:" + token);
+    const expiresAt = new Date(Date.now() + VERIFY_TTL_MINUTES * 60 * 1000);
+
+    await userRepository.setResetToken(user._id, { tokenHash, expiresAt });
+
+    const verifyLink = `${BACKEND_URL}/api/auth/verify-email?uid=${user._id}&token=${token}`;
+
+    try {
+        await sendMail({
+            to: user.email,
+            subject: "Verify your email address",
+            html: `
+        <p>Xin chào ${user.fullName || user.username},</p>
+        <p>Vui lòng xác thực email bằng cách nhấn vào liên kết sau (hạn ${VERIFY_TTL_MINUTES} phút):</p>
+        <p><a href="${verifyLink}">${verifyLink}</a></p>
+      `,
+        });
+    } catch (err) {
+        console.error("[MAIL ERROR][VERIFY EMAIL]", err?.message || err);
+    }
 };
 
 const detectIdentifierType = (s) => {
@@ -151,7 +178,11 @@ const register = async (data) => {
 
     await userRepository.setResetToken(user._id, { tokenHash, expiresAt });
     //Đường dẫn backend
-    const verifyLink = `https://milkybloom.us-east-1.elasticbeanstalk.com/api/auth/verify-email?uid=${user._id}&token=${token}`;
+    const verifyBase =
+        process.env.BACKEND_URL ||
+        process.env.BACKEND_BASE_URL ||
+        "https://api.milkybloomtoystore.id.vn";
+    const verifyLink = `${verifyBase}/api/auth/verify-email?uid=${user._id}&token=${token}`;
     try {
         await sendMail({
             to: email,
@@ -272,9 +303,10 @@ const login = async (payload) => {
 
     // 8) Nếu chưa verify
     if (!user.isVerified) {
+        await sendVerificationEmail(user);
         throw Object.assign(
             new Error(
-                "Account is not verified. Please verify your account before logging in.",
+                "Account is not verified. Please verify via the email we just sent.",
             ),
             { status: 403 },
         );
