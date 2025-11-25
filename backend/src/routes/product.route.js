@@ -25,7 +25,7 @@ router.get("/price/range", getProductByPrice);
 router.get("/:productId/variants", getVariantsByProduct);
 router.get("/:id", getProductById);
 
-router.use(adminMiddlewares);
+// router.use(adminMiddlewares);
 router.post("/", uploadProductImages, createProduct);
 router.delete("/:id", deleteProduct);
 router.patch("/:id", updateProduct);

@@ -62,16 +62,9 @@ router.get(
             secure: true, // chỉ gửi qua HTTPS (khi bạn bật SSL)
             sameSite: "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 ngày
-        }).send(`
-                    <html>
-                        <body style="font-family: sans-serif; text-align: center; padding: 50px;">
-                        <h2>Đăng nhập Google được rồi nha Mẹ, Tự Vô Mongo mà check!</h2>
-                        <p>Ai rảnh mà chào</p>
-                        </body>
-                    </html>
-                `);
-
-        // .redirect(`${process.env.FRONTEND_URL}/auth/success`); //fixing
+        }).redirect(
+            process.env.FRONTEND_URL || "https://www.milkybloomtoystore.id.vn",
+        );
     },
 );
 
@@ -102,16 +95,9 @@ router.get(
             secure: true, // chỉ gửi qua HTTPS (khi bạn bật SSL)
             sameSite: "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 ngày
-        }).send(`
-                    <html>
-                        <body style="font-family: sans-serif; text-align: center; padding: 50px;">
-                        <h2>Đăng nhập Google được rồi nha Mẹ, Tự Vô Mongo mà check!</h2>
-                        <p>Ai rảnh mà chào</p>
-                        </body>
-                    </html>
-                `);
-
-        // return res.redirect(`${FRONTEND_URL}/auth/success`);
+        }).redirect(
+            process.env.FRONTEND_URL || "https://www.milkybloomtoystore.id.vn",
+        );
     },
 );
 
