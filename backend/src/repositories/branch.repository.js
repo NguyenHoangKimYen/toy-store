@@ -1,24 +1,44 @@
 const Order = require("../models/order.model");
 const branches = require("../data/branches");
 
+// Helper: so sánh city/province không phân biệt hoa thường, bỏ dấu cách thừa
+const normalize = (s = "") => s.trim().toLowerCase();
+
 module.exports = {
     async getBranchesWithOrderStats() {
-        // Lấy thống kê đơn hàng theo chi nhánh
+        // Đếm số đơn theo city của địa chỉ giao hàng
         const orderStats = await Order.aggregate([
-            { $match: { paymentStatus: "paid" } },
+            {
+                $match: {
+                    status: { $nin: ["cancelled", "returned"] },
+                    paymentStatus: { $ne: "failed" },
+                },
+            },
+            {
+                $lookup: {
+                    from: "addresses",
+                    localField: "addressId",
+                    foreignField: "_id",
+                    as: "address",
+                },
+            },
+            { $unwind: { path: "$address", preserveNullAndEmptyArrays: true } },
             {
                 $group: {
-                    _id: "$warehouseCode", // cần có field này trong Order
+                    _id: { $ifNull: ["$address.city", "unknown"] },
                     orderCount: { $sum: 1 },
                 },
             },
         ]);
 
-        // Map vào danh sách chi nhánh
-        return branches.map((branch) => {
-            const stat = orderStats.find((x) => x._id === branch.code);
+        // Map city -> count để tra nhanh
+        const cityCount = new Map(
+            orderStats.map((s) => [normalize(s._id), s.orderCount]),
+        );
 
-            const orderCount = stat ? stat.orderCount : 0;
+        return branches.map((branch) => {
+            const key = normalize(branch.province);
+            const orderCount = cityCount.get(key) || 0;
 
             return {
                 code: branch.code,
@@ -27,7 +47,7 @@ module.exports = {
                 lat: branch.lat,
                 lng: branch.lng,
                 orderCount,
-                weight: orderCount / 200, // bạn có thể chỉnh scale
+                weight: orderCount ? Math.max(orderCount / 200, 0.05) : 0,
             };
         });
     },
