@@ -63,6 +63,7 @@ export const useCheckout = () => {
           sessionId,
           guestInfo: {
             fullName: addressId.fullNameOfReceiver,
+            email: addressId.email || '',
             phone: addressId.phone,
             addressLine: addressId.addressLine,
             lat: addressId.lat || null,

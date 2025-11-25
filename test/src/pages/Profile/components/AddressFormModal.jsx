@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 const AddressFormModal = ({ address, isOpen, onClose, onSave, mode = 'create' }) => {
   const [formData, setFormData] = useState({
     fullNameOfReceiver: '',
+    email: '',
     phone: '',
     addressLine: '',
     city: '',
@@ -23,6 +24,7 @@ const AddressFormModal = ({ address, isOpen, onClose, onSave, mode = 'create' })
     if (address && mode === 'edit') {
       setFormData({
         fullNameOfReceiver: address.fullNameOfReceiver || '',
+        email: address.email || '',
         phone: address.phone || '',
         addressLine: address.addressLine || '',
         city: address.city || '',
@@ -33,6 +35,7 @@ const AddressFormModal = ({ address, isOpen, onClose, onSave, mode = 'create' })
       // Reset form for create mode
       setFormData({
         fullNameOfReceiver: '',
+        email: '',
         phone: '',
         addressLine: '',
         city: '',
@@ -56,6 +59,12 @@ const AddressFormModal = ({ address, isOpen, onClose, onSave, mode = 'create' })
     
     if (!formData.fullNameOfReceiver.trim()) {
       newErrors.fullNameOfReceiver = 'Receiver name is required';
+    }
+    
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Invalid email format';
     }
     
     if (!formData.phone.trim()) {
@@ -89,6 +98,7 @@ const AddressFormModal = ({ address, isOpen, onClose, onSave, mode = 'create' })
       // Reset form after successful save
       setFormData({
         fullNameOfReceiver: '',
+        email: '',
         phone: '',
         addressLine: '',
         city: '',
@@ -141,6 +151,23 @@ const AddressFormModal = ({ address, isOpen, onClose, onSave, mode = 'create' })
                 )}
               </div>
               
+              <div>
+                <Label htmlFor='email'>Email *</Label>
+                <Input
+                  id='email'
+                  name='email'
+                  type='email'
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder='example@email.com'
+                />
+                {errors.email && (
+                  <p className='text-red-500 text-sm mt-1'>{errors.email}</p>
+                )}
+              </div>
+            </div>
+            
+            <div className='grid grid-cols-2 gap-4'>
               <div>
                 <Label htmlFor='phone'>Phone Number *</Label>
                 <Input

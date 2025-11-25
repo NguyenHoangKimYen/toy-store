@@ -55,8 +55,9 @@ const AddressAutocomplete = ({ value, onChange, placeholder, name, id }) => {
         value: suggestion.name || suggestion,
       },
     });
-    setIsOpen(false);
+    // Immediately clear suggestions and close dropdown
     setSuggestions([]);
+    setIsOpen(false);
   };
 
   return (
