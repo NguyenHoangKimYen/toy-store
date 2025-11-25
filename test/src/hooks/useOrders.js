@@ -155,7 +155,8 @@ export const useOrders = () => {
         const errorMsg = err.response?.data?.message || err.message || 'Failed to checkout from cart';
         setError(errorMsg);
         console.error('Error checking out from cart:', err);
-        throw err;
+        console.error('Error details:', err.response?.data);
+        throw new Error(errorMsg);
       } finally {
         setLoading(false);
       }

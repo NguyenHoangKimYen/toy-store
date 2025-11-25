@@ -69,15 +69,18 @@ export const useCheckout = () => {
             lat: addressId.lat || null,
             lng: addressId.lng || null,
           },
+          paymentMethod,
+          deliveryType: 'standard',
           discountCodeId: discountInfo.appliedCode?.id || null,
           pointsToUse: loyaltyPointsUsed,
         };
       } else {
         checkoutData = {
           addressId,
+          paymentMethod,
+          deliveryType: 'standard',
           discountCodeId: discountInfo.appliedCode?.id || null,
           pointsToUse: loyaltyPointsUsed,
-          paymentMethod,
         };
       }
 
