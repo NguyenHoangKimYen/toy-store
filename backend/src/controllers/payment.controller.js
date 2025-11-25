@@ -473,26 +473,13 @@ exports.paymentSuccess = async (req, res) => {
       await orderRepository.updatePaymentStatus(oid, update);
     }
 
-    return res.send(`
-      <html>
-        <head><title>Thanh toán</title><meta charset="utf-8"></head>
-        <body style="font-family: sans-serif; text-align: center; padding: 40px;">
-          <h1 style="color: ${code === 1 ? "#28a745" : "#e55353"};">
-            ${code === 1 ? "🎉 Thanh toán thành công!" : "❌ Thanh toán thất bại"}
-          </h1>
-          <p>Cảm ơn bạn đã mua hàng tại MilkyBloom.</p>
-          <a href="https://www.milkybloomtoystore.id.vn" style="
-            display: inline-block;
-            padding: 10px 20px;
-            background: #ff66b3;
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;">
-            Quay lại trang chủ
-          </a>
-        </body>
-      </html>
-    `);
+    // Redirect về trang chủ, đính kèm trạng thái thanh toán để FE xử lý
+    const redirectUrl = new URL("https://www.milkybloomtoystore.id.vn");
+    redirectUrl.searchParams.set("paymentStatus", code === 1 ? "success" : "failed");
+    if (oid) redirectUrl.searchParams.set("orderId", oid);
+    if (amount) redirectUrl.searchParams.set("amount", amount);
+
+    return res.redirect(302, redirectUrl.toString());
   } catch (err) {
     console.error("paymentSuccess error:", err);
     return res.status(500).send("Có lỗi xảy ra khi xử lý kết quả thanh toán.");
