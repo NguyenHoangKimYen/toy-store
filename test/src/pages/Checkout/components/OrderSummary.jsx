@@ -69,31 +69,31 @@ const OrderSummary = ({
 
       {/* Price Breakdown */}
       <div className="order-totals">
-        <div className="order-total-row">
+        <div key="subtotal" className="order-total-row">
           <span>Subtotal</span>
           <span>{formatPrice(subtotal)}</span>
         </div>
-        <div className="order-total-row">
+        <div key="shipping" className="order-total-row">
           <span>Shipping</span>
           <span>{formatPrice(shipping)}</span>
         </div>
-        <div className="order-total-row">
+        <div key="tax" className="order-total-row">
           <span>Tax</span>
           <span>{formatPrice(tax)}</span>
         </div>
         {discount > 0 && (
-          <div className="order-total-row order-discount">
+          <div key="discount" className="order-total-row order-discount">
             <span>Discount</span>
             <span className="discount-value">-{formatPrice(discount)}</span>
           </div>
         )}
         {loyaltyPointsDiscount > 0 && (
-          <div className="order-total-row order-points-discount">
+          <div key="loyalty-points" className="order-total-row order-points-discount">
             <span>Loyalty Points</span>
             <span className="points-discount-value">-{formatPrice(loyaltyPointsDiscount)}</span>
           </div>
         )}
-        <div className="order-total-row order-total-final">
+        <div key="total" className="order-total-row order-total-final">
           <span>Total</span>
           <span>{formatPrice(total)}</span>
         </div>

@@ -41,7 +41,8 @@ export const useCheckout = () => {
       return;
     }
 
-    if (!cart?.id) {
+    const cartId = cart?._id || cart?.id;
+    if (!cartId) {
       toast.error('Cart not found');
       return;
     }
@@ -51,25 +52,32 @@ export const useCheckout = () => {
       setError(null);
 
       // Prepare checkout data
-      const checkoutData = {
-        cartId: cart.id,
-        paymentMethod,
-        discountCodeId: discountInfo.appliedCode?.id || null,
-        pointsUsed: loyaltyPointsUsed,
-      };
+      let checkoutData;
       
-      // For guest checkout, send address data directly
+      // For guest checkout, send sessionId and guestInfo
       // For logged-in users, send addressId
       if (isGuestAddress) {
-        checkoutData.addressData = {
-          fullNameOfReceiver: addressId.fullNameOfReceiver,
-          phone: addressId.phone,
-          addressLine: addressId.addressLine,
-          city: addressId.city || '',
-          postalCode: addressId.postalCode || '',
+        // Get sessionId from localStorage for guest
+        const sessionId = localStorage.getItem('guestSessionId');
+        checkoutData = {
+          sessionId,
+          guestInfo: {
+            fullName: addressId.fullNameOfReceiver,
+            phone: addressId.phone,
+            addressLine: addressId.addressLine,
+            lat: addressId.lat || null,
+            lng: addressId.lng || null,
+          },
+          discountCodeId: discountInfo.appliedCode?.id || null,
+          pointsToUse: loyaltyPointsUsed,
         };
       } else {
-        checkoutData.addressId = addressId;
+        checkoutData = {
+          addressId,
+          discountCodeId: discountInfo.appliedCode?.id || null,
+          pointsToUse: loyaltyPointsUsed,
+          paymentMethod,
+        };
       }
 
       // Submit order via cart checkout
