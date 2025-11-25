@@ -4,7 +4,6 @@ import {
   getAllOrders,
   getOrderById,
   createOrder,
-  createGuestOrder,
   checkoutFromCart,
   guestCheckoutFromCart,
   updateOrderStatus,
@@ -15,6 +14,7 @@ import { useAuth } from './useAuth';
 /**
  * Custom hook for order management
  * Handles order creation, fetching, and status updates
+ * Backend response format: { success: true/false, order/orders: {...}, message?: '...' }
  */
 export const useOrders = () => {
   const { user } = useAuth();
@@ -31,10 +31,16 @@ export const useOrders = () => {
       setLoading(true);
       setError(null);
 
-      const data = await getMyOrders();
-      setOrders(data);
+      const response = await getMyOrders();
+      // Backend returns { success: true, orders: [...] }
+      if (response.success && response.orders) {
+        setOrders(response.orders);
+      } else {
+        throw new Error(response.message || 'Failed to fetch orders');
+      }
     } catch (err) {
-      setError(err.message || 'Failed to fetch orders');
+      const errorMsg = err.response?.data?.message || err.message || 'Failed to fetch orders';
+      setError(errorMsg);
       console.error('Error fetching orders:', err);
     } finally {
       setLoading(false);
@@ -47,10 +53,16 @@ export const useOrders = () => {
       setLoading(true);
       setError(null);
 
-      const data = await getAllOrders();
-      setOrders(data);
+      const response = await getAllOrders();
+      // Backend returns { success: true, orders: [...] }
+      if (response.success && response.orders) {
+        setOrders(response.orders);
+      } else {
+        throw new Error(response.message || 'Failed to fetch all orders');
+      }
     } catch (err) {
-      setError(err.message || 'Failed to fetch all orders');
+      const errorMsg = err.response?.data?.message || err.message || 'Failed to fetch all orders';
+      setError(errorMsg);
       console.error('Error fetching all orders:', err);
     } finally {
       setLoading(false);
@@ -63,11 +75,17 @@ export const useOrders = () => {
       setLoading(true);
       setError(null);
 
-      const data = await getOrderById(orderId);
-      setCurrentOrder(data);
-      return data;
+      const response = await getOrderById(orderId);
+      // Backend returns { success: true, order: {...} }
+      if (response.success && response.order) {
+        setCurrentOrder(response.order);
+        return response.order;
+      } else {
+        throw new Error(response.message || 'Failed to fetch order details');
+      }
     } catch (err) {
-      setError(err.message || 'Failed to fetch order details');
+      const errorMsg = err.response?.data?.message || err.message || 'Failed to fetch order details';
+      setError(errorMsg);
       console.error('Error fetching order details:', err);
       throw err;
     } finally {
@@ -89,19 +107,24 @@ export const useOrders = () => {
         setLoading(true);
         setError(null);
 
-        const newOrder = user?.id ? await createOrder(orderData) : await createGuestOrder(orderData);
-
-        setCurrentOrder(newOrder);
-        return newOrder;
+        const response = await createOrder(orderData);
+        // Backend returns { success: true, order: {...} }
+        if (response.success && response.order) {
+          setCurrentOrder(response.order);
+          return response.order;
+        } else {
+          throw new Error(response.message || 'Failed to create order');
+        }
       } catch (err) {
-        setError(err.message || 'Failed to create order');
+        const errorMsg = err.response?.data?.message || err.message || 'Failed to create order';
+        setError(errorMsg);
         console.error('Error creating order:', err);
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [user]
+    []
   );
 
   // Checkout from cart
@@ -111,18 +134,26 @@ export const useOrders = () => {
         setLoading(true);
         setError(null);
 
-        const newOrder = user?.id ? await checkoutFromCart(checkoutData) : await guestCheckoutFromCart(checkoutData);
+        const response = user?.id 
+          ? await checkoutFromCart(checkoutData) 
+          : await guestCheckoutFromCart(checkoutData);
 
-        setCurrentOrder(newOrder);
+        // Backend returns { success: true, data: {...} }
+        if (response.success && response.data) {
+          setCurrentOrder(response.data);
 
-        // Refresh orders list
-        if (user?.id) {
-          await fetchMyOrders();
+          // Refresh orders list
+          if (user?.id) {
+            await fetchMyOrders();
+          }
+
+          return response.data;
+        } else {
+          throw new Error(response.message || 'Failed to checkout from cart');
         }
-
-        return newOrder;
       } catch (err) {
-        setError(err.message || 'Failed to checkout from cart');
+        const errorMsg = err.response?.data?.message || err.message || 'Failed to checkout from cart';
+        setError(errorMsg);
         console.error('Error checking out from cart:', err);
         throw err;
       } finally {
@@ -139,19 +170,31 @@ export const useOrders = () => {
         setLoading(true);
         setError(null);
 
-        const updatedOrder = await updateOrderStatus(orderId, status);
+        const response = await updateOrderStatus(orderId, status);
+        // Backend returns { success: true, order: {...}, newBadges: [...] }
+        if (response.success && response.order) {
+          const updatedOrder = response.order;
 
-        // Update orders list
-        setOrders((prev) => prev.map((order) => (order.id === orderId ? updatedOrder : order)));
+          // Update orders list
+          setOrders((prev) => prev.map((order) => (order._id === orderId ? updatedOrder : order)));
 
-        // Update current order if it's the one being updated
-        if (currentOrder?.id === orderId) {
-          setCurrentOrder(updatedOrder);
+          // Update current order if it's the one being updated
+          if (currentOrder?._id === orderId) {
+            setCurrentOrder(updatedOrder);
+          }
+
+          // Show new badges if any
+          if (response.newBadges && response.newBadges.length > 0) {
+            console.log('New badges unlocked:', response.newBadges);
+          }
+
+          return updatedOrder;
+        } else {
+          throw new Error(response.message || 'Failed to update order status');
         }
-
-        return updatedOrder;
       } catch (err) {
-        setError(err.message || 'Failed to update order status');
+        const errorMsg = err.response?.data?.message || err.message || 'Failed to update order status';
+        setError(errorMsg);
         console.error('Error updating order status:', err);
         throw err;
       } finally {
@@ -168,24 +211,31 @@ export const useOrders = () => {
         setLoading(true);
         setError(null);
 
-        const cancelledOrder = await cancelOrder(orderId);
+        const response = await cancelOrder(orderId);
+        // Backend returns { success: true, order: {...} }
+        if (response.success && response.order) {
+          const cancelledOrder = response.order;
 
-        // Update orders list
-        setOrders((prev) => prev.map((order) => (order.id === orderId ? cancelledOrder : order)));
+          // Update orders list
+          setOrders((prev) => prev.map((order) => (order._id === orderId ? cancelledOrder : order)));
 
-        // Update current order if it's the one being cancelled
-        if (currentOrder?.id === orderId) {
-          setCurrentOrder(cancelledOrder);
+          // Update current order if it's the one being cancelled
+          if (currentOrder?._id === orderId) {
+            setCurrentOrder(cancelledOrder);
+          }
+
+          // Refresh orders list
+          if (user?.id) {
+            await fetchMyOrders();
+          }
+
+          return cancelledOrder;
+        } else {
+          throw new Error(response.message || 'Failed to cancel order');
         }
-
-        // Refresh orders list
-        if (user?.id) {
-          await fetchMyOrders();
-        }
-
-        return cancelledOrder;
       } catch (err) {
-        setError(err.message || 'Failed to cancel order');
+        const errorMsg = err.response?.data?.message || err.message || 'Failed to cancel order';
+        setError(errorMsg);
         console.error('Error cancelling order:', err);
         throw err;
       } finally {
@@ -212,7 +262,10 @@ export const useOrders = () => {
     delivered: orders.filter((o) => o.status === 'delivered').length,
     cancelled: orders.filter((o) => o.status === 'cancelled').length,
     returned: orders.filter((o) => o.status === 'returned').length,
-    totalSpent: orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0),
+    totalSpent: orders.reduce((sum, order) => {
+      const amount = order.totalAmount?.$numberDecimal || order.totalAmount || 0;
+      return sum + parseFloat(amount);
+    }, 0),
   };
 
   return {
