@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { ChevronLeft, Package, MapPin, CreditCard, Clock, History } from 'lucide-react';
+import { ChevronLeft, Package, MapPin, CreditCard, Clock, History, Truck, Cloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import { useOrders } from '@/hooks';
@@ -12,10 +12,19 @@ import './OrderDetail.css';
 const statusConfig = {
   pending: { label: 'Pending', color: 'warning', icon: Clock },
   confirmed: { label: 'Confirmed', color: 'info', icon: Package },
-  shipping: { label: 'Shipping', color: 'primary', icon: Package },
+  shipping: { label: 'Shipping', color: 'primary', icon: Truck },
   delivered: { label: 'Delivered', color: 'success', icon: Package },
   cancelled: { label: 'Cancelled', color: 'danger', icon: Package },
   returned: { label: 'Returned', color: 'danger', icon: Package },
+};
+
+// Helper to parse MongoDB Decimal128
+const parseDecimal = (value) => {
+  if (!value) return 0;
+  if (typeof value === 'object' && value.$numberDecimal) {
+    return parseFloat(value.$numberDecimal);
+  }
+  return parseFloat(value) || 0;
 };
 
 const OrderDetail = () => {
@@ -60,6 +69,17 @@ const OrderDetail = () => {
   const status = statusConfig[order.status] || statusConfig.pending;
   const StatusIcon = status.icon;
 
+  // Parse decimal amounts
+  const totalAmount = parseDecimal(order.totalAmount);
+  const shippingFee = parseDecimal(order.shippingFee);
+  const discountAmount = parseDecimal(order.discountAmount);
+  const voucherDiscount = parseDecimal(order.voucherDiscount);
+  const pointsUsed = order.pointsUsed || 0;
+  const pointsEarned = order.pointsEarned || 0;
+
+  // Calculate subtotal (goods total before shipping)
+  const subtotal = totalAmount - shippingFee;
+
   return (
     <div className="order-detail-container">
       {/* Header */}
@@ -74,7 +94,7 @@ const OrderDetail = () => {
           Back to Orders
         </Button>
         <div className="order-header-info">
-          <h1>Order #{order.id}</h1>
+          <h1>Order #{order._id.slice(-8).toUpperCase()}</h1>
           <div className={`order-status status-${status.color}`}>
             <StatusIcon size={16} />
             <span>{status.label}</span>
@@ -96,39 +116,87 @@ const OrderDetail = () => {
               <span className={`info-value status-${status.color}`}>{status.label}</span>
             </div>
             <div className="info-item">
-              <span className="info-label">Total Amount</span>
-              <span className="info-value">{formatPrice(order.totalAmount)}</span>
+              <span className="info-label">Delivery Type</span>
+              <span className="info-value">{order.deliveryType === 'express' ? 'Express' : 'Standard'}</span>
             </div>
-            {order.pointsUsed > 0 && (
+            <div className="info-item">
+              <span className="info-label">Total Amount</span>
+              <span className="info-value">{formatPrice(totalAmount)}</span>
+            </div>
+            {pointsUsed > 0 && (
               <div className="info-item">
                 <span className="info-label">Points Used</span>
-                <span className="info-value">{order.pointsUsed} pts</span>
+                <span className="info-value">{pointsUsed} pts (-{formatPrice(pointsUsed)})</span>
               </div>
             )}
-            {order.pointsEarned > 0 && (
+            {pointsEarned > 0 && (
               <div className="info-item">
                 <span className="info-label">Points Earned</span>
-                <span className="info-value">+{order.pointsEarned} pts</span>
+                <span className="info-value">+{pointsEarned} pts</span>
               </div>
             )}
           </div>
         </div>
 
         {/* Delivery Address Card */}
-        {order.address && (
+        {order.addressId && (
           <div className="order-info-card">
             <h2>
               <MapPin size={20} />
               Delivery Address
             </h2>
             <div className="address-info">
-              <p className="address-name">{order.address.recipientName}</p>
-              <p className="address-phone">{order.address.phoneNumber}</p>
-              <p className="address-street">{order.address.street}</p>
-              <p className="address-location">
-                {order.address.ward}, {order.address.district}, {order.address.province}
-              </p>
-              {order.address.notes && <p className="address-notes">Notes: {order.address.notes}</p>}
+              <p className="address-name">{order.addressId.fullNameOfReceiver || 'N/A'}</p>
+              <p className="address-phone">{order.addressId.phone || 'N/A'}</p>
+              <p className="address-street">{order.addressId.addressLine || 'N/A'}</p>
+              {order.addressId.lat && order.addressId.lng && (
+                <p className="address-location">
+                  Coordinates: {order.addressId.lat}, {order.addressId.lng}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Shipping Info Card */}
+        {order.shipping && (
+          <div className="order-info-card">
+            <h2>
+              <Truck size={20} />
+              Shipping Information
+            </h2>
+            <div className="shipping-info">
+              <div className="info-item">
+                <span className="info-label">Shipping Fee</span>
+                <span className="info-value">{formatPrice(shippingFee)}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Delivery Type</span>
+                <span className="info-value">
+                  {order.deliveryType === 'express' ? 'Express Delivery' : 'Standard Delivery'}
+                </span>
+              </div>
+              {order.shipping.estimatedTime && (
+                <div className="info-item">
+                  <span className="info-label">Estimated Delivery</span>
+                  <span className="info-value">{order.shipping.estimatedTime}</span>
+                </div>
+              )}
+              {order.shipping.distance && (
+                <div className="info-item">
+                  <span className="info-label">Distance</span>
+                  <span className="info-value">{order.shipping.distance.toFixed(2)} km</span>
+                </div>
+              )}
+              {order.shipping.weather && (
+                <div className="weather-info">
+                  <Cloud size={16} />
+                  <span>Weather: {order.shipping.weather.main || 'Unknown'}</span>
+                  {order.shipping.weather.description && (
+                    <span className="weather-desc">({order.shipping.weather.description})</span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -144,17 +212,21 @@ const OrderDetail = () => {
               <span className="info-label">Payment Method</span>
               <span className="info-value">{order.paymentMethod || 'Cash on Delivery'}</span>
             </div>
-            <div className="info-item">
-              <span className="info-label">Payment Status</span>
-              <span className={`info-value ${order.isPaid ? 'text-success' : 'text-warning'}`}>
-                {order.isPaid ? 'Paid' : 'Pending'}
-              </span>
-            </div>
-            {order.isPaid && order.paidAt && (
-              <div className="info-item">
-                <span className="info-label">Paid At</span>
-                <span className="info-value">{format(new Date(order.paidAt), 'PPp')}</span>
-              </div>
+            {order.payment && (
+              <>
+                <div className="info-item">
+                  <span className="info-label">Payment Status</span>
+                  <span className={`info-value ${order.payment.status === 'completed' ? 'text-success' : 'text-warning'}`}>
+                    {order.payment.status || 'Pending'}
+                  </span>
+                </div>
+                {order.payment.transactionId && (
+                  <div className="info-item">
+                    <span className="info-label">Transaction ID</span>
+                    <span className="info-value">{order.payment.transactionId}</span>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -203,42 +275,68 @@ const OrderDetail = () => {
             Order Items
           </h2>
           <div className="order-items-list">
-            {order.items?.map((item, index) => (
-              <div key={index} className="order-item">
-                <div className="item-info">
-                  <img
-                    src={item.product?.images?.[0] || '/placeholder-product.png'}
-                    alt={item.product?.name || 'Product'}
-                    className="item-image"
-                  />
-                  <div className="item-details">
-                    <h3>{item.product?.name || 'Product'}</h3>
-                    <p className="item-quantity">Quantity: {item.quantity}</p>
+            {order.items?.map((item, index) => {
+              const itemUnitPrice = parseDecimal(item.unitPrice);
+              const itemSubtotal = parseDecimal(item.subtotal);
+              
+              return (
+                <div key={index} className="order-item">
+                  <div className="item-info">
+                    <img
+                      src={item.productId?.images?.[0] || '/placeholder-product.png'}
+                      alt={item.productId?.name || 'Product'}
+                      className="item-image"
+                    />
+                    <div className="item-details">
+                      <h3>{item.productId?.name || 'Product'}</h3>
+                      {item.variantId && (
+                        <p className="item-variant">
+                          Variant: {item.variantId.color || ''} {item.variantId.size || ''}
+                        </p>
+                      )}
+                      <p className="item-quantity">Quantity: {item.quantity}</p>
+                    </div>
+                  </div>
+                  <div className="item-pricing">
+                    <p className="item-unit-price">{formatPrice(itemUnitPrice)} each</p>
+                    <p className="item-subtotal">{formatPrice(itemSubtotal)}</p>
                   </div>
                 </div>
-                <div className="item-pricing">
-                  <p className="item-unit-price">{formatPrice(item.unitPrice)}</p>
-                  <p className="item-subtotal">{formatPrice(item.subtotal)}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Order Summary */}
           <div className="order-summary">
             <div className="summary-row">
-              <span>Subtotal</span>
-              <span>{formatPrice(order.totalAmount)}</span>
+              <span>Subtotal (Goods)</span>
+              <span>{formatPrice(subtotal)}</span>
             </div>
-            {order.discountCode && (
+            {discountAmount > 0 && (
               <div className="summary-row discount">
-                <span>Discount ({order.discountCode.code})</span>
-                <span>-{formatPrice(order.discountCode.discountAmount || 0)}</span>
+                <span>Discount Code</span>
+                <span>-{formatPrice(discountAmount)}</span>
               </div>
             )}
+            {voucherDiscount > 0 && (
+              <div className="summary-row discount">
+                <span>Voucher Discount</span>
+                <span>-{formatPrice(voucherDiscount)}</span>
+              </div>
+            )}
+            {pointsUsed > 0 && (
+              <div className="summary-row discount">
+                <span>Points Used ({pointsUsed} pts)</span>
+                <span>-{formatPrice(pointsUsed)}</span>
+              </div>
+            )}
+            <div className="summary-row">
+              <span>Shipping Fee</span>
+              <span>{formatPrice(shippingFee)}</span>
+            </div>
             <div className="summary-row total">
               <span>Total</span>
-              <span>{formatPrice(order.totalAmount)}</span>
+              <span>{formatPrice(totalAmount)}</span>
             </div>
           </div>
         </div>
