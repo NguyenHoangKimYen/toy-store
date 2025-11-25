@@ -6,12 +6,10 @@ require("dotenv").config({
 const axios = require("axios");
 const qs = require("qs");
 
-const orderRepository = require("../repositories/order.repository");
-const {
-    buildRawSignature,
-    generateSignature,
-} = require("../utils/momo.helper");
-const { hmacSHA256 } = require("../utils/zalopay.helper");
+const orderRepository = require('../repositories/order.repository');
+const { buildRawSignature, generateSignature } = require('../utils/momo.helper');
+const { hmacSHA256 } = require('../utils/zalopay.helper');
+const { updateStatus: updateOrderStatus } = require('./order.service');
 
 const MOMO_CONFIG = {
     partnerCode: process.env.MOMO_PARTNER_CODE,
@@ -61,17 +59,11 @@ async function createMomoPayment(orderId) {
     const rawSignature = buildRawSignature(signatureObj);
     const signature = generateSignature(rawSignature, MOMO_CONFIG.secretKey);
 
-    console.log("🔎 RAW SIGNATURE USED:", rawSignature);
-    console.log("🔑 SECRET KEY USED:", MOMO_CONFIG.secretKey);
-
     const payload = {
         ...signatureObj,
         signature,
         lang: "vi",
     };
-
-    console.log("🧩 SIGNATURE:", signature);
-    console.log("📦 PAYLOAD:", payload);
 
     const res = await axios.post(MOMO_CONFIG.endpoint, payload);
     const data = res.data;
@@ -97,7 +89,7 @@ async function handleMomoIpn(body) {
     if (resultCode === 0) {
         await orderRepository.updatePaymentStatus(orderId, {
             paymentStatus: "paid",
-            status: "processing",
+            status: "confirmed",
         });
         return { success: true, message: "Payment success" };
     }
@@ -124,7 +116,6 @@ async function handleMomoReturn(query) {
 
 async function createZaloPayOrderService(order) {
     const { appId, key1, endpoint, redirectUrl, callbackUrl } = ZALOPAY_CONFIG;
-    if (!appId || !key1 || !endpoint) throw new Error("ZaloPay config missing");
 
     const date = new Date();
     const yyMMdd = date.toISOString().slice(2, 10).replace(/-/g, "");
@@ -162,7 +153,7 @@ async function createZaloPayOrderService(order) {
         embeddata,
         item,
         description: `MilkyBloom - Thanh toán đơn #${order._id}`,
-        bankcode: "zalopayapp",
+        bankcode: "",
         callbackurl: callbackUrl,
         mac,
     };
@@ -171,18 +162,49 @@ async function createZaloPayOrderService(order) {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
     });
 
+    // Lưu lại apptransid để map callback/return
+    await orderRepository.updateById(order._id, {
+        paymentMethod: "zalopay",
+        zaloAppTransId: apptransid,
+    });
+
     return zaloRes.data;
 }
 
+// ======================== VERIFY CALLBACK ==========================
+
 function verifyZaloPayCallback(params) {
+    // 👉 BỎ QUA VERIFY KHI KHÔNG Ở PRODUCTION
+    if (process.env.NODE_ENV !== "production") {
+        console.log("⚠️ [SANDBOX] Skip ZaloPay MAC verify");
+        return true;
+    }
+
     const reqMac = params.mac;
-    const dataStr =
-        typeof params.data === "string"
-            ? params.data
-            : JSON.stringify(params.data); // 👈 ép object thành string
+    const dataStr = typeof params.data === "string"
+        ? params.data
+        : JSON.stringify(params.data);
 
     const mac = hmacSHA256(dataStr, ZALOPAY_CONFIG.key2);
     return mac === reqMac;
+}
+
+async function handleZaloCallback(data) {
+    const { orderId, return_code } = data;
+
+    if (return_code === 1) {
+        await orderRepository.updatePaymentStatus(orderId, {
+            paymentStatus: "paid",
+            paymentMethod: "zalopay",
+        });
+        await updateOrderStatus(orderId, "confirmed");
+    } else {
+        await orderRepository.updatePaymentStatus(orderId, {
+            paymentStatus: "failed",
+            paymentMethod: "zalopay",
+        });
+        await updateOrderStatus(orderId, "cancelled");
+    }
 }
 
 module.exports = {
@@ -191,4 +213,5 @@ module.exports = {
     handleMomoReturn,
     createZaloPayOrderService,
     verifyZaloPayCallback,
+    handleZaloCallback,
 };
