@@ -2,6 +2,15 @@ import { useState, useEffect, useMemo } from 'react';
 import { useOrders } from '@/hooks';
 import { toast } from 'sonner';
 
+// Helper to parse MongoDB Decimal128
+const parseDecimal = (value) => {
+  if (!value) return 0;
+  if (typeof value === 'object' && value.$numberDecimal) {
+    return parseFloat(value.$numberDecimal);
+  }
+  return parseFloat(value) || 0;
+};
+
 export const useOrderHistory = () => {
   const { orders: allOrders, loading, error, fetchMyOrders } = useOrders();
   
@@ -24,9 +33,15 @@ export const useOrderHistory = () => {
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       filtered = filtered.filter(order => {
-        const orderId = order.id?.toString().toLowerCase() || '';
-        const orderNumber = order.orderNumber?.toLowerCase() || '';
-        return orderId.includes(searchLower) || orderNumber.includes(searchLower);
+        // Search in order _id
+        const orderId = order._id?.toString().toLowerCase() || '';
+        
+        // Search in product names
+        const hasMatchingProduct = order.items?.some(item => 
+          item.productId?.name?.toLowerCase().includes(searchLower)
+        );
+        
+        return orderId.includes(searchLower) || hasMatchingProduct;
       });
     }
 
@@ -38,7 +53,9 @@ export const useOrderHistory = () => {
       if (field === 'date') {
         comparison = new Date(b.createdAt) - new Date(a.createdAt);
       } else if (field === 'total') {
-        comparison = (b.totalAmount || 0) - (a.totalAmount || 0);
+        const aTotal = parseDecimal(a.totalAmount);
+        const bTotal = parseDecimal(b.totalAmount);
+        comparison = bTotal - aTotal;
       }
       
       return order === 'desc' ? comparison : -comparison;

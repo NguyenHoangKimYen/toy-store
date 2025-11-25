@@ -134,8 +134,14 @@
   margin-bottom: 0.25rem;
 }
 
+.order-item-variant {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
 .order-item-quantity {
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   color: #666;
 }
 
@@ -182,6 +188,10 @@
   border-radius: 6px;
   margin-bottom: 0.5rem;
   font-size: 0.95rem;
+}
+
+.summary-row.discount {
+  color: #059669;
 }
 
 .total-row {
