@@ -54,7 +54,7 @@ module.exports = {
     // Checkout từ cart cho guest (session)
     async checkoutFromCartForGuest(req, res, next) {
         try {
-            const { sessionId, guestInfo, discountCodeId, pointsToUse } =
+            const { sessionId, guestInfo, discountCodeId, pointsToUse, paymentMethod } =
                 req.body;
 
             const detail = await orderService.createOrderFromCart({
@@ -62,6 +62,7 @@ module.exports = {
                 guestInfo,
                 discountCodeId: discountCodeId || null,
                 pointsToUse: Number(pointsToUse) || 0,
+                paymentMethod: paymentMethod || 'cod',
             });
 
             res.status(201).json({ success: true, data: detail });
