@@ -56,15 +56,18 @@ router.get(
             { expiresIn: "7d" },
         );
 
+        const target = new URL("https://www.milkybloomtoystore.id.vn");
+        target.searchParams.set("token", token); // fallback nếu cookie không chia sẻ domain
+
         res.cookie("token", token, {
             //gửi cookie http-only, redirect về fe
             httpOnly: true,
-            secure: true, // chỉ gửi qua HTTPS (khi bạn bật SSL)
-            sameSite: "lax",
+            secure: true, // chỉ gửi qua HTTPS
+            sameSite: "none", // cho phép chia sẻ giữa api. và www.
+            domain: ".milkybloomtoystore.id.vn",
+            path: "/",
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 ngày
-        }).redirect(
-            process.env.FRONTEND_URL || "https://www.milkybloomtoystore.id.vn",
-        );
+        }).redirect(target.toString());
     },
 );
 
@@ -89,15 +92,18 @@ router.get(
             { expiresIn: "7d" },
         );
 
+        const target = new URL("https://www.milkybloomtoystore.id.vn");
+        target.searchParams.set("token", token);
+
         res.cookie("token", token, {
             //gửi cookie http-only, redirect về fe
             httpOnly: true,
-            secure: true, // chỉ gửi qua HTTPS (khi bạn bật SSL)
-            sameSite: "lax",
+            secure: true, // chỉ gửi qua HTTPS
+            sameSite: "none", // cho phép chia sẻ giữa api. và www.
+            domain: ".milkybloomtoystore.id.vn",
+            path: "/",
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 ngày
-        }).redirect(
-            process.env.FRONTEND_URL || "https://www.milkybloomtoystore.id.vn",
-        );
+        }).redirect(target.toString());
     },
 );
 
