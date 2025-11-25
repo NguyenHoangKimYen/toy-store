@@ -45,9 +45,11 @@ module.exports = {
         const voucher = await voucherRepository.findById(voucherId);
         if (!voucher) throw new Error("Voucher không tồn tại");
 
-        if (voucher.expiredAt < new Date()) {
-            throw new Error("Voucher đã hết hạn");
-        }
+        const now = new Date();
+        const startAt = voucher.startDate || voucher.createdAt || now;
+        const endAt = voucher.endDate || voucher.expiredAt;
+        if (startAt && startAt > now) throw new Error("Voucher chưa bắt đầu");
+        if (endAt && endAt < now) throw new Error("Voucher đã hết hạn");
 
         // Voucher chỉ dành cho user có tài khoản
         if (!userId) {
@@ -103,7 +105,7 @@ module.exports = {
             type: uv.voucherId.type,
             value: uv.voucherId.value,
             maxDiscount: uv.voucherId.maxDiscount,
-            expiredAt: uv.voucherId.expiredAt,
+            expiredAt: uv.voucherId.endDate || uv.voucherId.expiredAt,
             used: uv.used,
         }));
     },
