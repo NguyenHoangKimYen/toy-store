@@ -17,16 +17,13 @@ async function pollBankTransactions() {
 
             const orderId = match[1];
 
-            const order = await orderRepository.findById(orderId);
-            if (!order || order.status === "paid") continue;
+      const order = await orderRepository.findById(orderId);
+      if (!order || order.paymentStatus === "paid") continue;
 
-            // UPDATE ORDER THÀNH PAID
-            await orderRepository.update(orderId, { status: "paid" });
+      // UPDATE ORDER THÀNH PAID + CONFIRMED
+      await orderRepository.updatePaymentStatus(orderId, { paymentStatus: "paid", status: "confirmed" });
 
-            console.log("✔ Auto-paid order:", orderId, " → PAID");
-        }
-    } catch (e) {
-        console.error("Error checking transactions", e.message);
+      console.log("✔ Auto-paid order:", orderId, " → paid");
     }
 }
 

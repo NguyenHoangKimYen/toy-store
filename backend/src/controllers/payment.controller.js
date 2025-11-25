@@ -1,8 +1,10 @@
 const axios = require("axios");
 const orderRepository = require("../repositories/order.repository");
 const {
-    createZaloPayOrderService,
-    verifyZaloPayCallback,
+  createMomoPayment,
+  createZaloPayOrderService,
+  verifyZaloPayCallback,
+  handleZaloCallback,
 } = require("../services/payment.service");
 
 // MoMo helper
@@ -335,6 +337,19 @@ exports.momoIpn = async (req, res) => {
         console.log("MoMo IPN ERROR", err);
         return res.json({ resultCode: 1, message: err.message });
     }
+
+    const isSuccess = Number(resultCode) === 0;
+    const update = isSuccess
+      ? { paymentStatus: "paid", status: "confirmed" }
+      : { paymentStatus: "failed", status: "cancelled" };
+
+    await orderRepository.updatePaymentStatus(orderId, update);
+
+    return res.json({ resultCode: 0, message: "OK" });
+  } catch (err) {
+    console.log("MoMo IPN ERROR", err);
+    return res.json({ resultCode: 1, message: err.message });
+  }
 };
 
 //momo return
@@ -357,61 +372,146 @@ exports.momoReturn = async (req, res) => {
 
 //zalopay
 exports.createZaloPayOrder = async (req, res) => {
-    try {
-        const { orderId } = req.params;
-        const order = await orderRepository.findById(orderId);
+  try {
+    const { orderId } = req.params;
+    const order = await orderRepository.findById(orderId);
 
-        if (!order)
-            return res
-                .status(404)
-                .json({ success: false, message: "Order not found" });
+    if (!order)
+      return res.status(404).json({ success: false, message: "Order not found" });
 
-        const zaloResponse = await createZaloPayOrderService(order);
-
-        return res.json({
-            success: true,
-            orderId,
-            zaloPay: zaloResponse,
-        });
-    } catch (err) {
-        console.log("ZaloPay Error:", err.response?.data || err.message);
-        return res.status(500).json({ success: false, message: err.message });
+    // Ghi nhận phương thức thanh toán nếu chưa có
+    if (!order.paymentMethod) {
+      await orderRepository.updateById(orderId, { paymentMethod: "zalopay" });
     }
+
+    const zaloResponse = await createZaloPayOrderService(order);
+
+    return res.json({
+      success: true,
+      orderId,
+      zaloPay: zaloResponse
+    });
+
+  } catch (err) {
+    console.log("ZaloPay Error:", err.response?.data || err.message);
+    return res.status(500).json({ success: false, message: err.message });
+  }
 };
 
 //zalopay callback
 exports.zaloPayCallback = async (req, res) => {
-    try {
-        // const valid = verifyZaloPayCallback(req.body);
+  try {
+    // const valid = verifyZaloPayCallback(req.body);
+    // if (!valid) return res.json({ returncode: -1, returnmessage: "Invalid MAC" });
 
-        // if (!valid) {
-        //   return res.json({ returncode: -1, returnmessage: "Invalid MAC" });
-        // }
-        const rawData = req.body.data;
-        const data =
-            typeof rawData === "string" ? JSON.parse(rawData) : rawData;
+    const rawData = req.body.data;
+    const data = typeof rawData === "string" ? JSON.parse(rawData) : rawData || {};
 
-        // Lấy orderId từ embeddata
-        if (data.embeddata) {
-            try {
-                const embed = JSON.parse(data.embeddata);
-                orderId = embed.orderId || null;
-            } catch (e) {
-                console.log("Parse embeddata error:", e);
-            }
-        }
-
-        if (!orderId) {
-            return res.json({
-                returncode: -1,
-                returnmessage: "Missing orderId in callback",
-            });
-        }
-
-        await orderRepository.updateStatus(orderId, "paid");
-
-        return res.json({ returncode: 1, returnmessage: "Success" });
-    } catch (err) {
-        return res.json({ returncode: 0, returnmessage: err.message });
+    let orderId = null;
+    if (data?.embeddata) {
+      try {
+        const embed = JSON.parse(data.embeddata);
+        orderId = embed.orderId || null;
+      } catch (e) {
+        console.log("Parse embeddata error:", e);
+      }
     }
+
+    // Fallback: thử lấy trực tiếp
+    if (!orderId) {
+      orderId =
+        data.orderId ||
+        data.order_id ||
+        req.body.orderId ||
+        req.body.order_id ||
+        req.query.orderId ||
+        null;
+    }
+
+    if (!orderId) {
+      return res.json({ returncode: -1, returnmessage: "Missing orderId in callback" });
+    }
+
+    const returnCodeRaw =
+      data.returncode ??
+      data.return_code ??
+      data.returnCode ??
+      req.body.returncode ??
+      req.body.return_code ??
+      req.body.returnCode;
+
+    const returnCode = Number(returnCodeRaw);
+    if (Number.isNaN(returnCode)) {
+      console.log("ZaloPay callback missing/invalid returnCode", req.body);
+      return res.json({ returncode: -1, returnmessage: "Missing return code" });
+    }
+
+    await handleZaloCallback({ orderId, return_code: Number(returnCode) });
+
+    return res.json({ returncode: 1, returnmessage: "Success" });
+  } catch (err) {
+    console.error("ZaloPay callback error:", err);
+    return res.json({ returncode: 0, returnmessage: err.message });
+  }
+};
+
+// Trang success (redirect) của ZaloPay → tự động cập nhật trạng thái nếu đủ thông tin
+exports.paymentSuccess = async (req, res) => {
+  try {
+    const { apptransid, status, returncode, return_code, orderId, order_id, amount } = req.query;
+
+    const codeRaw = returncode ?? return_code ?? status;
+    const code = Number(codeRaw);
+
+    // Ưu tiên orderId từ query, nếu không có thì tìm bằng apptransid đã lưu
+    let oid = orderId || order_id || null;
+    if (!oid && apptransid) {
+      const found = await orderRepository.findByZaloAppTransId(apptransid);
+      if (found?._id) oid = found._id.toString();
+    }
+
+    // Fallback: tìm đơn ZaloPay chưa paid theo amount trong 24h
+    if (!oid && amount && !Number.isNaN(Number(amount))) {
+      const candidate = await orderRepository.findRecentUnpaidZaloByAmount(Number(amount));
+      if (candidate?._id) {
+        oid = candidate._id.toString();
+        // Lưu apptransid nếu có
+        if (apptransid) {
+          await orderRepository.updateById(candidate._id, { zaloAppTransId: apptransid });
+        }
+      }
+    }
+
+    if (oid && !Number.isNaN(code)) {
+      const isSuccess = code === 1;
+      const update = isSuccess
+        ? { paymentStatus: "paid", status: "confirmed", paymentMethod: "zalopay" }
+        : { paymentStatus: "failed", status: "cancelled", paymentMethod: "zalopay" };
+      await orderRepository.updatePaymentStatus(oid, update);
+    }
+
+    return res.send(`
+      <html>
+        <head><title>Thanh toán</title><meta charset="utf-8"></head>
+        <body style="font-family: sans-serif; text-align: center; padding: 40px;">
+          <h1 style="color: ${code === 1 ? "#28a745" : "#e55353"};">
+            ${code === 1 ? "🎉 Thanh toán thành công!" : "❌ Thanh toán thất bại"}
+          </h1>
+          <p>Cảm ơn bạn đã mua hàng tại MilkyBloom.</p>
+          <a href="https://www.milkybloomtoystore.id.vn" style="
+            display: inline-block;
+            padding: 10px 20px;
+            background: #ff66b3;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;">
+            Quay lại trang chủ
+          </a>
+        </body>
+      </html>
+    `);
+  } catch (err) {
+    console.error("paymentSuccess error:", err);
+    return res.status(500).send("Có lỗi xảy ra khi xử lý kết quả thanh toán.");
+  }
 };
