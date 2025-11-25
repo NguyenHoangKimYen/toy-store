@@ -18,8 +18,9 @@ export const useAddresses = (userId) => {
       setLoading(true);
       setError(null);
       
-      const data = await addressesService.getAddressesByUserId(userId);
-      const addressesArray = Array.isArray(data) ? data : (data.data || []);
+      const response = await addressesService.getAddressesByUserId(userId);
+      // Backend returns { success: true, data: [...] }
+      const addressesArray = response?.data || [];
       
       setAddresses(addressesArray);
       
@@ -28,7 +29,8 @@ export const useAddresses = (userId) => {
       setDefaultAddress(defaultAddr || null);
       
     } catch (err) {
-      setError(err.message || 'Failed to load addresses');
+      const errorMsg = err.response?.data?.message || err.message || 'Failed to load addresses';
+      setError(errorMsg);
       console.error('Error fetching addresses:', err);
       setAddresses([]);
     } finally {
@@ -43,16 +45,18 @@ export const useAddresses = (userId) => {
   // Create a new address
   const createAddress = async (addressData) => {
     try {
-      const newAddress = await addressesService.createAddress({
+      const response = await addressesService.createAddress({
         ...addressData,
         userId,
       });
+      // Backend returns { success: true, data: {...} }
       await fetchAddresses(); // Refresh list
       toast.success('Address added successfully');
-      return newAddress;
+      return response?.data || response;
     } catch (error) {
-      console.error('Error creating address:', error);
-      toast.error(error.message || 'Failed to add address');
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to add address';
+      console.error('Error creating address:', errorMsg);
+      toast.error(errorMsg);
       throw error;
     }
   };
@@ -60,13 +64,15 @@ export const useAddresses = (userId) => {
   // Update an existing address
   const updateAddress = async (addressId, addressData) => {
     try {
-      const updatedAddress = await addressesService.updateAddress(addressId, addressData);
+      const response = await addressesService.updateAddress(addressId, addressData);
+      // Backend returns { success: true, data: {...} }
       await fetchAddresses(); // Refresh list
       toast.success('Address updated successfully');
-      return updatedAddress;
+      return response?.data || response;
     } catch (error) {
-      console.error('Error updating address:', error);
-      toast.error(error.message || 'Failed to update address');
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to update address';
+      console.error('Error updating address:', errorMsg);
+      toast.error(errorMsg);
       throw error;
     }
   };
@@ -78,8 +84,9 @@ export const useAddresses = (userId) => {
       await fetchAddresses(); // Refresh list
       toast.success('Address deleted successfully');
     } catch (error) {
-      console.error('Error deleting address:', error);
-      toast.error(error.message || 'Failed to delete address');
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to delete address';
+      console.error('Error deleting address:', errorMsg);
+      toast.error(errorMsg);
       throw error;
     }
   };
@@ -91,8 +98,9 @@ export const useAddresses = (userId) => {
       await fetchAddresses(); // Refresh list
       toast.success('Default address updated');
     } catch (error) {
-      console.error('Error setting default address:', error);
-      toast.error(error.message || 'Failed to set default address');
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to set default address';
+      console.error('Error setting default address:', errorMsg);
+      toast.error(errorMsg);
       throw error;
     }
   };
@@ -100,8 +108,9 @@ export const useAddresses = (userId) => {
   // Get address suggestions (for autocomplete)
   const getAddressSuggestions = async (text) => {
     try {
-      const suggestions = await addressesService.getAddressSuggestions(text);
-      return Array.isArray(suggestions) ? suggestions : (suggestions.data || []);
+      const response = await addressesService.getAddressSuggestions(text);
+      // Backend returns { success: true, data: [...] }
+      return response?.data || [];
     } catch (error) {
       console.error('Error getting address suggestions:', error);
       return [];

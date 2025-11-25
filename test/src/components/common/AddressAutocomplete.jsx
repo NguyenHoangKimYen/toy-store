@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { MapPin } from 'lucide-react';
 import { getAddressSuggestions } from '@/services/addresses.service';
+import LoadingSpinner from './LoadingSpinner';
 
 const AddressAutocomplete = ({ value, onChange, placeholder, name, id }) => {
   const [suggestions, setSuggestions] = useState([]);
@@ -47,10 +48,11 @@ const AddressAutocomplete = ({ value, onChange, placeholder, name, id }) => {
   }, [value]);
 
   const handleSelectSuggestion = (suggestion) => {
+    // Backend returns { name, address, lat, lng }
     onChange({
       target: {
         name,
-        value: suggestion.display || suggestion.name || suggestion,
+        value: suggestion.name || suggestion,
       },
     });
     setIsOpen(false);
@@ -80,7 +82,7 @@ const AddressAutocomplete = ({ value, onChange, placeholder, name, id }) => {
               <MapPin className='w-4 h-4 text-gray-400 mt-1 flex-shrink-0' />
               <div>
                 <p className='text-sm text-gray-900 dark:text-white'>
-                  {suggestion.display || suggestion.name}
+                  {suggestion.name}
                 </p>
                 {suggestion.address && (
                   <p className='text-xs text-gray-500 dark:text-gray-400'>
