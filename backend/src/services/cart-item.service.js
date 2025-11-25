@@ -11,7 +11,7 @@ const createCartItem = async (cartId, variantId, quantity) => {
     if (!variant) throw new Error("Variant not found");
 
     // GIÁ CHUẨN LÀ GIÁ VARIANT KHÔNG PHẢI PRODUCT
-    const unitPrice = Number(variant.price);
+const unitPrice = parseFloat(variant.price.toString());
 
     const existingItem = await CartItem.findOne({ cartId, variantId });
 
@@ -69,7 +69,7 @@ const updateCartItem = async (cartItemId, updates) => {
     const variant = await Variant.findById(item.variantId).populate("productId");
     if (!variant) throw new Error("Variant not found");
 
-    const unitPrice = Number(variant.price);
+const unitPrice = parseFloat(variant.price.toString());
 
     const differenceInQuantity = quantity - item.quantity;
 

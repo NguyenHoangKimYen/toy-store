@@ -27,8 +27,9 @@ app.use(cors({
   origin: [
     'http://localhost:5173',
     process.env.FRONTEND_URL,
-    'https://milkybloomtoystore.id.vn',
+    'https://www.milkybloomtoystore.id.vn',
     'https://d1qc4bz6yrxl8k.cloudfront.net',
+    'https://api.milkybloomtoystore.id.vn',
   ],
   credentials: true,
 }));

@@ -13,7 +13,7 @@ const cartItemRepository = require('../repositories/cart-item.repository');
 const loyaltyService = require('../services/loyalty.service');
 const badgeService = require('../services/badge.service');
 const CoinTransactionRepository = require("../repositories/coin-transaction.repository");
-const discountCodeRepository = require("../repositories/discount-code.repository");
+const discountCodeService = require("../services/discount-code.service");
 const { checkAndAssignBadges } = require("../services/badge.service");
 const voucherRepository = require("../repositories/voucher.repository");
 const userVoucherRepository = require("../repositories/user-voucher.repository");
@@ -209,8 +209,12 @@ module.exports = {
         let discountAmount = 0;
 
         if (discountCodeId) {
-            const discount = await discountCodeRepository.validateAndApply(discountCodeId, userId, goodsTotal);
-            discountAmount = discount.discountAmount || 0;
+            const discount = await discountCodeService.validateAndApply({
+                userId,
+                discountCodeId,
+                orderAmount: goodsTotal,
+            });
+            discountAmount = discount.discountValue || 0;
         }
 
         // ⭐ XỬ LÝ COLLECTED VOUCHER
@@ -258,9 +262,6 @@ module.exports = {
         }
 
         const goodsAfterDiscount = Math.max(
-            goodsTotal - discountAmount - coinDiscount - voucherDiscount,
-            0
-        )(
             goodsTotal - discountAmount - coinDiscount - voucherDiscount,
             0
         );

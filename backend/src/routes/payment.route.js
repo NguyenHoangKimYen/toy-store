@@ -13,6 +13,7 @@ const {
 
   createZaloPayOrder,
   zaloPayCallback,
+  paymentSuccess,
 } = require("../controllers/payment.controller.js");
 
 const auth = require("../middlewares/auth.middleware.js");
@@ -44,5 +45,6 @@ router.get("/momo/return", momoReturn);
 router.post("/zalopay/:orderId", createZaloPayOrder);
 router.post("/zalopay/callback", zaloPayCallback);
 
+router.get("/success", paymentSuccess);
 
 module.exports = router;

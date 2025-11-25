@@ -3,7 +3,7 @@ const discountService = require("../services/discount-code.service");
 module.exports = {
     async create(req, res) {
         try {
-            const data = req.body;
+            const data = { ...req.body, createdBy: req.user?.id };
             const doc = await discountService.createDiscountCode(data);
             return res.json({ success: true, data: doc });
         } catch (err) {
@@ -54,7 +54,7 @@ module.exports = {
             const result = await discountService.validateByCode({
                 code,
                 totalAmount: Number(totalAmount),
-                userId,
+                userId: userId || req.user?.id,
             });
 
             return res.json({ success: true, data: result });

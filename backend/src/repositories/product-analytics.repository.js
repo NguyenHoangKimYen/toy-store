@@ -6,7 +6,7 @@ module.exports = {
     // 1. TOP SELLING PRODUCTS
     async getTopSelling(limit = 10) {
         return Order.aggregate([
-            { $match: { paymentStatus: "PAID" } },
+            { $match: { paymentStatus: "paid" } },
             { $unwind: "$items" },
             {
                 $group: {
@@ -97,7 +97,7 @@ module.exports = {
     // 4. PRODUCT REVENUE
     async getProductRevenue() {
         return Order.aggregate([
-            { $match: { paymentStatus: "PAID" } },
+            { $match: { paymentStatus: "paid" } },
             { $unwind: "$items" },
             {
                 $group: {
@@ -131,7 +131,7 @@ module.exports = {
     // 5. CATEGORY SALES
     async getCategoryStats() {
         return Order.aggregate([
-            { $match: { paymentStatus: "PAID" } },
+            { $match: { paymentStatus: "paid" } },
             { $unwind: "$items" },
             {
                 $lookup: {
