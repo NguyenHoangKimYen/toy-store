@@ -31,8 +31,9 @@ const AddressSelector = ({ userId, selectedAddressId, onSelectAddress }) => {
   const handleSaveAddress = async (addressData) => {
     const newAddress = await createAddress(addressData);
     // Auto-select the newly created address
-    if (newAddress && newAddress.data) {
-      onSelectAddress(newAddress.data._id);
+    // Backend returns the address object directly
+    if (newAddress && newAddress._id) {
+      onSelectAddress(newAddress._id);
     }
   };
 
