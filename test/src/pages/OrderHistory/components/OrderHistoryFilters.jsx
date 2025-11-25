@@ -15,7 +15,7 @@ const OrderHistoryFilters = ({ filters, onFilterChange, onSearch }) => {
       try {
         setLoadingStatuses(true)
         const response = await getMyOrders({ limit: 1000 })
-        const orders = response.orders || response || []
+        const orders = response?.orders || []
         
         // Extract unique statuses
         const statusesSet = new Set()
@@ -25,7 +25,7 @@ const OrderHistoryFilters = ({ filters, onFilterChange, onSearch }) => {
           }
         })
         
-        // Convert to array
+        // Convert to array and capitalize
         const statuses = Array.from(statusesSet).map(status => ({
           value: status.toLowerCase(),
           label: status.charAt(0).toUpperCase() + status.slice(1)
@@ -34,13 +34,14 @@ const OrderHistoryFilters = ({ filters, onFilterChange, onSearch }) => {
         setAvailableStatuses(statuses)
       } catch (error) {
         console.error('Failed to fetch order statuses:', error)
-        // Fallback to default statuses
+        // Fallback to default statuses based on backend model
         setAvailableStatuses([
           { value: 'pending', label: 'Pending' },
-          { value: 'processing', label: 'Processing' },
-          { value: 'shipped', label: 'Shipped' },
+          { value: 'confirmed', label: 'Confirmed' },
+          { value: 'shipping', label: 'Shipping' },
           { value: 'delivered', label: 'Delivered' },
           { value: 'cancelled', label: 'Cancelled' },
+          { value: 'returned', label: 'Returned' },
         ])
       } finally {
         setLoadingStatuses(false)
