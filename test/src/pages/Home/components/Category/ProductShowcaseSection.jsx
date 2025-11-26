@@ -55,15 +55,15 @@ const ProductShowcaseSection = ({
   if (!loading && (!products || products.length === 0)) return null;
 
   return (
-    <section className={`px-[5%] py-20 bg-gradient-to-br ${bgGradient} relative overflow-hidden`}>
+    <section className={`px-4 sm:px-6 md:px-[5%] py-12 sm:py-16 md:py-20 bg-gradient-to-br ${bgGradient} relative overflow-hidden`}>
       {/* Decorative elements */}
-      <div className={`absolute top-0 right-0 w-96 h-96 bg-gradient-to-br ${decorativeGradient1} rounded-full blur-3xl`}></div>
-      <div className={`absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr ${decorativeGradient2} rounded-full blur-3xl`}></div>
+      <div className={`absolute top-0 right-0 w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 bg-gradient-to-br ${decorativeGradient1} rounded-full blur-3xl opacity-60`}></div>
+      <div className={`absolute bottom-0 left-0 w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 bg-gradient-to-tr ${decorativeGradient2} rounded-full blur-3xl opacity-60`}></div>
       
       <div className="relative z-10">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10 max-w-[1600px] mx-auto">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 sm:mb-10 max-w-[1600px] mx-auto">
           <div>
-            <h2 className="text-4xl font-bold text-slate-800 mb-1">{title}</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-800 mb-1">{title}</h2>
             <p className="text-sm text-slate-500">{subtitle}</p>
           </div>
           {showViewAll && (

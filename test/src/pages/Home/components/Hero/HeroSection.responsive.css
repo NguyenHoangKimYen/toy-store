@@ -7,36 +7,69 @@
     }
 
     .hero-carousel .list .item {
-        width: 90%;
+        width: 95%;
+    }
+
+    .hero-carousel .list .item img {
+        width: 75%;
+        right: -20%;
+    }
+
+    .hero-carousel .list .item .introduce {
+        width: 55%;
     }
 
     .hero-carousel .list .item .introduce .name {
-        font-size: 3em;
+        font-size: 2.8em;
+        line-height: 1.1em;
+    }
+
+    .hero-carousel .list .item .introduce .des {
+        font-size: 0.95em;
     }
 }
 
 @media screen and (max-width: 767px) {
     .hero-carousel {
-        height: 70vh;
-        min-height: 450px;
+        height: 75vh;
+        min-height: 500px;
     }
 
     .hero-carousel .list .item {
         width: 100%;
-        font-size: 12px;
+        font-size: 14px;
     }
 
     .hero-carousel .list .item:nth-child(2) .introduce {
-        width: 50%;
+        width: 100%;
+        padding: 0 5%;
     }
 
     .hero-carousel .list .item img {
-        width: 70%;
-        right: -10%;
+        width: 100%;
+        right: -25%;
+        opacity: 0.7;
+        filter: drop-shadow(0 0 40px rgba(59, 130, 246, 0.3));
+    }
+
+    .hero-carousel .list .item .introduce .tag {
+        font-size: 1.2em;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .hero-carousel .list .item .introduce .name {
-        font-size: 2.5em;
+        font-size: 2.2em;
+        line-height: 1.15em;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 0.5em;
+    }
+
+    .hero-carousel .list .item .introduce .des {
+        font-size: 0.95em;
+        line-height: 1.5em;
+        -webkit-line-clamp: 2;
+        margin-bottom: 1.2em;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
     /* Hide original Shop Now button on mobile */
@@ -46,69 +79,87 @@
 
     /* Use Flexbox for horizontal layout - button between arrows */
     .hero-carousel .arrows {
-        bottom: 20px;
+        bottom: 24px;
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 12px;
+        gap: 16px;
         width: 90%;
     }
 
-    /* Arrow buttons only */
+    /* Arrow buttons - larger touch targets */
     .hero-carousel .arrows button#hero-prev,
     .hero-carousel .arrows button#hero-next {
-        width: 40px;
-        height: 40px;
-        font-size: 1em;
+        width: 48px;
+        height: 48px;
+        font-size: 1.1em;
         flex-shrink: 0;
     }
 
     /* Style the mobile Shop Now button - centered between arrows */
     .hero-carousel .arrows .mobile-shop-now {
-        padding: 8px 16px;
-        font-size: 0.7em;
+        padding: 12px 20px;
+        font-size: 0.75em;
         margin: 0;
         flex-shrink: 1;
         min-width: 0;
-        max-width: 130px;
+        max-width: 140px;
         width: auto;
-        height: auto;
+        height: 48px;
         border-radius: 50px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 }
 
 /* Extra small screens */
 @media screen and (max-width: 480px) {
     .hero-carousel {
-        height: 65vh;
-        min-height: 400px;
+        height: 70vh;
+        min-height: 450px;
+    }
+
+    .hero-carousel .list .item {
+        font-size: 12px;
+    }
+
+    .hero-carousel .list .item .introduce .tag {
+        font-size: 1em;
     }
 
     .hero-carousel .list .item .introduce .name {
-        font-size: 2em;
+        font-size: 1.8em;
+        line-height: 1.2em;
+    }
+
+    .hero-carousel .list .item .introduce .des {
+        font-size: 0.9em;
+        -webkit-line-clamp: 2;
     }
 
     .hero-carousel .arrows {
-        bottom: 15px;
+        bottom: 20px;
         width: 95%;
-        gap: 10px;
+        gap: 12px;
     }
 
     /* Make Shop Now button more compact on very small screens */
     .hero-carousel .arrows .mobile-shop-now {
-        padding: 6px 12px;
-        font-size: 0.65em;
-        max-width: 100px;
+        padding: 10px 16px;
+        font-size: 0.7em;
+        max-width: 120px;
+        height: 44px;
     }
 
-    /* Arrow buttons only */
+    /* Arrow buttons - maintain good touch targets */
     .hero-carousel .arrows button#hero-prev,
     .hero-carousel .arrows button#hero-next {
-        width: 36px;
-        height: 36px;
-        font-size: 0.9em;
+        width: 44px;
+        height: 44px;
+        font-size: 1em;
     }
 }

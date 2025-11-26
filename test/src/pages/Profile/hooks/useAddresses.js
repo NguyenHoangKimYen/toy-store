@@ -19,8 +19,25 @@ export const useAddresses = (userId) => {
       setError(null);
       
       const response = await addressesService.getAddressesByUserId(userId);
-      // Backend returns { success: true, data: [...] }
-      const addressesArray = response?.data || [];
+      
+      // The service returns the data directly (axios interceptor already extracted it)
+      // It can be: Array, { success: true, data: Array }, or single object
+      let addressesArray = [];
+      
+      if (Array.isArray(response)) {
+        // Direct array response
+        addressesArray = response;
+      } else if (response?.data) {
+        // Wrapped response
+        if (Array.isArray(response.data)) {
+          addressesArray = response.data;
+        } else {
+          addressesArray = [response.data];
+        }
+      } else if (response && typeof response === 'object') {
+        // Single object response
+        addressesArray = [response];
+      }
       
       setAddresses(addressesArray);
       
@@ -34,7 +51,7 @@ export const useAddresses = (userId) => {
       if (errorMsg.includes('No address found') || errorMsg.includes('not found') || err.response?.status === 404) {
         setAddresses([]);
         setDefaultAddress(null);
-        setError(null); // Don't show error for empty addresses
+        setError(null);
       } else {
         const displayError = err.response?.data?.message || err.message || 'Failed to load addresses';
         setError(displayError);
@@ -55,7 +72,6 @@ export const useAddresses = (userId) => {
     try {
       // If no userId (guest user), return address data without saving to backend
       if (!userId) {
-        // For guest users, just return the address data with a temporary ID
         const guestAddress = {
           ...addressData,
           _id: `guest_${Date.now()}`,
@@ -69,8 +85,8 @@ export const useAddresses = (userId) => {
         ...addressData,
         userId,
       });
-      // Backend returns { success: true, data: {...} }
-      await fetchAddresses(); // Refresh list
+      
+      await fetchAddresses();
       toast.success('Address added successfully');
       return response?.data || response;
     } catch (error) {
