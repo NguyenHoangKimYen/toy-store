@@ -158,7 +158,7 @@ const Signup = () => {
             {showVerificationNotice ? (
                 <VerificationNotice userEmail={userEmail} />
             ) : (
-                <AuthCard className="w-[500px]">
+                <AuthCard>
                     <AuthHeader 
                         title="Create Account" 
                         subtitle="Join thousands of happy customers" 
