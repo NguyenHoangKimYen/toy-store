@@ -15,6 +15,7 @@ const {
   zaloPayCallback,
   zaloPayReturn,
   paymentSuccess,
+  payByCash,
 } = require("../controllers/payment.controller.js");
 
 const auth = require("../middlewares/auth.middleware.js");
@@ -44,6 +45,10 @@ router.post(
     adminOnly,
     adminRejectVietQR,
 );
+
+// ===================== CASH (COD) =====================
+// Cho phép khách/FE gọi để chọn thanh toán tiền mặt (không yêu cầu đăng nhập)
+router.post("/cash/:orderId", payByCash);
 
 // ===================== MOMO =====================
 router.post("/momo/:orderId", createMomoPayment);
