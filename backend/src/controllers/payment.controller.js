@@ -2,17 +2,13 @@ const axios = require("axios");
 const orderRepository = require("../repositories/order.repository");
 const paymentRepository = require("../repositories/payment.repository");
 const {
-  createMomoPayment,
+  createMomoPayment: createMomoPaymentService,
+  handleMomoIpn: handleMomoIpnService,
+  handleMomoReturn: handleMomoReturnService,
   createZaloPayOrderService,
   verifyZaloPayCallback,
   handleZaloCallback,
 } = require("../services/payment.service");
-
-// MoMo helper
-const {
-  createMomoSignatureForCreatePayment,
-  createMomoSignatureForIpn,
-} = require("../utils/momo.helper");
 
 function isExpired(order) {
   const now = Date.now(); // timestamp VN hay UTC đều giống nhau
@@ -21,16 +17,6 @@ function isExpired(order) {
 
   return diffHours > 24;
 }
-
-// MoMo config
-const MOMO_CONFIG = {
-  partnerCode: process.env.MOMO_PARTNER_CODE,
-  accessKey: process.env.MOMO_ACCESS_KEY,
-  secretKey: process.env.MOMO_SECRET_KEY,
-  endpoint: process.env.MOMO_ENDPOINT,
-  redirectUrl: process.env.MOMO_REDIRECT_URL,
-  ipnUrl: process.env.MOMO_IPN_URL,
-};
 
 //VietQr payment
 exports.createVietQR = async (req, res) => {
@@ -340,83 +326,31 @@ exports.payByCash = async (req, res) => {
 
 //momo
 exports.createMomoPayment = async (req, res) => {
-  console.log("➡️ createMomoPayment CALLED");
   try {
     const orderIdParam = req.params.orderId;
     const order = await orderRepository.findById(orderIdParam);
 
-    if (!order) throw new Error("Order not found");
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
 
-    // TẠM THỜI: ép amount đúng số mà MoMo đang báo trong lỗi
-    const amount = 210000;
+    // Lưu phương thức thanh toán
+    if (order.paymentMethod !== "momo") {
+      await orderRepository.updateById(orderIdParam, { paymentMethod: "momo" });
+    }
 
-    const partnerCode = MOMO_CONFIG.partnerCode;
-    const accessKey = MOMO_CONFIG.accessKey;
-    const redirectUrl = MOMO_CONFIG.redirectUrl;
-    const ipnUrl = MOMO_CONFIG.ipnUrl;
-
-    // TẠM THỜI: ép requestId bằng đúng cái trong message lỗi
-    const requestId = "1763538270486";
-
-    // TẠM THỜI: ép orderId giống trong message lỗi
-    const orderId = "691bcfc87e543228bd3bc06e";
-
-    const requestType = "payWithMethod";
-    const extraData = "";
-
-    const orderInfo = `Thanh toan don hang ${orderId}`
-      .normalize("NFKD")
-      .replace(/[\u0300-\u036f]/g, "");
-
-    // HARD-CODE RAW SIGNATURE VÀ SIGNATURE
-    const rawSignature =
-      "accessKey=8BLEw6zEZ0Svdvx5" +
-      "&amount=210000" +
-      "&extraData=" +
-      "&ipnUrl=https://milkybloomtoystore.id.vn/api/payments/momo/ipn" +
-      "&orderId=691bcfc87e543228bd3bc06e" +
-      "&orderInfo=Thanh toan don hang 691bcfc87e543228bd3bc06e" +
-      "&partnerCode=MOMOGEXT20251119_TEST" +
-      "&redirectUrl=https://milkybloomtoystore.id.vn/api/payments/momo/return" +
-      "&requestId=1763538270486" +
-      "&requestType=payWithMethod";
-
-    const signature =
-      "efc0e887b15b27b39746decb1538a6f04e330f549ac5afbe454ef5894ea39cc1";
-
-    console.log("RAW SIGNATURE (HARDCODE):", rawSignature);
-    console.log("SIGNATURE (HARDCODE):", signature);
-
-    const payload = {
-      partnerCode,
-      accessKey,
-      requestId,
-      amount,
-      orderId,
-      orderInfo,
-      redirectUrl,
-      ipnUrl,
-      requestType,
-      extraData,
-      lang: "vi",
-      signature,
-    };
-
-    console.log("MOMO PAYLOAD (HARDCODE):", payload);
-
-    const response = await axios.post(MOMO_CONFIG.endpoint, payload);
-
+    const result = await createMomoPaymentService(orderIdParam);
+    
     return res.json({
       success: true,
-      orderId,
-      momo: response.data,
+      orderId: orderIdParam,
+      momo: result,
     });
   } catch (err) {
-    console.log("MoMo ERROR:", err.response?.data || err.message);
+    console.error("MoMo ERROR:", err.message);
     return res.status(500).json({
       success: false,
-      message: "MoMo request failed",
-      momoError: err.response?.data || err.message,
+      message: err.message || "MoMo request failed",
     });
   }
 };
@@ -425,63 +359,39 @@ exports.momoIpn = async (req, res) => {
   try {
     console.log("➡️ MoMo IPN BODY:", JSON.stringify(req.body, null, 2));
 
-    const {
-      partnerCode,
-      accessKey,
-      requestId,
-      amount,
-      orderId,
-      orderInfo,
-      orderType,
-      transId,
-      resultCode,
-      message,
-      payType,
-      responseTime,
-      extraData,
-      signature,
-    } = req.body;
-
-    // (OPTIONAL) Verify signature – có thể comment nếu chỉ test dev
-    // const { rawSignature, signature: expectedSignature } =
-    //   createMomoSignatureForIpn(
-    //     {
-    //       accessKey,
-    //       amount,
-    //       extraData,
-    //       message,
-    //       orderId,
-    //       orderInfo,
-    //       orderType,
-    //       partnerCode,
-    //       payType,
-    //       requestId,
-    //       responseTime,
-    //       resultCode,
-    //       transId,
-    //     },
-    //     MOMO_CONFIG.secretKey
-    //   );
-    //
-    // if (signature !== expectedSignature) {
-    //   console.log("MoMo IPN INVALID SIGNATURE", { rawSignature, expectedSignature, signature });
-    //   return res.json({ resultCode: 1, message: "Invalid signature" });
-    // }
-
-    if (!orderId) {
-      return res.json({ resultCode: 1, message: "Missing orderId" });
+    const result = await handleMomoIpnService(req.body);
+    
+    if (result.success) {
+      // Update payment record
+      const { orderId, transId } = req.body;
+      if (orderId) {
+        const existingPayment = await paymentRepository.findByOrderId(orderId);
+        const txId = transId || existingPayment?.transactionId || `MOMO-${orderId}`;
+        
+        if (existingPayment) {
+          await paymentRepository.updateByOrderId(orderId, {
+            method: "momo",
+            status: "success",
+            transactionId: txId,
+            paidAt: new Date(),
+          });
+        } else {
+          await paymentRepository.create({
+            orderId,
+            method: "momo",
+            status: "success",
+            transactionId: txId,
+            paidAt: new Date(),
+          });
+        }
+      }
+      
+      return res.json({ resultCode: 0, message: "OK" });
+    } else {
+      return res.json({ resultCode: 1, message: result.message });
     }
-
-    const isSuccess = Number(resultCode) === 0;
-    const update = isSuccess
-      ? { paymentStatus: "paid", status: "confirmed" }
-      : { paymentStatus: "failed", status: "cancelled" };
-
-    await orderRepository.updatePaymentStatus(orderId, update);
-
-    return res.json({ resultCode: 0, message: "OK" });
   } catch (err) {
-    console.log("MoMo IPN ERROR", err);
+    console.error("MoMo IPN ERROR:", err);
     return res.json({ resultCode: 1, message: err.message });
   }
 };
@@ -490,14 +400,26 @@ exports.momoIpn = async (req, res) => {
 exports.momoReturn = async (req, res) => {
   try {
     console.log("➡️ MoMo RETURN QUERY:", req.query);
-    const { resultCode, orderId } = req.query;
-
-    if (resultCode === "0") {
-      return res.send(`🎉 Thanh toán thành công: ${orderId}`);
+    
+    const result = await handleMomoReturnService(req.query);
+    
+    if (result.success) {
+      // Redirect to frontend payment page with success status
+      const redirectUrl = new URL("https://www.milkybloomtoystore.id.vn");
+      redirectUrl.pathname = `/payment/${result.orderId}`;
+      redirectUrl.searchParams.set("resultCode", "0");
+      return res.redirect(302, redirectUrl.toString());
+    } else {
+      // Redirect to frontend payment page with failure status
+      const redirectUrl = new URL("https://www.milkybloomtoystore.id.vn");
+      if (result.orderId) {
+        redirectUrl.pathname = `/payment/${result.orderId}`;
+      }
+      redirectUrl.searchParams.set("resultCode", "-1");
+      return res.redirect(302, redirectUrl.toString());
     }
-
-    return res.send(`❌ Thanh toán thất bại: ${orderId || "unknown"}`);
   } catch (err) {
+    console.error("MoMo RETURN ERROR:", err);
     return res.status(500).send("Có lỗi xảy ra khi xử lý kết quả thanh toán MoMo.");
   }
 };
