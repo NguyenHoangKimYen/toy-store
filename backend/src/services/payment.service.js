@@ -42,7 +42,7 @@ async function createMomoPayment(orderId) {
         const requestId = Date.now().toString();
         const momoOrderId = order._id.toString();
         const requestType = "payWithMethod";
-        const orderInfo = `Thanh toan don hang ${momoOrderId}`;
+        const orderInfo = `Payment for order ${momoOrderId}`; // Use English without special chars
 
         const signatureObj = {
             accessKey: MOMO_CONFIG.accessKey,
