@@ -69,10 +69,10 @@ const OrderSchema = new mongoose.Schema(
             default: 0,
         },
 
-        // Phương thức thanh toán: momo/zalopay/vietqr/cod/...
+        // Phương thức thanh toán: momo/zalopay/vietqr/cashondelivery
         paymentMethod: {
             type: String,
-            enum: ["momo", "zalopay", "vietqr", "cod", "bank_transfer", "cash", "other", null],
+            enum: ["momo", "zalopay", "vietqr", "cashondelivery", null],
             default: null,
             lowercase: true,
         },
