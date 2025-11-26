@@ -1,8 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '@/components/common';
-import { toast } from 'sonner';
 
 /**
  * GuestRoute component to block authenticated users from accessing auth pages
@@ -13,16 +12,6 @@ import { toast } from 'sonner';
 const GuestRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
-  // Show toast notification when authenticated user tries to access
-  useEffect(() => {
-    if (user) {
-      toast.error('You must be logged out first', {
-        position: "top-center",
-        duration: 3000,
-      });
-    }
-  }, [user]);
-
   // Show loading spinner while checking authentication
   if (loading) {
     return (
@@ -32,7 +21,7 @@ const GuestRoute = ({ children }) => {
     );
   }
 
-  // Redirect to home if already authenticated
+  // Redirect to home if already authenticated (silently, no toast)
   if (user) {
     return <Navigate to="/" replace />;
   }
