@@ -23,8 +23,17 @@ export const useAddresses = (userId) => {
       const response = await addressesService.getAddressesByUserId(userId);
       console.log('✅ useAddresses: Received response:', response);
       
-      // Backend returns { success: true, data: [...] }
-      const addressesArray = response?.data || [];
+      // Backend returns { success: true, data: [...] } or { success: true, data: {...} }
+      // Handle both array and single object responses
+      let addressesArray = [];
+      if (response?.data) {
+        if (Array.isArray(response.data)) {
+          addressesArray = response.data;
+        } else {
+          // If backend returns single object, wrap it in array
+          addressesArray = [response.data];
+        }
+      }
       console.log('📦 useAddresses: Extracted addresses array:', addressesArray, 'Length:', addressesArray.length);
       
       setAddresses(addressesArray);
