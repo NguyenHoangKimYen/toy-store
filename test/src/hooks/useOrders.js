@@ -25,7 +25,8 @@ export const useOrders = () => {
 
   // Fetch user's orders
   const fetchMyOrders = useCallback(async () => {
-    if (!user?.id) return;
+    const userId = user?._id || user?.id;
+    if (!userId) return;
 
     try {
       setLoading(true);
@@ -95,7 +96,8 @@ export const useOrders = () => {
 
   // Initialize orders on mount
   useEffect(() => {
-    if (user?.id) {
+    const userId = user?._id || user?.id;
+    if (userId) {
       fetchMyOrders();
     }
   }, [user, fetchMyOrders]);
@@ -134,7 +136,8 @@ export const useOrders = () => {
         setLoading(true);
         setError(null);
 
-        const response = user?.id 
+        const userId = user?._id || user?.id;
+        const response = userId
           ? await checkoutFromCart(checkoutData) 
           : await guestCheckoutFromCart(checkoutData);
 
@@ -147,7 +150,8 @@ export const useOrders = () => {
           setCurrentOrder(response.data);
 
           // Refresh orders list
-          if (user?.id) {
+          const userId = user?._id || user?.id;
+          if (userId) {
             await fetchMyOrders();
           }
 
@@ -231,7 +235,8 @@ export const useOrders = () => {
           }
 
           // Refresh orders list
-          if (user?.id) {
+          const userId = user?._id || user?.id;
+          if (userId) {
             await fetchMyOrders();
           }
 
