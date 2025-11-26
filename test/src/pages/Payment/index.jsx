@@ -71,7 +71,7 @@ const Payment = () => {
       }
 
       // Get payment method, default to 'cod' if not set
-      const orderPaymentMethod = order.paymentMethod || 'cod';
+      const orderPaymentMethod = order.paymentMethod || 'cashondelivery';
 
       // Check if we're returning from a payment gateway
       const isReturningFromPayment = resultCode || paymentStatus || 
@@ -228,7 +228,7 @@ const Payment = () => {
   }
 
   // Get payment method, default to 'cod' if not set
-  const paymentMethod = currentOrder.paymentMethod || 'cod';
+  const paymentMethod = currentOrder.paymentMethod || 'cashondelivery';
 
   // Already paid
   if (currentOrder.isPaid) {
