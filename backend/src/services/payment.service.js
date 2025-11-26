@@ -60,6 +60,9 @@ async function createMomoPayment(orderId) {
         const rawSignature = buildRawSignature(signatureObj);
         const signature = generateSignature(rawSignature, MOMO_CONFIG.secretKey);
 
+        console.log("🔵 Raw Signature String:", rawSignature);
+        console.log("🔑 Generated Signature:", signature);
+
         const payload = {
             ...signatureObj,
             signature,

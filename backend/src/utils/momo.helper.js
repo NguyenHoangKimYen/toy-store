@@ -42,10 +42,16 @@ function buildRawSignature(params) {
 
 // Generate HMAC SHA256 signature
 function generateSignature(rawSignature, secretKey) {
-    return crypto
+    console.log("🔐 Secret Key:", secretKey?.substring(0, 10) + "...");
+    console.log("📝 Raw Signature Length:", rawSignature?.length);
+    
+    const sig = crypto
         .createHmac("sha256", secretKey)
         .update(rawSignature, "utf8")
         .digest("hex");
+    
+    console.log("✅ Generated Signature:", sig);
+    return sig;
 }
 
 function createMomoSignatureForCreatePayment({
