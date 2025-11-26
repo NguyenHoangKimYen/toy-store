@@ -29,6 +29,55 @@ const ownerOrAdmin = (req, res, next) => {
     });
 };
 
+// ============ PUBLIC ENDPOINTS (No auth required) ============
+// Check username availability
+router.get("/check-username", async (req, res, next) => {
+    try {
+        const { username } = req.query;
+        if (!username) {
+            return res.status(400).json({
+                success: false,
+                message: "Username is required"
+            });
+        }
+        
+        const userRepository = require("../repositories/user.repository.js");
+        const existingUser = await userRepository.findByUsername(username);
+        
+        res.json({
+            success: true,
+            available: !existingUser,
+            message: existingUser ? "Username is already taken" : "Username is available"
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// Check email availability
+router.get("/check-email", async (req, res, next) => {
+    try {
+        const { email } = req.query;
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: "Email is required"
+            });
+        }
+        
+        const userRepository = require("../repositories/user.repository.js");
+        const existingUser = await userRepository.findByEmail(email);
+        
+        res.json({
+            success: true,
+            available: !existingUser,
+            message: existingUser ? "Email is already taken" : "Email is available"
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
 // ============ ADMIN ============
 router.use(auth);
 
