@@ -21,6 +21,9 @@ const AddressSection = ({ user }) => {
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [formMode, setFormMode] = useState('create');
 
+  // Debug: Log addresses state
+  console.log('🏠 AddressSection render - addresses:', addresses, 'length:', addresses?.length);
+
   const handleAddAddress = () => {
     setSelectedAddress(null);
     setFormMode('create');
