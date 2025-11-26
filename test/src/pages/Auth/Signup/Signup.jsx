@@ -14,6 +14,7 @@ const Signup = () => {
     const [formData, setFormData] = useState({ fullname: '', username: '', email: '', phone: '', password: '', confirmPassword: '' })
     const [validationErrors, setValidationErrors] = useState({})
     const [touchedFields, setTouchedFields] = useState({})
+    const [checkingAvailability, setCheckingAvailability] = useState({})
     const navigate = useNavigate()
 
     // Redirect if already logged in
@@ -91,6 +92,51 @@ const Signup = () => {
                 })
             }
         }
+
+        // Check availability for username and email
+        if ((name === 'username' || name === 'email') && value.length >= 3) {
+            checkAvailability(name, value)
+        }
+    }
+
+    const checkAvailability = async (field, value) => {
+        // Clear any existing timeout for this field
+        if (window[`${field}Timeout`]) {
+            clearTimeout(window[`${field}Timeout`])
+        }
+
+        // Debounce the API call
+        window[`${field}Timeout`] = setTimeout(async () => {
+            setCheckingAvailability(prev => ({ ...prev, [field]: true }))
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/users/check-${field}?${field}=${encodeURIComponent(value)}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+
+                const data = await res.json()
+
+                if (!res.ok) {
+                    // Field is taken
+                    setValidationErrors(prev => ({
+                        ...prev,
+                        [field]: data.message || `This ${field} is already taken`
+                    }))
+                } else {
+                    // Field is available - clear error if exists
+                    setValidationErrors(prev => {
+                        const updated = { ...prev }
+                        delete updated[field]
+                        return updated
+                    })
+                }
+            } catch (err) {
+                console.error(`Error checking ${field}:`, err)
+            } finally {
+                setCheckingAvailability(prev => ({ ...prev, [field]: false }))
+            }
+        }, 500) // Wait 500ms after user stops typing
     }
 
     const handleBlur = (e) => {
@@ -170,6 +216,7 @@ const Signup = () => {
                             touchedFields={touchedFields}
                             passwordStrength={passwordStrength}
                             loading={loading}
+                            checkingAvailability={checkingAvailability}
                             onInputChange={handleInputChange}
                             onBlur={handleBlur}
                             onSubmit={handleSubmit}

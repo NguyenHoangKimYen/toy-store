@@ -12,6 +12,7 @@ export const SignupForm = ({
   touchedFields,
   passwordStrength,
   loading,
+  checkingAvailability,
   onInputChange, 
   onBlur, 
   onSubmit 
@@ -40,6 +41,7 @@ export const SignupForm = ({
           formData={formData}
           validationErrors={validationErrors}
           touchedFields={touchedFields}
+          checkingAvailability={checkingAvailability}
           onInputChange={onInputChange}
           onBlur={onBlur}
           onNext={handleNextStep}
@@ -51,6 +53,7 @@ export const SignupForm = ({
           formData={formData}
           validationErrors={validationErrors}
           touchedFields={touchedFields}
+          checkingAvailability={checkingAvailability}
           onInputChange={onInputChange}
           onBlur={onBlur}
           onNext={handleNextStep}

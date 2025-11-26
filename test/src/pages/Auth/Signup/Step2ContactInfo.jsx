@@ -2,19 +2,21 @@ import React from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Check, X, ArrowRight, ArrowLeft } from 'lucide-react'
+import { Check, X, ArrowRight, ArrowLeft, Loader2 } from 'lucide-react'
 
 export const Step2ContactInfo = ({ 
   formData, 
   validationErrors, 
   touchedFields,
+  checkingAvailability = {},
   onInputChange, 
   onBlur, 
   onNext,
   onBack 
 }) => {
   const isStepValid = formData.email && formData.phone && 
-    !validationErrors.email && !validationErrors.phone
+    !validationErrors.email && !validationErrors.phone &&
+    !checkingAvailability.email
 
   return (
     <div className="space-y-5">
@@ -39,6 +41,8 @@ export const Step2ContactInfo = ({
               touchedFields.email
                 ? validationErrors.email
                   ? 'border-red-400 focus:ring-red-400'
+                  : checkingAvailability.email
+                  ? 'border-blue-400 focus:ring-blue-400'
                   : 'border-green-400 focus:ring-green-400'
                 : ''
             }`}
@@ -46,7 +50,9 @@ export const Step2ContactInfo = ({
           />
           {touchedFields.email && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              {validationErrors.email ? (
+              {checkingAvailability.email ? (
+                <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
+              ) : validationErrors.email ? (
                 <X className="w-5 h-5 text-red-500" />
               ) : (
                 <Check className="w-5 h-5 text-green-500" />
@@ -54,7 +60,13 @@ export const Step2ContactInfo = ({
             </div>
           )}
         </div>
-        {touchedFields.email && validationErrors.email && (
+        {checkingAvailability.email && (
+          <p className="text-xs text-blue-300 flex items-center gap-1">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            Checking availability...
+          </p>
+        )}
+        {touchedFields.email && validationErrors.email && !checkingAvailability.email && (
           <p className="text-xs text-red-300 flex items-center gap-1">
             <X className="w-3 h-3" />
             {validationErrors.email}

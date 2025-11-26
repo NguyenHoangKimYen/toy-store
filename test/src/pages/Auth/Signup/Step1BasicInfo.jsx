@@ -2,18 +2,20 @@ import React from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Check, X, ArrowRight } from 'lucide-react'
+import { Check, X, ArrowRight, Loader2 } from 'lucide-react'
 
 export const Step1BasicInfo = ({ 
   formData, 
   validationErrors, 
   touchedFields,
+  checkingAvailability = {},
   onInputChange, 
   onBlur, 
   onNext 
 }) => {
   const isStepValid = formData.fullname && formData.username && 
-    !validationErrors.fullname && !validationErrors.username
+    !validationErrors.fullname && !validationErrors.username &&
+    !checkingAvailability.username
 
   return (
     <div className="space-y-5">
@@ -77,6 +79,8 @@ export const Step1BasicInfo = ({
               touchedFields.username
                 ? validationErrors.username
                   ? 'border-red-400 focus:ring-red-400'
+                  : checkingAvailability.username
+                  ? 'border-blue-400 focus:ring-blue-400'
                   : 'border-green-400 focus:ring-green-400'
                 : ''
             }`}
@@ -84,7 +88,9 @@ export const Step1BasicInfo = ({
           />
           {touchedFields.username && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              {validationErrors.username ? (
+              {checkingAvailability.username ? (
+                <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
+              ) : validationErrors.username ? (
                 <X className="w-5 h-5 text-red-500" />
               ) : (
                 <Check className="w-5 h-5 text-green-500" />
@@ -92,7 +98,13 @@ export const Step1BasicInfo = ({
             </div>
           )}
         </div>
-        {touchedFields.username && validationErrors.username && (
+        {checkingAvailability.username && (
+          <p className="text-xs text-blue-300 flex items-center gap-1">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            Checking availability...
+          </p>
+        )}
+        {touchedFields.username && validationErrors.username && !checkingAvailability.username && (
           <p className="text-xs text-red-300 flex items-center gap-1">
             <X className="w-3 h-3" />
             {validationErrors.username}
