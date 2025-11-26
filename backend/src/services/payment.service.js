@@ -32,59 +32,70 @@ const ZALOPAY_CONFIG = {
 // ======================== MOMO PAYMENT ==========================
 
 async function createMomoPayment(orderId) {
-    const order = await orderRepository.findById(orderId);
-    if (!order) throw new Error("Order not found");
+    try {
+        const order = await orderRepository.findById(orderId);
+        if (!order) throw new Error("Order not found");
 
-    const amount = Number(order.totalAmount);
-    if (!amount || amount < 1000) throw new Error("Invalid MoMo amount");
+        const amount = Number(order.totalAmount);
+        if (!amount || amount < 1000) throw new Error("Invalid MoMo amount");
 
-    const requestId = Date.now().toString();
-    const momoOrderId = order._id.toString();
-    const requestType = "payWithMethod";
-    const orderInfo = `Thanh toan don hang ${momoOrderId}`;
+        const requestId = Date.now().toString();
+        const momoOrderId = order._id.toString();
+        const requestType = "payWithMethod";
+        const orderInfo = `Thanh toan don hang ${momoOrderId}`;
 
-    const signatureObj = {
-        accessKey: MOMO_CONFIG.accessKey,
-        amount,
-        extraData: "",
-        ipnUrl: MOMO_CONFIG.ipnUrl,
-        orderId: momoOrderId,
-        orderInfo,
-        partnerCode: MOMO_CONFIG.partnerCode,
-        redirectUrl: MOMO_CONFIG.redirectUrl,
-        requestId,
-        requestType,
-    };
+        const signatureObj = {
+            accessKey: MOMO_CONFIG.accessKey,
+            amount,
+            extraData: "",
+            ipnUrl: MOMO_CONFIG.ipnUrl,
+            orderId: momoOrderId,
+            orderInfo,
+            partnerCode: MOMO_CONFIG.partnerCode,
+            redirectUrl: MOMO_CONFIG.redirectUrl,
+            requestId,
+            requestType,
+        };
 
-    const rawSignature = buildRawSignature(signatureObj);
-    const signature = generateSignature(rawSignature, MOMO_CONFIG.secretKey);
+        const rawSignature = buildRawSignature(signatureObj);
+        const signature = generateSignature(rawSignature, MOMO_CONFIG.secretKey);
 
-    const payload = {
-        ...signatureObj,
-        signature,
-        lang: "vi",
-    };
+        const payload = {
+            ...signatureObj,
+            signature,
+            lang: "vi",
+        };
 
-    console.log("🔵 MoMo Request Payload:", JSON.stringify(payload, null, 2));
+        console.log("🔵 MoMo Request Payload:", JSON.stringify(payload, null, 2));
 
-    const res = await axios.post(MOMO_CONFIG.endpoint, payload);
-    const data = res.data;
+        const res = await axios.post(MOMO_CONFIG.endpoint, payload);
+        const data = res.data;
 
-    console.log("🟢 MoMo Response:", JSON.stringify(data, null, 2));
+        console.log("🟢 MoMo Response:", JSON.stringify(data, null, 2));
 
-    if (!data || data.resultCode !== 0) {
-        console.error("❌ MoMo Error Response:", data);
-        throw new Error(
-            `MoMo payment failed: ${data?.message || data?.localMessage || "Unknown error"}`,
-        );
+        if (!data || data.resultCode !== 0) {
+            console.error("❌ MoMo Error Response:", data);
+            throw new Error(
+                `MoMo payment failed: ${data?.message || data?.localMessage || "Unknown error"}`,
+            );
+        }
+
+        return {
+            payUrl: data.payUrl,
+            qrCode: data.qrCodeUrl || null,
+            deeplink: data.deeplink || null,
+            orderId: momoOrderId,
+        };
+    } catch (error) {
+        // Handle axios errors
+        if (error.response) {
+            console.error("❌ MoMo API Error:", error.response.data);
+            throw new Error(
+                `MoMo API error: ${error.response.data?.message || error.response.data?.localMessage || error.message}`
+            );
+        }
+        throw error;
     }
-
-    return {
-        payUrl: data.payUrl,
-        qrCode: data.qrCodeUrl || null,
-        deeplink: data.deeplink || null,
-        orderId: momoOrderId,
-    };
 }
 
 async function handleMomoIpn(body) {
