@@ -65,12 +65,17 @@ async function createMomoPayment(orderId) {
         lang: "vi",
     };
 
+    console.log("🔵 MoMo Request Payload:", JSON.stringify(payload, null, 2));
+
     const res = await axios.post(MOMO_CONFIG.endpoint, payload);
     const data = res.data;
 
+    console.log("🟢 MoMo Response:", JSON.stringify(data, null, 2));
+
     if (!data || data.resultCode !== 0) {
+        console.error("❌ MoMo Error Response:", data);
         throw new Error(
-            `MoMo payment failed: ${data.message || "Unknown error"}`,
+            `MoMo payment failed: ${data?.message || data?.localMessage || "Unknown error"}`,
         );
     }
 
