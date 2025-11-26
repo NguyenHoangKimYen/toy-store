@@ -24,7 +24,7 @@ const PAYMENT_METHODS = [
     description: 'Pay with ZaloPay e-wallet',
   },
   {
-    id: 'cod',
+    id: 'cashondelivery',
     name: 'Cash on Delivery',
     icon: Truck,
     description: 'Pay when you receive the order',
