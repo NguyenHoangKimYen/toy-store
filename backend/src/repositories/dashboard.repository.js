@@ -23,10 +23,15 @@ module.exports = {
             },
         ]);
 
+        const codTotal =
+            (raw.find((x) => x._id === "cashondelivery")?.total || 0) +
+            (raw.find((x) => x._id === "cod")?.total || 0) + // fallback dữ liệu cũ
+            (raw.find((x) => x._id === "cashOnDelivery")?.total || 0); // fallback kiểu cũ
+
         return {
             website: raw.find((x) => x._id === "website")?.total || 0,
             mobile: raw.find((x) => x._id === "mobile")?.total || 0,
-            cod: raw.find((x) => x._id === "cod")?.total || 0,
+            cod: codTotal,
             ewallet: raw
                 .filter((x) => ["momo", "vnpay", "zalopay"].includes(x._id))
                 .reduce((s, x) => s + x.total, 0),
@@ -132,11 +137,16 @@ module.exports = {
             },
         ]);
 
+        const codTotal =
+            (raw.find((x) => x._id === "cashondelivery")?.total || 0) +
+            (raw.find((x) => x._id === "cod")?.total || 0) + // fallback dữ liệu cũ
+            (raw.find((x) => x._id === "cashOnDelivery")?.total || 0); // fallback kiểu cũ
+
         return {
             momo: raw.find((x) => x._id === "momo")?.total || 0,
             vnpay: raw.find((x) => x._id === "vnpay")?.total || 0,
             zalopay: raw.find((x) => x._id === "zalopay")?.total || 0,
-            cod: raw.find((x) => x._id === "cod")?.total || 0,
+            cod: codTotal,
         };
     },
 };

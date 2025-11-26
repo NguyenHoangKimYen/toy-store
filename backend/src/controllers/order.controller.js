@@ -43,7 +43,7 @@ module.exports = {
                 discountCodeId: discountCodeId || null,
                 voucherId: voucherId || null,
                 pointsToUse: Number(pointsToUse) || 0,
-                paymentMethod: paymentMethod || 'cod',
+                paymentMethod: paymentMethod || 'cashondelivery',
                 deliveryType: deliveryType || 'standard',
             });
 
@@ -64,7 +64,7 @@ module.exports = {
                 guestInfo,
                 discountCodeId: discountCodeId || null,
                 pointsToUse: Number(pointsToUse) || 0,
-                paymentMethod: paymentMethod || 'cod',
+                paymentMethod: paymentMethod || 'cashondelivery',
             });
 
             res.status(201).json({ success: true, data: detail });
