@@ -24,6 +24,16 @@ const Payment = () => {
   const resultCode = searchParams.get('resultCode'); // MoMo uses resultCode
   const paymentStatus = searchParams.get('status'); // ZaloPay uses status (1 = success, -1 = failed)
 
+  const normalizeAmount = (order, qr) => {
+    const raw =
+      order?.totalAmount?.$numberDecimal ??
+      order?.totalAmount ??
+      qr?.amount ??
+      null;
+    const num = Number(raw);
+    return Number.isFinite(num) ? num : null;
+  };
+
   useEffect(() => {
     if (orderId) {
       loadPaymentInfo();
@@ -82,7 +92,12 @@ const Payment = () => {
         // Get QR code for VietQR
         const qrData = await getVietQR(orderId);
         if (qrData.success && qrData.qr) {
-          setQrCode(qrData.qr);
+          // Normalize QR URL to a single field
+          const qrUrl = qrData.qr.qrDataURL || qrData.qr.bill || null;
+          setQrCode({
+            ...qrData.qr,
+            qrUrl,
+          });
         }
         setLoading(false);
       } else if (orderPaymentMethod === 'momo' && !order.isPaid && !isReturningFromPayment) {
@@ -124,8 +139,7 @@ const Payment = () => {
       
       // Refresh order to get updated status
       await fetchOrderById(orderId);
-      
-      alert('Payment confirmation sent! Admin will verify and confirm your payment.');
+      navigate('/');
     } catch (err) {
       console.error('Error confirming payment:', err);
       setError(err.message || 'Failed to confirm payment');
@@ -179,7 +193,6 @@ const Payment = () => {
           )}
           
           <div className="result-actions">
-            <Button onClick={() => navigate(`/orders/${orderId}`)}>View Order</Button>
             {!isSuccess && (
               <Button variant="outline" onClick={() => loadPaymentInfo()}>
                 Try Again
@@ -202,9 +215,6 @@ const Payment = () => {
           <div className="result-actions">
             <Button onClick={() => loadPaymentInfo()}>
               Refresh Status
-            </Button>
-            <Button variant="outline" onClick={() => navigate(`/orders/${orderId}`)}>
-              View Order
             </Button>
           </div>
         </div>
@@ -232,9 +242,6 @@ const Payment = () => {
           <CheckCircle size={64} className="result-icon success" />
           <h1>Already Paid</h1>
           <p>This order has already been paid.</p>
-          <div className="result-actions">
-            <Button onClick={() => navigate(`/orders/${orderId}`)}>View Order</Button>
-          </div>
         </div>
       </div>
     );
@@ -254,9 +261,6 @@ const Payment = () => {
               <span className="amount">{formatPrice(currentOrder.totalAmount)}</span>
             </div>
           </div>
-          <div className="result-actions">
-            <Button onClick={() => navigate(`/orders/${orderId}`)}>View Order</Button>
-          </div>
         </div>
       </div>
     );
@@ -264,6 +268,10 @@ const Payment = () => {
 
   // VietQR payment
   if (paymentMethod === 'vietqr' && qrCode) {
+    const qrUrl = qrCode.qrUrl || qrCode.qrDataURL || qrCode.bill;
+    const displayOrderId = currentOrder._id || currentOrder.id || orderId;
+    const displayAmount = normalizeAmount(currentOrder, qrCode);
+
     return (
       <div className="payment-container">
         <div className="payment-card">
@@ -274,8 +282,8 @@ const Payment = () => {
           </div>
 
           <div className="qr-section">
-            {qrCode.qrDataURL ? (
-              <img src={qrCode.qrDataURL} alt="VietQR Code" className="qr-code-image" />
+            {qrUrl ? (
+              <img src={qrUrl} alt="VietQR Code" className="qr-code-image" />
             ) : (
               <div className="qr-placeholder">QR code not available</div>
             )}
@@ -285,11 +293,13 @@ const Payment = () => {
             <h3>Payment Details</h3>
             <div className="detail-row">
               <span>Order ID</span>
-              <span className="detail-value">#{currentOrder.id}</span>
+              <span className="detail-value">#{displayOrderId}</span>
             </div>
             <div className="detail-row">
               <span>Amount</span>
-              <span className="detail-value amount">{formatPrice(currentOrder.totalAmount)}</span>
+              <span className="detail-value amount">
+                {displayAmount !== null ? formatPrice(displayAmount) : '—'}
+              </span>
             </div>
             {qrCode.accountNo && (
               <div className="detail-row">
@@ -306,6 +316,14 @@ const Payment = () => {
           </div>
 
           <div className="payment-actions">
+            {qrUrl && (
+              <Button
+                variant="outline"
+                onClick={() => window.open(qrUrl, '_blank')}
+              >
+                Open QR in new tab
+              </Button>
+            )}
             <Button
               onClick={handleConfirmPayment}
               disabled={confirming}
@@ -319,12 +337,6 @@ const Payment = () => {
               ) : (
                 "I've Transferred"
               )}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate(`/orders/${orderId}`)}
-            >
-              View Order
             </Button>
           </div>
 
