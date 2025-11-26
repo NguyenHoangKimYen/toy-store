@@ -10,18 +10,15 @@ export const useAddresses = (userId) => {
 
   const fetchAddresses = useCallback(async () => {
     if (!userId) {
-      console.log('⚠️ useAddresses: No userId provided, skipping fetch');
       setLoading(false);
       return;
     }
 
-    console.log('🔄 useAddresses: Fetching addresses for userId:', userId);
     try {
       setLoading(true);
       setError(null);
       
       const response = await addressesService.getAddressesByUserId(userId);
-      console.log('✅ useAddresses: Received response:', response);
       
       // Backend returns { success: true, data: [...] } or { success: true, data: {...} }
       // Handle both array and single object responses
@@ -30,28 +27,23 @@ export const useAddresses = (userId) => {
         if (Array.isArray(response.data)) {
           addressesArray = response.data;
         } else {
-          // If backend returns single object, wrap it in array
           addressesArray = [response.data];
         }
       }
-      console.log('📦 useAddresses: Extracted addresses array:', addressesArray, 'Length:', addressesArray.length);
       
       setAddresses(addressesArray);
       
       // Find default address
       const defaultAddr = addressesArray.find(addr => addr.isDefault);
       setDefaultAddress(defaultAddr || null);
-      console.log('✅ useAddresses: State updated. Addresses count:', addressesArray.length);
       
     } catch (err) {
-      console.error('❌ useAddresses: Error caught:', err);
       // Handle "no address found" as an empty state, not an error
       const errorMsg = err.message || '';
       if (errorMsg.includes('No address found') || errorMsg.includes('not found') || err.response?.status === 404) {
-        console.log('ℹ️ useAddresses: No addresses found (404), setting empty array');
         setAddresses([]);
         setDefaultAddress(null);
-        setError(null); // Don't show error for empty addresses
+        setError(null);
       } else {
         const displayError = err.response?.data?.message || err.message || 'Failed to load addresses';
         setError(displayError);
@@ -60,7 +52,6 @@ export const useAddresses = (userId) => {
       }
     } finally {
       setLoading(false);
-      console.log('✅ useAddresses: Fetch complete');
     }
   }, [userId]);
 
@@ -70,11 +61,9 @@ export const useAddresses = (userId) => {
 
   // Create a new address
   const createAddress = async (addressData) => {
-    console.log('🆕 useAddresses: Creating address:', addressData);
     try {
       // If no userId (guest user), return address data without saving to backend
       if (!userId) {
-        // For guest users, just return the address data with a temporary ID
         const guestAddress = {
           ...addressData,
           _id: `guest_${Date.now()}`,
@@ -88,18 +77,13 @@ export const useAddresses = (userId) => {
         ...addressData,
         userId,
       });
-      console.log('✅ useAddresses: Address created, response:', response);
       
-      // Backend returns { success: true, data: {...} }
-      console.log('🔄 useAddresses: Calling fetchAddresses to refresh list...');
-      await fetchAddresses(); // Refresh list
-      console.log('✅ useAddresses: Refresh complete');
-      
+      await fetchAddresses();
       toast.success('Address added successfully');
       return response?.data || response;
     } catch (error) {
       const errorMsg = error.response?.data?.message || error.message || 'Failed to add address';
-      console.error('❌ useAddresses: Error creating address:', errorMsg, error);
+      console.error('Error creating address:', errorMsg);
       toast.error(errorMsg);
       throw error;
     }
