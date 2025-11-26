@@ -121,11 +121,14 @@ const Login = () => {
 
       // Successful login
       if (data.data?.user) {
-        // Store only user data (token is in httpOnly cookie)
+        // Store user data and token
         localStorage.setItem('user', JSON.stringify(data.data.user))
+        if (data.data.token) {
+          localStorage.setItem('authToken', data.data.token)
+        }
         
-        // Update auth context
-        authLogin(data.data.user, null)
+        // Update auth context with token
+        authLogin(data.data.user, data.data.token)
         
         // Clear guest sessionId AFTER successful login (cart has been merged by backend)
         localStorage.removeItem('guestSessionId')

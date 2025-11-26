@@ -12,7 +12,7 @@ export const useCheckout = () => {
   
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('cod');
+  const [paymentMethod, setPaymentMethod] = useState('cashondelivery');
   const [discountInfo, setDiscountInfo] = useState({
     appliedCode: null,
     discountAmount: 0,

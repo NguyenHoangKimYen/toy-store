@@ -29,10 +29,18 @@ export const useAddresses = (userId) => {
       setDefaultAddress(defaultAddr || null);
       
     } catch (err) {
-      const errorMsg = err.response?.data?.message || err.message || 'Failed to load addresses';
-      setError(errorMsg);
-      console.error('Error fetching addresses:', err);
-      setAddresses([]);
+      // Handle "no address found" as an empty state, not an error
+      const errorMsg = err.message || '';
+      if (errorMsg.includes('No address found') || errorMsg.includes('not found') || err.response?.status === 404) {
+        setAddresses([]);
+        setDefaultAddress(null);
+        setError(null); // Don't show error for empty addresses
+      } else {
+        const displayError = err.response?.data?.message || err.message || 'Failed to load addresses';
+        setError(displayError);
+        console.error('Error fetching addresses:', err);
+        setAddresses([]);
+      }
     } finally {
       setLoading(false);
     }

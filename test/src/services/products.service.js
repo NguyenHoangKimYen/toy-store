@@ -152,18 +152,22 @@ export const uploadProductImages = async (productId, formData) => {
 };
 
 /**
- * Delete a product image
+ * Delete product images
  * @param {string} productId - Product ID
- * @param {string} imageId - Image ID
+ * @param {Array<string>} imageUrls - Array of image URLs to delete
  * @returns {Promise<Object>}
  */
-export const deleteProductImage = async (productId, imageId) => {
-  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.PRODUCTS}/${productId}/images/${imageId}`, {
+export const deleteProductImage = async (productId, imageUrls) => {
+  // Support both single URL string or array of URLs
+  const removeImages = Array.isArray(imageUrls) ? imageUrls : [imageUrls];
+  
+  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.PRODUCTS}/${productId}/images`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
       ...getAuthHeaders(),
     },
+    body: JSON.stringify({ removeImages }),
   });
   
   return handleResponse(response);

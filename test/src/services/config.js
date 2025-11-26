@@ -70,6 +70,14 @@ const apiClient = {
           message: `HTTP error! status: ${response.status}`,
         }));
         console.error('API Error Response:', error);
+        
+        // Handle expired token - auto logout
+        if (response.status === 401 && (error.message === 'Invalid token' || error.message === 'Unauthorized')) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('user');
+          window.dispatchEvent(new Event('userLoggedOut'));
+        }
+        
         throw new Error(error.message || `HTTP error! status: ${response.status}`);
       }
 

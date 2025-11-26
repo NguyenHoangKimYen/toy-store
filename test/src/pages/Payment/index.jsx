@@ -4,7 +4,7 @@ import { CheckCircle, Clock, XCircle, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import { useOrders } from '@/hooks';
-import { getVietQR, customerConfirmVietQR, createMomoPayment, createZaloPayOrder, zaloPayReturn } from '@/services';
+import { getVietQR, customerConfirmVietQR, createMomoPayment, createZaloPayOrder, zaloPayReturn, payByCash } from '@/services';
 import { formatPrice } from '@/utils';
 import { ROUTES } from '@/config/routes';
 import './Payment.css';
@@ -81,7 +81,7 @@ const Payment = () => {
       }
 
       // Get payment method, default to 'cod' if not set
-      const orderPaymentMethod = order.paymentMethod || 'cod';
+      const orderPaymentMethod = order.paymentMethod || 'cashondelivery';
 
       // Check if we're returning from a payment gateway
       const isReturningFromPayment = resultCode || paymentStatus || 
@@ -121,8 +121,14 @@ const Payment = () => {
           }
         }
         setLoading(false);
+      } else if ((orderPaymentMethod === 'cod' || orderPaymentMethod === 'cashondelivery') && !order.isPaid && !isReturningFromPayment) {
+        // Confirm COD payment method with backend
+        await payByCash(orderId);
+        // Refresh order to show updated status
+        await fetchOrderById(orderId);
+        setLoading(false);
       } else {
-        // For COD or already paid orders, or returning from payment
+        // For already paid orders or returning from payment
         setLoading(false);
       }
     } catch (err) {
@@ -232,7 +238,7 @@ const Payment = () => {
   }
 
   // Get payment method, default to 'cod' if not set
-  const paymentMethod = currentOrder.paymentMethod || 'cod';
+  const paymentMethod = currentOrder.paymentMethod || 'cashondelivery';
 
   // Already paid
   if (currentOrder.isPaid) {
@@ -248,7 +254,7 @@ const Payment = () => {
   }
 
   // COD orders
-  if (paymentMethod === 'cod') {
+  if (paymentMethod === 'cod' || paymentMethod === 'cashondelivery') {
     return (
       <div className="payment-result">
         <div className="payment-result-card info">
