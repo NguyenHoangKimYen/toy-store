@@ -19,7 +19,7 @@ const { checkAndAssignBadges } = require("../services/badge.service");
 const voucherRepository = require("../repositories/voucher.repository");
 const userVoucherRepository = require("../repositories/user-voucher.repository");
 
-const VERIFY_TTL_MINUTES = Number(process.env.VERIFY_TTL_MINUTES || 1440);
+const VERIFY_TTL_MINUTES = Number(process.env.VERIFY_TTL_MINUTES || 15);
 const BACKEND_URL =
     process.env.BACKEND_URL ||
     process.env.BASE_URL ||
