@@ -10,12 +10,6 @@ const {
   handleZaloCallback,
 } = require("../services/payment.service");
 
-// MoMo helper
-const {
-  createMomoSignatureForCreatePayment,
-  createMomoSignatureForIpn,
-} = require("../utils/momo.helper");
-
 function isExpired(order) {
   const now = Date.now(); // timestamp VN hay UTC đều giống nhau
   const createdAt = new Date(order.createdAt).getTime(); // UTC timestamp
