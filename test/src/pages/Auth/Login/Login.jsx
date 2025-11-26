@@ -263,7 +263,7 @@ const Login = () => {
     <AuthLayout>
       {showForgotPassword ? (
         // Forgot Password Modal
-        <Card className="w-[480px] shadow-2xl border border-white/20 bg-white/10 backdrop-blur-xl animate-in fade-in duration-500">
+        <Card className="w-full max-w-[480px] mx-auto shadow-2xl border border-white/20 bg-white/10 backdrop-blur-xl animate-in fade-in duration-500">
           <CardHeader className="space-y-4 pb-6">
             <button
               onClick={() => setShowForgotPassword(false)}
@@ -319,8 +319,8 @@ const Login = () => {
         </Card>
       ) : needsOtp ? (
         // OTP Verification Form
-        <Card className="w-[500px] shadow-2xl border border-white/20 bg-white/10 backdrop-blur-xl animate-in fade-in duration-500">
-          <CardHeader className="space-y-4 pb-6">
+        <Card className="w-full max-w-[500px] mx-auto shadow-2xl border border-white/20 bg-white/10 backdrop-blur-xl animate-in fade-in duration-500">
+          <CardHeader className="space-y-3 sm:space-y-4 pb-4 sm:pb-6">
             <button
               onClick={() => {
                 setNeedsOtp(false)
@@ -364,7 +364,7 @@ const Login = () => {
                       value={digit}
                       onChange={(e) => handleOtpChange(index, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                      className="w-12 h-14 text-center text-2xl font-bold bg-white/10 border-2 border-white/30 text-white focus:ring-2 focus:ring-white/50 focus:bg-white/20"
+                      className="w-10 h-12 sm:w-12 sm:h-14 text-center text-xl sm:text-2xl font-bold bg-white/10 border-2 border-white/30 text-white focus:ring-2 focus:ring-white/50 focus:bg-white/20 transition-colors"
                     />
                   ))}
                 </div>
@@ -406,8 +406,8 @@ const Login = () => {
         </Card>
       ) : (
         // Normal Login Form
-        <Card className="w-[500px] shadow-2xl border border-white/20 bg-white/10 backdrop-blur-xl animate-in fade-in duration-500">
-          <CardHeader className="space-y-2 pb-6">
+        <Card className="w-full max-w-[500px] mx-auto shadow-2xl border border-white/20 bg-white/10 backdrop-blur-xl animate-in fade-in duration-500">
+          <CardHeader className="space-y-2 pb-4 sm:pb-6">
             <CardTitle className="text-3xl text-center font-bold text-white [text-shadow:_0_2px_8px_rgb(0_0_0_/_40%)]">
               Welcome Back
             </CardTitle>
@@ -484,7 +484,7 @@ const Login = () => {
               </div>
 
               {/* OAuth Buttons */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Button
                   type="button"
                   variant="outline"
