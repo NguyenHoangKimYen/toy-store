@@ -117,42 +117,47 @@ const AddressFormModal = ({ address, isOpen, onClose, onSave, mode = 'create' })
   if (!isOpen) return null;
 
   return (
-    <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4'>
-      <div className='bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto'>
-        <div className='sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between'>
-          <h2 className='text-xl font-semibold text-gray-900 dark:text-white'>
+    <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3 sm:p-4'>
+      <div className='bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto'>
+        <div className='sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between z-10'>
+          <h2 className='text-lg sm:text-xl font-semibold text-gray-900 dark:text-white'>
             {mode === 'create' ? 'Add New Address' : 'Edit Address'}
           </h2>
-          <button onClick={onClose} className='text-gray-400 hover:text-gray-600'>
+          <button 
+            onClick={onClose} 
+            className='text-gray-400 hover:text-gray-600 min-w-[44px] min-h-[44px] flex items-center justify-center -mr-2'
+            aria-label="Close"
+          >
             <X className='w-6 h-6' />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className='p-6 space-y-6'>
+        <form onSubmit={handleSubmit} className='p-4 sm:p-6 space-y-5 sm:space-y-6'>
           {/* Receiver Information */}
-          <div className='space-y-4'>
-            <h3 className='text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2'>
-              <MapPin className='w-5 h-5' />
+          <div className='space-y-3 sm:space-y-4'>
+            <h3 className='text-base sm:text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2'>
+              <MapPin className='w-4 h-4 sm:w-5 sm:h-5' />
               Receiver Information
             </h3>
             
-            <div className='grid grid-cols-2 gap-4'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
               <div>
-                <Label htmlFor='fullNameOfReceiver'>Receiver Name *</Label>
+                <Label htmlFor='fullNameOfReceiver' className='text-sm sm:text-base'>Receiver Name *</Label>
                 <Input
                   id='fullNameOfReceiver'
                   name='fullNameOfReceiver'
                   value={formData.fullNameOfReceiver}
                   onChange={handleInputChange}
                   placeholder='Enter receiver full name'
+                  className='mt-1.5 min-h-[44px]'
                 />
                 {errors.fullNameOfReceiver && (
-                  <p className='text-red-500 text-sm mt-1'>{errors.fullNameOfReceiver}</p>
+                  <p className='text-red-500 text-xs sm:text-sm mt-1.5'>{errors.fullNameOfReceiver}</p>
                 )}
               </div>
               
               <div>
-                <Label htmlFor='email'>Email *</Label>
+                <Label htmlFor='email' className='text-sm sm:text-base'>Email *</Label>
                 <Input
                   id='email'
                   name='email'
@@ -160,16 +165,17 @@ const AddressFormModal = ({ address, isOpen, onClose, onSave, mode = 'create' })
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder='example@email.com'
+                  className='mt-1.5 min-h-[44px]'
                 />
                 {errors.email && (
-                  <p className='text-red-500 text-sm mt-1'>{errors.email}</p>
+                  <p className='text-red-500 text-xs sm:text-sm mt-1.5'>{errors.email}</p>
                 )}
               </div>
             </div>
             
-            <div className='grid grid-cols-2 gap-4'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
               <div>
-                <Label htmlFor='phone'>Phone Number *</Label>
+                <Label htmlFor='phone' className='text-sm sm:text-base'>Phone Number *</Label>
                 <Input
                   id='phone'
                   name='phone'
@@ -177,83 +183,98 @@ const AddressFormModal = ({ address, isOpen, onClose, onSave, mode = 'create' })
                   value={formData.phone}
                   onChange={handleInputChange}
                   placeholder='0909999999'
+                  className='mt-1.5 min-h-[44px]'
                 />
                 {errors.phone && (
-                  <p className='text-red-500 text-sm mt-1'>{errors.phone}</p>
+                  <p className='text-red-500 text-xs sm:text-sm mt-1.5'>{errors.phone}</p>
                 )}
               </div>
             </div>
           </div>
 
           {/* Address Details */}
-          <div className='space-y-4'>
-            <h3 className='text-lg font-medium text-gray-900 dark:text-white'>
+          <div className='space-y-3 sm:space-y-4'>
+            <h3 className='text-base sm:text-lg font-medium text-gray-900 dark:text-white'>
               Address Details
             </h3>
             
             <div>
-              <Label htmlFor='addressLine'>Full Address *</Label>
-              <AddressAutocomplete
-                id='addressLine'
-                name='addressLine'
-                value={formData.addressLine}
-                onChange={handleInputChange}
-                placeholder='e.g., 76/12 Bà Hom, Phường 13, Quận 6'
-              />
-              <p className='text-xs text-gray-500 mt-1'>
+              <Label htmlFor='addressLine' className='text-sm sm:text-base'>Full Address *</Label>
+              <div className='mt-1.5'>
+                <AddressAutocomplete
+                  id='addressLine'
+                  name='addressLine'
+                  value={formData.addressLine}
+                  onChange={handleInputChange}
+                  placeholder='e.g., 76/12 Bà Hom, Phường 13, Quận 6'
+                />
+              </div>
+              <p className='text-xs text-gray-500 mt-1.5'>
                 Enter full address including street, ward, and district
               </p>
               {errors.addressLine && (
-                <p className='text-red-500 text-sm mt-1'>{errors.addressLine}</p>
+                <p className='text-red-500 text-xs sm:text-sm mt-1.5'>{errors.addressLine}</p>
               )}
             </div>
 
-            <div className='grid grid-cols-2 gap-4'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
               <div>
-                <Label htmlFor='city'>City</Label>
+                <Label htmlFor='city' className='text-sm sm:text-base'>City</Label>
                 <Input
                   id='city'
                   name='city'
                   value={formData.city}
                   onChange={handleInputChange}
                   placeholder='e.g., Ho Chi Minh'
+                  className='mt-1.5 min-h-[44px]'
                 />
               </div>
               
               <div>
-                <Label htmlFor='postalCode'>Postal Code</Label>
+                <Label htmlFor='postalCode' className='text-sm sm:text-base'>Postal Code</Label>
                 <Input
                   id='postalCode'
                   name='postalCode'
                   value={formData.postalCode}
                   onChange={handleInputChange}
                   placeholder='Optional'
+                  className='mt-1.5 min-h-[44px]'
                 />
               </div>
             </div>
           </div>
 
           {/* Default Address Checkbox */}
-          <div className='flex items-center gap-2 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg'>
+          <div className='flex items-start gap-3 p-3 sm:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg'>
             <input
               type='checkbox'
               id='isDefault'
               name='isDefault'
               checked={formData.isDefault}
               onChange={handleInputChange}
-              className='w-4 h-4'
+              className='w-5 h-5 mt-0.5 flex-shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500'
             />
-            <Label htmlFor='isDefault' className='cursor-pointer'>
+            <Label htmlFor='isDefault' className='cursor-pointer text-sm sm:text-base leading-relaxed'>
               Set as default address
             </Label>
           </div>
 
           {/* Action Buttons */}
-          <div className='flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700'>
-            <Button type='button' variant='outline' onClick={onClose} disabled={saving}>
+          <div className='flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t border-gray-200 dark:border-gray-700'>
+            <Button 
+              type='button' 
+              variant='outline' 
+              onClick={onClose} 
+              disabled={saving}
+              className='w-full sm:w-auto min-h-[44px] sm:min-h-[40px]'
+            >
               Cancel
             </Button>
-            <Button type='submit' disabled={saving} className='bg-blue-600 hover:bg-blue-700'>
+            <Button 
+              type='submit' 
+              disabled={saving} 
+              className='bg-blue-600 hover:bg-blue-700 w-full sm:w-auto min-h-[44px] sm:min-h-[40px]'
+            >
               <Save className='w-4 h-4 mr-2' />
               {saving ? 'Saving...' : mode === 'create' ? 'Add Address' : 'Save Changes'}
             </Button>

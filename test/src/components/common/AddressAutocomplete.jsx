@@ -69,6 +69,7 @@ const AddressAutocomplete = ({ value, onChange, placeholder, name, id }) => {
         onChange={onChange}
         placeholder={placeholder}
         autoComplete='off'
+        className='min-h-[44px]'
       />
 
       {/* Suggestions Dropdown */}
@@ -78,15 +79,15 @@ const AddressAutocomplete = ({ value, onChange, placeholder, name, id }) => {
             <div
               key={index}
               onClick={() => handleSelectSuggestion(suggestion)}
-              className='flex items-start gap-2 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors'
+              className='flex items-start gap-2 px-3 sm:px-4 py-3 sm:py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors active:bg-gray-200 dark:active:bg-gray-600 min-h-[44px] sm:min-h-[40px]'
             >
               <MapPin className='w-4 h-4 text-gray-400 mt-1 flex-shrink-0' />
-              <div>
-                <p className='text-sm text-gray-900 dark:text-white'>
+              <div className='flex-1 min-w-0'>
+                <p className='text-sm sm:text-base text-gray-900 dark:text-white break-words'>
                   {suggestion.name}
                 </p>
                 {suggestion.address && (
-                  <p className='text-xs text-gray-500 dark:text-gray-400'>
+                  <p className='text-xs text-gray-500 dark:text-gray-400 break-words mt-0.5'>
                     {suggestion.address}
                   </p>
                 )}
@@ -98,7 +99,7 @@ const AddressAutocomplete = ({ value, onChange, placeholder, name, id }) => {
 
       {/* Loading indicator */}
       {loading && (
-        <div className='absolute right-3 top-1/2 -translate-y-1/2'>
+        <div className='absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none'>
           <LoadingSpinner size="xs" variant="button" />
         </div>
       )}
