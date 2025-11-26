@@ -20,15 +20,23 @@ export const useAddresses = (userId) => {
       
       const response = await addressesService.getAddressesByUserId(userId);
       
-      // Backend returns { success: true, data: [...] } or { success: true, data: {...} }
-      // Handle both array and single object responses
+      // The service returns the data directly (axios interceptor already extracted it)
+      // It can be: Array, { success: true, data: Array }, or single object
       let addressesArray = [];
-      if (response?.data) {
+      
+      if (Array.isArray(response)) {
+        // Direct array response
+        addressesArray = response;
+      } else if (response?.data) {
+        // Wrapped response
         if (Array.isArray(response.data)) {
           addressesArray = response.data;
         } else {
           addressesArray = [response.data];
         }
+      } else if (response && typeof response === 'object') {
+        // Single object response
+        addressesArray = [response];
       }
       
       setAddresses(addressesArray);
