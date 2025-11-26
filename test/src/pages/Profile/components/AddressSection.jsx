@@ -44,10 +44,19 @@ const AddressSection = ({ user }) => {
   };
 
   const handleSaveAddress = async (addressData) => {
-    if (formMode === 'create') {
-      await createAddress(addressData);
-    } else {
-      await updateAddress(selectedAddress._id, addressData);
+    try {
+      if (formMode === 'create') {
+        await createAddress(addressData);
+      } else {
+        await updateAddress(selectedAddress._id, addressData);
+      }
+      // Close modal after successful save and refresh
+      setIsFormModalOpen(false);
+    } catch (error) {
+      // Error is already handled in useAddresses hook
+      // Keep modal open so user can fix errors
+      console.error('Save address error:', error);
+      throw error; // Re-throw to prevent modal from closing
     }
   };
 

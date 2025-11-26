@@ -94,7 +94,6 @@ const AddressFormModal = ({ address, isOpen, onClose, onSave, mode = 'create' })
     setSaving(true);
     try {
       await onSave(formData);
-      onClose();
       // Reset form after successful save
       setFormData({
         fullNameOfReceiver: '',
@@ -106,8 +105,10 @@ const AddressFormModal = ({ address, isOpen, onClose, onSave, mode = 'create' })
         isDefault: false,
       });
       setErrors({});
+      // Parent component will close the modal after refresh completes
     } catch (error) {
       // Error toast is handled in the parent component
+      // Keep modal open if there's an error
       console.error('Form submission error:', error);
     } finally {
       setSaving(false);
