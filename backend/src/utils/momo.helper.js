@@ -1,6 +1,53 @@
 // src/utils/momo.helper.js
 const crypto = require("crypto");
 
+// Build raw signature string for MoMo
+function buildRawSignature(params) {
+    const {
+        accessKey,
+        amount,
+        extraData,
+        ipnUrl,
+        orderId,
+        orderInfo,
+        partnerCode,
+        redirectUrl,
+        requestId,
+        requestType,
+    } = params;
+
+    return (
+        "accessKey=" +
+        accessKey +
+        "&amount=" +
+        amount +
+        "&extraData=" +
+        extraData +
+        "&ipnUrl=" +
+        ipnUrl +
+        "&orderId=" +
+        orderId +
+        "&orderInfo=" +
+        orderInfo +
+        "&partnerCode=" +
+        partnerCode +
+        "&redirectUrl=" +
+        redirectUrl +
+        "&requestId=" +
+        requestId +
+        "&requestType=" +
+        requestType
+    );
+}
+
+// Generate HMAC SHA256 signature
+function generateSignature(rawSignature, secretKey) {
+    return crypto
+        .createHmac("sha256", secretKey)
+        .update(rawSignature, "utf8")
+        .digest("hex");
+}
+
 function createMomoSignatureForCreatePayment({
     accessKey,
     amount,
@@ -99,6 +146,8 @@ function createMomoSignatureForIpn(params, secretKey) {
 }
 
 module.exports = {
+    buildRawSignature,
+    generateSignature,
     createMomoSignatureForCreatePayment,
     createMomoSignatureForIpn,
 };
