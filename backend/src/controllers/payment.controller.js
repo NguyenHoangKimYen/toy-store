@@ -1,5 +1,6 @@
 const axios = require("axios");
 const orderRepository = require("../repositories/order.repository");
+const paymentRepository = require("../repositories/payment.repository");
 const {
   createMomoPayment,
   createZaloPayOrderService,
@@ -46,6 +47,11 @@ exports.createVietQR = async (req, res) => {
     const account = "195703200508";
     const addInfo = `MB_${order._id}`;
 
+    // Lưu phương thức thanh toán để tránh bị ghi đè bởi cổng khác
+    if (order.paymentMethod !== "vietqr") {
+      await orderRepository.updateById(orderId, { paymentMethod: "vietqr" });
+    }
+
     const base = `https://img.vietqr.io/image/${bank}-${account}`;
     const bill = `${base}-bill.png?amount=${amount}&addInfo=${encodeURIComponent(
       addInfo
@@ -74,7 +80,11 @@ exports.customerConfirmVietQR = async (req, res) => {
 
     // Nếu quá 24h thì cancel
     if (isExpired(order)) {
-      await orderRepository.updateStatus(orderId, "cancelled");
+      await orderRepository.updatePaymentStatus(orderId, {
+        status: "cancelled",
+        paymentStatus: "failed",
+        paymentMethod: "vietqr",
+      });
 
       return res.status(400).json({
         success: false,
@@ -84,7 +94,7 @@ exports.customerConfirmVietQR = async (req, res) => {
     }
 
     // Nếu đã thanh toán
-    if (order.status === "confirmed") {
+    if (order.paymentStatus === "paid" || order.status === "confirmed") {
       return res.json({
         success: true,
         message: "Đơn hàng đã được xác nhận thanh toán",
@@ -92,9 +102,32 @@ exports.customerConfirmVietQR = async (req, res) => {
       });
     }
 
+    // Ghi nhận khách đã chuyển khoản và chờ admin xác nhận
+    await orderRepository.updatePaymentStatus(orderId, {
+      paymentMethod: "vietqr",
+      paymentStatus: "pending",
+    });
+
+    const existingPayment = await paymentRepository.findByOrderId(orderId);
+    const txId = existingPayment?.transactionId || `VIETQR-${orderId}`;
+    if (existingPayment) {
+      await paymentRepository.updateByOrderId(orderId, {
+        method: "vietqr",
+        status: "pending",
+        transactionId: txId,
+      });
+    } else {
+      await paymentRepository.create({
+        orderId,
+        method: "vietqr",
+        status: "pending",
+        transactionId: txId,
+      });
+    }
+
     return res.json({
       success: true,
-      message: "Đã ghi nhận yêu cầu. Vui lòng chờ admin xác nhận thanh toán.",
+      message: "MilkyBloom đã nhận được thông tin chuyển khoản của bạn và sẽ kiểm tra trong thời gian sớm nhất.",
     });
 
   } catch (err) {
@@ -133,7 +166,11 @@ exports.adminConfirmVietQR = async (req, res) => {
 
     // Nếu quá 24h thì cancel
     if (isExpired(order)) {
-      await orderRepository.updateStatus(orderId, "cancelled");
+      await orderRepository.updatePaymentStatus(orderId, {
+        status: "cancelled",
+        paymentStatus: "failed",
+        paymentMethod: "vietqr",
+      });
 
       return res.status(400).json({
         success: false,
@@ -142,7 +179,7 @@ exports.adminConfirmVietQR = async (req, res) => {
       });
     }
 
-    if (order.status === "confirmed") {
+    if (order.paymentStatus === "paid" || order.status === "confirmed") {
       return res.json({
         success: true,
         message: "Đơn hàng đã ở trạng thái confirmed",
@@ -150,7 +187,31 @@ exports.adminConfirmVietQR = async (req, res) => {
       });
     }
 
-    await orderRepository.updateStatus(orderId, "confirmed");
+    const now = new Date();
+    const updatedOrder = await orderRepository.updatePaymentStatus(orderId, {
+      status: "confirmed",
+      paymentStatus: "paid",
+      paymentMethod: "vietqr",
+    });
+
+    const existingPayment = await paymentRepository.findByOrderId(orderId);
+    const txId = existingPayment?.transactionId || `VIETQR-${orderId}`;
+    if (existingPayment) {
+      await paymentRepository.updateByOrderId(orderId, {
+        method: "vietqr",
+        status: "success",
+        transactionId: txId,
+        paidAt: now,
+      });
+    } else {
+      await paymentRepository.create({
+        orderId,
+        method: "vietqr",
+        status: "success",
+        transactionId: txId,
+        paidAt: now,
+      });
+    }
 
     return res.json({
       success: true,
@@ -175,7 +236,28 @@ exports.adminRejectVietQR = async (req, res) => {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    await orderRepository.updateStatus(orderId, "cancelled");
+    await orderRepository.updatePaymentStatus(orderId, {
+      status: "cancelled",
+      paymentStatus: "failed",
+      paymentMethod: "vietqr",
+    });
+
+    const existingPayment = await paymentRepository.findByOrderId(orderId);
+    const txId = existingPayment?.transactionId || `VIETQR-${orderId}`;
+    if (existingPayment) {
+      await paymentRepository.updateByOrderId(orderId, {
+        method: "vietqr",
+        status: "failed",
+        transactionId: txId,
+      });
+    } else {
+      await paymentRepository.create({
+        orderId,
+        method: "vietqr",
+        status: "failed",
+        transactionId: txId,
+      });
+    }
 
     return res.json({
       success: true,
@@ -185,6 +267,73 @@ exports.adminRejectVietQR = async (req, res) => {
 
   } catch (err) {
     console.log("adminRejectVietQR ERROR:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// CASH (COD) — ghi nhận thanh toán tiền mặt, sẽ thu tiền khi giao hàng
+exports.payByCash = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const order = await orderRepository.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    if (["cancelled", "returned"].includes(order.status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Đơn đã bị hủy/hoàn, không thể chọn thanh toán tiền mặt.",
+      });
+    }
+
+    if (order.paymentStatus === "paid") {
+      return res.json({
+        success: true,
+        message: "Đơn đã được thanh toán trước đó.",
+        order,
+      });
+    }
+
+    const updatePayload = {
+      paymentStatus: "pending", // sẽ chuyển sang paid khi giao hàng thành công
+      paymentMethod: "cashondelivery",
+    };
+
+    // Xác nhận đơn nếu đang ở trạng thái pending
+    if (order.status === "pending") {
+      updatePayload.status = "confirmed";
+    }
+
+    const updatedOrder = await orderRepository.updatePaymentStatus(orderId, updatePayload);
+
+    const existingPayment = await paymentRepository.findByOrderId(orderId);
+    const txId = existingPayment?.transactionId || `CASH-${orderId}`;
+
+    const paymentPayload = {
+      method: "cashondelivery",
+      status: "pending",
+      transactionId: txId,
+      paidAt: null,
+    };
+
+    if (existingPayment) {
+      await paymentRepository.updateByOrderId(orderId, paymentPayload);
+    } else {
+      await paymentRepository.create({
+        orderId,
+        ...paymentPayload,
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Đã xác nhận thanh toán, nhân viên sẽ thu tiền khi giao hàng.",
+      order: updatedOrder,
+    });
+  } catch (err) {
+    console.error("payByCash error:", err);
     return res.status(500).json({ success: false, message: err.message });
   }
 };

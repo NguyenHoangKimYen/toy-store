@@ -461,6 +461,43 @@ module.exports = {
         const updated = await orderRepository.updateStatus(orderId, newStatus);
         if (!updated) return null;
 
+        // COD/cashondelivery: chỉ ghi nhận đã thanh toán khi giao/hoàn tất
+        if (
+            updated.paymentMethod === "cashondelivery" &&
+            updated.paymentStatus !== "paid" &&
+            (newStatus === "delivered" || newStatus === "completed")
+        ) {
+            const now = new Date();
+
+            await orderRepository.updatePaymentStatus(orderId, {
+                status: newStatus,
+                paymentStatus: "paid",
+                paymentMethod: "cashondelivery",
+            });
+
+            const existingPayment = await paymentRepo.findByOrderId(orderId);
+            const txId = existingPayment?.transactionId || `CASH-${orderId}`;
+
+            const paymentPayload = {
+                method: "cashondelivery",
+                status: "success",
+                transactionId: txId,
+                paidAt: now,
+            };
+
+            if (existingPayment) {
+                await paymentRepo.updateByOrderId(orderId, paymentPayload);
+            } else {
+                await paymentRepo.create({
+                    orderId,
+                    ...paymentPayload,
+                });
+            }
+
+            updated.paymentStatus = "paid";
+            updated.paymentMethod = "cashondelivery";
+        }
+
         await historyRepo.add(orderId, newStatus);
 
         // Nếu đơn hoàn tất
