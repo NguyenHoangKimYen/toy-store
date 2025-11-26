@@ -117,13 +117,13 @@ const Signup = () => {
 
                 const data = await res.json()
 
-                if (!res.ok) {
+                if (data.success && !data.available) {
                     // Field is taken
                     setValidationErrors(prev => ({
                         ...prev,
                         [field]: data.message || `This ${field} is already taken`
                     }))
-                } else {
+                } else if (data.success && data.available) {
                     // Field is available - clear error if exists
                     setValidationErrors(prev => {
                         const updated = { ...prev }
