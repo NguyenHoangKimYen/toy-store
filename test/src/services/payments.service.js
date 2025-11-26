@@ -77,6 +77,14 @@ export const zaloPayReturn = async (params) => {
   return response;
 };
 
+// ===================== CASH (COD) =====================
+
+// Confirm Cash on Delivery payment method
+export const payByCash = async (orderId) => {
+  const response = await apiClient.post(`/payments/cash/${orderId}`);
+  return response;
+};
+
 export default {
   getVietQR,
   customerConfirmVietQR,
@@ -89,4 +97,5 @@ export default {
   createZaloPayOrder,
   zaloPayCallback,
   zaloPayReturn,
+  payByCash,
 };
