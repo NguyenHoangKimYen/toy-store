@@ -22,6 +22,9 @@ router.get("/:id", auth, orderController.getDetail);
 // User xem đơn của mình
 router.get("/", auth, orderController.getMyOrders);
 
+// User hủy đơn của mình
+router.put("/:id/cancel", auth, orderController.cancelOrder);
+
 // Checkout cart: User
 router.post("/checkout/cart", auth, orderController.checkoutFromCartForUser); //tạo đơn
 
