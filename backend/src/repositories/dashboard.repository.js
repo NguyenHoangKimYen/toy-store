@@ -128,7 +128,22 @@ module.exports = {
 
     // 7. Payment Summary
     async getPaymentSummary() {
+        const codMethods = ["cashondelivery", "cod", "cashOnDelivery"];
         const raw = await Order.aggregate([
+            {
+                $match: {
+                    $or: [
+                        // Tính cho tất cả cổng đã paid
+                        { paymentStatus: "paid" },
+                        // COD: chỉ tính khi đã giao/hoàn tất (tránh confirmed nhưng chưa thu tiền)
+                        {
+                            paymentMethod: { $in: codMethods },
+                            status: { $in: ["delivered", "completed"] },
+                            paymentStatus: { $ne: "failed" },
+                        },
+                    ],
+                },
+            },
             {
                 $group: {
                     _id: "$paymentMethod",
@@ -144,7 +159,10 @@ module.exports = {
 
         return {
             momo: raw.find((x) => x._id === "momo")?.total || 0,
-            vnpay: raw.find((x) => x._id === "vnpay")?.total || 0,
+            vietqr:
+                raw.find((x) => x._id === "vietqr")?.total ||
+                raw.find((x) => x._id === "vnpay")?.total ||
+                0,
             zalopay: raw.find((x) => x._id === "zalopay")?.total || 0,
             cod: codTotal,
         };
