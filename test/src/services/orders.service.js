@@ -68,6 +68,12 @@ export const cancelOrder = async (orderId) => {
   return response;
 };
 
+// Get orders by discount code ID (admin only)
+export const getOrdersByDiscountCode = async (discountCodeId) => {
+  const response = await apiClient.get(`/orders/discount/${discountCodeId}`);
+  return response;
+};
+
 export default {
   getMyOrders,
   getAllOrders,
@@ -77,4 +83,5 @@ export default {
   guestCheckoutFromCart,
   updateOrderStatus,
   cancelOrder,
+  getOrdersByDiscountCode,
 };

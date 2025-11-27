@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { toast } from 'sonner'
-import { Tag, Search, Plus, Edit, Trash2, Filter } from 'lucide-react'
+import { Tag, Search, Plus, Edit, Trash2, Eye } from 'lucide-react'
 import { getAllDiscountCodes, createDiscountCode, updateDiscountCode, deleteDiscountCode } from '@/services/discountCodes.service'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import Badge from '@/components/ui/badge'
 import DiscountCodeModal from './components/DiscountCodeModal'
 import DeleteConfirmDialog from './components/DeleteConfirmDialog'
+import DiscountOrdersModal from './components/DiscountOrdersModal'
 
 const DiscountCodes = () => {
   const [codes, setCodes] = useState([])
@@ -17,6 +18,8 @@ const DiscountCodes = () => {
   const [showModal, setShowModal] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [codeToDelete, setCodeToDelete] = useState(null)
+  const [showOrdersModal, setShowOrdersModal] = useState(false)
+  const [selectedCodeForOrders, setSelectedCodeForOrders] = useState(null)
 
   useEffect(() => {
     fetchCodes()
@@ -55,6 +58,11 @@ const DiscountCodes = () => {
   const handleDelete = (code) => {
     setCodeToDelete(code)
     setShowDeleteDialog(true)
+  }
+
+  const handleViewOrders = (code) => {
+    setSelectedCodeForOrders(code)
+    setShowOrdersModal(true)
   }
 
   const confirmDelete = async () => {
@@ -152,10 +160,18 @@ const DiscountCodes = () => {
                             {isFullyUsed && <Badge variant="secondary">Expired</Badge>}
                           </div>
                           <p className="text-xl font-semibold text-primary">
-                            ${parseFloat(code.value?.$numberDecimal || code.value || 0).toFixed(2)} OFF
+                            {parseFloat(code.value?.$numberDecimal || code.value || 0).toLocaleString()}₫ OFF
                           </p>
                         </div>
                         <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleViewOrders(code)}
+                            title="View orders using this code"
+                          >
+                            <Eye size={16} />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -221,6 +237,16 @@ const DiscountCodes = () => {
           onCancel={() => {
             setShowDeleteDialog(false)
             setCodeToDelete(null)
+          }}
+        />
+      )}
+
+      {showOrdersModal && (
+        <DiscountOrdersModal
+          discountCode={selectedCodeForOrders}
+          onClose={() => {
+            setShowOrdersModal(false)
+            setSelectedCodeForOrders(null)
           }}
         />
       )}
