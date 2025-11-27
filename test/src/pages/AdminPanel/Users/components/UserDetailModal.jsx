@@ -1,4 +1,5 @@
 import React from 'react'
+import { createPortal } from 'react-dom'
 import { X, Mail, Phone, Calendar, Award, Shield, CheckCircle, XCircle } from 'lucide-react'
 import { formatDateTime, formatPhone, getRoleBadgeColor } from '../utils/formatters'
 
@@ -11,7 +12,7 @@ const UserDetailModal = ({ user, onClose, onEdit, onDelete }) => {
     onDelete(user._id)
   }
 
-  return (
+  return createPortal(
     <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[2000] p-4'>
       <div className='bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto'>
         {/* Header */}
@@ -187,7 +188,8 @@ const UserDetailModal = ({ user, onClose, onEdit, onDelete }) => {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

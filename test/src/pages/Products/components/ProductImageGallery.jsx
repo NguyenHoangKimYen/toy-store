@@ -1,10 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { ChevronUp, ChevronDown, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import './ProductImageGallery.css';
 
 const ProductImageGallery = ({ images = [], selectedVariantImageIndex = 0, productName }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [fullscreenIndex, setFullscreenIndex] = useState(0);
   const thumbnailsRef = React.useRef(null);
   const [showUpArrow, setShowUpArrow] = useState(false);
   const [showDownArrow, setShowDownArrow] = useState(false);
@@ -68,8 +71,42 @@ const ProductImageGallery = ({ images = [], selectedVariantImageIndex = 0, produ
     setCurrentIndex(index);
   };
 
+  const openFullscreen = (index) => {
+    setFullscreenIndex(index);
+    setIsFullscreen(true);
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeFullscreen = () => {
+    setIsFullscreen(false);
+    document.body.style.overflow = '';
+  };
+
+  const navigateFullscreen = (direction) => {
+    if (direction === 'next') {
+      setFullscreenIndex((prev) => (prev + 1) % imageList.length);
+    } else {
+      setFullscreenIndex((prev) => (prev - 1 + imageList.length) % imageList.length);
+    }
+  };
+
+  // Handle escape key to close fullscreen
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        closeFullscreen();
+      }
+    };
+
+    if (isFullscreen) {
+      window.addEventListener('keydown', handleEscape);
+      return () => window.removeEventListener('keydown', handleEscape);
+    }
+  }, [isFullscreen]);
+
   return (
-    <div className="product-image-gallery-nike">
+    <>
+      <div className="product-image-gallery-nike">
       {/* Side Thumbnails */}
       <div className="thumbnails-column">
         {showUpArrow && (
@@ -117,9 +154,66 @@ const ProductImageGallery = ({ images = [], selectedVariantImageIndex = 0, produ
           src={imageList[currentIndex]}
           alt={`${productName} - Image ${currentIndex + 1}`}
           className="main-image"
+          onClick={() => openFullscreen(currentIndex)}
+          style={{ cursor: 'pointer' }}
         />
       </div>
     </div>
+
+    {/* Fullscreen Modal - Rendered via Portal to escape stacking context */}
+    {isFullscreen && createPortal(
+      <div className="image-fullscreen-modal" onClick={closeFullscreen}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="fullscreen-close-btn"
+          onClick={closeFullscreen}
+        >
+          <X size={24} />
+        </Button>
+
+        {imageList.length > 1 && (
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="fullscreen-nav-btn prev"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigateFullscreen('prev');
+              }}
+            >
+              <ChevronLeft size={32} />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="fullscreen-nav-btn next"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigateFullscreen('next');
+              }}
+            >
+              <ChevronRight size={32} />
+            </Button>
+          </>
+        )}
+
+        <div className="fullscreen-image-wrapper" onClick={(e) => e.stopPropagation()}>
+          <img
+            src={imageList[fullscreenIndex]}
+            alt={`${productName} - Image ${fullscreenIndex + 1}`}
+            className="fullscreen-image"
+          />
+          <div className="fullscreen-counter">
+            {fullscreenIndex + 1} / {imageList.length}
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
+    </>
   );
 };
 

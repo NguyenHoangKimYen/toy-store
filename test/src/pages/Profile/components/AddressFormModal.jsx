@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Save, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -135,7 +136,7 @@ const AddressFormModal = ({ address, isOpen, onClose, onSave, mode = 'create' })
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-[2000] p-3 sm:p-4'>
       <div className='bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto'>
         <div className='sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between z-10'>
@@ -301,7 +302,8 @@ const AddressFormModal = ({ address, isOpen, onClose, onSave, mode = 'create' })
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
