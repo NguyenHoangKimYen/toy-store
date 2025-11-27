@@ -22,6 +22,7 @@ const VerifyEmail = lazy(() => import('../pages/Auth/Signup/VerifyEmail'));
 const PlaceOrder = lazy(() => import('../pages/PlaceOrder'));
 const Orders = lazy(() => import('../pages/Orders'));
 const OrderHistory = lazy(() => import('../pages/OrderHistory'));
+const OrderDetail = lazy(() => import('../pages/OrderHistory/OrderDetail'));
 const Payment = lazy(() => import('../pages/Payment'));
 const Profile = lazy(() => import('../pages/Profile'));
 const AdminPanel = lazy(() => import('../pages/AdminPanel'));
@@ -153,6 +154,10 @@ const router = createBrowserRouter([
       {
         path: ROUTES.ORDER_HISTORY,
         element: <Suspense fallback={<PageLoader />}><OrderHistory /></Suspense>
+      },
+      {
+        path: `${ROUTES.ORDER_HISTORY}/:orderId`,
+        element: <Suspense fallback={<PageLoader />}><OrderDetail /></Suspense>
       },
       {
         path: ROUTES.PROFILE,

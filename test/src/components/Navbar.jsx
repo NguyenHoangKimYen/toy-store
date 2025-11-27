@@ -8,7 +8,7 @@ import './Navbar.css'
 
 // Navigation links configuration
 const NAV_LINKS = [
-    { to: '/products', label: 'PRODUCTS', icon: Box },
+    { to: '/products', label: 'SHOP', icon: Box },
     { to: '/categories', label: 'CATEGORIES', icon: Layers }, // Different path for unique key
     { to: '/about', label: 'ABOUT', icon: Info },
     { to: '/contact', label: 'CONTACT', icon: Phone }
