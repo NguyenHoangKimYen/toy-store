@@ -39,6 +39,40 @@ const ProductDetail = () => {
 
   const [addingToCart, setAddingToCart] = React.useState(false);
 
+  // Collect all images: product images + all variant images
+  const allImages = React.useMemo(() => {
+    if (!product) return [];
+    
+    const images = [...(product.imageUrls || [])];
+    
+    // Add images from all variants
+    if (variants && variants.length > 0) {
+      variants.forEach(variant => {
+        if (variant.imageUrls && variant.imageUrls.length > 0) {
+          variant.imageUrls.forEach(img => {
+            // Avoid duplicates
+            if (!images.includes(img)) {
+              images.push(img);
+            }
+          });
+        }
+      });
+    }
+    
+    return images;
+  }, [product, variants]);
+
+  // Get the index of the selected variant's first image (for auto-scroll)
+  const selectedVariantImageIndex = React.useMemo(() => {
+    if (!selectedVariant || !selectedVariant.imageUrls || selectedVariant.imageUrls.length === 0) {
+      return 0;
+    }
+    
+    const variantFirstImage = selectedVariant.imageUrls[0];
+    const index = allImages.indexOf(variantFirstImage);
+    return index >= 0 ? index : 0;
+  }, [selectedVariant, allImages]);
+
   const handleAddToCart = async () => {
     const startTime = performance.now();
     
@@ -165,8 +199,8 @@ const ProductDetail = () => {
           {/* Image Gallery */}
           <div className="lg:sticky lg:top-20 lg:max-h-[calc(100vh-100px)] overflow-hidden">
             <ProductImageGallery 
-              images={product.imageUrls || []}
-              variantImages={selectedVariant?.imageUrls || []}
+              images={allImages}
+              selectedVariantImageIndex={selectedVariantImageIndex}
               productName={product.name} 
             />
           </div>

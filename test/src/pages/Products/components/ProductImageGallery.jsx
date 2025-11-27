@@ -3,36 +3,34 @@ import { ChevronUp, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import './ProductImageGallery.css';
 
-const ProductImageGallery = ({ images = [], variantImages = [], productName }) => {
+const ProductImageGallery = ({ images = [], selectedVariantImageIndex = 0, productName }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const thumbnailsRef = React.useRef(null);
   const [showUpArrow, setShowUpArrow] = useState(false);
   const [showDownArrow, setShowDownArrow] = useState(false);
 
-  // Combine product images with variant images (variant images first if available)
+  // Ensure we have at least one image (fallback to placeholder)
   const imageList = useMemo(() => {
-    const allImages = [];
-    
-    // Add variant images first (if any)
-    if (variantImages && variantImages.length > 0) {
-      allImages.push(...variantImages);
-    }
-    
-    // Then add product images
-    if (images && images.length > 0) {
-      allImages.push(...images);
-    }
-    
-    // Fallback to placeholder if no images
-    return allImages.length > 0 ? allImages : ['/placeholder.png'];
-  }, [images, variantImages]);
+    return images.length > 0 ? images : ['/placeholder.png'];
+  }, [images]);
 
-  // Reset to first image when variant changes (variant images change)
+  // Auto-scroll to selected variant's image when variant changes
   useEffect(() => {
-    if (variantImages && variantImages.length > 0) {
-      setCurrentIndex(0);
+    if (selectedVariantImageIndex >= 0 && selectedVariantImageIndex < imageList.length) {
+      setCurrentIndex(selectedVariantImageIndex);
+      
+      // Scroll thumbnail into view
+      if (thumbnailsRef.current) {
+        const thumbnailElements = thumbnailsRef.current.children;
+        if (thumbnailElements[selectedVariantImageIndex]) {
+          thumbnailElements[selectedVariantImageIndex].scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest'
+          });
+        }
+      }
     }
-  }, [variantImages]);
+  }, [selectedVariantImageIndex, imageList.length]);
 
   // Check if scroll buttons should be shown
   const checkScrollButtons = () => {
