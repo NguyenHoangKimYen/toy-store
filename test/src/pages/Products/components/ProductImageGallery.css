@@ -272,15 +272,17 @@
 
 .fullscreen-counter {
   position: absolute;
-  bottom: -3rem;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.1);
+  top: 1rem;
+  left: 1rem;
+  z-index: 1000002;
+  background: rgba(0, 0, 0, 0.7);
   color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 9999px;
+  padding: 0.5rem 0.875rem;
+  border-radius: 0.5rem;
   font-size: 0.875rem;
+  font-weight: 500;
   backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Mobile fullscreen adjustments */
@@ -311,8 +313,9 @@
   }
 
   .fullscreen-counter {
-    bottom: -2.5rem;
+    top: 0.5rem;
+    left: 0.5rem;
     font-size: 0.75rem;
-    padding: 0.375rem 0.75rem;
+    padding: 0.375rem 0.625rem;
   }
 }

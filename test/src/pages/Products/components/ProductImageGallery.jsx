@@ -90,19 +90,27 @@ const ProductImageGallery = ({ images = [], selectedVariantImageIndex = 0, produ
     }
   };
 
-  // Handle escape key to close fullscreen
+  // Close fullscreen on ESC key and navigate with arrow keys
   useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === 'Escape' && isFullscreen) {
+    const handleKeyboard = (e) => {
+      if (!isFullscreen) return;
+      
+      if (e.key === 'Escape') {
         closeFullscreen();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setFullscreenIndex((prev) => (prev - 1 + imageList.length) % imageList.length);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        setFullscreenIndex((prev) => (prev + 1) % imageList.length);
       }
     };
 
     if (isFullscreen) {
-      window.addEventListener('keydown', handleEscape);
-      return () => window.removeEventListener('keydown', handleEscape);
+      window.addEventListener('keydown', handleKeyboard);
+      return () => window.removeEventListener('keydown', handleKeyboard);
     }
-  }, [isFullscreen]);
+  }, [isFullscreen, fullscreenIndex, imageList.length]);
 
   return (
     <>
@@ -201,14 +209,14 @@ const ProductImageGallery = ({ images = [], selectedVariantImageIndex = 0, produ
         )}
 
         <div className="fullscreen-image-wrapper" onClick={(e) => e.stopPropagation()}>
+          <div className="fullscreen-counter">
+            {fullscreenIndex + 1} / {imageList.length}
+          </div>
           <img
             src={imageList[fullscreenIndex]}
             alt={`${productName} - Image ${fullscreenIndex + 1}`}
             className="fullscreen-image"
           />
-          <div className="fullscreen-counter">
-            {fullscreenIndex + 1} / {imageList.length}
-          </div>
         </div>
       </div>,
       document.body
