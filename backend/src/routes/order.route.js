@@ -10,6 +10,9 @@ router.post("/", orderController.create);
 // Admin thay đổi trạng thái đơn
 router.put("/:id/status", auth, adminOnly, orderController.updateStatus);
 
+// Admin lấy orders theo discount code
+router.get("/discount/:discountCodeId", auth, adminOnly, orderController.getOrdersByDiscountCode);
+
 // Lấy chi tiết đơn (guest - no auth required)
 router.get("/:id/guest", orderController.getDetail);
 
