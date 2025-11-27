@@ -8,8 +8,141 @@ import {
   getTopSelling,
   getLowStock,
   getCategoryStats,
+  getBranchesMap,
 } from '@/services';
 import { formatPrice, formatPriceNumber } from '@/utils/formatPrice';
+import BranchMap from './BranchMap';
+
+const toNumber = (v) => {
+  if (v == null) return 0;
+  if (typeof v === 'object' && '$numberDecimal' in v) return Number(v.$numberDecimal);
+  return Number(v) || 0;
+};
+
+// ----- Simple SVG charts -----
+const PieChart = ({ data, colors, size = 160 }) => {
+  const total = data.reduce((s, d) => s + d.value, 0);
+  let acc = 0;
+  const radius = size / 2;
+
+  if (total === 0) {
+    return (
+      <div className="flex items-center justify-center text-xs text-stone-500 h-full">
+        No data
+      </div>
+    );
+  }
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      {data.map((d, i) => {
+        const start = (acc / total) * 2 * Math.PI;
+        const end = ((acc + d.value) / total) * 2 * Math.PI;
+        acc += d.value;
+        const largeArc = end - start > Math.PI ? 1 : 0;
+        const x1 = radius + radius * Math.cos(start);
+        const y1 = radius + radius * Math.sin(start);
+        const x2 = radius + radius * Math.cos(end);
+        const y2 = radius + radius * Math.sin(end);
+        const mid = (start + end) / 2;
+        const labelX = radius + (radius * 0.55) * Math.cos(mid);
+        const labelY = radius + (radius * 0.55) * Math.sin(mid);
+        const pct = total ? Math.round((d.value / total) * 100) : 0;
+
+        return (
+          <g key={d.label}>
+            <path
+              d={`M${radius},${radius} L${x1},${y1} A${radius},${radius} 0 ${largeArc} 1 ${x2},${y2} Z`}
+              fill={colors[i] || '#cbd5e1'}
+              stroke="#fff"
+              strokeWidth="1"
+            />
+            {pct > 0 && (
+              <text
+                x={labelX}
+                y={labelY}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fill="#0f172a"
+                fontSize="10"
+              >
+                {pct}%
+              </text>
+            )}
+          </g>
+        );
+      })}
+    </svg>
+  );
+};
+
+const TinyLegend = ({ items }) => (
+  <div className="flex flex-wrap gap-3 text-xs text-stone-600">
+    {items.map((i) => (
+      <div key={i.label} className="flex items-center gap-1">
+        <span className="inline-block w-3 h-3 rounded-sm" style={{ background: i.color }} />
+        <span>{i.label}</span>
+      </div>
+    ))}
+  </div>
+);
+
+const BarChart = ({ data, colors }) => {
+  const max = Math.max(0, ...data.map((d) => d.value));
+  return (
+    <div className="space-y-2">
+      {data.map((d, idx) => {
+        const width = max ? Math.round((d.value / max) * 100) : 0;
+        return (
+          <div key={d.label} className="text-sm">
+            <div className="flex justify-between text-stone-600 mb-1">
+              <span>{d.label}</span>
+              <span className="font-semibold">{formatPrice(d.value)}</span>
+            </div>
+            <div className="h-3 bg-stone-100 rounded-full overflow-hidden relative">
+              <div
+                className="h-full"
+                style={{
+                  width: `${width}%`,
+                  background: colors[idx] || '#6366f1',
+                  transition: 'width 0.3s ease',
+                }}
+              />
+              <span className="absolute inset-0 flex items-center justify-center text-[10px] text-white/90">
+                {width}%
+              </span>
+            </div>
+          </div>
+        );
+      })}
+      {data.length === 0 && <div className="text-xs text-stone-500">No data</div>}
+    </div>
+  );
+};
+
+const LineChart = ({ data, stroke = '#6366f1' }) => {
+  if (!data.length) return <div className="text-xs text-stone-500">No data</div>;
+  const values = data.map((d) => Number(d.value || 0));
+  const max = Math.max(...values, 1);
+  const points = data.map((d, idx) => {
+    const x = (idx / Math.max(1, data.length - 1)) * 100;
+    const y = 100 - (Number(d.value || 0) / max) * 100;
+    return `${x},${y}`;
+  });
+  return (
+    <svg viewBox="0 0 100 100" className="w-full h-32">
+      <polyline
+        fill="none"
+        stroke={stroke}
+        strokeWidth="2"
+        points={points.join(' ')}
+      />
+      {points.map((p, idx) => (
+        <circle key={idx} cx={p.split(',')[0]} cy={p.split(',')[1]} r="1.3" fill={stroke} />
+      ))}
+    </svg>
+  );
+};
 
 const StatCard = ({ title, value, pill, accent }) => (
   <div className="p-4 rounded-xl bg-white shadow-sm border border-stone-200">
@@ -25,24 +158,6 @@ const StatCard = ({ title, value, pill, accent }) => (
     {accent && <div className="text-xs text-stone-500 mt-1">{accent}</div>}
   </div>
 );
-
-const BarRow = ({ label, value, max }) => {
-  const width = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
-  return (
-    <div className="mb-3">
-      <div className="flex justify-between text-sm text-stone-600 mb-1">
-        <span>{label}</span>
-        <span className="font-semibold">{formatPrice(value)}</span>
-      </div>
-      <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
-        <div
-          className="h-full bg-indigo-500 transition-all"
-          style={{ width: `${width}%` }}
-        />
-      </div>
-    </div>
-  );
-};
 
 const ListCard = ({ title, items, renderItem }) => (
   <div className="p-4 rounded-xl bg-white shadow-sm border border-stone-200">
@@ -66,6 +181,7 @@ const Main = () => {
   const [topSelling, setTopSelling] = useState([]);
   const [lowStock, setLowStock] = useState([]);
   const [categoryStats, setCategoryStats] = useState([]);
+  const [branches, setBranches] = useState([]);
 
   useEffect(() => {
     const load = async () => {
@@ -80,6 +196,7 @@ const Main = () => {
           paymentRes,
           topSellingRes,
           lowStockRes,
+          branchesRes,
           categoryRes,
         ] = await Promise.all([
           getSalesOverview(),
@@ -88,6 +205,7 @@ const Main = () => {
           getPaymentSummary(),
           getTopSelling(),
           getLowStock(),
+          getBranchesMap(),
           getCategoryStats(),
         ]);
 
@@ -97,6 +215,7 @@ const Main = () => {
         setPaymentSummary(paymentRes.data);
         setTopSelling(topSellingRes.data || []);
         setLowStock(lowStockRes.data || []);
+        setBranches(branchesRes.data || []);
         setCategoryStats(categoryRes.data || []);
       } catch (err) {
         console.error('Load dashboard error:', err);
@@ -109,22 +228,74 @@ const Main = () => {
     load();
   }, []);
 
-  const totalRevenueThisYear = useMemo(() => {
-    return (yearlySales?.thisYear || []).reduce(
-      (sum, m) => sum + Number(m.revenue || 0),
-      0
-    );
+  const revenueMonthData = useMemo(() => {
+    const months = Array.from({ length: 12 }, (_, i) => ({
+      label: `Th${i + 1}`,
+      value: 0,
+    }));
+
+    (yearlySales?.thisYear || []).forEach((m) => {
+      const idx = Number(m._id) - 1;
+      if (idx >= 0 && idx < 12) {
+        months[idx].value = toNumber(m.revenue);
+      }
+    });
+
+    return months;
   }, [yearlySales]);
 
-  const maxPaymentValue = useMemo(() => {
-    if (!paymentSummary) return 0;
-    return Math.max(
-      paymentSummary.momo || 0,
-      paymentSummary.vnpay || 0,
-      paymentSummary.zalopay || 0,
-      paymentSummary.cod || 0
-    );
+  const totalRevenueThisYear = useMemo(
+    () => revenueMonthData.reduce((sum, m) => sum + toNumber(m.value), 0),
+    [revenueMonthData],
+  );
+
+  const revenueMonthMax = useMemo(
+    () => Math.max(1, ...revenueMonthData.map((m) => toNumber(m.value))),
+    [revenueMonthData],
+  );
+
+  const monthColor = (value) => {
+    const v = toNumber(value) / revenueMonthMax;
+    if (v === 0) return '#e5e7eb';
+    if (v < 0.25) return '#d1fae5';
+    if (v < 0.5) return '#86efac';
+    if (v < 0.75) return '#22c55e';
+    return '#15803d';
+  };
+
+  const totalRevenue7Days = useMemo(
+    () => revenueUpdates.reduce((s, d) => s + toNumber(d.total), 0),
+    [revenueUpdates],
+  );
+
+  const paymentData = useMemo(() => {
+    if (!paymentSummary) return [];
+    const vietqrValue = paymentSummary.vietqr ?? paymentSummary.vnpay ?? 0;
+    return [
+      { label: 'COD', value: toNumber(paymentSummary.cod), color: '#facc15' },
+      { label: 'MoMo', value: toNumber(paymentSummary.momo), color: '#f472b6' },
+      { label: 'VietQR', value: toNumber(vietqrValue), color: '#38bdf8' },
+      { label: 'ZaloPay', value: toNumber(paymentSummary.zalopay), color: '#22c55e' },
+    ];
   }, [paymentSummary]);
+
+  const segmentationData = useMemo(() => {
+    if (!overview) return [];
+    return [
+      { label: 'High', value: toNumber(overview.high), color: '#4f46e5' },
+      { label: 'Medium', value: toNumber(overview.medium), color: '#fb923c' },
+      { label: 'Low', value: toNumber(overview.low), color: '#94a3b8' },
+    ];
+  }, [overview]);
+
+  const revenue7Data = useMemo(
+    () =>
+      revenueUpdates.map((d) => ({
+        label: d._id,
+        value: toNumber(d.total),
+      })),
+    [revenueUpdates],
+  );
 
   return (
     <div className="bg-white rounded-lg pb-6 shadow h-full">
@@ -157,73 +328,76 @@ const Main = () => {
               />
               <StatCard
                 title="7 ngày gần nhất"
-                value={formatPrice(
-                  revenueUpdates.reduce((s, d) => s + Number(d.total || 0), 0)
-                )}
+                value={formatPrice(totalRevenue7Days)}
                 accent={`Đơn: ${revenueUpdates.reduce(
-                  (s, d) => s + Number(d.orders || 0),
+                  (s, d) => s + toNumber(d.orders),
                   0
                 )}`}
               />
               <StatCard
-                title="Thanh toán COD"
-                value={formatPrice(paymentSummary?.cod || 0)}
-                accent="Gồm cashondelivery/cod"
+                title="Tổng doanh thu"
+                value={formatPrice(
+                  toNumber(paymentSummary?.cod) +
+                    toNumber(paymentSummary?.momo) +
+                    toNumber(paymentSummary?.vietqr ?? paymentSummary?.vnpay) +
+                    toNumber(paymentSummary?.zalopay)
+                )}
+                accent="Gồm COD, MoMo, VietQR, ZaloPay"
               />
             </div>
 
             <div className="grid gap-4 lg:grid-cols-3">
+              <div className="p-4 rounded-xl bg-white shadow-sm border border-stone-200">
+                <h3 className="text-sm font-semibold text-stone-700 mb-3">
+                  User Segmentation (Pie)
+                </h3>
+                <div className="flex items-center gap-4">
+                  <PieChart data={segmentationData} colors={segmentationData.map((s) => s.color)} />
+                  <TinyLegend items={segmentationData} />
+                </div>
+              </div>
+
               <div className="lg:col-span-2 p-4 rounded-xl bg-white shadow-sm border border-stone-200">
                 <h3 className="text-sm font-semibold text-stone-700 mb-3">
                   Doanh thu theo cổng thanh toán
                 </h3>
-                {paymentSummary ? (
-                  <>
-                    <BarRow
-                      label="COD"
-                      value={paymentSummary.cod || 0}
-                      max={maxPaymentValue}
-                    />
-                    <BarRow
-                      label="MoMo"
-                      value={paymentSummary.momo || 0}
-                      max={maxPaymentValue}
-                    />
-                    <BarRow
-                      label="VNPAY"
-                      value={paymentSummary.vnpay || 0}
-                      max={maxPaymentValue}
-                    />
-                    <BarRow
-                      label="ZaloPay"
-                      value={paymentSummary.zalopay || 0}
-                      max={maxPaymentValue}
-                    />
-                  </>
-                ) : (
-                  <div className="text-sm text-stone-500">Không có dữ liệu</div>
-                )}
+                <BarChart data={paymentData} colors={paymentData.map((p) => p.color)} />
+                <div className="mt-2 text-[11px] text-stone-500">
+                  COD vàng • MoMo hồng • VietQR xanh biển • ZaloPay xanh lá
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="p-4 rounded-xl bg-white shadow-sm border border-stone-200">
+                <h3 className="text-sm font-semibold text-stone-700 mb-3">
+                  Doanh thu 7 ngày (Bar)
+                </h3>
+                <BarChart data={revenue7Data} colors={revenue7Data.map(() => '#6366f1')} />
               </div>
 
               <div className="p-4 rounded-xl bg-white shadow-sm border border-stone-200">
                 <h3 className="text-sm font-semibold text-stone-700 mb-3">
-                  Doanh thu 7 ngày
+                  Doanh thu theo tháng (Heatmap)
                 </h3>
-                <div className="space-y-2">
-                  {revenueUpdates.map((d) => (
-                    <div
-                      key={d._id}
-                      className="flex items-center justify-between text-sm"
-                    >
-                      <span className="text-stone-600">{d._id}</span>
-                      <span className="font-semibold">
-                        {formatPrice(Number(d.total || 0))}
-                      </span>
+                <div className="grid grid-cols-6 md:grid-cols-12 gap-2">
+                  {revenueMonthData.map((m) => (
+                    <div key={m.label} className="flex flex-col items-center gap-1">
+                      <div
+                        className="w-7 h-7 rounded border border-stone-200"
+                        style={{ background: monthColor(m.value) }}
+                        title={`${m.label}: ${formatPrice(m.value)}`}
+                      />
+                      <span className="text-[11px] text-stone-600">{m.label}</span>
                     </div>
                   ))}
-                  {revenueUpdates.length === 0 && (
-                    <div className="text-sm text-stone-500">Chưa có dữ liệu</div>
-                  )}
+                </div>
+                <div className="flex items-center gap-2 text-[11px] text-stone-500 mt-2">
+                  <span>Less</span>
+                  {['#e5e7eb', '#d1fae5', '#86efac', '#22c55e', '#15803d'].map((c) => (
+                    <span key={c} className="w-4 h-3 rounded-[3px] border border-stone-200" style={{ background: c }} />
+                  ))}
+                  <span>More</span>
                 </div>
               </div>
             </div>
@@ -296,14 +470,24 @@ const Main = () => {
                     <div className="text-xs text-stone-500">
                       Bán: {c.totalSold}
                     </div>
-                    <div className="text-sm font-medium">
-                      {formatPrice(c.revenue)}
-                    </div>
+                  <div className="text-sm font-medium">
+                    {formatPrice(c.revenue)}
                   </div>
-                ))}
-                {categoryStats.length === 0 && (
-                  <div className="text-sm text-stone-500">Chưa có dữ liệu</div>
-                )}
+                </div>
+              ))}
+              {categoryStats.length === 0 && (
+                <div className="text-sm text-stone-500">Chưa có dữ liệu</div>
+              )}
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-white shadow-sm border border-stone-200">
+              <h3 className="text-sm font-semibold text-stone-700 mb-3">
+                Bản đồ chi nhánh (Vietmap)
+              </h3>
+              <BranchMap branches={branches} />
+              <div className="text-[11px] text-stone-500 mt-2">
+                Nguồn: /dashboard/branches-map. Có thể cấu hình khóa VietMap qua VITE_VIETMAP_API_KEY.
               </div>
             </div>
           </div>

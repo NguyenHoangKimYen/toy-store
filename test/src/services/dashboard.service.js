@@ -7,6 +7,7 @@ export const getPaymentSummary = () => apiClient.get('/dashboard/payment-summary
 export const getTopSelling = () => apiClient.get('/dashboard/products/top-selling');
 export const getLowStock = () => apiClient.get('/dashboard/products/low-stock');
 export const getCategoryStats = () => apiClient.get('/dashboard/products/category-stats');
+export const getBranchesMap = () => apiClient.get('/dashboard/branches-map');
 
 export default {
   getSalesOverview,
@@ -16,4 +17,5 @@ export default {
   getTopSelling,
   getLowStock,
   getCategoryStats,
+  getBranchesMap,
 };

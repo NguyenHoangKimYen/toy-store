@@ -13,6 +13,12 @@ initAPIPreconnect();
 // Initialize performance monitoring (dev only)
 initPerformanceTracking();
 
+// Facebook đôi khi append "#_=_" vào redirect → loại bỏ để tránh hash lạ
+if (window.location.hash === '#_=_') {
+  const cleanUrl = window.location.href.replace(/#_=_$/, '');
+  window.history.replaceState({}, document.title, cleanUrl);
+}
+
 // Start MSW when in development with mock data enabled
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
 
