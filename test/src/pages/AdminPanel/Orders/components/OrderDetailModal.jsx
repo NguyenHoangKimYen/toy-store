@@ -4,6 +4,7 @@ import { getOrderById } from '@/services/orders.service'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import Badge from '@/components/ui/badge'
+import { formatPrice } from '@/utils/formatPrice'
 import {
   Dialog,
   DialogContent,
@@ -148,7 +149,7 @@ const OrderDetailModal = ({ order, onClose, onStatusUpdate }) => {
                       )}
                       <p className="text-sm text-muted-foreground">Quantity: {item.quantity}</p>
                     </div>
-                    <p className="font-semibold">${itemSubtotal.toFixed(2)}</p>
+                    <p className="font-semibold">{formatPrice(itemSubtotal)}</p>
                   </div>
                 );
               })}
@@ -169,7 +170,7 @@ const OrderDetailModal = ({ order, onClose, onStatusUpdate }) => {
               <div className="flex justify-between">
                 <span>Shipping Fee:</span>
                 <span className="font-medium">
-                  ${parseFloat(orderData.shippingFee?.$numberDecimal || orderData.shippingFee || 0).toFixed(2)}
+                  {formatPrice(orderData.shippingFee?.$numberDecimal || orderData.shippingFee || 0)}
                 </span>
               </div>
               {orderData.discountAmount && parseFloat(orderData.discountAmount?.$numberDecimal || orderData.discountAmount || 0) > 0 && (
@@ -179,7 +180,7 @@ const OrderDetailModal = ({ order, onClose, onStatusUpdate }) => {
                     Discount Code:
                   </span>
                   <span className="font-medium">
-                    -${parseFloat(orderData.discountAmount?.$numberDecimal || orderData.discountAmount || 0).toFixed(2)}
+                    -{formatPrice(orderData.discountAmount?.$numberDecimal || orderData.discountAmount || 0)}
                   </span>
                 </div>
               )}
@@ -190,14 +191,14 @@ const OrderDetailModal = ({ order, onClose, onStatusUpdate }) => {
                     Voucher Discount:
                   </span>
                   <span className="font-medium">
-                    -${parseFloat(orderData.voucherDiscount?.$numberDecimal || orderData.voucherDiscount || 0).toFixed(2)}
+                    -{formatPrice(orderData.voucherDiscount?.$numberDecimal || orderData.voucherDiscount || 0)}
                   </span>
                 </div>
               )}
               {orderData.pointsUsed > 0 && (
                 <div className="flex justify-between text-green-600">
                   <span>Points Used:</span>
-                  <span className="font-medium">{orderData.pointsUsed} pts (-${orderData.pointsUsed.toFixed(2)})</span>
+                  <span className="font-medium">{orderData.pointsUsed} pts (-{formatPrice(orderData.pointsUsed)})</span>
                 </div>
               )}
               {orderData.pointsEarned > 0 && (
@@ -209,7 +210,7 @@ const OrderDetailModal = ({ order, onClose, onStatusUpdate }) => {
               <div className="flex justify-between pt-2 border-t font-bold text-lg">
                 <span>Total:</span>
                 <span>
-                  ${parseFloat(orderData.totalAmount?.$numberDecimal || orderData.totalAmount || 0).toFixed(2)}
+                  {formatPrice(orderData.totalAmount?.$numberDecimal || orderData.totalAmount || 0)}
                 </span>
               </div>
             </div>

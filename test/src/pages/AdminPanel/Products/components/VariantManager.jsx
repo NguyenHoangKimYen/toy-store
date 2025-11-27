@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Badge from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { formatPrice } from '@/utils/formatPrice';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -194,11 +195,6 @@ const VariantManager = ({ productId, variants: initialVariants = [], onUpdate })
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatPrice = (price) => {
-    const value = price?.$numberDecimal || price;
-    return value ? `$${parseFloat(value).toFixed(2)}` : 'N/A';
   };
 
   const formatAttributes = (attributes) => {

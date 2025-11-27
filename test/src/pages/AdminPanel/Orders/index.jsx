@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import Badge from '@/components/ui/badge'
+import { formatPrice } from '@/utils/formatPrice'
 import OrderDetailModal from './components/OrderDetailModal'
 import OrderFilters from './components/OrderFilters'
 
@@ -159,7 +160,7 @@ const Orders = () => {
                       <div className="flex flex-col items-end gap-2">
                         <div className="text-right">
                           <p className="text-xl font-bold">
-                            ${parseFloat(order.totalAmount?.$numberDecimal || order.totalAmount || 0).toFixed(2)}
+                            {formatPrice(order.totalAmount?.$numberDecimal || order.totalAmount || 0)}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {order.deliveryType === 'express' ? 'Express' : 'Standard'} Delivery
