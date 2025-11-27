@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const orderController = require("../controllers/order.controller");
 const auth = require("../middlewares/auth.middleware");
-const adminOnly = require("../middlewares/auth.middleware");
+const adminOnly = require("../middlewares/admin.middleware");
 
 // User tạo đơn
 router.post("/", orderController.create);
@@ -15,9 +15,6 @@ router.get("/:id/guest", orderController.getDetail);
 
 // Lấy chi tiết đơn (authenticated)
 router.get("/:id", auth, orderController.getDetail);
-
-// Lấy chi tiết đơn
-router.get("/:id/guest", orderController.getDetail);
 
 // User xem đơn của mình
 router.get("/", auth, orderController.getMyOrders);
