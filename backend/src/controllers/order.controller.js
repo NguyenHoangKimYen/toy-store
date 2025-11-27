@@ -22,7 +22,7 @@ module.exports = {
                 .status(404)
                 .json({ success: false, message: "Order not found" });
 
-        return res.json({ success: true, order });
+        return res.json({ success: true, data: order });
     },
 
     async getMyOrders(req, res) {
