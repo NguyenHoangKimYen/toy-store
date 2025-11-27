@@ -26,7 +26,7 @@ module.exports = {
     },
 
     async getMyOrders(req, res) {
-        const orders = await orderService.getOrdersByUser(req.user._id);
+        const orders = await orderService.getOrdersByUser(req.user.id);
         return res.json({ success: true, orders });
     },
 
@@ -109,6 +109,52 @@ module.exports = {
             return res.json({ success: true, orders });
         } catch (err) {
             console.error("Get Orders By Discount Code Error:", err);
+            return res
+                .status(500)
+                .json({ success: false, message: err.message });
+        }
+    },
+
+    async cancelOrder(req, res) {
+        try {
+            const orderId = req.params.id;
+            const userId = req.user?.id;
+            
+            // Get order to check ownership and status
+            const order = await orderService.getOrderDetail(orderId);
+            
+            if (!order) {
+                return res.status(404).json({ 
+                    success: false, 
+                    message: "Order not found" 
+                });
+            }
+            
+            // Check if user owns this order (unless admin)
+            if (req.user?.role !== 'admin' && order.userId.toString() !== userId) {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: "You can only cancel your own orders" 
+                });
+            }
+            
+            // Check if order can be cancelled
+            if (!['pending', 'confirmed'].includes(order.status)) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: `Cannot cancel order with status: ${order.status}` 
+                });
+            }
+            
+            // Cancel the order
+            const cancelled = await orderService.updateStatus(orderId, 'cancelled');
+            
+            return res.json({
+                success: true,
+                order: cancelled,
+            });
+        } catch (err) {
+            console.error("Cancel Order Error:", err);
             return res
                 .status(500)
                 .json({ success: false, message: err.message });
