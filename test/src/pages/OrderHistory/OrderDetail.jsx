@@ -19,7 +19,7 @@ const parseDecimal = (value) => {
 };
 
 const getWeatherIcon = (condition) => {
-  if (!condition) return <Cloud size={20} />;
+  if (!condition || typeof condition !== 'string') return <Cloud size={20} />;
   const lower = condition.toLowerCase();
   if (lower.includes('rain') || lower.includes('storm')) return <CloudRain size={20} />;
   if (lower.includes('clear') || lower.includes('sunny')) return <Sun size={20} />;
@@ -28,6 +28,7 @@ const getWeatherIcon = (condition) => {
 };
 
 const getStatusVariant = (status) => {
+  if (!status || typeof status !== 'string') return 'default';
   switch (status.toLowerCase()) {
     case 'pending':
       return 'secondary';
@@ -202,7 +203,7 @@ const OrderDetail = () => {
                 {order.shipping.weather && (
                   <div className="weather-info">
                     {getWeatherIcon(order.shipping.weather)}
-                    <span>Weather: {order.shipping.weather}</span>
+                    <span>Weather: {typeof order.shipping.weather === 'string' ? order.shipping.weather : 'N/A'}</span>
                   </div>
                 )}
                 <div className="shipping-row total">
