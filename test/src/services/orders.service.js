@@ -20,7 +20,7 @@ export const getMyOrders = async (params = {}) => {
 
 // Get all orders (admin only) - using query params to differentiate
 export const getAllOrders = async (params = {}) => {
-  const response = await apiClient.get('/orders', { params });
+  const response = await apiClient.get('/orders/admin/all', { params });
   return response;
 };
 
