@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks';
+import { formatPrice } from '@/utils/formatPrice';
 import './LoyaltyPointsInput.css';
 
 const LoyaltyPointsInput = ({ onPointsApplied, currentTotal }) => {
@@ -61,14 +62,14 @@ const LoyaltyPointsInput = ({ onPointsApplied, currentTotal }) => {
       </div>
 
       <div className="points-available">
-        Available: <strong>{availablePoints.toLocaleString()}</strong> points (1 point = $1)
+        Available: <strong>{availablePoints.toLocaleString()}</strong> points (1 point = 1₫)
       </div>
 
       {appliedPoints > 0 ? (
         <div className="points-applied">
           <div className="applied-info">
             <span className="applied-label">Points Applied:</span>
-            <span className="applied-value">-{appliedPoints.toLocaleString()} pts (${appliedPoints})</span>
+            <span className="applied-value">-{appliedPoints.toLocaleString()} pts ({formatPrice(appliedPoints)})</span>
           </div>
           <Button
             variant="outline"
@@ -111,10 +112,6 @@ const LoyaltyPointsInput = ({ onPointsApplied, currentTotal }) => {
       )}
 
       {error && <div className="points-error">{error}</div>}
-
-      <div className="points-note">
-        💡 Earn 10% cashback as loyalty points on every order!
-      </div>
     </div>
   );
 };

@@ -21,7 +21,27 @@ const AddressSelector = ({ userId, selectedAddressId, onSelectAddress }) => {
   
   // Combine real addresses with guest addresses
   const allAddresses = userId ? addresses : [...addresses, ...guestAddresses];
-  const displayedAddresses = allAddresses.slice(0, 3);
+  
+  // Always show selected address in the first 3 if it exists
+  const displayedAddresses = (() => {
+    const firstThree = allAddresses.slice(0, 3);
+    const selectedId = typeof selectedAddressId === 'object' ? selectedAddressId?._id : selectedAddressId;
+    
+    // Check if selected address is already in first 3
+    const isSelectedInFirstThree = firstThree.some(addr => addr._id === selectedId);
+    
+    if (isSelectedInFirstThree || !selectedId) {
+      return firstThree;
+    }
+    
+    // If selected address is not in first 3, replace the last one with it
+    const selectedAddress = allAddresses.find(addr => addr._id === selectedId);
+    if (selectedAddress) {
+      return [...firstThree.slice(0, 2), selectedAddress];
+    }
+    
+    return firstThree;
+  })();
 
   // Auto-select default address if no address is selected
   useEffect(() => {
