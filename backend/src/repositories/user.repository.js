@@ -52,12 +52,12 @@ const findByPhone = async (phone, includePassword = false) => {
 };
 
 const findByUsername = async (username, includePassword = false) => {
-    return User.findOne({ username })
+    return User.findOne({ username: { $regex: new RegExp(`^${username}$`, 'i') } })
         .populate({
             path: "defaultAddressId",
             select: "fullName phone addressLine city postalCode isDefault",
         })
-        .select(includePassword ? "+password" : "-password"); //hiển thị hoặc không hiển thị password
+        .select(includePassword ? "+password" : "-password");
 };
 
 // Tìm người dùng theo ID và bao gồm trường mật khẩu
