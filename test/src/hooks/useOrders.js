@@ -26,19 +26,36 @@ export const useOrders = () => {
   // Fetch user's orders
   const fetchMyOrders = useCallback(async () => {
     const userId = user?._id || user?.id;
-    if (!userId) return;
+    if (!userId) {
+      console.log('No userId found, skipping fetch');
+      return;
+    }
 
     try {
       setLoading(true);
       setError(null);
 
+      console.log('Fetching orders for user:', userId);
       const response = await getMyOrders();
+      console.log('Orders response:', response);
+      
       // Backend returns { success: true, orders: [...] }
-      if (response.success && response.orders) {
-        setOrders(response.orders);
-      } else {
-        throw new Error(response.message || 'Failed to fetch orders');
+      // But response might already be the data object or need data extraction
+      let ordersArray = [];
+      
+      if (Array.isArray(response)) {
+        // Direct array response
+        ordersArray = response;
+      } else if (response?.success && response?.orders) {
+        // Wrapped in success object
+        ordersArray = response.orders;
+      } else if (response?.orders) {
+        // Just orders property
+        ordersArray = response.orders;
       }
+      
+      console.log('Setting orders:', ordersArray);
+      setOrders(ordersArray);
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.message || 'Failed to fetch orders';
       setError(errorMsg);
