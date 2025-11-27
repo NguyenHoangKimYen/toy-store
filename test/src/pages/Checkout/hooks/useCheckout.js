@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useCart, useOrders } from '@/hooks';
 import { ROUTES } from '@/config/routes';
+import { payByCash } from '@/services';
 
 export const useCheckout = () => {
   const navigate = useNavigate();
@@ -94,7 +95,15 @@ export const useCheckout = () => {
       const orderId = order._id || order.id;
 
       // Redirect based on payment method
-      if (paymentMethod === 'cashondelivery') {
+      if (paymentMethod === 'cod') {
+        try {
+          await payByCash(orderId);
+        } catch (err) {
+          console.error('payByCash error:', err);
+          // vẫn tiếp tục, chỉ cảnh báo
+          toast.warning('Đặt COD nhưng chưa ghi nhận trạng thái thanh toán. Vui lòng kiểm tra đơn.');
+        }
+
         // COD - show success and go to order detail
         toast.success('Order placed successfully!', {
           description: `Order #${orderId}`,

@@ -5,8 +5,8 @@
   background: #fef2f2;
   padding: 1rem;
   min-height: 100vh;
-  height: 100vh;
-  overflow: hidden;
+  height: auto;
+  overflow: visible;
 }
 
 .admin-panel-sidebar {
@@ -17,13 +17,13 @@
 .admin-panel-main {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .admin-panel-content {
   background: white;
   border-radius: 12px;
-  overflow: auto;
+  overflow: visible;
   flex: 1;
 }
 

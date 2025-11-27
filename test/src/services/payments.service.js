@@ -79,7 +79,6 @@ export const zaloPayReturn = async (params) => {
 
 // ===================== CASH (COD) =====================
 
-// Confirm Cash on Delivery payment method
 export const payByCash = async (orderId) => {
   const response = await apiClient.post(`/payments/cash/${orderId}`);
   return response;
@@ -97,5 +96,6 @@ export default {
   createZaloPayOrder,
   zaloPayCallback,
   zaloPayReturn,
+  payByCash,
   payByCash,
 };
