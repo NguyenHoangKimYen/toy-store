@@ -552,6 +552,11 @@ module.exports = {
         }
 
         return updated;
+    },
+
+    async getOrdersByDiscountCode(discountCodeId) {
+        const orders = await orderRepository.findByDiscountCode(discountCodeId);
+        return orders;
     }
 
 };
