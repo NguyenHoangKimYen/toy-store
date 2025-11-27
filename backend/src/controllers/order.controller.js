@@ -26,7 +26,7 @@ module.exports = {
     },
 
     async getMyOrders(req, res) {
-        const orders = await orderService.getOrdersByUser(req.user._id);
+        const orders = await orderService.getOrdersByUser(req.user.id);
         return res.json({ success: true, orders });
     },
 
