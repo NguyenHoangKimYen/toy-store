@@ -1,9 +1,14 @@
 /**
  * Format price in VND (Vietnamese Dong)
- * @param {number} price - Price in VND
+ * @param {number|object} price - Price in VND or Decimal128 object
  * @returns {string} Formatted price string
  */
 export const formatPrice = (price) => {
+  // Handle Decimal128 object from MongoDB
+  if (price && typeof price === 'object' && price.$numberDecimal) {
+    price = Number(price.$numberDecimal);
+  }
+  
   if (price == null || isNaN(price)) return '0₫';
   
   return new Intl.NumberFormat('vi-VN', {

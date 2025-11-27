@@ -125,7 +125,8 @@ const Payment = () => {
         setLoading(false);
       } else if ((orderPaymentMethod === 'cod' || orderPaymentMethod === 'cashondelivery') && !order.isPaid && !isReturningFromPayment) {
         // Confirm COD payment method with backend
-        await payByCash(orderId);
+        const response = await payByCash(orderId);
+        setPaymentResponse(response);
         // Refresh order to show updated status
         await fetchOrderById(orderId);
         setLoading(false);
@@ -292,12 +293,14 @@ const Payment = () => {
 
   // COD orders
   if (paymentMethod === 'cod' || paymentMethod === 'cashondelivery') {
+    const backendMessage = paymentResponse?.message;
+    
     return (
       <div className="payment-result">
         <div className="payment-result-card success">
           <CheckCircle size={64} className="result-icon success" />
           <h1>Đặt hàng thành công!</h1>
-          <p>Bạn sẽ thanh toán khi nhận hàng.</p>
+          <p>{backendMessage || 'Bạn sẽ thanh toán khi nhận hàng.'}</p>
           <div className="order-summary">
             <div className="summary-row">
               <span>Mã đơn hàng</span>

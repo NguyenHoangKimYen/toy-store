@@ -19,7 +19,6 @@ const Checkout = () => {
     paymentMethod,
     subtotal,
     shipping,
-    tax,
     discount,
     loyaltyPointsDiscount,
     total,
@@ -101,7 +100,6 @@ const Checkout = () => {
             cartItems={cartItems}
             subtotal={subtotal}
             shipping={shipping}
-            tax={tax}
             discount={discount}
             loyaltyPointsDiscount={loyaltyPointsDiscount}
             total={total}

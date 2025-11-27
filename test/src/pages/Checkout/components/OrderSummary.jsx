@@ -11,7 +11,6 @@ const OrderSummary = ({
   cartItems,
   subtotal,
   shipping,
-  tax,
   discount,
   loyaltyPointsDiscount = 0,
   total,
@@ -81,11 +80,7 @@ const OrderSummary = ({
         </div>
         <div key="shipping" className="order-total-row">
           <span>Shipping</span>
-          <span>{formatPrice(shipping)}</span>
-        </div>
-        <div key="tax" className="order-total-row">
-          <span>Tax</span>
-          <span>{formatPrice(tax)}</span>
+          <span>{shipping === 0 ? 'FREE' : formatPrice(shipping)}</span>
         </div>
         {discount > 0 && (
           <div key="discount" className="order-total-row order-discount">

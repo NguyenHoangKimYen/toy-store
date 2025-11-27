@@ -8,6 +8,7 @@ export * from './categories.service';
 export * from './dashboard.service';
 export * from './addresses.service';
 export * from './payments.service';
+export * from './shipping.service';
 export * from './config';
 export * from '../utils/apiHelpers';
 export * from '../utils/authHelpers';
@@ -23,6 +24,7 @@ import * as categoriesService from './categories.service';
 import * as dashboardService from './dashboard.service';
 import * as addressesService from './addresses.service';
 import * as paymentsService from './payments.service';
+import * as shippingService from './shipping.service';
 
 export default {
   products: productsService,
@@ -35,4 +37,5 @@ export default {
   dashboard: dashboardService,
   addresses: addressesService,
   payments: paymentsService,
+  shipping: shippingService,
 };

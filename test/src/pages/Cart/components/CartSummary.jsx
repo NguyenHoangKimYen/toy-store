@@ -1,14 +1,48 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { formatPrice } from '@/utils/formatPrice';
+import { getShippingFeeByUser } from '@/services';
+import { useAuth } from '@/hooks';
 import './CartSummary.css';
 
 const CartSummary = ({ subtotal, onCheckout, onContinueShopping }) => {
-  const shipping = subtotal > 1000000 ? 0 : 50000; // Free shipping over 1,000,000 VND
-  const tax = subtotal * 0.1;
-  const total = subtotal + shipping + tax;
+  const { user } = useAuth();
+  const [shipping, setShipping] = useState(0);
+  
+  const total = subtotal + shipping;
+
+  // Fetch shipping fee from backend
+  useEffect(() => {
+    const fetchShippingFee = async () => {
+      if (subtotal === 0) {
+        setShipping(0);
+        return;
+      }
+
+      try {
+        if (user?._id) {
+          const response = await getShippingFeeByUser(user._id, {
+            orderValue: subtotal,
+            deliveryType: 'standard',
+          });
+          
+          if (response.success) {
+            setShipping(response.fee || 0);
+          }
+        } else {
+          // For guests, estimate (will be calculated accurately at checkout)
+          setShipping(subtotal >= 500000 ? 0 : 50000);
+        }
+      } catch (err) {
+        console.error('Error fetching shipping fee:', err);
+        setShipping(subtotal >= 500000 ? 0 : 50000);
+      }
+    };
+
+    fetchShippingFee();
+  }, [subtotal, user]);
 
   return (
     <Card className="cart-summary-card">
@@ -29,15 +63,11 @@ const CartSummary = ({ subtotal, onCheckout, onContinueShopping }) => {
             🎉 You got free shipping!
           </p>
         )}
-        {shipping > 0 && subtotal < 1000000 && (
+        {shipping > 0 && subtotal < 500000 && (
           <p className="free-shipping-notice">
-            Add {formatPrice(1000000 - subtotal)} more for free shipping
+            Add {formatPrice(500000 - subtotal)} more for free shipping
           </p>
         )}
-        <div className="summary-row">
-          <span>Tax (10%)</span>
-          <span>{formatPrice(tax)}</span>
-        </div>
         <div className="summary-row summary-total">
           <span>Total</span>
           <span>{formatPrice(total)}</span>

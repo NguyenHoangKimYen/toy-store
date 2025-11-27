@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useCart, useOrders } from '@/hooks';
+import { useCart, useOrders, useAuth } from '@/hooks';
 import { ROUTES } from '@/config/routes';
-import { payByCash } from '@/services';
+import { payByCash, getShippingFeeByUser } from '@/services';
 
 export const useCheckout = () => {
   const navigate = useNavigate();
   const { cart, cartItems, cartSummary, loading: cartLoading, clearAllItems } = useCart();
   const { checkoutCart, loading: orderLoading } = useOrders();
+  const { user } = useAuth();
   
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -19,15 +20,53 @@ export const useCheckout = () => {
     isApplied: false,
   });
   const [loyaltyPointsUsed, setLoyaltyPointsUsed] = useState(0);
+  const [shippingFee, setShippingFee] = useState(0);
+  const [shippingLoading, setShippingLoading] = useState(false);
 
   // Calculate totals
   const subtotal = cartSummary.subtotal;
-  const shipping = subtotal > 1000000 ? 0 : 50000; // Free shipping over 1,000,000 VND
-  const tax = subtotal * 0.1; // 10% tax
   const discount = discountInfo.discountAmount || 0;
-  const total = Math.max(0, subtotal + shipping + tax - discount - loyaltyPointsUsed);
+  const total = Math.max(0, subtotal + shippingFee - discount - loyaltyPointsUsed);
 
   const loading = cartLoading || orderLoading;
+
+  // Fetch shipping fee from backend when subtotal changes or user logs in
+  useEffect(() => {
+    const fetchShippingFee = async () => {
+      if (subtotal === 0) {
+        setShippingFee(0);
+        return;
+      }
+
+      try {
+        setShippingLoading(true);
+        
+        if (user?._id) {
+          // For logged-in users
+          const response = await getShippingFeeByUser(user._id, {
+            orderValue: subtotal,
+            deliveryType: 'standard',
+          });
+          
+          if (response.success) {
+            setShippingFee(response.fee || 0);
+          }
+        } else {
+          // For guests, estimate based on threshold (will be calculated accurately at checkout)
+          // Backend gives free shipping at 500k
+          setShippingFee(subtotal >= 500000 ? 0 : 50000);
+        }
+      } catch (err) {
+        console.error('Error fetching shipping fee:', err);
+        // Fallback to estimated fee
+        setShippingFee(subtotal >= 500000 ? 0 : 50000);
+      } finally {
+        setShippingLoading(false);
+      }
+    };
+
+    fetchShippingFee();
+  }, [subtotal, user]);
 
   const handlePaymentMethodChange = (method) => {
     setPaymentMethod(method);
@@ -139,12 +178,11 @@ export const useCheckout = () => {
     cartItems,
     paymentMethod,
     subtotal,
-    shipping,
-    tax,
+    shipping: shippingFee,
     discount: discountInfo.discountAmount || 0,
     loyaltyPointsDiscount: loyaltyPointsUsed,
     total,
-    loading,
+    loading: loading || shippingLoading,
     error,
     submitting,
     handlePaymentMethodChange,
