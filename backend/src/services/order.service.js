@@ -168,6 +168,15 @@ module.exports = {
             paymentMethod,
             deliveryType,
         } = data;
+
+        // Chuẩn hóa COD naming để khớp với luồng thanh toán
+        if (
+            paymentMethod === "cod" ||
+            paymentMethod === "cash" ||
+            paymentMethod === "cashondelivery"
+        ) {
+            paymentMethod = "cashondelivery";
+        }
         let shippingAddress = null;
 
         if (!["standard", "express"].includes(deliveryType))
@@ -463,7 +472,9 @@ module.exports = {
 
         // COD/cashondelivery: chỉ ghi nhận đã thanh toán khi giao/hoàn tất
         if (
-            updated.paymentMethod === "cashondelivery" &&
+            (updated.paymentMethod === "cashondelivery" ||
+                updated.paymentMethod === "cod" ||
+                updated.paymentMethod === "cash") &&
             updated.paymentStatus !== "paid" &&
             (newStatus === "delivered" || newStatus === "completed")
         ) {

@@ -51,6 +51,7 @@ router.get(
             {
                 id: req.user._id,
                 email: req.user.email,
+                role: req.user.role,
             },
             process.env.JWT_SECRET,
             { expiresIn: "7d" },
@@ -87,6 +88,7 @@ router.get(
             {
                 id: req.user._id,
                 email: req.user.email,
+                role: req.user.role,
             },
             process.env.JWT_SECRET,
             { expiresIn: "7d" },

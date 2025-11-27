@@ -2,10 +2,23 @@ const OrderItem = require("../models/order-item.model");
 const Product = require("../models/product.model");
 const Variant = require("../models/variant.model");
 
-// Chỉ tính các đơn không bị hủy/trả và không failed thanh toán
+// Chỉ tính các đơn hợp lệ: không hủy/trả, không failed,
+// paid hoặc COD đã giao/hoàn tất
+const COD_METHODS = ["cashondelivery", "cod", "cashOnDelivery"];
 const ACTIVE_ORDER_MATCH = {
-    "order.status": { $nin: ["cancelled", "returned"] },
-    "order.paymentStatus": { $ne: "failed" },
+    $and: [
+        { "order.status": { $nin: ["cancelled", "returned"] } },
+        { "order.paymentStatus": { $ne: "failed" } },
+        {
+            $or: [
+                { "order.paymentStatus": "paid" },
+                {
+                    "order.paymentMethod": { $in: COD_METHODS },
+                    "order.status": { $in: ["delivered", "completed"] },
+                },
+            ],
+        },
+    ],
 };
 
 // Lookup Order để biết trạng thái thanh toán
