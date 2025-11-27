@@ -6,6 +6,9 @@ module.exports = {
     },
 
     findByOrder(orderId) {
-        return OrderItem.find({ orderId }).lean();
+        return OrderItem.find({ orderId })
+            .populate('productId', 'name images description')
+            .populate('variantId', 'color size price stock')
+            .lean();
     },
 };
