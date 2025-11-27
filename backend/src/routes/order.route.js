@@ -10,6 +10,9 @@ router.post("/", orderController.create);
 // Admin thay đổi trạng thái đơn
 router.put("/:id/status", auth, adminOnly, orderController.updateStatus);
 
+// Admin xem tất cả đơn hàng
+router.get("/admin/all", auth, adminOnly, orderController.adminGetAll);
+
 // Lấy chi tiết đơn (guest - no auth required)
 router.get("/:id/guest", orderController.getDetail);
 
