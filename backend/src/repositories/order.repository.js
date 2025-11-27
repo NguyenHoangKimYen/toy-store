@@ -61,4 +61,12 @@ module.exports = {
       { new: true }
     );
   },
+
+  // 🔹 Tìm orders theo discount code ID
+  findByDiscountCode(discountCodeId) {
+    return Order.find({ discountCodeId })
+      .populate('userId', 'fullName email')
+      .sort({ createdAt: -1 })
+      .lean();
+  },
 };
