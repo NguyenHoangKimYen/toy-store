@@ -101,4 +101,17 @@ module.exports = {
                 .json({ success: false, message: err.message });
         }
     },
+
+    async getOrdersByDiscountCode(req, res) {
+        try {
+            const { discountCodeId } = req.params;
+            const orders = await orderService.getOrdersByDiscountCode(discountCodeId);
+            return res.json({ success: true, orders });
+        } catch (err) {
+            console.error("Get Orders By Discount Code Error:", err);
+            return res
+                .status(500)
+                .json({ success: false, message: err.message });
+        }
+    },
 };
