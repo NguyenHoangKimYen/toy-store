@@ -90,7 +90,7 @@ const AddressAutocomplete = ({ value, onChange, onSelect, placeholder, name, id 
 
       {/* Suggestions Dropdown */}
       {isOpen && suggestions.length > 0 && (
-        <div className='absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto'>
+        <div className='absolute z-[2100] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto'>
           {suggestions.map((suggestion, index) => (
             <div
               key={index}

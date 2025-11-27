@@ -8,7 +8,7 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
+  z-index: 1500;
   animation: fadeIn 0.2s ease;
 }
 
@@ -30,7 +30,7 @@
   top: 2rem;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 1001;
+  z-index: 1500;
   max-width: 700px;
   width: calc(100% - 2rem);
   animation: expandFromOriginal 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
@@ -122,7 +122,7 @@
   max-height: calc(100vh - 8rem);
   overflow-y: auto;
   animation: slideDown 0.2s ease;
-  z-index: 999;
+  z-index: 1100;
 }
 
 @keyframes slideDown {

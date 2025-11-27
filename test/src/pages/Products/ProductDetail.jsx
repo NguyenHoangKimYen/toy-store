@@ -214,7 +214,7 @@ const ProductDetail = () => {
       </div>
 
       {/* Mobile Bottom Action Bar */}
-      <div className="hidden max-md:flex fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-2 md:p-3 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] gap-2">
+      <div className="hidden max-md:flex fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-2 md:p-3 z-[100] shadow-[0_-2px_10px_rgba(0,0,0,0.1)] gap-2">
         <button
           className="flex-1 h-11 text-sm font-semibold rounded-none bg-slate-100 text-slate-800 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
           onClick={handleAddToCart}

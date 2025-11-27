@@ -42,7 +42,7 @@ const DiscountOrdersModal = ({ discountCode, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 p-4">
       <Card className="w-full max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
