@@ -14,6 +14,8 @@ const AddressFormModal = ({ address, isOpen, onClose, onSave, mode = 'create' })
     addressLine: '',
     city: '',
     postalCode: '',
+    lat: null,
+    lng: null,
     isDefault: false,
   });
 
@@ -29,6 +31,8 @@ const AddressFormModal = ({ address, isOpen, onClose, onSave, mode = 'create' })
         addressLine: address.addressLine || '',
         city: address.city || '',
         postalCode: address.postalCode || '',
+        lat: address.lat || null,
+        lng: address.lng || null,
         isDefault: address.isDefault || false,
       });
     } else {
@@ -40,6 +44,8 @@ const AddressFormModal = ({ address, isOpen, onClose, onSave, mode = 'create' })
         addressLine: '',
         city: '',
         postalCode: '',
+        lat: null,
+        lng: null,
         isDefault: false,
       });
     }
@@ -52,6 +58,16 @@ const AddressFormModal = ({ address, isOpen, onClose, onSave, mode = 'create' })
       [name]: type === 'checkbox' ? checked : value,
     }));
     setErrors(prev => ({ ...prev, [name]: '' }));
+  };
+
+  const handleAddressSelect = (suggestion) => {
+    setFormData(prev => ({
+      ...prev,
+      addressLine: suggestion.name || suggestion,
+      lat: suggestion.lat || null,
+      lng: suggestion.lng || null,
+    }));
+    setErrors(prev => ({ ...prev, addressLine: '' }));
   };
 
   const validateForm = () => {
@@ -102,6 +118,8 @@ const AddressFormModal = ({ address, isOpen, onClose, onSave, mode = 'create' })
         addressLine: '',
         city: '',
         postalCode: '',
+        lat: null,
+        lng: null,
         isDefault: false,
       });
       setErrors({});
@@ -207,6 +225,7 @@ const AddressFormModal = ({ address, isOpen, onClose, onSave, mode = 'create' })
                   name='addressLine'
                   value={formData.addressLine}
                   onChange={handleInputChange}
+                  onSelect={handleAddressSelect}
                   placeholder='e.g., 76/12 Bà Hom, Phường 13, Quận 6'
                 />
               </div>

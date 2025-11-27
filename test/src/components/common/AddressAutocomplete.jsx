@@ -4,10 +4,11 @@ import { MapPin } from 'lucide-react';
 import { getAddressSuggestions } from '@/services/addresses.service';
 import LoadingSpinner from './LoadingSpinner';
 
-const AddressAutocomplete = ({ value, onChange, placeholder, name, id }) => {
+const AddressAutocomplete = ({ value, onChange, onSelect, placeholder, name, id }) => {
   const [suggestions, setSuggestions] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const skipSearchRef = useRef(false);
   const wrapperRef = useRef(null);
 
   // Close dropdown when clicking outside
@@ -24,6 +25,12 @@ const AddressAutocomplete = ({ value, onChange, placeholder, name, id }) => {
 
   // Debounce address search
   useEffect(() => {
+    // Skip search if we just selected a suggestion
+    if (skipSearchRef.current) {
+      skipSearchRef.current = false;
+      return;
+    }
+
     if (!value || value.length < 2) {
       setSuggestions([]);
       setIsOpen(false);
@@ -48,16 +55,25 @@ const AddressAutocomplete = ({ value, onChange, placeholder, name, id }) => {
   }, [value]);
 
   const handleSelectSuggestion = (suggestion) => {
-    // Backend returns { name, address, lat, lng }
-    onChange({
-      target: {
-        name,
-        value: suggestion.name || suggestion,
-      },
-    });
-    // Immediately clear suggestions and close dropdown
-    setSuggestions([]);
+    // Set flag to skip next search
+    skipSearchRef.current = true;
+    
+    // Close dropdown immediately
     setIsOpen(false);
+    setSuggestions([]);
+    
+    // If onSelect callback provided, use it (for lat/lng etc)
+    if (onSelect) {
+      onSelect(suggestion);
+    } else {
+      // Fallback to onChange
+      onChange({
+        target: {
+          name,
+          value: suggestion.name || suggestion,
+        },
+      });
+    }
   };
 
   return (
