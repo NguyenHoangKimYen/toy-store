@@ -17,9 +17,11 @@ const AddressSelector = ({ userId, selectedAddressId, onSelectAddress }) => {
 
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [guestAddresses, setGuestAddresses] = useState([]);
+  const [showAllAddresses, setShowAllAddresses] = useState(false);
   
   // Combine real addresses with guest addresses
   const allAddresses = userId ? addresses : [...addresses, ...guestAddresses];
+  const displayedAddresses = showAllAddresses ? allAddresses : allAddresses.slice(0, 3);
 
   // Auto-select default address if no address is selected
   useEffect(() => {
@@ -103,7 +105,7 @@ const AddressSelector = ({ userId, selectedAddressId, onSelectAddress }) => {
         </Card>
       ) : (
         <div className='space-y-2 sm:space-y-3'>
-          {allAddresses.map((address) => (
+            {displayedAddresses.map((address) => (
             <Card
               key={address._id}
               className={`p-3 sm:p-4 cursor-pointer transition-all min-h-[44px] ${
@@ -152,6 +154,17 @@ const AddressSelector = ({ userId, selectedAddressId, onSelectAddress }) => {
               </div>
             </Card>
           ))}
+          
+          {allAddresses.length > 3 && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowAllAddresses(!showAllAddresses)}
+              className="w-full mt-4"
+            >
+              {showAllAddresses ? 'Show Less' : `View All (${allAddresses.length} addresses)`}
+            </Button>
+          )}
         </div>
       )}
 
