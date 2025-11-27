@@ -457,8 +457,21 @@ module.exports = {
     },
 
     // Lấy toàn bộ đơn của user
-    getOrdersByUser(userId) {
-        return orderRepository.findByUser(userId);
+    async getOrdersByUser(userId) {
+        const orders = await orderRepository.findByUser(userId);
+        
+        // Populate items for each order
+        const ordersWithItems = await Promise.all(
+            orders.map(async (order) => {
+                const items = await itemRepo.findByOrder(order._id);
+                return {
+                    ...order,
+                    items
+                };
+            })
+        );
+        
+        return ordersWithItems;
     },
 
     // Admin: lấy tất cả

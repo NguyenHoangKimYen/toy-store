@@ -27,7 +27,12 @@ module.exports = {
   },
 
   findByUser(userId) {
-    return Order.find({ userId }).sort({ createdAt: -1 }).lean();
+    return Order.find({ userId })
+      .populate('addressId', 'fullNameOfReceiver phone addressLine city postalCode')
+      .populate('discountCodeId', 'code value')
+      .populate('voucherId', 'code value type')
+      .sort({ createdAt: -1 })
+      .lean();
   },
 
     findAll(filter = {}, options = {}) {
