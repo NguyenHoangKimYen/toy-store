@@ -165,7 +165,8 @@ const ProductDetail = () => {
           {/* Image Gallery */}
           <div className="lg:sticky lg:top-20 lg:max-h-[calc(100vh-100px)] overflow-hidden">
             <ProductImageGallery 
-              images={selectedVariant?.imageUrls || product.imageUrls || []} 
+              images={product.imageUrls || []}
+              variantImages={selectedVariant?.imageUrls || []}
               productName={product.name} 
             />
           </div>

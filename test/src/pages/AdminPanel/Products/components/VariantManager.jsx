@@ -116,6 +116,7 @@ const VariantManager = ({ productId, variants: initialVariants = [], onUpdate })
         sku: `PROD-${skuSuffix}`,
         price: '',
         stockQuantity: 0,
+        imageUrls: [],
       };
     });
     
@@ -479,6 +480,25 @@ const VariantManager = ({ productId, variants: initialVariants = [], onUpdate })
                               className='h-9'
                             />
                           </div>
+                        </div>
+                        
+                        {/* Variant Image URL */}
+                        <div className='mt-3'>
+                          <label className='text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block'>
+                            🖼️ Variant Image URL (optional)
+                          </label>
+                          <Input
+                            value={variant.imageUrls?.[0] || ''}
+                            onChange={(e) => {
+                              const newImageUrls = e.target.value ? [e.target.value] : [];
+                              updateGeneratedVariant(index, 'imageUrls', newImageUrls);
+                            }}
+                            placeholder='https://example.com/variant-image.jpg'
+                            className='h-9'
+                          />
+                          <p className='text-xs text-gray-500 mt-1'>
+                            Add a specific image for this variant. If empty, product's general images will be shown.
+                          </p>
                         </div>
                       </div>
                     ))}
