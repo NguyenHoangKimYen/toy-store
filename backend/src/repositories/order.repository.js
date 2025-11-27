@@ -33,6 +33,7 @@ module.exports = {
     findAll(filter = {}, options = {}) {
         const { page = 1, limit = 20 } = options;
         return Order.find(filter)
+            .populate('userId', 'fullName email username phone')
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(limit)
