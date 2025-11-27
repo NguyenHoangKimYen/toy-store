@@ -19,6 +19,7 @@ const Payment = () => {
   const [error, setError] = useState(null);
   const [qrCode, setQrCode] = useState(null);
   const [confirming, setConfirming] = useState(false);
+  const [paymentResponse, setPaymentResponse] = useState(null);
 
   // Check for payment callback (MoMo, ZaloPay return)
   const resultCode = searchParams.get('resultCode'); // MoMo uses resultCode
@@ -49,11 +50,12 @@ const Payment = () => {
       
       if (status === '1' && apptransid) {
         try {
-          await zaloPayReturn({ 
+          const response = await zaloPayReturn({ 
             status, 
             apptransid,
             amount: searchParams.get('amount')
           });
+          setPaymentResponse(response);
           // Refresh order details after confirming payment
           if (orderId) {
             await fetchOrderById(orderId);
@@ -181,30 +183,65 @@ const Payment = () => {
     // ZaloPay: status === '1' means success
     const isSuccess = resultCode === '0' || paymentStatus === '1';
     
+    // Extract backend message
+    const backendMessage = paymentResponse?.message || searchParams.get('message');
+    const transactionId = searchParams.get('transId') || searchParams.get('apptransid');
+    
     return (
       <div className="payment-result">
         <div className={`payment-result-card ${isSuccess ? 'success' : 'failed'}`}>
           {isSuccess ? (
             <>
               <CheckCircle size={64} className="result-icon success" />
-              <h1>Payment Successful!</h1>
-              <p>Your payment has been processed successfully.</p>
+              <h1>Thanh toán thành công!</h1>
+              <p>{backendMessage || 'Giao dịch của bạn đã được xử lý thành công.'}</p>
+              
+              {transactionId && (
+                <div className="order-summary">
+                  <div className="summary-row">
+                    <span>Mã giao dịch</span>
+                    <span className="detail-value">{transactionId}</span>
+                  </div>
+                  {currentOrder && (
+                    <>
+                      <div className="summary-row">
+                        <span>Mã đơn hàng</span>
+                        <span className="detail-value">#{currentOrder._id || currentOrder.id || orderId}</span>
+                      </div>
+                      <div className="summary-row">
+                        <span>Số tiền</span>
+                        <span className="amount">{formatPrice(currentOrder.totalAmount)}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+              
+              <div className="result-actions">
+                <Button onClick={() => navigate(ROUTES.ORDER_HISTORY)}>
+                  Xem đơn hàng
+                </Button>
+                <Button variant="outline" onClick={() => navigate(ROUTES.HOME)}>
+                  Tiếp tục mua sắm
+                </Button>
+              </div>
             </>
           ) : (
             <>
               <XCircle size={64} className="result-icon failed" />
-              <h1>Payment Failed</h1>
-              <p>We couldn't process your payment. Please try again.</p>
+              <h1>Thanh toán thất bại</h1>
+              <p>{backendMessage || 'Không thể xử lý giao dịch của bạn. Vui lòng thử lại.'}</p>
+              
+              <div className="result-actions">
+                <Button variant="outline" onClick={() => loadPaymentInfo()}>
+                  Thử lại
+                </Button>
+                <Button onClick={() => navigate(`/orders/${orderId}`)}>
+                  Xem đơn hàng
+                </Button>
+              </div>
             </>
           )}
-          
-          <div className="result-actions">
-            {!isSuccess && (
-              <Button variant="outline" onClick={() => loadPaymentInfo()}>
-                Try Again
-              </Button>
-            )}
-          </div>
         </div>
       </div>
     );
@@ -257,15 +294,31 @@ const Payment = () => {
   if (paymentMethod === 'cod' || paymentMethod === 'cashondelivery') {
     return (
       <div className="payment-result">
-        <div className="payment-result-card info">
-          <Clock size={64} className="result-icon info" />
-          <h1>Cash on Delivery</h1>
-          <p>You will pay when you receive the order.</p>
+        <div className="payment-result-card success">
+          <CheckCircle size={64} className="result-icon success" />
+          <h1>Đặt hàng thành công!</h1>
+          <p>Bạn sẽ thanh toán khi nhận hàng.</p>
           <div className="order-summary">
             <div className="summary-row">
-              <span>Total Amount</span>
+              <span>Mã đơn hàng</span>
+              <span className="detail-value">#{currentOrder._id || currentOrder.id || orderId}</span>
+            </div>
+            <div className="summary-row">
+              <span>Phương thức thanh toán</span>
+              <span className="detail-value">Thanh toán khi nhận hàng</span>
+            </div>
+            <div className="summary-row">
+              <span>Tổng tiền</span>
               <span className="amount">{formatPrice(currentOrder.totalAmount)}</span>
             </div>
+          </div>
+          <div className="result-actions">
+            <Button onClick={() => navigate(ROUTES.ORDER_HISTORY)}>
+              Xem đơn hàng
+            </Button>
+            <Button variant="outline" onClick={() => navigate(ROUTES.HOME)}>
+              Tiếp tục mua sắm
+            </Button>
           </div>
         </div>
       </div>

@@ -20,6 +20,9 @@ const AddressSection = ({ user }) => {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [formMode, setFormMode] = useState('create');
+  const [showAllAddresses, setShowAllAddresses] = useState(false);
+
+  const displayedAddresses = showAllAddresses ? addresses : addresses.slice(0, 3);
 
   const handleAddAddress = () => {
     setSelectedAddress(null);
@@ -111,69 +114,88 @@ const AddressSection = ({ user }) => {
             </Button>
           </Card>
         ) : (
-          addresses.map((address) => (
-            <Card key={address._id} className='p-4 sm:p-5'>
-              <div className='flex flex-col sm:flex-row sm:justify-between items-start gap-3 sm:gap-4'>
-                {/* Address Content */}
-                <div className='flex-1 w-full sm:w-auto'>
-                  <div className='flex items-center flex-wrap gap-2 mb-2'>
-                    <h4 className='font-semibold text-base sm:text-lg text-gray-900 dark:text-white'>
-                      {address.fullNameOfReceiver}
-                    </h4>
-                    {address.isDefault && (
-                      <span className='inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full dark:bg-green-900 dark:text-green-200'>
-                        <CheckCircle className='w-3 h-3' />
-                        Default
-                      </span>
+          <>
+            {displayedAddresses.map((address) => (
+              <Card key={address._id} className='p-4 sm:p-5'>
+                <div className='flex flex-col sm:flex-row sm:justify-between items-start gap-3 sm:gap-4'>
+                  {/* Address Content */}
+                  <div className='flex-1 w-full sm:w-auto'>
+                    <div className='flex items-center flex-wrap gap-2 mb-2'>
+                      <h4 className='font-semibold text-base sm:text-lg text-gray-900 dark:text-white'>
+                        {address.fullNameOfReceiver}
+                      </h4>
+                      {address.isDefault && (
+                        <span className='inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full dark:bg-green-900 dark:text-green-200'>
+                          <CheckCircle className='w-3 h-3' />
+                          Default
+                        </span>
+                      )}
+                    </div>
+                    <p className='text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-1'>
+                      {address.phone}
+                    </p>
+                    <p className='text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed'>
+                      {address.addressLine}
+                    </p>
+                    {address.city && (
+                      <p className='text-sm text-gray-600 dark:text-gray-400 mt-1'>
+                        {address.city}{address.postalCode && `, ${address.postalCode}`}
+                      </p>
                     )}
                   </div>
-                  <p className='text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-1'>
-                    {address.phone}
-                  </p>
-                  <p className='text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed'>
-                    {address.addressLine}
-                  </p>
-                  {address.city && (
-                    <p className='text-sm text-gray-600 dark:text-gray-400 mt-1'>
-                      {address.city}{address.postalCode && `, ${address.postalCode}`}
-                    </p>
-                  )}
-                </div>
 
-                {/* Actions */}
-                <div className='flex sm:flex-col gap-2 w-full sm:w-auto flex-wrap sm:flex-nowrap'>
-                  {!address.isDefault && (
+                  {/* Actions */}
+                  <div className='flex sm:flex-col gap-2 w-full sm:w-auto flex-wrap sm:flex-nowrap'>
+                    {!address.isDefault && (
+                      <Button
+                        onClick={() => handleSetDefault(address._id)}
+                        variant='outline'
+                        size='sm'
+                        className='text-xs flex-1 sm:flex-none min-h-[44px] sm:min-h-[36px] whitespace-nowrap'
+                      >
+                        Set as Default
+                      </Button>
+                    )}
                     <Button
-                      onClick={() => handleSetDefault(address._id)}
-                      variant='outline'
+                      onClick={() => handleEditAddress(address)}
+                      variant='ghost'
                       size='sm'
-                      className='text-xs flex-1 sm:flex-none min-h-[44px] sm:min-h-[36px] whitespace-nowrap'
+                      className='text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex-1 sm:flex-none min-h-[44px] sm:min-h-[36px]'
                     >
-                      Set as Default
+                      <Edit className='w-4 h-4 mr-1' />
+                      Edit
                     </Button>
-                  )}
-                  <Button
-                    onClick={() => handleEditAddress(address)}
-                    variant='ghost'
-                    size='sm'
-                    className='text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex-1 sm:flex-none min-h-[44px] sm:min-h-[36px]'
-                  >
-                    <Edit className='w-4 h-4 mr-1' />
-                    Edit
-                  </Button>
-                  <Button
-                    onClick={() => handleDeleteAddress(address._id)}
-                    variant='ghost'
-                    size='sm'
-                    className='text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 flex-1 sm:flex-none min-h-[44px] sm:min-h-[36px]'
-                  >
-                    <Trash2 className='w-4 h-4 mr-1' />
-                    Delete
-                  </Button>
+                    <Button
+                      onClick={() => handleDeleteAddress(address._id)}
+                      variant='ghost'
+                      size='sm'
+                      className='text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 flex-1 sm:flex-none min-h-[44px] sm:min-h-[36px]'
+                    >
+                      <Trash2 className='w-4 h-4 mr-1' />
+                      Delete
+                    </Button>
+                  </div>
                 </div>
+              </Card>
+            ))}
+
+            {/* View All Button */}
+            {addresses.length > 3 && (
+              <div className='flex justify-center pt-2'>
+                <Button
+                  onClick={() => setShowAllAddresses(!showAllAddresses)}
+                  variant='outline'
+                  className='min-h-[44px]'
+                >
+                  {showAllAddresses ? (
+                    <>Show Less</>
+                  ) : (
+                    <>View All ({addresses.length} addresses)</>
+                  )}
+                </Button>
               </div>
-            </Card>
-          ))
+            )}
+          </>
         )}
       </div>
 
