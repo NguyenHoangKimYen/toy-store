@@ -5,7 +5,7 @@ import ProductStats from './components/ProductStats'
 import ProductDetailModal from './components/ProductDetailModal'
 import ProductFormModal from './components/ProductFormModal'
 import ProductFilters from './components/ProductFilters'
-import AdminLayout from '../layouts/AdminLayout'
+import { AdminContent } from '../components'
 import { useProducts } from '@/hooks' // Using global hook
 import { PageHeader, SearchBar } from '@/components/common'
 import { getCategories } from '@/services/categories.service'
@@ -175,7 +175,7 @@ const Products = () => {
 
   return (
     <>
-      <AdminLayout
+      <AdminContent
         header={
           <PageHeader
             title='Product Management'
@@ -224,7 +224,7 @@ const Products = () => {
           }}
           onDelete={handleDeleteProduct}
         />
-      </AdminLayout>
+      </AdminContent>
 
       {/* Product Detail Modal */}
       {isDetailModalOpen && selectedProduct && (

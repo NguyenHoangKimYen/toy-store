@@ -26,7 +26,7 @@ const OrderDetail = lazy(() => import('../pages/OrderHistory/OrderDetail'));
 const Payment = lazy(() => import('../pages/Payment'));
 const Profile = lazy(() => import('../pages/Profile'));
 const AdminPanel = lazy(() => import('../pages/AdminPanel'));
-const Dashboard = lazy(() => import('../pages/AdminPanel/layouts/Main'));
+const Dashboard = lazy(() => import('../pages/AdminPanel/Dashboard'));
 const Users = lazy(() => import('../pages/AdminPanel/Users'));
 const AdminProducts = lazy(() => import('../pages/AdminPanel/Products'));
 const AdminOrders = lazy(() => import('../pages/AdminPanel/Orders'));

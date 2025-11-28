@@ -15,6 +15,8 @@ const Orders = () => {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [deliveryTypeFilter, setDeliveryTypeFilter] = useState('all')
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState('all')
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
@@ -80,19 +82,21 @@ const Orders = () => {
       order.userId?.fullName?.toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter
+    const matchesDeliveryType = deliveryTypeFilter === 'all' || order.deliveryType === deliveryTypeFilter
+    const matchesPaymentMethod = paymentMethodFilter === 'all' || order.paymentMethod === paymentMethodFilter
 
-    return matchesSearch && matchesStatus
+    return matchesSearch && matchesStatus && matchesDeliveryType && matchesPaymentMethod
   })
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Package className="w-8 h-8" />
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold flex items-center gap-2">
+            <Package className="w-6 h-6 sm:w-8 sm:h-8" />
             Orders Management
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Manage and track all customer orders
           </p>
         </div>
@@ -100,25 +104,25 @@ const Orders = () => {
 
       <Card>
         <CardHeader>
-          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-            <div className="flex-1 w-full md:w-auto">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between">
+            <div className="flex-1 w-full">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
+                <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
                 <Input
-                  placeholder="Search by order ID, customer name, or email..."
+                  placeholder="Search by order ID, customer, or email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-8 sm:pl-10 text-sm"
                 />
               </div>
             </div>
             <Button
               variant="outline"
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2"
+              className="flex items-center justify-center gap-2 text-sm"
             >
               <Filter size={16} />
-              Filters
+              <span className="hidden sm:inline">Filters</span>
             </Button>
           </div>
         </CardHeader>
@@ -127,6 +131,10 @@ const Orders = () => {
           <OrderFilters
             statusFilter={statusFilter}
             setStatusFilter={setStatusFilter}
+            deliveryTypeFilter={deliveryTypeFilter}
+            setDeliveryTypeFilter={setDeliveryTypeFilter}
+            paymentMethodFilter={paymentMethodFilter}
+            setPaymentMethodFilter={setPaymentMethodFilter}
           />
         )}
 
@@ -139,34 +147,50 @@ const Orders = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredOrders.map((order) => (
+              {filteredOrders.map((order) => {
+                const addressData = typeof order.addressId === 'object' ? order.addressId : null;
+                return (
                 <Card key={order._id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="space-y-2 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-sm font-semibold">
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
+                      <div className="space-y-2 flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-mono text-xs sm:text-sm font-semibold">
                             #{order._id.slice(-8)}
                           </span>
                           {getStatusBadge(order.status)}
+                          {/* Delivery Type Badge */}
+                          <Badge variant="outline" className="flex items-center gap-1">
+                            <Truck size={12} />
+                            {order.deliveryType === 'express' ? 'Express' : 'Standard'}
+                          </Badge>
+                          {/* Payment Method Badge */}
+                          {order.paymentMethod && (
+                            <Badge variant="outline" className="flex items-center gap-1 capitalize">
+                              {order.paymentMethod === 'cashondelivery' ? 'COD' : order.paymentMethod}
+                            </Badge>
+                          )}
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          <p>Customer: {order.userId?.fullName || 'Guest'}</p>
-                          <p>Email: {order.userId?.email || 'N/A'}</p>
-                          <p>Date: {new Date(order.createdAt).toLocaleDateString()}</p>
+                        <div className="text-xs sm:text-sm text-muted-foreground space-y-1">
+                          <p className="truncate"><strong>Customer:</strong> {order.userId?.fullName || 'Guest'}</p>
+                          <p className="truncate"><strong>Email:</strong> {order.userId?.email || 'N/A'}</p>
+                          {addressData && (
+                            <p className="truncate"><strong>Address:</strong> {addressData.addressLine || 'N/A'}</p>
+                          )}
+                          <p><strong>Date:</strong> {new Date(order.createdAt).toLocaleDateString()}</p>
                         </div>
                       </div>
 
-                      <div className="flex flex-col items-end gap-2">
+                      <div className="flex flex-col items-end gap-2 flex-shrink-0">
                         <div className="text-right">
-                          <p className="text-xl font-bold">
+                          <p className="text-lg sm:text-xl font-bold">
                             {formatPrice(order.totalAmount?.$numberDecimal || order.totalAmount || 0)}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {order.deliveryType === 'express' ? 'Express' : 'Standard'} Delivery
+                            Shipping: {formatPrice(order.shippingFee?.$numberDecimal || order.shippingFee || 0)}
                           </p>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <Button
                             variant="outline"
                             size="sm"
@@ -174,14 +198,16 @@ const Orders = () => {
                               setSelectedOrder(order)
                               setShowDetailModal(true)
                             }}
+                            className="text-xs sm:text-sm"
                           >
-                            <Eye size={16} className="mr-1" />
-                            View
+                            <Eye size={14} className="mr-1" />
+                            <span className="hidden sm:inline">View</span>
                           </Button>
                           {order.status === 'pending' && (
                             <Button
                               size="sm"
                               onClick={() => handleStatusUpdate(order._id, 'confirmed')}
+                              className="text-xs sm:text-sm"
                             >
                               Confirm
                             </Button>
@@ -190,6 +216,7 @@ const Orders = () => {
                             <Button
                               size="sm"
                               onClick={() => handleStatusUpdate(order._id, 'shipping')}
+                              className="text-xs sm:text-sm"
                             >
                               Ship
                             </Button>
@@ -198,6 +225,7 @@ const Orders = () => {
                             <Button
                               size="sm"
                               onClick={() => handleStatusUpdate(order._id, 'delivered')}
+                              className="text-xs sm:text-sm"
                             >
                               Deliver
                             </Button>
@@ -207,7 +235,8 @@ const Orders = () => {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+              )
+            })}
             </div>
           )}
         </CardContent>

@@ -5,7 +5,7 @@ import UserStats from './components/UserStats'
 import UserDetailModal from './components/UserDetailModal'
 import UserFormModal from './components/UserFormModal'
 import UserFilters from './components/UserFilters'
-import AdminLayout from '../layouts/AdminLayout'
+import { AdminContent } from '../components'
 import { useUsers } from '@/hooks' // Using global hook
 import { PageHeader, SearchBar, ConfirmDialog } from '@/components/common'
 
@@ -140,7 +140,7 @@ const Users = () => {
 
   return (
     <>
-      <AdminLayout
+      <AdminContent
         header={
           <PageHeader
             title='User Management'
@@ -148,7 +148,7 @@ const Users = () => {
             actionButton={
               <button 
                 onClick={handleAddUser}
-                className='flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
+                className='w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
               >
                 <UserPlus className='w-4 h-4' />
                 Add User
@@ -183,7 +183,7 @@ const Users = () => {
           onEdit={handleEditUser}
           onDelete={handleDeleteUser}
         />
-      </AdminLayout>
+      </AdminContent>
 
       {/* User Detail Modal */}
       {isDetailModalOpen && selectedUser && (

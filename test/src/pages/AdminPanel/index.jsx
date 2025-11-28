@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import Sidebar from './layouts/Sidebar'
+import { AdminSidebar } from './components'
 import { Menu } from 'lucide-react'
 import './AdminPanel.css'
 
@@ -19,7 +19,7 @@ const AdminPanel = () => {
 
       {/* Sidebar */}
       <div className={`admin-panel-sidebar ${sidebarOpen ? 'open' : ''}`}>
-        <Sidebar onNavigate={() => setSidebarOpen(false)} />
+        <AdminSidebar onNavigate={() => setSidebarOpen(false)} />
       </div>
 
       {/* Main Content */}

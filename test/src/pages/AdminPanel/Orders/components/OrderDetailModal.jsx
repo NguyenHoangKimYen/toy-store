@@ -106,28 +106,26 @@ const OrderDetailModal = ({ order, onClose, onStatusUpdate }) => {
           </div>
 
           {/* Delivery Address */}
-          {orderData.addressId && (
-            <div className="border rounded-lg p-4 space-y-2">
-              <h3 className="font-semibold mb-2 flex items-center gap-2">
-                <MapPin size={18} />
-                Delivery Address
-              </h3>
-              <div className="text-sm space-y-1">
-                {typeof orderData.addressId === 'object' ? (
-                  <>
-                    <p><strong>Recipient:</strong> {orderData.addressId.fullNameOfReceiver || 'N/A'}</p>
-                    <p><strong>Phone:</strong> {orderData.addressId.phone || 'N/A'}</p>
-                    <p><strong>Address:</strong> {orderData.addressId.addressLine || 'N/A'}</p>
-                    {orderData.addressId.lat && orderData.addressId.lng && (
-                      <p><strong>Coordinates:</strong> {orderData.addressId.lat}, {orderData.addressId.lng}</p>
-                    )}
-                  </>
-                ) : (
-                  <p>Address details not available</p>
-                )}
-              </div>
+          <div className="border rounded-lg p-4 space-y-2">
+            <h3 className="font-semibold mb-2 flex items-center gap-2">
+              <MapPin size={18} />
+              Delivery Address
+            </h3>
+            <div className="text-sm space-y-1">
+              {orderData.addressId && typeof orderData.addressId === 'object' ? (
+                <>
+                  <p><strong>Recipient:</strong> {orderData.addressId.fullNameOfReceiver || 'N/A'}</p>
+                  <p><strong>Phone:</strong> {orderData.addressId.phone || 'N/A'}</p>
+                  <p><strong>Address:</strong> {orderData.addressId.addressLine || 'N/A'}</p>
+                  {orderData.addressId.lat && orderData.addressId.lng && (
+                    <p><strong>Coordinates:</strong> {orderData.addressId.lat}, {orderData.addressId.lng}</p>
+                  )}
+                </>
+              ) : (
+                <p className="text-muted-foreground italic">Address details not available (ID: {orderData.addressId || 'N/A'})</p>
+              )}
             </div>
-          )}
+          </div>
 
           {/* Order Items */}
           <div className="border rounded-lg p-4">
@@ -164,14 +162,29 @@ const OrderDetailModal = ({ order, onClose, onStatusUpdate }) => {
             </h3>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
-                <span>Delivery Type:</span>
-                <span className="font-medium">{orderData.deliveryType === 'express' ? 'Express' : 'Standard'}</span>
+                <span>Shipping Method:</span>
+                <span className="font-medium">
+                  {orderData.deliveryType === 'express' ? 'Express Delivery' : 'Standard Delivery'}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Shipping Fee:</span>
                 <span className="font-medium">
                   {formatPrice(orderData.shippingFee?.$numberDecimal || orderData.shippingFee || 0)}
                 </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Payment Method:</span>
+                <span className="font-medium capitalize">
+                  {orderData.paymentMethod === 'cashondelivery' ? 'Cash on Delivery' : 
+                   orderData.paymentMethod || 'N/A'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Payment Status:</span>
+                <Badge variant={orderData.paymentStatus === 'paid' ? 'default' : 'secondary'} className="capitalize">
+                  {orderData.paymentStatus || 'unpaid'}
+                </Badge>
               </div>
               {orderData.discountAmount && parseFloat(orderData.discountAmount?.$numberDecimal || orderData.discountAmount || 0) > 0 && (
                 <div className="flex justify-between text-green-600">
