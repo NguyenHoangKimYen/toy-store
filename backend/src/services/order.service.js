@@ -416,6 +416,9 @@ module.exports = {
 
         // Address để tính ship + weather
         const address = await addressRepo.findById(order.addressId);
+        if (!address) {
+            return null;
+        }
 
         // Weather
         const weather = await getWeatherCondition(address.lat, address.lng);
@@ -446,9 +449,10 @@ module.exports = {
         // Payment
         const payment = await paymentRepo.findByOrderId(orderId);
 
-        // Trả về order detail đầy đủ
+        // Trả về order detail đầy đủ với address object thay vì addressId
         return {
             ...order,
+            addressId: address, // Replace addressId with full address object for frontend compatibility
             items,
             history,
             shipping,
@@ -457,8 +461,21 @@ module.exports = {
     },
 
     // Lấy toàn bộ đơn của user
-    getOrdersByUser(userId) {
-        return orderRepository.findByUser(userId);
+    async getOrdersByUser(userId) {
+        const orders = await orderRepository.findByUser(userId);
+        
+        // Populate items for each order
+        const ordersWithItems = await Promise.all(
+            orders.map(async (order) => {
+                const items = await itemRepo.findByOrder(order._id);
+                return {
+                    ...order,
+                    items
+                };
+            })
+        );
+        
+        return ordersWithItems;
     },
 
     // Admin: lấy tất cả
