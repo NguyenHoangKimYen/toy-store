@@ -1,4 +1,4 @@
-const CollectVoucher = require("../models/collect-voucher.model");
+const CollectVoucher = require('../models/collect-voucher.model');
 
 module.exports = {
     create(data) {
@@ -6,7 +6,7 @@ module.exports = {
     },
 
     findByUser(userId) {
-        return CollectVoucher.find({ userId }).populate("voucherId");
+        return CollectVoucher.find({ userId }).populate('voucherId');
     },
 
     findByUserAndVoucher(userId, voucherId) {
@@ -15,5 +15,5 @@ module.exports = {
 
     markUsed(id) {
         return CollectVoucher.findByIdAndUpdate(id, { used: true });
-    }
+    },
 };

@@ -1,6 +1,6 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-require("./category.model.js");
+require('./category.model.js');
 
 const ProductSchema = new mongoose.Schema(
     {
@@ -21,10 +21,10 @@ const ProductSchema = new mongoose.Schema(
         categoryId: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "Category",
+                ref: 'Category',
                 required: true,
                 index: true,
-            }
+            },
         ],
 
         description: {
@@ -42,11 +42,11 @@ const ProductSchema = new mongoose.Schema(
         minPrice: { type: Number, default: 0 },
         maxPrice: { type: Number, default: 0 },
 
-        totalStock: { 
-            type: Number, 
+        totalStock: {
+            type: Number,
             default: 0,
             min: 0,
-            index: true
+            index: true,
         },
 
         imageUrls: [
@@ -66,14 +66,14 @@ const ProductSchema = new mongoose.Schema(
         variants: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "Variant",
+                ref: 'Variant',
             },
         ],
 
         status: {
             type: String,
-            enum: ["Draft", "Published", "Archived", "Disabled"],
-            default: "Draft",
+            enum: ['Draft', 'Published', 'Archived', 'Disabled'],
+            default: 'Draft',
             index: true,
         },
 
@@ -87,13 +87,13 @@ const ProductSchema = new mongoose.Schema(
             type: Number,
             default: 0,
             min: 0,
-            index: true
+            index: true,
         },
     },
     {
         timestamps: true,
-        collection: "products",
-    }
+        collection: 'products',
+    },
 );
 
-module.exports = mongoose.model("Product", ProductSchema);
+module.exports = mongoose.model('Product', ProductSchema);

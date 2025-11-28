@@ -1,8 +1,8 @@
-const CartRepository = require("../repositories/cart.repository");
-const CartItemRepository = require("../repositories/cart-item.repository"); 
-const Cart = require("../models/cart.model");
-const CartItem = require("../models/cart-item.model");
-const Variant = require("../models/variant.model");
+const CartRepository = require('../repositories/cart.repository');
+const CartItemRepository = require('../repositories/cart-item.repository');
+const Cart = require('../models/cart.model');
+const CartItem = require('../models/cart-item.model');
+const Variant = require('../models/variant.model');
 
 // ==========================================
 // INTERNAL HELPER FUNCTIONS
@@ -13,58 +13,75 @@ const Variant = require("../models/variant.model");
  * Giúp đồng bộ dữ liệu chính xác tuyệt đối, tránh lỗi cộng dồn sai.
  */
 const _recalculateCartTotals = async (cartId) => {
-    // 1. Lấy tất cả item thực tế đang có trong DB
     const items = await CartItem.find({ cartId });
-    
     let totalPrice = 0;
-    
-    // 2. Tính tổng tiền
-    items.forEach(item => {
+    let totalItems = 0;
+
+    items.forEach((item) => {
         const price = parseFloat(item.price.toString());
-        totalPrice += (price * item.quantity);
+        totalPrice += price * item.quantity;
+        totalItems += item.quantity;
     });
 
-    // 3. [SỬA TẠI ĐÂY] Cập nhật mảng items luôn (Sync)
-    // Lấy danh sách _id từ kết quả tìm được gán thẳng vào mảng items
-    // Điều này giúp loại bỏ ID rác hoặc ID trùng lặp
-    await CartRepository.update(cartId, { 
-        items: items.map(item => item._id), // <--- Dòng này sửa lỗi trùng lặp của bạn
+    // Cập nhật lại Cart cha (Sync ID và tổng tiền)
+    await CartRepository.update(cartId, {
+        items: items.map((item) => item._id), // Lưu ID để tham chiếu
         totalPrice,
-        totalItems: items.length 
+        totalItems,
     });
 };
+
 // ==========================================
 // MAIN SERVICE FUNCTIONS
 // ==========================================
 
+// src/services/cart.service.js
+
 const getCartByUserOrSession = async ({ userId, sessionId }) => {
-    let cart = null;
-    if (userId) {
-        cart = await CartRepository.findCartByUserId(userId);
-    } else if (sessionId) {
-        cart = await CartRepository.findCartBySessionId(sessionId);
-    }
+    let cartDoc = null;
     
-    // Nếu tìm thấy cart, populate full items để trả về FE
-    if (cart) {
-        return await Cart.findById(cart._id).populate({
-            path: 'items',
-            populate: { path: 'variantId productId' } // Populate sâu lấy info SP
-        });
+    // 1. Tìm Cart
+    if (userId) {
+        cartDoc = await CartRepository.findCartByUserId(userId);
+    } else if (sessionId) {
+        cartDoc = await CartRepository.findCartBySessionId(sessionId);
     }
-    return null;
+
+    if (!cartDoc) return null;
+
+    // 2. Chuyển sang Object để xử lý
+    const cart = cartDoc.toObject();
+
+    // 3. [FIX] POPULATE MẠNH MẼ HƠN
+    // Ta sẽ populate cả 2 đường:
+    // - Đường 1: productId trực tiếp (để dự phòng)
+    // - Đường 2: variantId -> rồi lồng vào productId bên trong variant
+    
+    const fullItems = await CartItem.find({ cartId: cart._id })
+        .populate({
+            path: 'variantId',   // Populate trường variantId
+            model: 'Variant',    // Chỉ định rõ Model là 'Variant'
+            populate: {
+                path: 'productId', // Tiếp tục populate productId bên trong Variant
+                model: 'Product',  // Chỉ định rõ Model
+                select: 'name imageUrls slug'
+            }
+        });
+
+    // 4. Gán items đã populate vào cart
+    cart.items = fullItems;
+
+    return cart;
 };
 
 const createCart = async ({ userId, sessionId }) => {
-    // Kiểm tra xem đã có cart chưa
     const existing = await getCartByUserOrSession({ userId, sessionId });
     if (existing) return existing;
 
     const newCartData = { items: [], totalPrice: 0, totalItems: 0 };
-    
     if (userId) newCartData.userId = userId;
     else if (sessionId) newCartData.sessionId = sessionId;
-    else throw new Error("Either userId or sessionId must be provided");
+    else throw new Error('Either userId or sessionId must be provided');
 
     return await CartRepository.create(newCartData);
 };
@@ -74,90 +91,56 @@ const createCart = async ({ userId, sessionId }) => {
  */
 const addItem = async (cartId, itemData) => {
     const { variantId, quantity } = itemData;
-
-    // ... (Phần validate variant và stock giữ nguyên) ...
-    const variant = await Variant.findById(variantId).populate("productId");
-    if (!variant) throw new Error("Variant not found");
+    const variant = await Variant.findById(variantId).populate('productId');
+    if (!variant) throw new Error('Variant not found');
     const unitPrice = Number(variant.price);
 
     let cartItem = await CartItem.findOne({ cartId, variantId });
 
     if (cartItem) {
-        // ... (Phần cộng dồn số lượng giữ nguyên) ...
         const newQuantity = cartItem.quantity + quantity;
-        if (newQuantity > variant.stockQuantity) {
-            throw new Error(`Not enough stock...`);
-        }
+        if (newQuantity > variant.stockQuantity) throw new Error(`Not enough stock.`);
         cartItem.quantity = newQuantity;
         cartItem.price = unitPrice;
         await cartItem.save();
     } else {
-        // ... (Phần tạo mới) ...
-        if (quantity > variant.stockQuantity) {
-            throw new Error(`Not enough stock...`);
-        }
-
-        cartItem = await CartItem.create({
+        if (quantity > variant.stockQuantity) throw new Error(`Not enough stock.`);
+        await CartItem.create({
             cartId,
             productId: variant.productId._id,
             variantId,
             quantity,
             price: unitPrice,
         });
-        
-        // [XÓA DÒNG NÀY] Không cần push thủ công nữa
-        // await CartRepository.update(cartId, { $push: { items: cartItem._id } }); 
     }
 
-    // 3. Tính lại tổng tiền & Đồng bộ danh sách Items
-    await _recalculateCartTotals(cartId); // <--- Hàm này sẽ tự nhét ID mới vào mảng
-
-    // 4. Trả về kết quả
-    return await Cart.findById(cartId).populate({
-        path: 'items',
-        populate: { path: 'variantId productId' }
-    });
+    await _recalculateCartTotals(cartId);
+    // Gọi lại hàm get đầy đủ thông tin để trả về
+    return await getCartByUserOrSession({ userId: null, sessionId: null }).then(() => Cart.findById(cartId));
 };
 
 /**
  * XÓA 1 ITEM KHỎI GIỎ
  */
 const removeItem = async (cartId, itemData) => {
-    // 1. Chỉ cần variantId là đủ để tìm ra item trong giỏ
-    const { variantId, quantity } = itemData; 
-
-    // Tìm item dựa trên variantId thay vì cartItemId
+    const { variantId, quantity } = itemData;
     const cartItem = await CartItem.findOne({ cartId, variantId });
+    if (!cartItem) throw new Error('Sản phẩm không có trong giỏ hàng');
 
-    if (!cartItem) {
-        throw new Error("Sản phẩm không có trong giỏ hàng");
-    }
-
-    // 2. Tính toán trừ số lượng
-    // Lấy giá hiện tại từ Variant để đảm bảo tính đúng giá
     const variant = await Variant.findById(variantId);
     const unitPrice = variant ? Number(variant.price) : cartItem.price;
-
     const newQuantity = cartItem.quantity - quantity;
 
     if (newQuantity > 0) {
-        // Nếu vẫn còn > 0 thì cập nhật
         cartItem.quantity = newQuantity;
         cartItem.price = unitPrice;
         await cartItem.save();
     } else {
-        // Nếu <= 0 thì xóa luôn dòng này
         await CartItem.findOneAndDelete({ _id: cartItem._id });
     }
 
-    // 3. Tính lại tổng tiền (Hàm này tự quét DB nên không cần client gửi price)
     await _recalculateCartTotals(cartId);
-
-    // 4. Trả về giỏ hàng mới
-    return await Cart.findById(cartId).populate({
-        path: 'items',
-        populate: { path: 'variantId productId' }
-    });
+    return await Cart.findById(cartId);
 };
 
 /**
@@ -166,26 +149,26 @@ const removeItem = async (cartId, itemData) => {
 const clearCart = async (cartId) => {
     // Xóa tất cả item con
     await CartItem.deleteMany({ cartId });
-    
+
     // Reset Cart cha
     return await Cart.findByIdAndUpdate(
         cartId,
         { items: [], totalPrice: 0, totalItems: 0 },
-        { new: true }
+        { new: true },
     );
 };
 
 const deleteCart = async (cartId) => {
-    await CartItem.deleteMany({ cartId }); 
+    await CartItem.deleteMany({ cartId });
     // [SỬA TẠI ĐÂY] Đổi .delete thành .remove
-    return await CartRepository.remove(cartId); 
+    return await CartRepository.remove(cartId);
 };
 
 const getAllCarts = async () => {
-        return await CartRepository.getAll();
-    };
+    return await CartRepository.getAll();
+};
 
-    /**
+/**
  * HỢP NHẤT GIỎ HÀNG (GUEST -> USER)
  */
 const mergeGuestCartIntoUserCart = async (userId, sessionId) => {
@@ -215,20 +198,24 @@ const mergeGuestCartIntoUserCart = async (userId, sessionId) => {
         if (!variant || variant.stockQuantity <= 0) continue;
 
         const existingUserItem = userCartItems.find(
-            (item) => item.variantId.toString() === guestItem.variantId.toString()
+            (item) =>
+                item.variantId.toString() === guestItem.variantId.toString(),
         );
 
         if (existingUserItem) {
             // Cộng dồn
             const newQuantity = existingUserItem.quantity + guestItem.quantity;
             const maxQuantity = Math.min(newQuantity, variant.stockQuantity);
-            
+
             existingUserItem.quantity = maxQuantity;
             existingUserItem.price = variant.price;
             await existingUserItem.save();
         } else {
             // Tạo mới sang giỏ User
-            const quantity = Math.min(guestItem.quantity, variant.stockQuantity);
+            const quantity = Math.min(
+                guestItem.quantity,
+                variant.stockQuantity,
+            );
             const newItem = await CartItem.create({
                 cartId: userCart._id,
                 productId: guestItem.productId,
@@ -236,9 +223,12 @@ const mergeGuestCartIntoUserCart = async (userId, sessionId) => {
                 quantity,
                 price: variant.price,
             });
-            
+
             // Push vào mảng items của User Cart
-            await Cart.updateOne({ _id: userCart._id }, { $push: { items: newItem._id } });
+            await Cart.updateOne(
+                { _id: userCart._id },
+                { $push: { items: newItem._id } },
+            );
         }
     }
 
@@ -251,7 +241,7 @@ const mergeGuestCartIntoUserCart = async (userId, sessionId) => {
 
     return await Cart.findById(userCart._id).populate({
         path: 'items',
-        populate: { path: 'variantId productId' }
+        populate: { path: 'variantId productId' },
     });
 };
 
@@ -263,5 +253,5 @@ module.exports = {
     clearCart,
     deleteCart,
     getAllCarts,
-    mergeGuestCartIntoUserCart
+    mergeGuestCartIntoUserCart,
 };

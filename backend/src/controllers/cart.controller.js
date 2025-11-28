@@ -1,5 +1,5 @@
-const CartService = require("../services/cart.service");
-const socket = require("../socket/index");
+const CartService = require('../services/cart.service');
+const socket = require('../socket/index');
 
 const getAllCarts = async (req, res) => {
     try {
@@ -16,7 +16,7 @@ const getCartByUser = async (req, res) => {
             userId: req.params.userId,
         });
         if (!cart)
-            return res.status(404).json({ message: "Không tìm thấy giỏ hàng" });
+            return res.status(404).json({ message: 'Không tìm thấy giỏ hàng' });
         res.status(200).json(cart);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -29,7 +29,7 @@ const getCartBySession = async (req, res) => {
             sessionId: req.params.sessionId,
         });
         if (!cart)
-            return res.status(404).json({ message: "Không tìm thấy giỏ hàng" });
+            return res.status(404).json({ message: 'Không tìm thấy giỏ hàng' });
         res.status(200).json(cart);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -55,22 +55,23 @@ const addItem = async (req, res, next) => {
 
         // 2. [SOCKET] Bắn tin cập nhật cho user
         // Ưu tiên lấy từ Token (req.user), nếu không có thì lấy từ Body (hỗ trợ test/guest)
-        const socketUserId = (req.user && req.user._id) 
-                             ? req.user._id.toString() 
-                             : req.body.userId;
+        const socketUserId =
+            req.user && req.user._id
+                ? req.user._id.toString()
+                : req.body.userId;
 
         if (socketUserId) {
             try {
                 const io = socket.getIO();
-                
-                io.to(`user_${socketUserId}`).emit("cart_updated", {
-                    action: "add_item",
-                    totalItems: updatedCart.totalItems, 
+
+                io.to(`user_${socketUserId}`).emit('cart_updated', {
+                    action: 'add_item',
+                    totalItems: updatedCart.totalItems,
                     cart: updatedCart,
                 });
             } catch (socketErr) {
                 // Vẫn nên giữ console.error để biết nếu socket bị lỗi hệ thống
-                console.error("Socket emit error:", socketErr.message);
+                console.error('Socket emit error:', socketErr.message);
             }
         }
 
@@ -88,18 +89,19 @@ const removeItem = async (req, res, next) => {
         const { cartId } = req.params;
         // Body bây giờ chỉ cần variantId và quantity (giống hệt add-item)
         // userId có thể lấy từ token hoặc body để bắn socket
-        const { variantId, quantity, userId } = req.body; 
+        const { variantId, quantity, userId } = req.body;
 
         // Gọi service
         const updatedCart = await CartService.removeItem(
-            cartId, 
-            { variantId, quantity } // Truyền object itemData
+            cartId,
+            { variantId, quantity }, // Truyền object itemData
         );
 
         // [SOCKET] Logic bắn tin (Giữ nguyên như cũ)
-        const socketUserId = (req.user && req.user._id) ? req.user._id.toString() : userId;
+        const socketUserId =
+            req.user && req.user._id ? req.user._id.toString() : userId;
         if (socketUserId) {
-             // ... bắn socket emit "cart_updated"
+            // ... bắn socket emit "cart_updated"
         }
 
         res.status(200).json(updatedCart);
@@ -116,8 +118,8 @@ const clearCart = async (req, res, next) => {
         if (req.user && req.user._id) {
             try {
                 const io = socket.getIO();
-                io.to(`user_${req.user._id}`).emit("cart_updated", {
-                    action: "clear_cart",
+                io.to(`user_${req.user._id}`).emit('cart_updated', {
+                    action: 'clear_cart',
                     cart: updated,
                 });
             } catch (e) {
@@ -135,8 +137,8 @@ const deleteCart = async (req, res) => {
     try {
         const deleted = await CartService.deleteCart(req.params.cartId);
         if (!deleted)
-            return res.status(404).json({ message: "Không tìm thấy giỏ hàng" });
-        res.status(200).json({ message: "Đã xóa giỏ hàng thành công" });
+            return res.status(404).json({ message: 'Không tìm thấy giỏ hàng' });
+        res.status(200).json({ message: 'Đã xóa giỏ hàng thành công' });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }

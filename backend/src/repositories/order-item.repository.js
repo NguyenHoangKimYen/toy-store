@@ -7,5 +7,5 @@ module.exports = {
 
     findByOrder(orderId) {
         return OrderItem.find({ orderId }).lean();
-    }
+    },
 };

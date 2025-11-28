@@ -1,4 +1,4 @@
-const Variant = require("../models/variant.model");
+const Variant = require('../models/variant.model');
 
 const findByProductId = async (productId) => {
     return await Variant.find({ productId }).lean();
@@ -29,7 +29,10 @@ const createMany = async (dataArray, options = {}) => {
  * Updated: Thêm options
  */
 const update = async (id, updateData, options = {}) => {
-    return await Variant.findByIdAndUpdate(id, updateData, { new: true, ...options });
+    return await Variant.findByIdAndUpdate(id, updateData, {
+        new: true,
+        ...options,
+    });
 };
 
 const deleteById = async (id, options = {}) => {
@@ -47,5 +50,5 @@ module.exports = {
     createMany, // Đừng quên export hàm mới này
     update,
     deleteById,
-    deleteByProductId
+    deleteByProductId,
 };

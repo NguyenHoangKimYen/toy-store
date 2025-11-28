@@ -7,7 +7,8 @@ require('dotenv').config();
 
 async function debugCarts() {
     try {
-        const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/milkybloom';
+        const mongoUri =
+            process.env.MONGO_URI || 'mongodb://localhost:27017/milkybloom';
         await mongoose.connect(mongoUri);
         console.log('✅ Connected to MongoDB');
 
@@ -15,9 +16,9 @@ async function debugCarts() {
         const cartsCollection = db.collection('carts');
 
         const allCarts = await cartsCollection.find({}).toArray();
-        
+
         console.log(`\n📊 Total carts: ${allCarts.length}\n`);
-        
+
         allCarts.forEach((cart, index) => {
             console.log(`Cart ${index + 1}:`);
             console.log(`  _id: ${cart._id}`);
@@ -29,10 +30,14 @@ async function debugCarts() {
 
         const stats = {
             total: allCarts.length,
-            hasUserId: allCarts.filter(c => c.userId != null).length,
-            hasSessionId: allCarts.filter(c => c.sessionId != null).length,
-            hasNeither: allCarts.filter(c => c.userId == null && c.sessionId == null).length,
-            nullSessionIdWithUserId: allCarts.filter(c => c.userId != null && c.sessionId == null).length,
+            hasUserId: allCarts.filter((c) => c.userId != null).length,
+            hasSessionId: allCarts.filter((c) => c.sessionId != null).length,
+            hasNeither: allCarts.filter(
+                (c) => c.userId == null && c.sessionId == null,
+            ).length,
+            nullSessionIdWithUserId: allCarts.filter(
+                (c) => c.userId != null && c.sessionId == null,
+            ).length,
         };
 
         console.log('\n📊 Statistics:');
@@ -40,7 +45,9 @@ async function debugCarts() {
         console.log(`  With userId: ${stats.hasUserId}`);
         console.log(`  With sessionId: ${stats.hasSessionId}`);
         console.log(`  Neither (need fixing): ${stats.hasNeither}`);
-        console.log(`  User carts with null sessionId (OK): ${stats.nullSessionIdWithUserId}`);
+        console.log(
+            `  User carts with null sessionId (OK): ${stats.nullSessionIdWithUserId}`,
+        );
 
         await mongoose.disconnect();
         console.log('\n✅ Disconnected from MongoDB');

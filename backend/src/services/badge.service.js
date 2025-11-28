@@ -1,5 +1,5 @@
-const Badge = require("../models/badge.model");
-const User = require("../models/user.model");
+const Badge = require('../models/badge.model');
+const User = require('../models/user.model');
 
 async function checkAndAssignBadges(user) {
     const badges = await Badge.find();
@@ -9,29 +9,32 @@ async function checkAndAssignBadges(user) {
         let achieved = false;
 
         switch (badge.type) {
-            case "spent":
+            case 'spent':
                 achieved = user.lifetimeSpent >= badge.threshold;
                 break;
 
-            case "orders":
+            case 'orders':
                 achieved = (user.totalOrders || 0) >= badge.threshold;
                 break;
         }
 
         if (achieved) {
             const already = user.badges.some(
-                b => b.badgeId.toString() === badge._id.toString()
+                (b) => b.badgeId.toString() === badge._id.toString(),
             );
 
             if (!already) {
-                user.badges.push({ badgeId: badge._id, receivedAt: new Date() });
+                user.badges.push({
+                    badgeId: badge._id,
+                    receivedAt: new Date(),
+                });
 
                 // Badge mới unlock → push vào list
                 unlocked.push({
                     id: badge._id,
                     name: badge.name,
                     icon: badge.icon,
-                    description: badge.description
+                    description: badge.description,
                 });
             }
         }

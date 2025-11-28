@@ -1,4 +1,4 @@
-const CartItem = require("../models/cart-item.model");
+const CartItem = require('../models/cart-item.model');
 
 const create = async (data) => {
     const item = new CartItem(data);
@@ -7,8 +7,8 @@ const create = async (data) => {
 
 const withProductAndVariant = (query) => {
     return query
-        .populate({ path: "productId", model: "Product" })
-        .populate({ path: "variantId", model: "Variant" });
+        .populate({ path: 'productId', model: 'Product' })
+        .populate({ path: 'variantId', model: 'Variant' });
 };
 const findById = async (id) => {
     return await withProductAndVariant(CartItem.findById(id));

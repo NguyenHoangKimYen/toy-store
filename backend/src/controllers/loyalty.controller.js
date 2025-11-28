@@ -1,4 +1,4 @@
-const loyaltyService = require("../services/loyalty.service");
+const loyaltyService = require('../services/loyalty.service');
 
 module.exports = {
     async getMyLoyalty(req, res) {
@@ -9,7 +9,9 @@ module.exports = {
             return res.json({ success: true, data: info });
         } catch (err) {
             console.error(err);
-            return res.status(400).json({ success: false, message: err.message });
+            return res
+                .status(400)
+                .json({ success: false, message: err.message });
         }
     },
 
@@ -18,12 +20,17 @@ module.exports = {
             const userId = req.user.id;
             const limit = Number(req.query.limit) || 50;
 
-            const tx = await loyaltyService.getMyCoinTransactions(userId, limit);
+            const tx = await loyaltyService.getMyCoinTransactions(
+                userId,
+                limit,
+            );
 
             return res.json({ success: true, data: tx });
         } catch (err) {
             console.error(err);
-            return res.status(400).json({ success: false, message: err.message });
+            return res
+                .status(400)
+                .json({ success: false, message: err.message });
         }
     },
 
@@ -31,12 +38,17 @@ module.exports = {
     async getHistory(req, res) {
         try {
             const userId = req.user.id;
-            const history = await loyaltyService.getMyCoinTransactions(userId, 200);
+            const history = await loyaltyService.getMyCoinTransactions(
+                userId,
+                200,
+            );
 
             return res.json({ success: true, data: history });
         } catch (err) {
             console.error(err);
-            return res.status(400).json({ success: false, message: err.message });
+            return res
+                .status(400)
+                .json({ success: false, message: err.message });
         }
     },
 
@@ -51,7 +63,9 @@ module.exports = {
             return res.json({ success: true, data: result });
         } catch (err) {
             console.error(err);
-            return res.status(400).json({ success: false, message: err.message });
+            return res
+                .status(400)
+                .json({ success: false, message: err.message });
         }
-    }
+    },
 };

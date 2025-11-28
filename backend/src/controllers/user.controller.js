@@ -1,6 +1,6 @@
-const userService = require("../services/user.service.js");
-const userRepository = require("../repositories/user.repository.js");
-const { uploadToS3 } = require("../utils/s3.helper.js");
+const userService = require('../services/user.service.js');
+const userRepository = require('../repositories/user.repository.js');
+const { uploadToS3 } = require('../utils/s3.helper.js');
 
 // GET USERS (GỘP PARAM)
 const getAllUsers = async (req, res, next) => {
@@ -30,7 +30,7 @@ const verifyUser = async (req, res, next) => {
         if (!id || !token) {
             return res.status(400).json({
                 success: false,
-                message: "Missing id or token",
+                message: 'Missing id or token',
             });
         }
 
@@ -38,14 +38,14 @@ const verifyUser = async (req, res, next) => {
         if (!user) {
             return res.status(404).json({
                 success: false,
-                message: "User not found",
+                message: 'User not found',
             });
         }
 
         if (user.verificationCode !== token) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid verification code",
+                message: 'Invalid verification code',
             });
         }
 
@@ -53,7 +53,7 @@ const verifyUser = async (req, res, next) => {
 
         res.json({
             success: true,
-            message: "User verified successfully",
+            message: 'User verified successfully',
             data: verifiedUser,
         });
     } catch (error) {
@@ -70,21 +70,21 @@ const setUserPassword = async (req, res, next) => {
         if (!id) {
             return res.status(400).json({
                 success: false,
-                message: "Missing user id",
+                message: 'Missing user id',
             });
         }
 
         if (!password || password.length < 8 || password.length > 32) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid password",
+                message: 'Invalid password',
             });
         }
 
         if (confirmPassword !== undefined && password !== confirmPassword) {
             return res.status(400).json({
                 success: false,
-                message: "Password confirmation does not match",
+                message: 'Password confirmation does not match',
             });
         }
 
@@ -104,7 +104,7 @@ const updateUser = async (req, res, next) => {
         if (!id) {
             return res.status(400).json({
                 success: false,
-                message: "Missing user id",
+                message: 'Missing user id',
             });
         }
 
@@ -124,7 +124,7 @@ const deleteUser = async (req, res, next) => {
         if (!id) {
             return res.status(400).json({
                 success: false,
-                message: "Missing user id",
+                message: 'Missing user id',
             });
         }
 
@@ -144,23 +144,23 @@ const uploadAvatar = async (req, res, next) => {
         if (!id) {
             return res.status(400).json({
                 success: false,
-                message: "Missing user id",
+                message: 'Missing user id',
             });
         }
 
         if (!req.file) {
             return res.status(400).json({
                 success: false,
-                message: "No file uploaded",
+                message: 'No file uploaded',
             });
         }
 
-        const [url] = await uploadToS3([req.file], "avatarImages");
+        const [url] = await uploadToS3([req.file], 'avatarImages');
         const updated = await userRepository.update(id, { avatar: url });
 
         res.json({
             success: true,
-            message: "Avatar uploaded successfully",
+            message: 'Avatar uploaded successfully',
             data: updated,
         });
     } catch (error) {
@@ -176,23 +176,23 @@ const updateAvatar = async (req, res, next) => {
         if (!id) {
             return res.status(400).json({
                 success: false,
-                message: "Missing user id",
+                message: 'Missing user id',
             });
         }
 
         if (!req.file) {
             return res.status(400).json({
                 success: false,
-                message: "No file uploaded",
+                message: 'No file uploaded',
             });
         }
 
-        const [url] = await uploadToS3([req.file], "avatars");
+        const [url] = await uploadToS3([req.file], 'avatars');
         const updatedUser = await userRepository.update(id, { avatar: url });
 
         res.json({
             success: true,
-            message: "Avatar updated successfully",
+            message: 'Avatar updated successfully',
             data: updatedUser,
         });
     } catch (error) {

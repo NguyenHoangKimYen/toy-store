@@ -7,7 +7,9 @@ const CONNECTION_URL = process.env.MONGO_URI;
 const connectDB = async () => {
     try {
         if (!CONNECTION_URL) {
-            console.error('ERROR: MONGO_URI is not defined in environment variables.');
+            console.error(
+                'ERROR: MONGO_URI is not defined in environment variables.',
+            );
             process.exit(1);
         }
 

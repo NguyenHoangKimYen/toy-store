@@ -1,8 +1,8 @@
 const haversine = require('haversine-distance');
 const BRANCHES = require('../data/branches.js');
 const { getWeatherCondition } = require('./weather.service');
-const { applyLoyaltyToShipping } = require("../utils/loyalty-ship.helper.js");
-const User = require("../models/user.model");
+const { applyLoyaltyToShipping } = require('../utils/loyalty-ship.helper.js');
+const User = require('../models/user.model');
 
 //Chuan hoa chu
 function normalizeVN(str = '') {
@@ -36,7 +36,7 @@ function findNearestWarehouse(address) {
     for (const wh of BRANCHES) {
         const dist = haversine(
             { lat: wh.lat, lng: wh.lng },
-            { lat: address.lat, lng: address.lng }
+            { lat: address.lat, lng: address.lng },
         );
         if (dist < minDist) {
             minDist = dist;
@@ -68,11 +68,16 @@ async function calculateShippingFee(
     weightGram = 500,
     orderValue = 0,
     hasFreeship = false,
-    deliveryType = 'standard'
+    deliveryType = 'standard',
 ) {
     const nearest = findNearestWarehouse(address);
     if (!nearest)
-        return { fee: 0, region: 'unknown', distanceKm: 0, notes: ['Không thấy cửa hàng gần nhất'] };
+        return {
+            fee: 0,
+            region: 'unknown',
+            distanceKm: 0,
+            notes: ['Không thấy cửa hàng gần nhất'],
+        };
 
     let distanceKm = nearest.distanceKm;
     let region = detectRegion(distanceKm);
@@ -80,7 +85,7 @@ async function calculateShippingFee(
     let baseFee = 0;
     let extraFee = 0;
     let notes = [];
-    let isExpressAllowed = (region === 'noi_thanh');
+    let isExpressAllowed = region === 'noi_thanh';
 
     //Phí cơ bản theo vùng
     switch (region) {
@@ -127,11 +132,14 @@ async function calculateShippingFee(
     const matchedIsland = [
         { name: 'Phú Quốc', province: 'Kiên Giang' },
         { name: 'Côn Đảo', province: 'Bà Rịa - Vũng Tàu' },
-        { name: 'Cát Bà', province: 'Hải Phòng' }
+        { name: 'Cát Bà', province: 'Hải Phòng' },
     ].find(
-        area =>
-            normalizeProvince(address.province) === normalizeProvince(area.province) &&
-            normalizeVN(address.addressLine || '').includes(normalizeVN(area.name))
+        (area) =>
+            normalizeProvince(address.province) ===
+                normalizeProvince(area.province) &&
+            normalizeVN(address.addressLine || '').includes(
+                normalizeVN(area.name),
+            ),
     );
 
     //Tạm thời không hỗ trợ giao hàng ở đảo
@@ -142,7 +150,9 @@ async function calculateShippingFee(
             fee: 0,
             deliveryType,
             isExpressAllowed: false,
-            notes: [`Hiện không hỗ trợ giao hàng đến khu vực đảo: ${matchedIsland.name}`],
+            notes: [
+                `Hiện không hỗ trợ giao hàng đến khu vực đảo: ${matchedIsland.name}`,
+            ],
         };
     }
 
@@ -157,14 +167,16 @@ async function calculateShippingFee(
             isExpressAllowed: false,
             fee: Math.round(baseFee),
             notes,
-            weather
+            weather,
         };
     }
 
     if (deliveryType === 'express' && isExpressAllowed) {
         if (weather.isBadWeather) {
             baseFee *= 1.3;
-            notes.push(`Thời tiết xấu: ${weather.description} → phí hoả tốc tăng`);
+            notes.push(
+                `Thời tiết xấu: ${weather.description} → phí hoả tốc tăng`,
+            );
         }
 
         const hour = new Date().getHours() + 7; // VN timezone
@@ -175,19 +187,22 @@ async function calculateShippingFee(
             notes.push('Phụ phí giao ban đêm');
         }
 
-        if ((realHour >= 7 && realHour < 9) || (realHour >= 17 && realHour < 19)) {
+        if (
+            (realHour >= 7 && realHour < 9) ||
+            (realHour >= 17 && realHour < 19)
+        ) {
             baseFee += 10000;
             notes.push('Phụ phí giờ cao điểm');
         }
     }
 
     // ⭐⭐⭐ ÁP DỤNG LOYALTY TIER ⭐⭐⭐
-    let tier = "none";
+    let tier = 'none';
     let discountFromTier = 0;
 
     if (address?.userId) {
-        const user = await User.findById(address.userId).select("loyaltyTier");
-        if (user) tier = user.loyaltyTier || "none";
+        const user = await User.findById(address.userId).select('loyaltyTier');
+        if (user) tier = user.loyaltyTier || 'none';
     }
 
     // Nhận số tiền giảm từ helper
@@ -209,12 +224,12 @@ async function calculateShippingFee(
         notes,
         weather,
         loyaltyTier: tier,
-        loyaltyDiscount: discountFromTier
+        loyaltyDiscount: discountFromTier,
     };
 }
 
 module.exports = {
     findNearestWarehouse,
     detectRegion,
-    calculateShippingFee
+    calculateShippingFee,
 };

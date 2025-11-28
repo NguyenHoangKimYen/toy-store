@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const DiscountCodeSchema = new mongoose.Schema(
     {
@@ -35,7 +35,7 @@ const DiscountCodeSchema = new mongoose.Schema(
 
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
+            ref: 'User',
             required: true,
         },
 
@@ -48,8 +48,8 @@ const DiscountCodeSchema = new mongoose.Schema(
          */
         requiredTier: {
             type: String,
-            enum: ["none", "silver", "gold", "diamond"],
-            default: "none",
+            enum: ['none', 'silver', 'gold', 'diamond'],
+            default: 'none',
         },
 
         // NEW: Ngày hết hạn mã
@@ -59,8 +59,8 @@ const DiscountCodeSchema = new mongoose.Schema(
         },
     },
     {
-        timestamps: { createdAt: "createdAt", updatedAt: false },
-    }
+        timestamps: { createdAt: 'createdAt', updatedAt: false },
+    },
 );
 
-module.exports = mongoose.model("DiscountCode", DiscountCodeSchema);
+module.exports = mongoose.model('DiscountCode', DiscountCodeSchema);

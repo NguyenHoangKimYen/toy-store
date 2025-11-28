@@ -7,7 +7,10 @@ const axios = require('axios');
 const qs = require('qs');
 
 const orderRepository = require('../repositories/order.repository');
-const { buildRawSignature, generateSignature } = require('../utils/momo.helper');
+const {
+    buildRawSignature,
+    generateSignature,
+} = require('../utils/momo.helper');
 const { hmacSHA256 } = require('../utils/zalopay.helper');
 
 const MOMO_CONFIG = {
@@ -32,20 +35,20 @@ const ZALOPAY_CONFIG = {
 
 async function createMomoPayment(orderId) {
     const order = await orderRepository.findById(orderId);
-    if (!order) throw new Error("Order not found");
+    if (!order) throw new Error('Order not found');
 
     const amount = Number(order.totalAmount);
-    if (!amount || amount < 1000) throw new Error("Invalid MoMo amount");
+    if (!amount || amount < 1000) throw new Error('Invalid MoMo amount');
 
     const requestId = Date.now().toString();
     const momoOrderId = order._id.toString();
-    const requestType = "payWithMethod";
+    const requestType = 'payWithMethod';
     const orderInfo = `Thanh toan don hang ${momoOrderId}`;
 
     const signatureObj = {
         accessKey: MOMO_CONFIG.accessKey,
         amount,
-        extraData: "",
+        extraData: '',
         ipnUrl: MOMO_CONFIG.ipnUrl,
         orderId: momoOrderId,
         orderInfo,
@@ -58,23 +61,25 @@ async function createMomoPayment(orderId) {
     const rawSignature = buildRawSignature(signatureObj);
     const signature = generateSignature(rawSignature, MOMO_CONFIG.secretKey);
 
-    console.log("🔎 RAW SIGNATURE USED:", rawSignature);
-    console.log("🔑 SECRET KEY USED:", MOMO_CONFIG.secretKey);
+    console.log('🔎 RAW SIGNATURE USED:', rawSignature);
+    console.log('🔑 SECRET KEY USED:', MOMO_CONFIG.secretKey);
 
     const payload = {
         ...signatureObj,
         signature,
-        lang: "vi",
+        lang: 'vi',
     };
 
-    console.log("🧩 SIGNATURE:", signature);
-    console.log("📦 PAYLOAD:", payload);
+    console.log('🧩 SIGNATURE:', signature);
+    console.log('📦 PAYLOAD:', payload);
 
     const res = await axios.post(MOMO_CONFIG.endpoint, payload);
     const data = res.data;
 
     if (!data || data.resultCode !== 0) {
-        throw new Error(`MoMo payment failed: ${data.message || "Unknown error"}`);
+        throw new Error(
+            `MoMo payment failed: ${data.message || 'Unknown error'}`,
+        );
     }
 
     return {
@@ -87,31 +92,31 @@ async function createMomoPayment(orderId) {
 
 async function handleMomoIpn(body) {
     const { orderId, resultCode } = body;
-    if (!orderId) return { success: false, message: "Missing orderId" };
+    if (!orderId) return { success: false, message: 'Missing orderId' };
 
     if (resultCode === 0) {
         await orderRepository.updatePaymentStatus(orderId, {
-            paymentStatus: "paid",
-            status: "processing",
+            paymentStatus: 'paid',
+            status: 'processing',
         });
-        return { success: true, message: "Payment success" };
+        return { success: true, message: 'Payment success' };
     }
 
     await orderRepository.updatePaymentStatus(orderId, {
-        paymentStatus: "failed",
-        status: "cancelled",
+        paymentStatus: 'failed',
+        status: 'cancelled',
     });
 
-    return { success: false, message: "Payment failed" };
+    return { success: false, message: 'Payment failed' };
 }
 
 async function handleMomoReturn(query) {
     const { resultCode, orderId } = query;
 
     return {
-        success: resultCode === "0",
+        success: resultCode === '0',
         orderId,
-        message: resultCode === "0" ? "Payment success" : "Payment failed",
+        message: resultCode === '0' ? 'Payment success' : 'Payment failed',
     };
 }
 
@@ -119,19 +124,19 @@ async function handleMomoReturn(query) {
 
 async function createZaloPayOrderService(order) {
     const { appId, key1, endpoint, redirectUrl, callbackUrl } = ZALOPAY_CONFIG;
-    if (!appId || !key1 || !endpoint) throw new Error("ZaloPay config missing");
+    if (!appId || !key1 || !endpoint) throw new Error('ZaloPay config missing');
 
     const date = new Date();
-    const yyMMdd = date.toISOString().slice(2, 10).replace(/-/g, "");
-    const random = String(Math.floor(Math.random() * 999999)).padStart(6, "0");
+    const yyMMdd = date.toISOString().slice(2, 10).replace(/-/g, '');
+    const random = String(Math.floor(Math.random() * 999999)).padStart(6, '0');
     const apptransid = `${yyMMdd}_${random}`;
 
-    const amount = parseInt(order.totalAmount?.toString() || "0", 10);
+    const amount = parseInt(order.totalAmount?.toString() || '0', 10);
     const apptime = Date.now();
-    const appuser = (order.userId || "guest_user").toString();
+    const appuser = (order.userId || 'guest_user').toString();
     const embeddata = JSON.stringify({
         redirecturl: redirectUrl,
-        orderId: order._id.toString()
+        orderId: order._id.toString(),
     });
 
     const item = JSON.stringify([]);
@@ -144,7 +149,7 @@ async function createZaloPayOrderService(order) {
         apptime,
         embeddata,
         item,
-    ].join("|");
+    ].join('|');
 
     const mac = hmacSHA256(data, key1);
 
@@ -157,13 +162,13 @@ async function createZaloPayOrderService(order) {
         embeddata,
         item,
         description: `MilkyBloom - Thanh toán đơn #${order._id}`,
-        bankcode: "zalopayapp",
+        bankcode: 'zalopayapp',
         callbackurl: callbackUrl,
         mac,
     };
 
     const zaloRes = await axios.post(endpoint, qs.stringify(payload), {
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     });
 
     return zaloRes.data;
@@ -171,9 +176,10 @@ async function createZaloPayOrderService(order) {
 
 function verifyZaloPayCallback(params) {
     const reqMac = params.mac;
-    const dataStr = typeof params.data === "string"
-        ? params.data
-        : JSON.stringify(params.data); // 👈 ép object thành string
+    const dataStr =
+        typeof params.data === 'string'
+            ? params.data
+            : JSON.stringify(params.data); // 👈 ép object thành string
 
     const mac = hmacSHA256(dataStr, ZALOPAY_CONFIG.key2);
     return mac === reqMac;
