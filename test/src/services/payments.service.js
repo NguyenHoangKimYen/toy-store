@@ -97,5 +97,4 @@ export default {
   zaloPayCallback,
   zaloPayReturn,
   payByCash,
-  payByCash,
 };
