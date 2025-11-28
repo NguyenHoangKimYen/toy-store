@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
-import { Tag, Search, Plus, Edit, Trash2, Eye } from 'lucide-react'
+import { Tag, Plus, Edit, Trash2, Eye } from 'lucide-react'
 import { getAllDiscountCodes, createDiscountCode, updateDiscountCode, deleteDiscountCode } from '@/services/discountCodes.service'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import Badge from '@/components/ui/badge'
 import DiscountCodeModal from './components/DiscountCodeModal'
 import DeleteConfirmDialog from './components/DeleteConfirmDialog'
 import DiscountOrdersModal from './components/DiscountOrdersModal'
+import { AdminContent } from '../components'
+import { PageHeader, SearchBar } from '@/components/common'
 
 const DiscountCodes = () => {
   const [codes, setCodes] = useState([])
@@ -106,49 +107,36 @@ const DiscountCodes = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Tag className="w-8 h-8" />
-            Discount Codes Management
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Create and manage discount codes for customers
-          </p>
-        </div>
-        <Button onClick={handleCreate} className="flex items-center gap-2">
-          <Plus size={16} />
-          New Code
-        </Button>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-            <div className="flex-1 w-full md:w-auto">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
-                <Input
-                  placeholder="Search discount codes..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
+    <>
+      <AdminContent
+        loading={loading}
+        header={
+          <PageHeader
+            icon={Tag}
+            title="Discount Codes Management"
+            description="Create and manage discount codes for customers"
+            action={
+              <Button onClick={handleCreate} className="flex items-center gap-2">
+                <Plus size={16} />
+                New Code
+              </Button>
+            }
+          />
+        }
+        filters={
+          <SearchBar
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Search discount codes..."
+          />
+        }
+      >
+        {filteredCodes.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            No discount codes found
           </div>
-        </CardHeader>
-
-        <CardContent>
-          {loading ? (
-            <div className="text-center py-8">Loading discount codes...</div>
-          ) : filteredCodes.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No discount codes found
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredCodes.map((code) => {
                 const usagePercentage = getUsagePercentage(code)
                 const isFullyUsed = code.usedCount >= code.usageLimit
@@ -219,8 +207,7 @@ const DiscountCodes = () => {
               })}
             </div>
           )}
-        </CardContent>
-      </Card>
+      </AdminContent>
 
       {showModal && (
         <DiscountCodeModal
@@ -253,7 +240,7 @@ const DiscountCodes = () => {
           }}
         />
       )}
-    </div>
+    </>
   )
 }
 
