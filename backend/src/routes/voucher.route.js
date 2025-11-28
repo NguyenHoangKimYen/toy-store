@@ -16,6 +16,9 @@ router.delete("/:id", auth, adminOnly, voucherController.deleteVoucher);
 // Admin lấy danh sách voucher
 router.get("/", auth, adminOnly, voucherController.getAllVouchers);
 
+// User xem danh sách voucher đang mở để thu thập
+router.get("/collectable", auth, voucherController.getCollectable);
+
 // User dùng được voucher nào
 router.get("/usable", auth, voucherController.getUsableVouchers);
 
