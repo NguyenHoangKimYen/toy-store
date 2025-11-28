@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
 import { Tag, Search, Plus, Edit, Trash2, Eye } from 'lucide-react'
 import { getAllDiscountCodes, createDiscountCode, updateDiscountCode, deleteDiscountCode } from '@/services/discountCodes.service'
@@ -21,14 +21,14 @@ const DiscountCodes = () => {
   const [showOrdersModal, setShowOrdersModal] = useState(false)
   const [selectedCodeForOrders, setSelectedCodeForOrders] = useState(null)
 
-  useEffect(() => {
-    fetchCodes()
-  }, [])
-
-  const fetchCodes = async () => {
+  const fetchCodes = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await getAllDiscountCodes()
+      // Send search param to backend
+      const params = {
+        search: searchTerm.trim() || undefined,
+      }
+      const response = await getAllDiscountCodes(params)
       setCodes(response.discountCodes || response.data || [])
     } catch (error) {
       const errorMessage = error.message || 'Failed to fetch discount codes'
@@ -43,7 +43,11 @@ const DiscountCodes = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [searchTerm])
+
+  useEffect(() => {
+    fetchCodes()
+  }, [fetchCodes])
 
   const handleCreate = () => {
     setSelectedCode(null)
@@ -94,9 +98,8 @@ const DiscountCodes = () => {
     }
   }
 
-  const filteredCodes = codes.filter(code =>
-    code.code?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  // Filtering is now done on backend
+  const filteredCodes = codes
 
   const getUsagePercentage = (code) => {
     return ((code.usedCount || 0) / (code.usageLimit || 1)) * 100

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
 import { Package, Search, Filter, Truck, CheckCircle, XCircle, Clock, Eye } from 'lucide-react'
 import { getAllOrders, updateOrderStatus } from '@/services/orders.service'
@@ -22,14 +22,17 @@ const Orders = () => {
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
 
-  useEffect(() => {
-    fetchOrders()
-  }, [])
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await getAllOrders()
+      // Send search and filter params to backend
+      const params = {
+        search: searchTerm.trim() || undefined,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        deliveryType: deliveryTypeFilter !== 'all' ? deliveryTypeFilter : undefined,
+        paymentMethod: paymentMethodFilter !== 'all' ? paymentMethodFilter : undefined,
+      }
+      const response = await getAllOrders(params)
       // Backend returns { success: true, orders: [...] }
       setOrders(response?.orders || [])
     } catch (error) {
@@ -43,7 +46,11 @@ const Orders = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [searchTerm, statusFilter, deliveryTypeFilter, paymentMethodFilter])
+
+  useEffect(() => {
+    fetchOrders()
+  }, [fetchOrders])
 
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
@@ -76,18 +83,8 @@ const Orders = () => {
     )
   }
 
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = 
-      order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.userId?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.userId?.fullName?.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesStatus = statusFilter === 'all' || order.status === statusFilter
-    const matchesDeliveryType = deliveryTypeFilter === 'all' || order.deliveryType === deliveryTypeFilter
-    const matchesPaymentMethod = paymentMethodFilter === 'all' || order.paymentMethod === paymentMethodFilter
-
-    return matchesSearch && matchesStatus && matchesDeliveryType && matchesPaymentMethod
-  })
+  // Filtering is now done on backend
+  const filteredOrders = orders
 
   return (
     <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">

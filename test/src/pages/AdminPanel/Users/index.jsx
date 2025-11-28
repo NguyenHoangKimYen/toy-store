@@ -30,7 +30,7 @@ const Users = () => {
   // Build params for API call
   const apiParams = useMemo(() => {
     const params = {
-      search: searchQuery.trim() || undefined,
+      keyword: searchQuery.trim() || undefined, // Backend expects 'keyword' not 'search'
     }
 
     // Add filters if not 'all'
