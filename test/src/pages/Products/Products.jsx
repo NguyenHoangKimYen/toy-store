@@ -2,6 +2,7 @@ import React, { useState, lazy, Suspense } from 'react';
 import { useProductCatalog } from './hooks';
 import './Products.css';
 import catalogBanner from '@/assets/images/catalog_banner.webp';
+import catalogBannerVideo from '@/assets/media/video.mp4';
 
 // Lazy load heavy components
 const ProductToolbar = lazy(() => import('./components/ProductToolbar'));
@@ -10,6 +11,7 @@ const ProductGrid = lazy(() => import('./components/ProductGrid'));
 
 const Products = () => {
   const [showFilters, setShowFilters] = useState(false);
+  const [videoError, setVideoError] = useState(false);
   
   const {
     products,
@@ -33,17 +35,35 @@ const Products = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const showVideo = !!catalogBannerVideo && !videoError;
+
   return (
     <div className="products-page">
       <div className="products-container">
         {/* Header */}
         <div className="products-header">
           <div className="products-header-banner">
-            <img 
-              src={catalogBanner} 
-              alt="Product Catalog Banner" 
-              className="products-banner-image"
-            />
+            <div className="products-banner-media">
+              {showVideo ? (
+                <video
+                  className="products-banner-video"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  poster={catalogBanner}
+                  onError={() => setVideoError(true)}
+                >
+                  <source src={catalogBannerVideo} type="video/mp4" />
+                </video>
+              ) : (
+                <img 
+                  src={catalogBanner} 
+                  alt="Product Catalog Banner" 
+                  className="products-banner-image"
+                />
+              )}
+            </div>
             {filters.search && (
               <p className="products-search-info">
                 Showing results for <strong className="text-orange-600">"{filters.search}"</strong>

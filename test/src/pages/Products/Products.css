@@ -18,14 +18,32 @@
 .products-header-banner {
   width: 100%;
   text-align: center;
+  position: relative;
 }
 
-.products-banner-image {
+.products-banner-media {
   width: 100%;
   max-width: 1400px;
-  height: auto;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin-bottom: 1rem;
+  margin: 0 auto 1rem;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  background: radial-gradient(circle at 20% 20%, rgba(79, 70, 229, 0.22), transparent 40%),
+              radial-gradient(circle at 80% 15%, rgba(14, 165, 233, 0.2), transparent 38%),
+              radial-gradient(circle at 60% 80%, rgba(236, 72, 153, 0.2), transparent 42%),
+              #0b1021;
+}
+
+.products-banner-image,
+.products-banner-video {
+  width: 100%;
+  height: clamp(220px, 38vw, 420px);
+  object-fit: cover;
+  display: block;
+}
+
+.products-banner-video {
+  background: #0b1021;
 }
 
 .products-search-info {
