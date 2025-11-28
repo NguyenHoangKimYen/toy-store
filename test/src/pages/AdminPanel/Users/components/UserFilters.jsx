@@ -111,7 +111,7 @@ const UserFilters = ({ filters, onFilterChange, onClearFilters, showFilters }) =
           <Button
             variant='ghost'
             onClick={onClearFilters}
-            className='flex items-center gap-2 text-red-600 hover:text-red-700'
+            className='flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50'
           >
             <X className='w-4 h-4' />
             Clear All Filters

@@ -29,8 +29,8 @@ const AdminContent = ({
   }, []);
 
   return (
-    <div className='h-full flex flex-col'>
-      <div className='flex-1 overflow-y-auto px-4 sm:px-6 admin-scroll-container'>
+    <div className='h-full flex flex-col overflow-hidden'>
+      <div className='flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 admin-scroll-container'>
         <div className='py-4 sm:py-6'>
           {header}
 

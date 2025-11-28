@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import Badge from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { formatPrice } from '@/utils/formatPrice'
 import OrderDetailModal from './components/OrderDetailModal'
 import OrderFilters from './components/OrderFilters'
@@ -203,33 +204,23 @@ const Orders = () => {
                             <Eye size={14} className="mr-1" />
                             <span className="hidden sm:inline">View</span>
                           </Button>
-                          {order.status === 'pending' && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleStatusUpdate(order._id, 'confirmed')}
-                              className="text-xs sm:text-sm"
-                            >
-                              Confirm
-                            </Button>
-                          )}
-                          {order.status === 'confirmed' && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleStatusUpdate(order._id, 'shipping')}
-                              className="text-xs sm:text-sm"
-                            >
-                              Ship
-                            </Button>
-                          )}
-                          {order.status === 'shipping' && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleStatusUpdate(order._id, 'delivered')}
-                              className="text-xs sm:text-sm"
-                            >
-                              Deliver
-                            </Button>
-                          )}
+                          {/* Status Select Dropdown */}
+                          <Select 
+                            value={order.status} 
+                            onValueChange={(newStatus) => handleStatusUpdate(order._id, newStatus)}
+                          >
+                            <SelectTrigger className="h-8 text-xs sm:text-sm w-[120px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="confirmed">Confirmed</SelectItem>
+                              <SelectItem value="shipping">Shipping</SelectItem>
+                              <SelectItem value="delivered">Delivered</SelectItem>
+                              <SelectItem value="cancelled">Cancelled</SelectItem>
+                              <SelectItem value="returned">Returned</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
                     </div>

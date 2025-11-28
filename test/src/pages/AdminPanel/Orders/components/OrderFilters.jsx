@@ -81,7 +81,7 @@ const OrderFilters = ({
               setDeliveryTypeFilter('all')
               setPaymentMethodFilter('all')
             }}
-            className="w-full text-xs sm:text-sm"
+            className="w-full text-xs sm:text-sm text-red-600 hover:text-red-700 hover:bg-red-50 border-red-300"
           >
             Clear Filters
           </Button>
