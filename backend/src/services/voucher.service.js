@@ -39,6 +39,38 @@ module.exports = {
     },
 
     /**
+     * User xem danh sách voucher có thể thu thập (isCollectable + active + trong thời gian)
+     */
+    async getCollectableVouchers(userId) {
+        const now = new Date();
+        const list = await voucherRepository.findAll({
+            isActive: true,
+            isCollectable: true,
+            $and: [
+                {
+                    $or: [{ startDate: null }, { startDate: { $lte: now } }],
+                },
+                {
+                    $or: [{ endDate: null }, { endDate: { $gte: now } }],
+                },
+            ],
+        });
+
+        // Đánh dấu voucher đã thu thập hay chưa
+        if (!userId) return list.map((v) => ({ ...v.toObject(), collected: false }));
+
+        const collected = await userVoucherRepository.findUsableByUser(userId);
+        const collectedIds = new Set(
+            collected.map((uv) => uv.voucherId?._id?.toString() || uv.voucherId?.toString()),
+        );
+
+        return list.map((v) => ({
+            ...v.toObject(),
+            collected: collectedIds.has(v._id.toString()),
+        }));
+    },
+
+    /**
      * Kiểm tra voucher có dùng được không
      */
     async validateVoucherForUser(userId, voucherId, goodsTotal) {

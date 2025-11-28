@@ -148,6 +148,30 @@ async function giveMonthlyVoucher(user) {
     return code;
 }
 
+async function redeemCoins(userId, amount) {
+    const user = await User.findById(userId);
+    if (!user) throw new Error("User not found");
+
+    const redeemAmount = Number(amount);
+    if (!redeemAmount || redeemAmount <= 0)
+        throw new Error("Amount must be greater than 0");
+    if (user.loyaltyPoints < redeemAmount)
+        throw new Error("Not enough coins");
+
+    user.loyaltyPoints -= redeemAmount;
+    await user.save();
+
+    await CoinTransactionRepository.create({
+        userId,
+        type: "spend",
+        amount: redeemAmount,
+        balanceAfter: user.loyaltyPoints,
+        description: "Redeem coins",
+    });
+
+    return { balance: user.loyaltyPoints };
+}
+
 module.exports = {
     handleOrderCompleted,
     getMyLoyaltyInfo,
@@ -155,4 +179,5 @@ module.exports = {
     getTierFromSpent,
     getCoinMultiplier,
     giveMonthlyVoucher,
+    redeemCoins,
 };
