@@ -4,7 +4,7 @@ const Variant = require("../models/variant.model");
 
 // Chỉ tính các đơn hợp lệ: không hủy/trả, không failed,
 // paid hoặc COD đã giao/hoàn tất
-const COD_METHODS = ["cashondelivery", "cod", "cashOnDelivery"];
+const COD_METHODS = ["cashondelivery", "cod", "cashOnDelivery", "cash"];
 const ACTIVE_ORDER_MATCH = {
     $and: [
         { "order.status": { $nin: ["cancelled", "returned"] } },
