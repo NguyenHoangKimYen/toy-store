@@ -1,5 +1,5 @@
-const voucherService = require("../services/voucher.service");
-const voucherCollectService = require("../services/voucher-collect.service");
+const voucherService = require('../services/voucher.service');
+const voucherCollectService = require('../services/voucher-collect.service');
 
 module.exports = {
     // --- ADMIN ---
@@ -8,16 +8,23 @@ module.exports = {
             const result = await voucherService.createVoucher(req.body);
             return res.json({ success: true, voucher: result });
         } catch (err) {
-            return res.status(400).json({ success: false, message: err.message });
+            return res
+                .status(400)
+                .json({ success: false, message: err.message });
         }
     },
 
     async updateVoucher(req, res) {
         try {
-            const result = await voucherService.updateVoucher(req.params.id, req.body);
+            const result = await voucherService.updateVoucher(
+                req.params.id,
+                req.body,
+            );
             return res.json({ success: true, voucher: result });
         } catch (err) {
-            return res.status(400).json({ success: false, message: err.message });
+            return res
+                .status(400)
+                .json({ success: false, message: err.message });
         }
     },
 
@@ -26,7 +33,9 @@ module.exports = {
             const result = await voucherService.deleteVoucher(req.params.id);
             return res.json({ success: true, result });
         } catch (err) {
-            return res.status(400).json({ success: false, message: err.message });
+            return res
+                .status(400)
+                .json({ success: false, message: err.message });
         }
     },
 
@@ -41,7 +50,9 @@ module.exports = {
             const list = await voucherService.getUsableVouchers(req.user.id);
             return res.json({ success: true, vouchers: list });
         } catch (err) {
-            return res.status(400).json({ success: false, message: err.message });
+            return res
+                .status(400)
+                .json({ success: false, message: err.message });
         }
     },
 
@@ -50,12 +61,16 @@ module.exports = {
             const userId = req.user.id;
             const { voucherId } = req.body;
 
-            const result = await voucherCollectService.collectVoucher(userId, voucherId);
+            const result = await voucherCollectService.collectVoucher(
+                userId,
+                voucherId,
+            );
 
             return res.json({ success: true, data: result });
-
         } catch (err) {
-            return res.status(400).json({ success: false, message: err.message });
+            return res
+                .status(400)
+                .json({ success: false, message: err.message });
         }
     },
 
@@ -66,7 +81,9 @@ module.exports = {
 
             return res.json({ success: true, vouchers: list });
         } catch (err) {
-            return res.status(400).json({ success: false, message: err.message });
+            return res
+                .status(400)
+                .json({ success: false, message: err.message });
         }
-    }
+    },
 };

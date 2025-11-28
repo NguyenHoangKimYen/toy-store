@@ -1,61 +1,64 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 // [XÓA] Dòng dưới đây gây ra lỗi Circular Dependency
-// const CartRepository = require("../repositories/cart.repository"); 
+// const CartRepository = require("../repositories/cart.repository");
 
-const CartItemSchema = new mongoose.Schema({
-    cartId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Cart",
-        required: true,
-    },
+const CartItemSchema = new mongoose.Schema(
+    {
+        cartId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Cart',
+            required: true,
+        },
 
-    productId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Product",
-        required: true,
-    },
+        productId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Product',
+            required: true,
+        },
 
-    variantId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Variant",
-        required: true,
-    },
-    quantity: {
-        type: Number,
-        required: true,
-        min: 1,
-    },
-    price: {
-        type: mongoose.Schema.Types.Decimal128,
-        required: true,
-        min: 0,
-    },
-}, {
-    toJSON: {
-        transform: function (doc, ret) {
-            ret.id = ret._id.toString();
-            delete ret._id;
-            delete ret.__v;
-            
-            // Convert Decimal128 to number for price
-            if (ret.price) {
-                ret.price = parseFloat(ret.price.toString());
-            }
-            
-            // Rename populated fields for frontend
-            if (ret.productId) {
-                ret.product = ret.productId;
-                delete ret.productId;
-            }
-            if (ret.variantId) {
-                ret.variant = ret.variantId;
-                delete ret.variantId;
-            }
-            
-            return ret;
+        variantId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Variant',
+            required: true,
+        },
+        quantity: {
+            type: Number,
+            required: true,
+            min: 1,
+        },
+        price: {
+            type: mongoose.Schema.Types.Decimal128,
+            required: true,
+            min: 0,
         },
     },
-});
+    {
+        toJSON: {
+            transform: function (doc, ret) {
+                ret.id = ret._id.toString();
+                delete ret._id;
+                delete ret.__v;
+
+                // Convert Decimal128 to number for price
+                if (ret.price) {
+                    ret.price = parseFloat(ret.price.toString());
+                }
+
+                // Rename populated fields for frontend
+                if (ret.productId) {
+                    ret.product = ret.productId;
+                    delete ret.productId;
+                }
+                if (ret.variantId) {
+                    ret.variant = ret.variantId;
+                    delete ret.variantId;
+                }
+
+                return ret;
+            },
+        },
+    },
+);
 
 CartItemSchema.index({ cartId: 1, variantId: 1 }, { unique: true });
 
@@ -66,7 +69,7 @@ CartItemSchema.index({ cartId: 1, variantId: 1 }, { unique: true });
 async function recalculateCart(cartId) {
     if (!cartId) return;
 
-    const items = await mongoose.model("CartItem").find({ cartId: cartId });
+    const items = await mongoose.model('CartItem').find({ cartId: cartId });
 
     let newTotalPrice = 0;
     const itemIds = [];
@@ -76,16 +79,18 @@ async function recalculateCart(cartId) {
             itemIds.push(item._id);
 
             const unitPrice = parseFloat(item.price.toString());
-            return sum + (unitPrice * item.quantity); // ⭐⭐ SỬA TẠI ĐÂY
+            return sum + unitPrice * item.quantity; // ⭐⭐ SỬA TẠI ĐÂY
         }, 0);
     }
 
-    await mongoose.model("Cart").findByIdAndUpdate(cartId, {
+    await mongoose.model('Cart').findByIdAndUpdate(cartId, {
         totalPrice: newTotalPrice,
-        items: itemIds
+        items: itemIds,
     });
 
-    console.log(`Updated Cart ${cartId}: ${newTotalPrice} VND & ${itemIds.length} items.`);
+    console.log(
+        `Updated Cart ${cartId}: ${newTotalPrice} VND & ${itemIds.length} items.`,
+    );
 }
 
 CartItemSchema.post('save', async function () {
@@ -98,4 +103,4 @@ CartItemSchema.post('findOneAndDelete', async function (doc) {
     }
 });
 
-module.exports = mongoose.model("CartItem", CartItemSchema);
+module.exports = mongoose.model('CartItem', CartItemSchema);

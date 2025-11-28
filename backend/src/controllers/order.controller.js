@@ -9,14 +9,18 @@ module.exports = {
             return res.json({ success: true, order: result });
         } catch (err) {
             console.error(err);
-            return res.status(500).json({ success: false, message: err.message });
+            return res
+                .status(500)
+                .json({ success: false, message: err.message });
         }
     },
 
     async getDetail(req, res) {
         const order = await orderService.getOrderDetail(req.params.id);
-        if (!order) 
-            return res.status(404).json({ success: false, message: 'Order not found' });
+        if (!order)
+            return res
+                .status(404)
+                .json({ success: false, message: 'Order not found' });
 
         return res.json({ success: true, order });
     },
@@ -30,7 +34,8 @@ module.exports = {
     async checkoutFromCartForUser(req, res, next) {
         try {
             const userId = req.user.id;
-            const { addressId, discountCodeId, pointsToUse, voucherId } = req.body;
+            const { addressId, discountCodeId, pointsToUse, voucherId } =
+                req.body;
 
             const detail = await orderService.createOrderFromCart({
                 userId,
@@ -49,7 +54,8 @@ module.exports = {
     // Checkout từ cart cho guest (session)
     async checkoutFromCartForGuest(req, res, next) {
         try {
-            const { sessionId, guestInfo, discountCodeId, pointsToUse } = req.body;
+            const { sessionId, guestInfo, discountCodeId, pointsToUse } =
+                req.body;
 
             const detail = await orderService.createOrderFromCart({
                 sessionId,
@@ -71,19 +77,25 @@ module.exports = {
 
     async updateStatus(req, res) {
         try {
-            const updated = await orderService.updateStatus(req.params.id, req.body.status);
+            const updated = await orderService.updateStatus(
+                req.params.id,
+                req.body.status,
+            );
             if (!updated)
-                return res.status(404).json({ success: false, message: 'Order not found' });
+                return res
+                    .status(404)
+                    .json({ success: false, message: 'Order not found' });
 
             return res.json({
                 success: true,
                 order: updated,
-                newBadges: updated.newBadges || []
+                newBadges: updated.newBadges || [],
             });
-
         } catch (err) {
-            console.error("Update Order Status Error:", err);
-            return res.status(500).json({ success: false, message: err.message });
+            console.error('Update Order Status Error:', err);
+            return res
+                .status(500)
+                .json({ success: false, message: err.message });
         }
-    }
+    },
 };

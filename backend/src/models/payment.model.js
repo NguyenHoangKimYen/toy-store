@@ -1,20 +1,20 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 // Định nghĩa các phương thức thanh toán có thể có
 const PAYMENT_METHOD_ENUM = [
-    "cod", // Thanh toán khi nhận hàng
-    "credit_card",
-    "momo",
-    "zalopay",
-    "bank_transfer",
+    'cod', // Thanh toán khi nhận hàng
+    'credit_card',
+    'momo',
+    'zalopay',
+    'bank_transfer',
 ];
 
 // Định nghĩa các trạng thái thanh toán
 const PAYMENT_STATUS_ENUM = [
-    "pending", // Đang chờ thanh toán
-    "success", // Thanh toán thành công
-    "failed", // Thanh toán thất bại
-    "refunded", // Đã hoàn tiền (có thể cần thiết)
+    'pending', // Đang chờ thanh toán
+    'success', // Thanh toán thành công
+    'failed', // Thanh toán thất bại
+    'refunded', // Đã hoàn tiền (có thể cần thiết)
 ];
 
 const PaymentSchema = new mongoose.Schema(
@@ -24,7 +24,7 @@ const PaymentSchema = new mongoose.Schema(
         // Khóa ngoại: Đơn hàng được thanh toán (FK → Order)
         orderId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Order", // Tham chiếu đến Model 'Order'
+            ref: 'Order', // Tham chiếu đến Model 'Order'
             required: true,
             unique: true, // Thường mỗi đơn hàng chỉ có một bản ghi thanh toán cuối cùng
         },
@@ -41,7 +41,7 @@ const PaymentSchema = new mongoose.Schema(
         status: {
             type: String,
             enum: PAYMENT_STATUS_ENUM,
-            default: "pending",
+            default: 'pending',
             required: true,
             lowercase: true,
         },
@@ -70,4 +70,4 @@ const PaymentSchema = new mongoose.Schema(
 );
 
 // Tạo Model từ Schema
-module.exports = mongoose.model("Payment", PaymentSchema);
+module.exports = mongoose.model('Payment', PaymentSchema);

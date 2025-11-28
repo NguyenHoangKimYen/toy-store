@@ -9,5 +9,5 @@ module.exports = {
         return OrderStatusHistory.find({ orderId })
             .sort({ updatedAt: -1 })
             .lean();
-    }
+    },
 };

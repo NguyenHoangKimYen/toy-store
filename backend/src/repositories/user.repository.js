@@ -1,5 +1,5 @@
-const { token } = require("morgan");
-const User = require("../models/user.model.js");
+const { token } = require('morgan');
+const User = require('../models/user.model.js');
 
 const findAll = async (filter = {}, options = {}) => {
     return User.find(filter)
@@ -33,11 +33,11 @@ const findByEmail = async (email, includePassword = false) => {
 
 const findByEmailOrPhone = async (email, phone) => {
     return User.findOne({
-        $or: [{ email }, { phone }]
+        $or: [{ email }, { phone }],
     })
         .populate({
             path: 'defaultAddressId',
-            select: 'fullName phone addressLine city postalCode isDefault'
+            select: 'fullName phone addressLine city postalCode isDefault',
         })
         .select('-password');
 };
@@ -62,21 +62,21 @@ const findByUsername = async (username, includePassword = false) => {
 
 // Tìm người dùng theo ID và bao gồm trường mật khẩu
 const findByIdWithPassword = async (id) => {
-    return User.findById(id).select('+password')
-        .populate({
-            path: 'defaultAddressId',
-            select: 'fullName phone addressLine city postalCode isDefault',
-        });
+    return User.findById(id).select('+password').populate({
+        path: 'defaultAddressId',
+        select: 'fullName phone addressLine city postalCode isDefault',
+    });
 };
 
-const create = async (data) => { //lấy toàn bộ thông tin người dùng
+const create = async (data) => {
+    //lấy toàn bộ thông tin người dùng
     const user = new User(data);
     return await user.save();
 };
 
 // Các trường không nên trả về công khai
 const PUBLIC_PROJECTION =
-    "-password -__v -resetTokenHash -resetTokenExpiresAt -resetOtpHash -resetOtpExpiresAt";
+    '-password -__v -resetTokenHash -resetTokenExpiresAt -resetOtpHash -resetOtpExpiresAt';
 
 // Đánh dấu người dùng đã được xác minh
 const setVerified = (id, isVerified = true) => {
@@ -85,9 +85,13 @@ const setVerified = (id, isVerified = true) => {
     );
 };
 
-const setPassword = (id, hashValue) => { //cập nhật mật khẩu người dùng
-    return User.findByIdAndUpdate(id, { password: hashValue }, { new: true })
-        .select(PUBLIC_PROJECTION);
+const setPassword = (id, hashValue) => {
+    //cập nhật mật khẩu người dùng
+    return User.findByIdAndUpdate(
+        id,
+        { password: hashValue },
+        { new: true },
+    ).select(PUBLIC_PROJECTION);
 };
 
 const setResetToken = (id, { tokenHash, expiresAt }) => {
@@ -96,11 +100,11 @@ const setResetToken = (id, { tokenHash, expiresAt }) => {
         id,
         {
             $set: {
-                resetTokenHash: tokenHash,      // <- String
+                resetTokenHash: tokenHash, // <- String
                 resetTokenExpiresAt: expiresAt, // <- Date
             },
         },
-        { new: true }
+        { new: true },
     ).select(PUBLIC_PROJECTION);
 };
 
@@ -127,18 +131,20 @@ const accountIsVerified = (id) => {
                 verifiedAt: new Date(),
             },
             $unset: {
-                resetTokenHash: "",
-                resetTokenExpiresAt: "",
+                resetTokenHash: '',
+                resetTokenExpiresAt: '',
             },
         },
-        { new: true }
+        { new: true },
     );
 };
 
 const findByIdWithSecrets = async (id) => {
     // Tìm người dùng theo ID bao gồm tất cả các trường bí mật
     return User.findById(id)
-        .select('+password +resetTokenHash +resetTokenExpiresAt +resetOtpHash +resetOtpExpiresAt +changeEmailOldOtpHash +changeEmailOldOtpExpiresAt +verifyNewEmailTokenHash +verifyNewEmailExpiresAt +changePhoneOtpHash +changePhoneOtpExpiresAt')
+        .select(
+            '+password +resetTokenHash +resetTokenExpiresAt +resetOtpHash +resetOtpExpiresAt +changeEmailOldOtpHash +changeEmailOldOtpExpiresAt +verifyNewEmailTokenHash +verifyNewEmailExpiresAt +changePhoneOtpHash +changePhoneOtpExpiresAt',
+        )
         .populate({
             path: 'defaultAddressId',
             select: 'fullName phone addressLine city postalCode isDefault',
@@ -151,7 +157,7 @@ const incFailLogin = async (id) => {
     return User.findByIdAndUpdate(
         id,
         { $inc: { failLoginAttempts: 1 } },
-        { new: true, runValidators: false }
+        { new: true, runValidators: false },
     ).select('+password'); //so sánh mật khẩu
 };
 
@@ -160,7 +166,7 @@ const resetFailLogin = async (id) => {
     return User.findByIdAndUpdate(
         id,
         { $set: { failLoginAttempts: 0 } },
-        { new: true }
+        { new: true },
     );
 };
 
@@ -197,9 +203,9 @@ const setOldEmailOtp = (userId, otpHash, expiresAt) => {
         userId,
         {
             changeEmailOldOtpHash: otpHash,
-            changeEmailOldOtpExpiresAt: expiresAt
+            changeEmailOldOtpExpiresAt: expiresAt,
         },
-        { new: true }
+        { new: true },
     );
 };
 
@@ -209,9 +215,9 @@ const setPendingNewEmail = (userId, newEmail, tokenHash, expiresAt) => {
         {
             pendingNewEmail: newEmail,
             verifyNewEmailTokenHash: tokenHash,
-            verifyNewEmailExpiresAt: expiresAt
+            verifyNewEmailExpiresAt: expiresAt,
         },
-        { new: true }
+        { new: true },
     );
 };
 
@@ -221,9 +227,9 @@ const setChangeEmailOtp = (id, { otpHash, expiresAt, pendingNewEmail }) => {
         {
             changeEmailOldOtpHash: otpHash,
             changeEmailOldOtpExpiresAt: expiresAt,
-            pendingNewEmail
+            pendingNewEmail,
         },
-        { new: true }
+        { new: true },
     );
 };
 
@@ -238,7 +244,7 @@ const applyNewEmail = (id, newEmail) => {
             changeEmailOldOtpHash: null,
             changeEmailOldOtpExpiresAt: null,
         },
-        { new: true }
+        { new: true },
     );
 };
 
@@ -248,9 +254,9 @@ const setChangePhoneOtp = (id, { otpHash, expiresAt, pendingPhone }) => {
         {
             changePhoneOtpHash: otpHash,
             changePhoneOtpExpiresAt: expiresAt,
-            pendingPhone
+            pendingPhone,
         },
-        { new: true }
+        { new: true },
     );
 };
 
@@ -261,21 +267,18 @@ const applyNewPhone = (id, newPhone) => {
             phone: newPhone,
             pendingPhone: null,
             changePhoneOtpHash: null,
-            changePhoneOtpExpiresAt: null
+            changePhoneOtpExpiresAt: null,
         },
-        { new: true }
+        { new: true },
     );
 };
 
 const update = async (id, data) => {
-    return User.findByIdAndUpdate(
-        id,
-        data,
-        {
-            new: true,
-            runValidators: true,
-            context: 'query' //để các validator hoạt động đúng trong update
-        })
+    return User.findByIdAndUpdate(id, data, {
+        new: true,
+        runValidators: true,
+        context: 'query', //để các validator hoạt động đúng trong update
+    })
         .populate({
             path: 'defaultAddressId',
             select: 'fullName phone addressLine city postalCode isDefault',

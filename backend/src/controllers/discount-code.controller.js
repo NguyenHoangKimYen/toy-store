@@ -1,4 +1,4 @@
-const discountService = require("../services/discount-code.service");
+const discountService = require('../services/discount-code.service');
 
 module.exports = {
     async create(req, res) {
@@ -8,7 +8,9 @@ module.exports = {
             return res.json({ success: true, data: doc });
         } catch (err) {
             console.error(err);
-            return res.status(400).json({ success: false, message: err.message });
+            return res
+                .status(400)
+                .json({ success: false, message: err.message });
         }
     },
 
@@ -21,7 +23,9 @@ module.exports = {
             return res.json({ success: true, data: updated });
         } catch (err) {
             console.error(err);
-            return res.status(400).json({ success: false, message: err.message });
+            return res
+                .status(400)
+                .json({ success: false, message: err.message });
         }
     },
 
@@ -30,10 +34,12 @@ module.exports = {
             const id = req.params.id;
             await discountService.deleteDiscountCode(id);
 
-            return res.json({ success: true, message: "Deleted successfully" });
+            return res.json({ success: true, message: 'Deleted successfully' });
         } catch (err) {
             console.error(err);
-            return res.status(400).json({ success: false, message: err.message });
+            return res
+                .status(400)
+                .json({ success: false, message: err.message });
         }
     },
 
@@ -43,7 +49,9 @@ module.exports = {
             return res.json({ success: true, data: list });
         } catch (err) {
             console.error(err);
-            return res.status(400).json({ success: false, message: err.message });
+            return res
+                .status(400)
+                .json({ success: false, message: err.message });
         }
     },
 
@@ -60,7 +68,9 @@ module.exports = {
             return res.json({ success: true, data: result });
         } catch (err) {
             console.error(err);
-            return res.status(400).json({ success: false, message: err.message });
+            return res
+                .status(400)
+                .json({ success: false, message: err.message });
         }
-    }
+    },
 };

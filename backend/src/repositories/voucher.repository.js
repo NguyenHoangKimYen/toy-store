@@ -1,4 +1,4 @@
-const Voucher = require("../models/voucher.model");
+const Voucher = require('../models/voucher.model');
 
 module.exports = {
     findById(id) {
@@ -6,5 +6,5 @@ module.exports = {
     },
     findActive() {
         return Voucher.find({ isActive: true });
-    }
+    },
 };

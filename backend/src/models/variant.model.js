@@ -1,11 +1,11 @@
-const mongoose = require("mongoose");
-const Product = mongoose.model("Product");
+const mongoose = require('mongoose');
+const Product = mongoose.model('Product');
 
 const VariantSchema = new mongoose.Schema(
     {
         productId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Product",
+            ref: 'Product',
             required: true,
             index: true,
         },
@@ -32,7 +32,7 @@ const VariantSchema = new mongoose.Schema(
         price: {
             type: mongoose.Schema.Types.Decimal128,
             min: 0,
-            default: 0
+            default: 0,
         },
 
         stockQuantity: {
@@ -52,7 +52,7 @@ const VariantSchema = new mongoose.Schema(
             type: Number,
             default: 0,
             min: 0,
-            index: true
+            index: true,
         },
 
         isActive: {
@@ -63,7 +63,7 @@ const VariantSchema = new mongoose.Schema(
     },
     {
         timestamps: true,
-        collection: "variants",
+        collection: 'variants',
     },
 );
 
@@ -71,51 +71,66 @@ const VariantSchema = new mongoose.Schema(
 async function updateProductPrices(productId) {
     if (!productId) return;
 
-    const activeVariants = await mongoose.model("Variant").find({ productId: productId, isActive: true });
+    const activeVariants = await mongoose
+        .model('Variant')
+        .find({ productId: productId, isActive: true });
 
     let minPrice = 0;
     let maxPrice = 0;
     let totalStock = 0;
 
     if (activeVariants.length > 0) {
-        const prices = activeVariants.map(v => parseFloat(v.price.toString()));
+        const prices = activeVariants.map((v) =>
+            parseFloat(v.price.toString()),
+        );
 
         minPrice = Math.min(...prices);
         maxPrice = Math.max(...prices);
-        totalStock = activeVariants.reduce((sum, v) => sum + (v.stockQuantity || 0), 0);
+        totalStock = activeVariants.reduce(
+            (sum, v) => sum + (v.stockQuantity || 0),
+            0,
+        );
     }
-    
-    await mongoose.model("Product").updateOne(
+
+    await mongoose.model('Product').updateOne(
         { _id: productId },
-        { $set: { minPrice: minPrice, maxPrice: maxPrice, totalStock: totalStock } }
+        {
+            $set: {
+                minPrice: minPrice,
+                maxPrice: maxPrice,
+                totalStock: totalStock,
+            },
+        },
     );
-    console.log(`Updated min/max price and totalStock for Product ${productId}: ${minPrice} - ${maxPrice}, Stock: ${totalStock}`);
+    console.log(
+        `Updated min/max price and totalStock for Product ${productId}: ${minPrice} - ${maxPrice}, Stock: ${totalStock}`,
+    );
 }
 
 // Static method to manually recalculate product data (for bulk operations)
-VariantSchema.statics.recalculateProductData = async function(productId) {
+VariantSchema.statics.recalculateProductData = async function (productId) {
     await updateProductPrices(productId);
 };
 
 // 3. Đăng ký Middleware (Sau khi Variant được lưu, cập nhật, hoặc xóa)
-VariantSchema.post('save', function() {
+VariantSchema.post('save', function () {
     updateProductPrices(this.productId);
 });
 
-VariantSchema.post('remove', function() {
+VariantSchema.post('remove', function () {
     updateProductPrices(this.productId);
 });
 
-VariantSchema.post('findOneAndDelete', function(doc) {
+VariantSchema.post('findOneAndDelete', function (doc) {
     if (doc) {
         updateProductPrices(doc.productId);
     }
 });
 
-VariantSchema.post('findOneAndUpdate', function(doc) {
+VariantSchema.post('findOneAndUpdate', function (doc) {
     if (doc) {
         updateProductPrices(doc.productId);
     }
 });
 
-module.exports = mongoose.model("Variant", VariantSchema);
+module.exports = mongoose.model('Variant', VariantSchema);

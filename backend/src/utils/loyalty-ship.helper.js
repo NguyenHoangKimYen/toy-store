@@ -7,19 +7,19 @@
  */
 function applyLoyaltyToShipping(tier, baseFee, deliveryType) {
     switch (tier) {
-        case "silver":
+        case 'silver':
             // Silver: giảm 10k cho standard
-            return deliveryType === "standard" ? 10_000 : 0;
+            return deliveryType === 'standard' ? 10_000 : 0;
 
-        case "gold":
+        case 'gold':
             // Gold: freeship standard
-            return deliveryType === "standard" ? baseFee : 0;
+            return deliveryType === 'standard' ? baseFee : 0;
 
-        case "diamond":
+        case 'diamond':
             // Diamond: freeship tất cả
             return baseFee;
 
-        case "none":
+        case 'none':
         default:
             return 0;
     }

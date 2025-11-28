@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const AdminActionLogSchema = new mongoose.Schema(
     {
@@ -7,7 +7,7 @@ const AdminActionLogSchema = new mongoose.Schema(
         // Khóa ngoại: Người quản trị thực hiện hành động (FK → User)
         adminId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User", // Tham chiếu đến Model 'User'
+            ref: 'User', // Tham chiếu đến Model 'User'
             required: true,
         },
 
@@ -35,8 +35,8 @@ const AdminActionLogSchema = new mongoose.Schema(
         // createdAtdatetime (Tự động)
     },
     {
-        timestamps: { createdAt: "createdAt", updatedAt: false }, // Chỉ cần createdAt
+        timestamps: { createdAt: 'createdAt', updatedAt: false }, // Chỉ cần createdAt
     },
 );
 
-module.exports = mongoose.model("AdminActionLog", AdminActionLogSchema);
+module.exports = mongoose.model('AdminActionLog', AdminActionLogSchema);

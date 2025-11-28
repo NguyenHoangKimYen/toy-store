@@ -1,5 +1,5 @@
-const bcrypt = require("bcrypt");
-const userRepository = require("../repositories/user.repository.js");
+const bcrypt = require('bcrypt');
+const userRepository = require('../repositories/user.repository.js');
 
 /**
  * GỘP GET USER:
@@ -52,8 +52,8 @@ const getAllUsers = async (query) => {
 // Tạo user (admin hoặc hệ thống dùng)
 const createUser = async (userData) => {
     const { password, role, ...rest } = userData;
-    const allowedRoles = ["customer", "admin"];
-    const safeRole = allowedRoles.includes(role) ? role : "customer";
+    const allowedRoles = ['customer', 'admin'];
+    const safeRole = allowedRoles.includes(role) ? role : 'customer';
 
     if (password) {
         rest.password = await bcrypt.hash(password, 10);
@@ -68,7 +68,8 @@ const createUser = async (userData) => {
 // Xác minh user
 const setUserVerified = async (id, isVerified = true) => {
     const verifiedUser = await userRepository.setVerified(id, isVerified);
-    if (!verifiedUser) throw new Error("User not found or verification update failed");
+    if (!verifiedUser)
+        throw new Error('User not found or verification update failed');
     return verifiedUser;
 };
 
@@ -76,18 +77,18 @@ const setUserVerified = async (id, isVerified = true) => {
 const setUserPassword = async (id, plainPassword) => {
     if (
         !plainPassword ||
-        typeof plainPassword !== "string" ||
+        typeof plainPassword !== 'string' ||
         !plainPassword.trim() ||
         plainPassword.length < 8 ||
         plainPassword.length > 32
     ) {
-        throw new Error("Invalid password");
+        throw new Error('Invalid password');
     }
 
     const hashedPassword = await bcrypt.hash(plainPassword, 10);
     const updated = await userRepository.setPassword(id, hashedPassword);
 
-    if (!updated) throw new Error("User not found or password update failed");
+    if (!updated) throw new Error('User not found or password update failed');
 
     return updated;
 };
@@ -95,14 +96,14 @@ const setUserPassword = async (id, plainPassword) => {
 // Update user
 const updateUser = async (id, userData) => {
     const updated = await userRepository.update(id, userData);
-    if (!updated) throw new Error("User not found or update failed");
+    if (!updated) throw new Error('User not found or update failed');
     return updated;
 };
 
 // Delete user
 const deleteUser = async (id) => {
     const deleted = await userRepository.remove(id);
-    if (!deleted) throw new Error("User not found or delete failed");
+    if (!deleted) throw new Error('User not found or delete failed');
     return deleted;
 };
 

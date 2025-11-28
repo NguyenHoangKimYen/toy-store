@@ -1,9 +1,9 @@
 const {
     forgotPasswordSchema,
     resetPasswordSchema,
-} = require("../services/password.service.js");
-const passwordService = require("../services/password.service.js");
-const userRepository = require("../repositories/user.repository.js");
+} = require('../services/password.service.js');
+const passwordService = require('../services/password.service.js');
+const userRepository = require('../repositories/user.repository.js');
 
 const forgotPassword = async (req, res, next) => {
     try {
@@ -51,7 +51,7 @@ const resetPassword = async (req, res, next) => {
         );
         res.json({
             success: true,
-            message: "Password updated",
+            message: 'Password updated',
         });
     } catch (error) {
         next(error);

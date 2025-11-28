@@ -1,20 +1,20 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 // Định nghĩa các trạng thái đơn hàng phổ biến
 const ORDER_STATUS_ENUM = [
-    "pending",
-    "confirmed",
-    "shipping",
-    "delivered",
-    "cancelled", // Thêm trạng thái này cho đầy đủ
-    "returned", // Thêm trạng thái này cho đầy đủ
+    'pending',
+    'confirmed',
+    'shipping',
+    'delivered',
+    'cancelled', // Thêm trạng thái này cho đầy đủ
+    'returned', // Thêm trạng thái này cho đầy đủ
 ];
 
 const OrderSchema = new mongoose.Schema(
     {
         userId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User", // Tham chiếu đến Model 'User'
+            ref: 'User', // Tham chiếu đến Model 'User'
             required: true,
             index: true,
         },
@@ -23,14 +23,14 @@ const OrderSchema = new mongoose.Schema(
         // Địa chỉ này nên là bản sao của Address lúc đặt hàng để tránh thay đổi sau này
         addressId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Address", // Tham chiếu đến Model 'Address'
+            ref: 'Address', // Tham chiếu đến Model 'Address'
             required: true,
         },
 
         // Khóa ngoại: Mã giảm giá đã sử dụng (nullable)
         discountCodeId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "DiscountCode", // Tham chiếu đến Model 'DiscountCode'
+            ref: 'DiscountCode', // Tham chiếu đến Model 'DiscountCode'
             default: null,
         },
 
@@ -60,8 +60,8 @@ const OrderSchema = new mongoose.Schema(
 
         deliveryType: {
             type: String,
-            enum: ["standard", "express"],
-            default: "standard"
+            enum: ['standard', 'express'],
+            default: 'standard',
         },
 
         shippingFee: {
@@ -73,7 +73,7 @@ const OrderSchema = new mongoose.Schema(
         status: {
             type: String,
             enum: ORDER_STATUS_ENUM, // Giới hạn giá trị
-            default: "pending",
+            default: 'pending',
             required: true,
             lowercase: true,
         },
@@ -86,4 +86,4 @@ const OrderSchema = new mongoose.Schema(
 );
 
 // Tạo Model từ Schema
-module.exports = mongoose.model("Order", OrderSchema);
+module.exports = mongoose.model('Order', OrderSchema);

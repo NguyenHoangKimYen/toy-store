@@ -1,4 +1,4 @@
-const repo = require("../repositories/product-analytics.repository");
+const repo = require('../repositories/product-analytics.repository');
 
 module.exports = {
     async getTopSelling() {

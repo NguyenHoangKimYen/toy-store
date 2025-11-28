@@ -1,4 +1,4 @@
-const UserVoucher = require("../models/user-voucher.model");
+const UserVoucher = require('../models/user-voucher.model');
 
 module.exports = {
     create(data) {
@@ -10,6 +10,6 @@ module.exports = {
     },
 
     getUserVouchers(userId) {
-        return UserVoucher.find({ userId }).populate("voucherId");
-    }
+        return UserVoucher.find({ userId }).populate('voucherId');
+    },
 };

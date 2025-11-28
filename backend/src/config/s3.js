@@ -1,4 +1,4 @@
-const { S3 } = require("aws-sdk");
+const { S3 } = require('aws-sdk');
 
 const s3 = new S3({
     region: process.env.AWS_BUCKET_REGION,

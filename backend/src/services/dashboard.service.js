@@ -1,5 +1,5 @@
-const dashboardRepo = require("../repositories/dashboard.repository");
-const branchRepository = require("../repositories/branch.repository");
+const dashboardRepo = require('../repositories/dashboard.repository');
+const branchRepository = require('../repositories/branch.repository');
 
 module.exports = {
     async getSalesDistribution() {
@@ -11,7 +11,7 @@ module.exports = {
             byWebsite: channel.website,
             byMobile: channel.mobile,
             byCOD: channel.cod,
-            byEwallet: channel.ewallet
+            byEwallet: channel.ewallet,
         };
     },
 
@@ -41,5 +41,5 @@ module.exports = {
     // chi nhánh cửa hàng
     async getBranchesMap() {
         return branchRepository.getBranchesWithOrderStats();
-    }
+    },
 };
