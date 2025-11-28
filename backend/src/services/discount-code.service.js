@@ -31,8 +31,17 @@ module.exports = {
         return DiscountCode.findByIdAndDelete(id);
     },
 
-    async getAll() {
-        return DiscountCode.find().sort({ createdAt: -1 });
+    async getAll(params = {}) {
+        const { search } = params;
+        const query = {};
+        
+        // Add search filter if provided
+        if (search && search.trim()) {
+            const searchRegex = new RegExp(search.trim(), 'i');
+            query.code = { $regex: searchRegex };
+        }
+        
+        return DiscountCode.find(query).sort({ createdAt: -1 });
     },
 
     async validateAndApply({ userId, discountCodeId, orderAmount }) {
