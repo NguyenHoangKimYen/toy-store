@@ -1,6 +1,9 @@
 const Order = require("../models/order.model");
 const User = require("../models/user.model");
 
+// Normalize all legacy COD method values so analytics stay correct
+const COD_METHODS = ["cashondelivery", "cod", "cashOnDelivery", "cash"];
+
 module.exports = {
     // 1. Tổng doanh thu (status = PAID)
     async getTotalRevenue() {
@@ -14,7 +17,20 @@ module.exports = {
     // 2. Doanh thu theo kênh (website/mobile/cod/e-wallet)
     async getRevenueByChannel() {
         const raw = await Order.aggregate([
-            { $match: { paymentStatus: "paid" } },
+            {
+                $match: {
+                    $or: [
+                        // Tất cả đơn đã paid (mọi cổng)
+                        { paymentStatus: "paid" },
+                        // COD chỉ tính khi đã giao xong (đảm bảo đã thu tiền)
+                        {
+                            paymentMethod: { $in: COD_METHODS },
+                            status: { $in: ["delivered", "completed"] },
+                            paymentStatus: { $ne: "failed" },
+                        },
+                    ],
+                },
+            },
             {
                 $group: {
                     _id: "$paymentMethod",
@@ -23,10 +39,9 @@ module.exports = {
             },
         ]);
 
-        const codTotal =
-            (raw.find((x) => x._id === "cashondelivery")?.total || 0) +
-            (raw.find((x) => x._id === "cod")?.total || 0) + // fallback dữ liệu cũ
-            (raw.find((x) => x._id === "cashOnDelivery")?.total || 0); // fallback kiểu cũ
+        const codTotal = raw
+            .filter((x) => COD_METHODS.includes(x._id))
+            .reduce((sum, x) => sum + x.total, 0);
 
         return {
             website: raw.find((x) => x._id === "website")?.total || 0,
@@ -128,7 +143,6 @@ module.exports = {
 
     // 7. Payment Summary
     async getPaymentSummary() {
-        const codMethods = ["cashondelivery", "cod", "cashOnDelivery"];
         const raw = await Order.aggregate([
             {
                 $match: {
@@ -137,7 +151,7 @@ module.exports = {
                         { paymentStatus: "paid" },
                         // COD: chỉ tính khi đã giao/hoàn tất (tránh confirmed nhưng chưa thu tiền)
                         {
-                            paymentMethod: { $in: codMethods },
+                            paymentMethod: { $in: COD_METHODS },
                             status: { $in: ["delivered", "completed"] },
                             paymentStatus: { $ne: "failed" },
                         },
@@ -152,10 +166,9 @@ module.exports = {
             },
         ]);
 
-        const codTotal =
-            (raw.find((x) => x._id === "cashondelivery")?.total || 0) +
-            (raw.find((x) => x._id === "cod")?.total || 0) + // fallback dữ liệu cũ
-            (raw.find((x) => x._id === "cashOnDelivery")?.total || 0); // fallback kiểu cũ
+        const codTotal = raw
+            .filter((x) => COD_METHODS.includes(x._id))
+            .reduce((sum, x) => sum + x.total, 0);
 
         return {
             momo: raw.find((x) => x._id === "momo")?.total || 0,
