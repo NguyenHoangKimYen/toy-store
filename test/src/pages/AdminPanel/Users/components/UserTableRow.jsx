@@ -1,7 +1,6 @@
 import React from 'react'
 import { Eye, Edit, Trash2, CheckCircle, XCircle } from 'lucide-react'
-import { formatDate } from '@/utils/formatDate'
-import { formatPhone, getRoleBadgeColor } from '../utils/formatters'
+import { getRoleBadgeColor } from '../utils/formatters'
 
 const UserTableRow = ({ user, onViewDetails, onEdit, onDelete }) => {
   return (
@@ -25,10 +24,9 @@ const UserTableRow = ({ user, onViewDetails, onEdit, onDelete }) => {
         </div>
       </td>
 
-      {/* Contact */}
+      {/* Email */}
       <td className='px-6 py-4 whitespace-nowrap'>
         <div className='text-sm text-gray-900 dark:text-white'>{user.email}</div>
-        <div className='text-sm text-gray-500 dark:text-gray-400'>{formatPhone(user.phone)}</div>
       </td>
 
       {/* Role */}
@@ -53,26 +51,6 @@ const UserTableRow = ({ user, onViewDetails, onEdit, onDelete }) => {
             </>
           )}
         </div>
-        {user.socialProvider && (
-          <span className='text-xs text-gray-500 dark:text-gray-400 capitalize'>
-            via {user.socialProvider}
-          </span>
-        )}
-      </td>
-
-      {/* Loyalty Points */}
-      <td className='px-6 py-4 whitespace-nowrap'>
-        <div className='flex items-center gap-1'>
-          <span className='text-yellow-500'>⭐</span>
-          <span className='text-sm font-medium text-gray-900 dark:text-white'>
-            {(user.loyaltyPoints ?? 0).toLocaleString()}
-          </span>
-        </div>
-      </td>
-
-      {/* Joined Date */}
-      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400'>
-        {formatDate(user.createdAt)}
       </td>
 
       {/* Actions */}

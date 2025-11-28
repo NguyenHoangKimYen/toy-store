@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { X, Shield, CheckCircle } from 'lucide-react'
+import { X, Shield, CheckCircle, ArrowUpDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -101,7 +101,10 @@ const UserFilters = ({ filters, onFilterChange, onClearFilters, showFilters }) =
     onFilterChange({ ...filters, [key]: value })
   }
 
-  const hasActiveFilters = Object.values(filters).some(v => v && v !== 'all')
+  const hasActiveFilters = Object.entries(filters).some(([key, value]) => {
+    if (key === 'sortBy') return value && value !== 'none'
+    return value && value !== 'all'
+  })
 
   return (
     <div className='mb-4'>
@@ -122,7 +125,7 @@ const UserFilters = ({ filters, onFilterChange, onClearFilters, showFilters }) =
       {/* Filter Panel */}
       {showFilters && (
         <div className='p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-4 mb-4'>
-          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4'>
             
             {/* Role Filter */}
             <div className='space-y-2'>
@@ -192,6 +195,27 @@ const UserFilters = ({ filters, onFilterChange, onClearFilters, showFilters }) =
               </Select>
             </div>
 
+            {/* Sort by Loyalty Points */}
+            <div className='space-y-2'>
+              <Label className='flex items-center gap-2 text-sm font-medium'>
+                <ArrowUpDown className='w-4 h-4' />
+                Sort by Points
+              </Label>
+              <Select 
+                value={filters.sortBy || 'none'} 
+                onValueChange={(v) => handleChange('sortBy', v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder='No Sorting' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='none'>No Sorting</SelectItem>
+                  <SelectItem value='points-high'>Highest Points First</SelectItem>
+                  <SelectItem value='points-low'>Lowest Points First</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
           </div>
 
           {/* Active Filters Summary */}
@@ -212,6 +236,11 @@ const UserFilters = ({ filters, onFilterChange, onClearFilters, showFilters }) =
                 {filters.socialProvider && filters.socialProvider !== 'all' && (
                   <span className='px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs capitalize'>
                     Login: {filters.socialProvider === 'local' ? 'Email/Password' : filters.socialProvider}
+                  </span>
+                )}
+                {filters.sortBy && filters.sortBy !== 'none' && (
+                  <span className='px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs'>
+                    Sort: {filters.sortBy === 'points-high' ? 'Highest Points' : 'Lowest Points'}
                   </span>
                 )}
               </div>

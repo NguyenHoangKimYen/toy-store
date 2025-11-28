@@ -23,7 +23,8 @@ const Users = () => {
   const [filters, setFilters] = useState({
     role: 'all',
     isVerified: 'all',
-    socialProvider: 'all'
+    socialProvider: 'all',
+    sortBy: 'none'
   })
 
   // Build params for API call
@@ -42,7 +43,7 @@ const Users = () => {
 
   // Custom hook handles data fetching and CRUD operations
   const { 
-    users, 
+    users: fetchedUsers, 
     stats, 
     loading, 
     error,
@@ -54,6 +55,21 @@ const Users = () => {
     dependencies: [apiParams]
   })
 
+  // Apply sorting to users
+  const users = useMemo(() => {
+    if (!fetchedUsers || filters.sortBy === 'none') return fetchedUsers
+    
+    const sorted = [...fetchedUsers]
+    
+    if (filters.sortBy === 'points-high') {
+      sorted.sort((a, b) => (b.loyaltyPoints || 0) - (a.loyaltyPoints || 0))
+    } else if (filters.sortBy === 'points-low') {
+      sorted.sort((a, b) => (a.loyaltyPoints || 0) - (b.loyaltyPoints || 0))
+    }
+    
+    return sorted
+  }, [fetchedUsers, filters.sortBy])
+
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters)
   }
@@ -62,7 +78,8 @@ const Users = () => {
     setFilters({
       role: 'all',
       isVerified: 'all',
-      socialProvider: 'all'
+      socialProvider: 'all',
+      sortBy: 'none'
     })
     setSearchQuery('')
   }
