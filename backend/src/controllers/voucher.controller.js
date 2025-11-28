@@ -44,6 +44,19 @@ module.exports = {
         return res.json({ success: true, vouchers: list });
     },
 
+    // --- PUBLIC/USER ---
+    async getCollectable(req, res) {
+        try {
+            const userId = req.user?.id || null;
+            const list = await voucherService.getCollectableVouchers(userId);
+            return res.json({ success: true, vouchers: list });
+        } catch (err) {
+            return res
+                .status(400)
+                .json({ success: false, message: err.message });
+        }
+    },
+
     // --- USER ---
     async getUsableVouchers(req, res) {
         try {
