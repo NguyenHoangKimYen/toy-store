@@ -39,6 +39,9 @@ module.exports = {
         const { page = 1, limit = 20 } = options;
         return Order.find(filter)
             .populate('userId', 'fullName email username phone')
+            .populate('addressId', 'fullNameOfReceiver phone addressLine city postalCode lat lng')
+            .populate('discountCodeId', 'code value')
+            .populate('voucherId', 'code value type')
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(limit)
