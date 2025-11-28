@@ -35,22 +35,11 @@ module.exports = {
       .lean();
   },
 
-    findAll(filter = {}, options = {}) {
+    async findAll(filter = {}, options = {}) {
         const { page = 1, limit = 20, search, status, deliveryType, paymentMethod } = options;
         
         // Build MongoDB query
         const query = { ...filter };
-        
-        // Add search filter if provided
-        if (search && search.trim()) {
-            const searchRegex = new RegExp(search.trim(), 'i');
-            query.$or = [
-                { _id: { $regex: searchRegex } },
-                { 'userId.email': { $regex: searchRegex } },
-                { 'userId.fullName': { $regex: searchRegex } },
-                { 'userId.username': { $regex: searchRegex } }
-            ];
-        }
         
         // Add status filter
         if (status && status !== 'all') {
@@ -65,6 +54,33 @@ module.exports = {
         // Add payment method filter
         if (paymentMethod && paymentMethod !== 'all') {
             query.paymentMethod = paymentMethod;
+        }
+        
+        // If search is provided, we need to search in User collection first
+        if (search && search.trim()) {
+            const User = require('../models/user.model');
+            const searchRegex = new RegExp(search.trim(), 'i');
+            
+            // Search for matching users
+            const matchingUsers = await User.find({
+                $or: [
+                    { email: { $regex: searchRegex } },
+                    { fullName: { $regex: searchRegex } },
+                    { username: { $regex: searchRegex } }
+                ]
+            }).select('_id').lean();
+            
+            const userIds = matchingUsers.map(u => u._id);
+            
+            // Combine with order ID search
+            query.$or = [
+                { userId: { $in: userIds } }
+            ];
+            
+            // Try to match order ID if search looks like an ObjectId
+            if (search.trim().match(/^[0-9a-fA-F]{24}$/)) {
+                query.$or.push({ _id: search.trim() });
+            }
         }
         
         return Order.find(query)

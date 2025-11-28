@@ -33,9 +33,15 @@ const getAllUsers = async (query) => {
     // === 2. Lọc theo role ===
     if (role) filter.role = role;
 
-    // === 3. Keyword search (full-text) ===
-    if (keyword) {
-        filter.$text = { $search: keyword };
+    // === 3. Keyword search (regex-based) ===
+    if (keyword && keyword.trim()) {
+        const searchRegex = new RegExp(keyword.trim(), 'i');
+        filter.$or = [
+            { email: { $regex: searchRegex } },
+            { fullName: { $regex: searchRegex } },
+            { username: { $regex: searchRegex } },
+            { phone: { $regex: searchRegex } }
+        ];
     }
 
     // Nếu tìm 1 kết quả -> không cần phân trang
