@@ -84,7 +84,9 @@ const loyaltyRoutes = require("./routes/loyalty.route.js");
 const discountRoutes = require("./routes/discount-code.routes.js");
 const monthlyJob = require("./utils/montly-loyalty.js");
 const voucherRoutes = require("./routes/voucher.route.js");
+const badgeRoutes = require("./routes/badge.route.js");
 const dashboardRoutes = require("./routes/dashboard.routes.js");
+const chatRoutes = require("./routes/chat.route.js");
 
 const errorHandler = require("./middlewares/error.middleware");
 
@@ -108,7 +110,9 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/loyalty", loyaltyRoutes);
 app.use("/api/discount", discountRoutes);
 app.use("/api/vouchers", voucherRoutes);
+app.use("/api/badges", badgeRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/chat", chatRoutes);
 
 const server = http.createServer(app);
 socket.init(server);
