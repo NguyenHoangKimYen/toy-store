@@ -7,6 +7,9 @@ const getVariantsByProduct = async (req, res, next) => {
         const variants = await variantService.getVariantsByProduct(
             req.params.productId,
         );
+        const variants = await variantService.getVariantsByProduct(
+            req.params.productId,
+        );
         res.json({ success: true, data: variants });
     } catch (err) {
         next(err);

@@ -6,7 +6,7 @@ const auth = require('../middlewares/auth.middleware');
 
 // User lấy voucher từ event
 router.post(
-    '/collect/:voucherId',
+    "/collect/:voucherId",
     auth,
     voucherCollectController.collectVoucher,
 );

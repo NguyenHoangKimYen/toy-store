@@ -14,56 +14,55 @@ const {
     deleteUser,
     uploadAvatar: uploadAvatarController,
     updateAvatar: updateAvatarController,
-} = require('../controllers/user.controller.js');
+    getUserById,
+    checkUsername,
+    checkEmail,
+} = require("../controllers/user.controller.js");
 
 const router = express.Router();
 
-// Chỉ owner hoặc admin được sửa user
-const ownerOrAdmin = (req, res, next) => {
-    if (req.user.role === 'admin') return next();
-    if (req.user.id === req.query.id) return next();
-    return res.status(403).json({
-        success: false,
-        message: 'Forbidden: You cannot modify another user.',
-    });
-};
+// ============ PUBLIC ROUTES (No auth required) ============
+// Check username availability
+router.get("/check-username", checkUsername);
 
-// ============ ADMIN ============
+// Check email availability
+router.get("/check-email", checkEmail);
+
+// ============ PROTECTED ROUTES (Auth required) ============
+router.use(auth);
 
 // GET: tất cả user hoặc search theo param
-router.get('/', auth, adminOnly, getAllUsers);
+router.get("/", adminOnly, getAllUsers);
+
+router.get("/:userId", auth, getUserById);
 
 // Admin tạo user
-router.post('/', auth, adminOnly, createUser);
+router.post("/", adminOnly, createUser);
 
 // Admin update user
-router.put('/', auth, adminOnly, updateUser);
+router.put("/", adminOnly, updateUser);
 
 // Admin delete user
-router.delete('/', auth, adminOnly, deleteUser);
+router.delete("/", adminOnly, deleteUser);
 
-// ============ USER ============
+// ============ USER ROUTES ============
 
-// Verify user (owner hoặc admin)
-router.patch('/verify', auth, ownerOrAdmin, verifyUser);
+// Verify user
+router.patch("/verify", verifyUser);
 
 // Set password
-router.patch('/set-password', auth, ownerOrAdmin, setUserPassword);
+router.patch("/set-password", setUserPassword);
 
 // Upload avatar
 router.post(
-    '/avatar',
-    auth,
-    ownerOrAdmin,
+    "/avatar",
     uploadAvatarMiddleware,
     uploadAvatarController,
 );
 
 // Update avatar
 router.patch(
-    '/avatar',
-    auth,
-    ownerOrAdmin,
+    "/avatar",
     uploadAvatarMiddleware,
     updateAvatarController,
 );

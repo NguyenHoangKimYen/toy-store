@@ -60,11 +60,52 @@ const OrderSchema = new mongoose.Schema(
 
         deliveryType: {
             type: String,
-            enum: ['standard', 'express'],
-            default: 'standard',
+            enum: ["standard", "express"],
+            default: "standard",
         },
 
         shippingFee: {
+            type: Number,
+            default: 0,
+        },
+
+        // Phương thức thanh toán: momo/zalopay/vietqr/cashondelivery
+        paymentMethod: {
+            type: String,
+            enum: ["momo", "zalopay", "vietqr", "cashondelivery", null],
+            default: null,
+            lowercase: true,
+        },
+
+        // Trạng thái thanh toán riêng (khác với trạng thái đơn)
+        paymentStatus: {
+            type: String,
+            enum: ["unpaid", "paid", "failed", "refunded", "pending"],
+            default: "unpaid",
+            lowercase: true,
+        },
+
+        // Mã giao dịch từ ZaloPay (apptransid) để map callback/return
+        zaloAppTransId: {
+            type: String,
+            default: null,
+            index: true,
+        },
+
+        // Voucher áp dụng (nếu có)
+        voucherId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Voucher",
+            default: null,
+        },
+
+        // Giảm giá từ mã/voucher
+        discountAmount: {
+            type: Number,
+            default: 0,
+        },
+
+        voucherDiscount: {
             type: Number,
             default: 0,
         },

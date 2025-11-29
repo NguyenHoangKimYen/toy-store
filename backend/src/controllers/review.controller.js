@@ -2,7 +2,7 @@ const ReviewService = require('../services/review.service');
 
 const createReview = async (req, res, next) => {
     try {
-        const userId = req.user._id;
+        const userId = req.user._id || req.user.id;
         // Lấy text data từ body
         const { productId, variantId, rating, comment } = req.body;
 
@@ -121,11 +121,27 @@ const moderateReview = async (req, res, next) => {
             adminId: req.user._id,
             status,
             reason,
+            reason,
         });
 
         return res.status(200).json({
             message: `Review has been ${status}`,
             metadata: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const getPendingReviews = async (req, res, next) => {
+    try {
+        const userId = req.user._id;
+        const result = await ReviewService.getProductsToReview(userId);
+        
+        return res.status(200).json({
+            success: true,
+            message: "Lấy danh sách chờ đánh giá thành công",
+            data: result
         });
     } catch (error) {
         next(error);
@@ -138,4 +154,5 @@ module.exports = {
     updateReview,
     deleteReview,
     moderateReview,
+    getPendingReviews
 };

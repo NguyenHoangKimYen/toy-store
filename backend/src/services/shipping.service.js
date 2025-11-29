@@ -1,27 +1,27 @@
-const haversine = require('haversine-distance');
-const BRANCHES = require('../data/branches.js');
-const { getWeatherCondition } = require('./weather.service');
-const { applyLoyaltyToShipping } = require('../utils/loyalty-ship.helper.js');
-const User = require('../models/user.model');
+const haversine = require("haversine-distance");
+const BRANCHES = require("../data/branches.js");
+const { getWeatherCondition } = require("./weather.service");
+const { applyLoyaltyToShipping } = require("../utils/loyalty-ship.helper.js");
+const User = require("../models/user.model");
 
 //Chuan hoa chu
-function normalizeVN(str = '') {
+function normalizeVN(str = "") {
     return str
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
         .toLowerCase();
 }
 
-function normalizeProvince(str = '') {
+function normalizeProvince(str = "") {
     let text = str
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
         .toLowerCase()
         .trim();
 
-    text = text.replace(/^tp\.?\s*/g, 'thanh pho ');
-    text = text.replace(/ho chi minh city/g, 'thanh pho ho chi minh');
-    text = text.replace(/hcm/g, 'ho chi minh');
+    text = text.replace(/^tp\.?\s*/g, "thanh pho ");
+    text = text.replace(/ho chi minh city/g, "thanh pho ho chi minh");
+    text = text.replace(/hcm/g, "ho chi minh");
 
     return text;
 }
@@ -49,10 +49,10 @@ function findNearestWarehouse(address) {
 
 //Xác định vùng giao hàng dựa trên khoảng cách
 function detectRegion(distanceKm) {
-    if (distanceKm <= 20) return 'noi_thanh';
-    if (distanceKm <= 40) return 'ngoai_thanh';
-    if (distanceKm <= 300) return 'lien_vung_gan';
-    return 'lien_vung_xa';
+    if (distanceKm <= 20) return "noi_thanh";
+    if (distanceKm <= 40) return "ngoai_thanh";
+    if (distanceKm <= 300) return "lien_vung_gan";
+    return "lien_vung_xa";
 }
 
 /**
@@ -68,15 +68,15 @@ async function calculateShippingFee(
     weightGram = 500,
     orderValue = 0,
     hasFreeship = false,
-    deliveryType = 'standard',
+    deliveryType = "standard",
 ) {
     const nearest = findNearestWarehouse(address);
     if (!nearest)
         return {
             fee: 0,
-            region: 'unknown',
+            region: "unknown",
             distanceKm: 0,
-            notes: ['Không thấy cửa hàng gần nhất'],
+            notes: ["Không thấy cửa hàng gần nhất"],
         };
 
     let distanceKm = nearest.distanceKm;
@@ -85,23 +85,23 @@ async function calculateShippingFee(
     let baseFee = 0;
     let extraFee = 0;
     let notes = [];
-    let isExpressAllowed = region === 'noi_thanh';
+    let isExpressAllowed = region === "noi_thanh";
 
     //Phí cơ bản theo vùng
     switch (region) {
-        case 'noi_thanh':
+        case "noi_thanh":
             baseFee = 18000;
             extraFee = 2000;
             break;
-        case 'ngoai_thanh':
+        case "ngoai_thanh":
             baseFee = 25000;
             extraFee = 2500;
             break;
-        case 'lien_vung_gan':
+        case "lien_vung_gan":
             baseFee = 30000;
             extraFee = 3000;
             break;
-        case 'lien_vung_xa':
+        case "lien_vung_xa":
             baseFee = 45000;
             extraFee = 5000;
             break;
@@ -117,27 +117,27 @@ async function calculateShippingFee(
     //Voucher / Freeship
     if (hasFreeship && orderValue >= 500000) {
         baseFee = 0;
-        notes.push('FREESHIP');
+        notes.push("FREESHIP");
     } else if (hasFreeship) {
         baseFee = Math.max(baseFee - 15000, 0);
-        notes.push('DISCOUNT_DELIVERY');
+        notes.push("DISCOUNT_DELIVERY");
     } else if (orderValue >= 500000) {
         baseFee = 0;
-        notes.push('FREESHIP');
+        notes.push("FREESHIP");
     }
 
     //Phí ship phụ thuộc vào thời tiết
     const weather = await getWeatherCondition(address.lat, address.lng);
 
     const matchedIsland = [
-        { name: 'Phú Quốc', province: 'Kiên Giang' },
-        { name: 'Côn Đảo', province: 'Bà Rịa - Vũng Tàu' },
-        { name: 'Cát Bà', province: 'Hải Phòng' },
+        { name: "Phú Quốc", province: "Kiên Giang" },
+        { name: "Côn Đảo", province: "Bà Rịa - Vũng Tàu" },
+        { name: "Cát Bà", province: "Hải Phòng" },
     ].find(
         (area) =>
             normalizeProvince(address.province) ===
                 normalizeProvince(area.province) &&
-            normalizeVN(address.addressLine || '').includes(
+            normalizeVN(address.addressLine || "").includes(
                 normalizeVN(area.name),
             ),
     );
@@ -146,7 +146,7 @@ async function calculateShippingFee(
     if (matchedIsland) {
         return {
             success: false,
-            region: 'dao',
+            region: "dao",
             fee: 0,
             deliveryType,
             isExpressAllowed: false,
@@ -157,13 +157,13 @@ async function calculateShippingFee(
     }
 
     // Express chỉ áp dụng nội thành
-    if (deliveryType === 'express' && !isExpressAllowed) {
-        notes.push('Không thể giao hoả tốc tại khu vực này');
+    if (deliveryType === "express" && !isExpressAllowed) {
+        notes.push("Không thể giao hoả tốc tại khu vực này");
         return {
             nearestWarehouse: nearest,
             region,
             distanceKm,
-            deliveryType: 'standard',
+            deliveryType: "standard",
             isExpressAllowed: false,
             fee: Math.round(baseFee),
             notes,
@@ -171,7 +171,7 @@ async function calculateShippingFee(
         };
     }
 
-    if (deliveryType === 'express' && isExpressAllowed) {
+    if (deliveryType === "express" && isExpressAllowed) {
         if (weather.isBadWeather) {
             baseFee *= 1.3;
             notes.push(
@@ -184,7 +184,7 @@ async function calculateShippingFee(
 
         if (realHour >= 20 || realHour < 6) {
             baseFee += 15000;
-            notes.push('Phụ phí giao ban đêm');
+            notes.push("Phụ phí giao ban đêm");
         }
 
         if (
@@ -192,7 +192,7 @@ async function calculateShippingFee(
             (realHour >= 17 && realHour < 19)
         ) {
             baseFee += 10000;
-            notes.push('Phụ phí giờ cao điểm');
+            notes.push("Phụ phí giờ cao điểm");
         }
     }
 

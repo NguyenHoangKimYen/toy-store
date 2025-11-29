@@ -1,4 +1,4 @@
-const axios = require('axios');
+const axios = require("axios");
 const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
 
 /**
@@ -29,10 +29,10 @@ async function getWeatherCondition(lat, lng) {
             isBadWeather,
         };
     } catch (err) {
-        console.error('Weather API error:', err.message);
+        console.error("Weather API error:", err.message);
         return {
             isBadWeather: false,
-            message: 'Không thể lấy dữ liệu thời tiết',
+            message: "Không thể lấy dữ liệu thời tiết",
         };
     }
 }

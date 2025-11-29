@@ -15,31 +15,31 @@ function createMomoSignatureForCreatePayment({
     secretKey,
 }) {
     const rawSignature =
-        'accessKey=' +
+        "accessKey=" +
         accessKey +
-        '&amount=' +
+        "&amount=" +
         amount +
-        '&extraData=' +
+        "&extraData=" +
         extraData +
-        '&ipnUrl=' +
+        "&ipnUrl=" +
         ipnUrl +
-        '&orderId=' +
+        "&orderId=" +
         orderId +
-        '&orderInfo=' +
+        "&orderInfo=" +
         orderInfo +
-        '&partnerCode=' +
+        "&partnerCode=" +
         partnerCode +
-        '&redirectUrl=' +
+        "&redirectUrl=" +
         redirectUrl +
-        '&requestId=' +
+        "&requestId=" +
         requestId +
-        '&requestType=' +
+        "&requestType=" +
         requestType;
 
     const signature = crypto
-        .createHmac('sha256', secretKey)
-        .update(rawSignature, 'utf8')
-        .digest('hex');
+        .createHmac("sha256", secretKey)
+        .update(rawSignature, "utf8")
+        .digest("hex");
 
     return { rawSignature, signature };
 }
@@ -63,37 +63,37 @@ function createMomoSignatureForIpn(params, secretKey) {
     } = params;
 
     const rawSignature =
-        'accessKey=' +
+        "accessKey=" +
         accessKey +
-        '&amount=' +
+        "&amount=" +
         amount +
-        '&extraData=' +
+        "&extraData=" +
         extraData +
-        '&message=' +
+        "&message=" +
         message +
-        '&orderId=' +
+        "&orderId=" +
         orderId +
-        '&orderInfo=' +
+        "&orderInfo=" +
         orderInfo +
-        '&orderType=' +
+        "&orderType=" +
         orderType +
-        '&partnerCode=' +
+        "&partnerCode=" +
         partnerCode +
-        '&payType=' +
+        "&payType=" +
         payType +
-        '&requestId=' +
+        "&requestId=" +
         requestId +
-        '&responseTime=' +
+        "&responseTime=" +
         responseTime +
-        '&resultCode=' +
+        "&resultCode=" +
         resultCode +
-        '&transId=' +
+        "&transId=" +
         transId;
 
     const signature = crypto
-        .createHmac('sha256', secretKey)
-        .update(rawSignature, 'utf8')
-        .digest('hex');
+        .createHmac("sha256", secretKey)
+        .update(rawSignature, "utf8")
+        .digest("hex");
 
     return { rawSignature, signature };
 }

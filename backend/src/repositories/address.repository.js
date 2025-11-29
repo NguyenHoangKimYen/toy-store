@@ -1,16 +1,16 @@
-const { options, date } = require('joi');
-const Address = require('../models/address.model.js');
-const User = require('../models/user.model.js');
+const { options, date } = require("joi");
+const Address = require("../models/address.model.js");
+const User = require("../models/user.model.js");
 
 const findAll = async (filter = {}, options = {}) => {
     //tìm tắt cả
     return Address.find(filter)
         .populate({
-            path: 'userId',
-            select: 'fullNameOfReceiver email phone defaultAddressId',
+            path: "userId",
+            select: "fullNameOfReceiver email phone defaultAddressId",
             populate: {
-                path: 'defaultAddressId',
-                select: 'fullNameOfReceiver phone addressLine city postalCode isDefault',
+                path: "defaultAddressId",
+                select: "fullNameOfReceiver phone addressLine city postalCode isDefault",
             },
         })
         .skip(options.skip || 0) //phân trang
@@ -21,8 +21,8 @@ const findAll = async (filter = {}, options = {}) => {
 const findById = async (id) => {
     //tìm địa chỉ theo ID
     return Address.findById(id).populate({
-        path: 'userId',
-        select: 'fullNameOfReceiver email phone defaultAddressId',
+        path: "userId",
+        select: "fullNameOfReceiver email phone defaultAddressId",
     });
 };
 
@@ -62,7 +62,7 @@ const update = async (id, data) => {
     return Address.findByIdAndUpdate(id, data, {
         new: true, //trả về document sau khi cập nhật
         runValidators: true, //kiểm tra trước khi lưu
-        context: 'query',
+        context: "query",
     });
 };
 

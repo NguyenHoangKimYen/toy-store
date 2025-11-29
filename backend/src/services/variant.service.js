@@ -38,12 +38,12 @@ const createVariant = async (productId, variantData, imgFiles) => {
     const allowedAttributes = product.attributes;
 
     let variantAttributesArray;
-    if (typeof variantData.attributes === 'string') {
+    if (typeof variantData.attributes === "string") {
         try {
             variantAttributesArray = JSON.parse(variantData.attributes);
         } catch (e) {
             throw new Error(
-                'Invalid attributes JSON format. Please send an array.',
+                "Invalid attributes JSON format. Please send an array.",
             );
         }
     } else {

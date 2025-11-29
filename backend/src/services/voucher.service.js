@@ -39,15 +39,49 @@ module.exports = {
     },
 
     /**
+     * User xem danh sách voucher có thể thu thập (isCollectable + active + trong thời gian)
+     */
+    async getCollectableVouchers(userId) {
+        const now = new Date();
+        const list = await voucherRepository.findAll({
+            isActive: true,
+            isCollectable: true,
+            $and: [
+                {
+                    $or: [{ startDate: null }, { startDate: { $lte: now } }],
+                },
+                {
+                    $or: [{ endDate: null }, { endDate: { $gte: now } }],
+                },
+            ],
+        });
+
+        // Đánh dấu voucher đã thu thập hay chưa
+        if (!userId) return list.map((v) => ({ ...v.toObject(), collected: false }));
+
+        const collected = await userVoucherRepository.findUsableByUser(userId);
+        const collectedIds = new Set(
+            collected.map((uv) => uv.voucherId?._id?.toString() || uv.voucherId?.toString()),
+        );
+
+        return list.map((v) => ({
+            ...v.toObject(),
+            collected: collectedIds.has(v._id.toString()),
+        }));
+    },
+
+    /**
      * Kiểm tra voucher có dùng được không
      */
     async validateVoucherForUser(userId, voucherId, goodsTotal) {
         const voucher = await voucherRepository.findById(voucherId);
         if (!voucher) throw new Error('Voucher không tồn tại');
 
-        if (voucher.expiredAt < new Date()) {
-            throw new Error('Voucher đã hết hạn');
-        }
+        const now = new Date();
+        const startAt = voucher.startDate || voucher.createdAt || now;
+        const endAt = voucher.endDate || voucher.expiredAt;
+        if (startAt && startAt > now) throw new Error("Voucher chưa bắt đầu");
+        if (endAt && endAt < now) throw new Error("Voucher đã hết hạn");
 
         // Voucher chỉ dành cho user có tài khoản
         if (!userId) {
@@ -103,7 +137,7 @@ module.exports = {
             type: uv.voucherId.type,
             value: uv.voucherId.value,
             maxDiscount: uv.voucherId.maxDiscount,
-            expiredAt: uv.voucherId.expiredAt,
+            expiredAt: uv.voucherId.endDate || uv.voucherId.expiredAt,
             used: uv.used,
         }));
     },
@@ -116,7 +150,7 @@ module.exports = {
             userId,
             voucherId,
         );
-        if (!uv) throw new Error('User chưa collect voucher này');
+        if (!uv) throw new Error("User chưa collect voucher này");
 
         if (uv.used) throw new Error('Voucher đã dùng rồi');
 

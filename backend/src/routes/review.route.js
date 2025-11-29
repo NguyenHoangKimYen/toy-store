@@ -6,7 +6,8 @@ const {
     updateReview,
     deleteReview,
     moderateReview,
-} = require('../controllers/review.controller');
+    getPendingReviews
+} = require("../controllers/review.controller");
 
 const { uploadReviewImages } = require('../middlewares/upload.middleware.js');
 
@@ -14,15 +15,21 @@ const authMiddleware = require('../middlewares/auth.middleware');
 
 // --- PUBLIC ROUTES ---
 router.get('/product/:productId', getReviewsByProductId);
+const { uploadReviewImages } = require("../middlewares/upload.middleware.js");
+const authMiddleware = require("../middlewares/auth.middleware.js");
+const adminMiddlewares = require("../middlewares/admin.middleware.js");
 
-// middleware
+router.get("/product/:productId", getReviewsByProductId);
+
+
 router.use(authMiddleware);
+router.get("/pending", getPendingReviews);
+router.post("/", uploadReviewImages, createReview);
+router.patch("/:reviewId", uploadReviewImages, updateReview);
+router.delete("/:reviewId", deleteReview);
 
-// Các route bên dưới sẽ yêu cầu đăng nhập
-router.post('/', uploadReviewImages, createReview);
-router.patch('/:reviewId', uploadReviewImages, updateReview);
-router.delete('/:reviewId', deleteReview);
 
-router.patch('/:reviewId/moderate', authMiddleware, moderateReview);
+router.use(adminMiddlewares);
+router.patch("/:reviewId/moderate", adminMiddlewares, moderateReview); 
 
 module.exports = router;

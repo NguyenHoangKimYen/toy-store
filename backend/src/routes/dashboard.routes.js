@@ -5,19 +5,19 @@ const adminOnly = require('../middlewares/admin.middleware');
 
 // Layout Section 2: Sales Overview + Revenue Updates + Yearly Sales
 router.get(
-    '/sales-overview',
+    "/sales-overview",
     auth,
     adminOnly,
     dashboardController.getSalesOverview,
 );
 router.get(
-    '/revenue-updates',
+    "/revenue-updates",
     auth,
     adminOnly,
     dashboardController.getRevenueUpdates,
 );
 router.get(
-    '/yearly-sales',
+    "/yearly-sales",
     auth,
     adminOnly,
     dashboardController.getYearlySales,
@@ -25,7 +25,7 @@ router.get(
 
 // Layout Section 4: Payment Gateways
 router.get(
-    '/payment-summary',
+    "/payment-summary",
     auth,
     adminOnly,
     dashboardController.getPaymentSummary,
@@ -33,31 +33,31 @@ router.get(
 
 // --- PRODUCT ANALYTICS (GỘP CHUNG DASHBOARD) ---
 router.get(
-    '/products/top-selling',
+    "/products/top-selling",
     auth,
     adminOnly,
     dashboardController.getTopSelling,
 );
 router.get(
-    '/products/high-stock',
+    "/products/high-stock",
     auth,
     adminOnly,
     dashboardController.getHighStock,
 );
 router.get(
-    '/products/low-stock',
+    "/products/low-stock",
     auth,
     adminOnly,
     dashboardController.getLowStock,
 );
 router.get(
-    '/products/revenue',
+    "/products/revenue",
     auth,
     adminOnly,
     dashboardController.getProductRevenue,
 );
 router.get(
-    '/products/category-stats',
+    "/products/category-stats",
     auth,
     adminOnly,
     dashboardController.getCategoryStats,
@@ -65,7 +65,7 @@ router.get(
 
 //Hiển thị chi nhánh cửa hàng trên bản đồ
 router.get(
-    '/branches-map',
+    "/branches-map",
     auth,
     adminOnly,
     dashboardController.getBranchesMap,

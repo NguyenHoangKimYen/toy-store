@@ -93,11 +93,11 @@ async function recalculateCart(cartId) {
     );
 }
 
-CartItemSchema.post('save', async function () {
+CartItemSchema.post("save", async function () {
     await recalculateCart(this.cartId);
 });
 
-CartItemSchema.post('findOneAndDelete', async function (doc) {
+CartItemSchema.post("findOneAndDelete", async function (doc) {
     if (doc) {
         await recalculateCart(doc.cartId);
     }

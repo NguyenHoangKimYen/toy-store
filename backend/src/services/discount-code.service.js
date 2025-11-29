@@ -8,6 +8,42 @@ function isTierEligible(userTier, requiredTier) {
 }
 
 module.exports = {
+    async createDiscountCode(data) {
+        const payload = {
+            ...data,
+            code: data.code?.toUpperCase().trim(),
+        };
+
+        if (!payload.createdBy) {
+            throw new Error("createdBy is required");
+        }
+
+        return DiscountCode.create(payload);
+    },
+
+    async updateDiscountCode(id, data) {
+        const payload = { ...data };
+        if (payload.code) payload.code = payload.code.toUpperCase().trim();
+        return DiscountCode.findByIdAndUpdate(id, payload, { new: true });
+    },
+
+    async deleteDiscountCode(id) {
+        return DiscountCode.findByIdAndDelete(id);
+    },
+
+    async getAll(params = {}) {
+        const { search } = params;
+        const query = {};
+        
+        // Add search filter if provided
+        if (search && search.trim()) {
+            const searchRegex = new RegExp(search.trim(), 'i');
+            query.code = { $regex: searchRegex };
+        }
+        
+        return DiscountCode.find(query).sort({ createdAt: -1 });
+    },
+
     async validateAndApply({ userId, discountCodeId, orderAmount }) {
         const code = await discountRepo.findById(discountCodeId);
         if (!code) throw new Error('DISCOUNT_NOT_FOUND');
@@ -39,6 +75,43 @@ module.exports = {
         return {
             discountValue,
             finalAmount,
+        };
+    },
+
+    async validateByCode({ code, totalAmount, userId }) {
+        if (!code) throw new Error("DISCOUNT_CODE_REQUIRED");
+        const doc = await discountRepo.findByCode(code);
+        if (!doc) throw new Error("DISCOUNT_NOT_FOUND");
+
+        // Check expired
+        if (doc.expiresAt && doc.expiresAt < new Date()) {
+            throw new Error("DISCOUNT_EXPIRED");
+        }
+
+        // Check usage limit
+        if (doc.usedCount >= doc.usageLimit) {
+            throw new Error("DISCOUNT_USAGE_LIMIT");
+        }
+
+        // Check tier restriction
+        if (userId) {
+            const user = await User.findById(userId).select("loyaltyTier");
+            const userTier = user?.loyaltyTier || "none";
+
+            if (!isTierEligible(userTier, doc.requiredTier)) {
+                throw new Error("DISCOUNT_TIER_NOT_ELIGIBLE");
+            }
+        }
+
+        const discountValue = Number(doc.value);
+        const finalAmount = Math.max(Number(totalAmount) - discountValue, 0);
+
+        return {
+            discountCodeId: doc._id,
+            discountValue,
+            finalAmount,
+            requiredTier: doc.requiredTier,
+            usageLeft: Math.max(doc.usageLimit - doc.usedCount, 0),
         };
     },
 

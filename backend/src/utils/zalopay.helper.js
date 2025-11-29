@@ -8,13 +8,13 @@ const ZALOPAY_CONFIG = {
     key2: process.env.ZALOPAY_KEY2,
     endpoint:
         process.env.ZALOPAY_ENDPOINT ||
-        'https://sandbox.zalopay.com.vn/v001/tpe/createorder',
+        "https://sandbox.zalopay.com.vn/v001/tpe/createorder",
     callbackUrl: process.env.ZALOPAY_CALLBACK_URL,
     redirectUrl: process.env.ZALOPAY_REDIRECT_URL,
 };
 
 function hmacSHA256(data, key) {
-    return crypto.createHmac('sha256', key).update(data).digest('hex');
+    return crypto.createHmac("sha256", key).update(data).digest("hex");
 }
 
 // Create ZaloPay order payload and call the sandbox endpoint
@@ -23,20 +23,24 @@ async function createZaloPayOrder(order) {
     const key1 = ZALOPAY_CONFIG.key1;
 
     if (!appid || !key1) {
-        throw new Error('Missing ZaloPay configuration');
+        throw new Error("Missing ZaloPay configuration");
     }
 
     const now = new Date();
-    const yyMMdd = now.toISOString().slice(2, 10).replace(/-/g, '');
+    const yyMMdd = now.toISOString().slice(2, 10).replace(/-/g, "");
     const random = Math.floor(100000 + Math.random() * 900000);
     const apptransid = `${yyMMdd}_${random}`;
 
     const amount = parseInt(order.totalAmount.toString(), 10);
     const apptime = Date.now();
-    const appuser = order.userId?.toString() || 'guest';
+    const appuser = order.userId?.toString() || "guest";
+
+    // Build dynamic redirect URL with order ID
+    const baseUrl = ZALOPAY_CONFIG.redirectUrl.replace(/\/payment\/success$/, '');
+    const dynamicRedirectUrl = `${baseUrl}/payment/${order._id}`;
 
     const embeddata = JSON.stringify({
-        redirecturl: ZALOPAY_CONFIG.redirectUrl,
+        redirecturl: dynamicRedirectUrl,
     });
 
     const item = JSON.stringify([]);
@@ -53,13 +57,13 @@ async function createZaloPayOrder(order) {
         embeddata,
         item,
         description: `MilkyBloom - Order #${order._id}`,
-        bankcode: 'zalopayapp',
+        bankcode: "zalopayapp",
         callbackurl: ZALOPAY_CONFIG.callbackUrl,
         mac,
     });
 
     const headers = {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        "Content-Type": "application/x-www-form-urlencoded",
     };
 
     const response = await axios.post(ZALOPAY_CONFIG.endpoint, payload, {

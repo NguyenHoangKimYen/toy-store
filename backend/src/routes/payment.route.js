@@ -11,9 +11,12 @@ const {
     momoIpn,
     momoReturn,
 
-    createZaloPayOrder,
-    zaloPayCallback,
-} = require('../controllers/payment.controller.js');
+  createZaloPayOrder,
+  zaloPayCallback,
+  zaloPayReturn,
+  paymentSuccess,
+  payByCash,
+} = require("../controllers/payment.controller.js");
 
 const auth = require('../middlewares/auth.middleware.js');
 const adminOnly = require('../middlewares/admin.middleware.js');
@@ -29,7 +32,7 @@ router.get('/vietqr/admin/pending', auth, adminOnly, getPendingVietQROrders);
 
 // ADMIN xác nhận đã nhận tiền
 router.post(
-    '/vietqr/admin/:orderId/confirm',
+    "/vietqr/admin/:orderId/confirm",
     auth,
     adminOnly,
     adminConfirmVietQR,
@@ -37,19 +40,26 @@ router.post(
 
 // ADMIN từ chối thanh toán
 router.post(
-    '/vietqr/admin/:orderId/reject',
+    "/vietqr/admin/:orderId/reject",
     auth,
     adminOnly,
     adminRejectVietQR,
 );
 
+// ===================== CASH (COD) =====================
+// Cho phép khách/FE gọi để chọn thanh toán tiền mặt (không yêu cầu đăng nhập)
+router.post("/cash/:orderId", payByCash);
+
 // ===================== MOMO =====================
-router.post('/momo/:orderId', createMomoPayment);
-router.post('/momo/ipn', momoIpn);
-router.get('/momo/return', momoReturn);
+router.post("/momo/:orderId", createMomoPayment);
+router.post("/momo/ipn", momoIpn);
+router.get("/momo/return", momoReturn);
 
 // ===================== ZALOPAY =====================
-router.post('/zalopay/:orderId', createZaloPayOrder);
-router.post('/zalopay/callback', zaloPayCallback);
+router.post("/zalopay/:orderId", createZaloPayOrder);
+router.post("/zalopay/callback", zaloPayCallback);
+router.get("/zalopay/return", zaloPayReturn);
+
+router.get("/success", paymentSuccess);
 
 module.exports = router;

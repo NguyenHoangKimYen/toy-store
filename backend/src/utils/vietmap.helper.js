@@ -1,7 +1,7 @@
-const axios = require('axios');
+const axios = require("axios");
 
 const VIETMAP_API_KEY = process.env.VIETMAP_API_KEY;
-const NODE_ENV = process.env.NODE_ENV || 'development';
+const NODE_ENV = process.env.NODE_ENV || "development";
 const DEFAULT_TIMEOUT = 8000;
 
 // --- Utility helpers ---
@@ -13,14 +13,14 @@ const extractFeatures = (payload) => {
 };
 
 const toLowerSafe = (value) =>
-    typeof value === 'string' ? value.toLowerCase() : '';
+    typeof value === "string" ? value.toLowerCase() : "";
 
 // --- Format address ---
-const buildFormattedAddress = (props = {}, userInput = '') => {
+const buildFormattedAddress = (props = {}, userInput = "") => {
     const rawParts = [
-        props.locality || '',
-        props.county || '',
-        props.region || '',
+        props.locality || "",
+        props.county || "",
+        props.region || "",
     ]
         .filter(Boolean)
         .map((p) => p.trim());
@@ -34,7 +34,7 @@ const buildFormattedAddress = (props = {}, userInput = '') => {
         }
     }
 
-    return uniqueParts.join(', ');
+    return uniqueParts.join(", ");
 };
 
 // --- Pick best VietMap feature ---
@@ -53,36 +53,36 @@ const selectBestFeature = (features, targetText) => {
 };
 
 // --- Build final address result ---
-const buildResultFromFeature = (feature, userInput = '') => {
+const buildResultFromFeature = (feature, userInput = "") => {
     if (!feature) return null;
 
     const props = feature.properties || {};
     const coords = feature.geometry?.coordinates || [];
 
     // Tách phần số nhà hoặc đầu vào
-    const inputHead = userInput.split(',')[0].trim();
+    const inputHead = userInput.split(",")[0].trim();
 
     // Lấy hành chính từ VietMap
     const vietmapAdmin = buildFormattedAddress(props);
 
     // Loại phần hành chính trùng trong input
     const cleanedHead = inputHead
-        .replace(/(Phường|Xã|Thị Trấn|Quận|Huyện|Thành Phố).*/i, '')
+        .replace(/(Phường|Xã|Thị Trấn|Quận|Huyện|Thành Phố).*/i, "")
         .trim();
 
     // Hợp nhất số nhà người nhập + hành chính chuẩn từ VietMap
     const formatted = [cleanedHead, vietmapAdmin]
         .filter(Boolean)
-        .join(', ')
-        .replace(/,\s*,/g, ',')
-        .replace(/\s{2,}/g, ' ')
+        .join(", ")
+        .replace(/,\s*,/g, ",")
+        .replace(/\s{2,}/g, " ")
         .trim();
 
     return {
         valid: true,
         formatted,
-        lat: typeof coords[1] === 'number' ? coords[1] : null,
-        lng: typeof coords[0] === 'number' ? coords[0] : null,
+        lat: typeof coords[1] === "number" ? coords[1] : null,
+        lng: typeof coords[0] === "number" ? coords[0] : null,
     };
 };
 
@@ -91,7 +91,7 @@ const vietMapRequest = async (endpoint, params = {}) => {
     const response = await axios.get(
         `https://maps.vietmap.vn/api/${endpoint}`,
         {
-            params: { apikey: VIETMAP_API_KEY, type: 'address', ...params },
+            params: { apikey: VIETMAP_API_KEY, type: "address", ...params },
             timeout: DEFAULT_TIMEOUT,
         },
     );
@@ -102,10 +102,10 @@ const vietMapRequest = async (endpoint, params = {}) => {
 const verifyAddress = async (addressLine) => {
     try {
         if (!addressLine || !VIETMAP_API_KEY) {
-            throw new Error('Missing address or API key');
+            throw new Error("Missing address or API key");
         }
 
-        const searchResults = await vietMapRequest('search', {
+        const searchResults = await vietMapRequest("search", {
             text: addressLine,
         });
         const matched = buildResultFromFeature(
@@ -125,9 +125,9 @@ const verifyAddress = async (addressLine) => {
         }
 
         console.log(
-            '⚠️ VietMap search returned no result, trying autocomplete...',
+            "⚠️ VietMap search returned no result, trying autocomplete...",
         );
-        const suggestions = await vietMapRequest('autocomplete', {
+        const suggestions = await vietMapRequest("autocomplete", {
             text: addressLine,
         });
         const fallback = buildResultFromFeature(
@@ -149,7 +149,7 @@ const verifyAddress = async (addressLine) => {
             };
         }
 
-        if (NODE_ENV === 'development') {
+        if (NODE_ENV === "development") {
             return {
                 valid: true,
                 userInput: addressLine,
@@ -169,7 +169,7 @@ const verifyAddress = async (addressLine) => {
             corrected: false,
         };
     } catch (error) {
-        console.error('VietMap verifyAddress error:', error.message);
+        console.error("VietMap verifyAddress error:", error.message);
         return {
             valid: false,
             userInput: addressLine,
@@ -185,8 +185,8 @@ const verifyAddress = async (addressLine) => {
 const suggestAddress = async (keyword) => {
     try {
         if (!keyword || !VIETMAP_API_KEY)
-            throw new Error('Missing keyword or API key');
-        const suggestions = await vietMapRequest('autocomplete', {
+            throw new Error("Missing keyword or API key");
+        const suggestions = await vietMapRequest("autocomplete", {
             text: keyword,
         });
 
@@ -194,14 +194,14 @@ const suggestAddress = async (keyword) => {
             const props = item.properties || {};
             const coords = item.geometry?.coordinates || [];
             return {
-                name: props.name || props.label || '',
+                name: props.name || props.label || "",
                 address: buildFormattedAddress(props),
-                lat: typeof coords[1] === 'number' ? coords[1] : null,
-                lng: typeof coords[0] === 'number' ? coords[0] : null,
+                lat: typeof coords[1] === "number" ? coords[1] : null,
+                lng: typeof coords[0] === "number" ? coords[0] : null,
             };
         });
     } catch (error) {
-        console.error('VietMap suggestAddresses error:', error.message);
+        console.error("VietMap suggestAddresses error:", error.message);
         return [];
     }
 };

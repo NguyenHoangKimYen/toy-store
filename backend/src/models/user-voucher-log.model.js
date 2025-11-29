@@ -4,12 +4,12 @@ const UserVoucherLogSchema = new mongoose.Schema(
     {
         userId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
+            ref: "User",
             required: true,
         },
         tier: {
             type: String,
-            enum: ['silver', 'gold', 'diamond'],
+            enum: ["silver", "gold", "diamond"],
             required: true,
         },
         month: { type: Number, required: true }, // 11 → tháng 11
@@ -18,4 +18,4 @@ const UserVoucherLogSchema = new mongoose.Schema(
     { timestamps: true },
 );
 
-module.exports = mongoose.model('UserVoucherLog', UserVoucherLogSchema);
+module.exports = mongoose.model("UserVoucherLog", UserVoucherLogSchema);

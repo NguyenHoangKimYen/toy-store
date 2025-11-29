@@ -4,13 +4,13 @@ const coinTransactionSchema = new mongoose.Schema(
     {
         userId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
+            ref: "User",
             required: true,
         },
 
         type: {
             type: String,
-            enum: ['earn', 'spend', 'adjust'],
+            enum: ["earn", "spend", "adjust"],
             required: true,
         },
 
@@ -26,18 +26,18 @@ const coinTransactionSchema = new mongoose.Schema(
 
         orderId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Order',
+            ref: "Order",
             default: null,
         },
 
         description: {
             type: String,
-            default: '',
+            default: "",
         },
     },
     {
         timestamps: true,
-        collection: 'coin_transactions',
+        collection: "coin_transactions",
     },
 );
 

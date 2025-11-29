@@ -8,8 +8,8 @@ const DiscountCodeSchema = new mongoose.Schema(
             unique: true,
             uppercase: true,
             trim: true,
-            minlength: 5,
-            maxlength: 5,
+            minlength: 8,
+            maxlength: 12,
         },
 
         value: {
@@ -59,7 +59,7 @@ const DiscountCodeSchema = new mongoose.Schema(
         },
     },
     {
-        timestamps: { createdAt: 'createdAt', updatedAt: false },
+        timestamps: { createdAt: "createdAt", updatedAt: false },
     },
 );
 

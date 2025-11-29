@@ -3,12 +3,12 @@ const mongoose = require('mongoose');
 const CollectVoucherSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: "User",
         required: true,
     },
     voucherId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'DiscountCode',
+        ref: "DiscountCode",
         required: true,
     },
     collectedAt: { type: Date, default: Date.now },

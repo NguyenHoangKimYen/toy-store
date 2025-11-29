@@ -27,17 +27,16 @@ app.use((req, res, next) => {
 app.use(express.json()); // Cho phép phân tích cú pháp JSON trong body của request
 app.use(express.urlencoded({ extended: true })); // Cho phép phân tích cú pháp URL-encoded trong body của request
 
-app.use(
-    cors({
-        origin: [
-            'http://localhost:5173',
-            process.env.FRONTEND_URL,
-            'https://milkybloomtoystore.id.vn',
-            'https://d1qc4bz6yrxl8k.cloudfront.net',
-        ],
-        credentials: true,
-    }),
-);
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    process.env.FRONTEND_URL,
+    'https://www.milkybloomtoystore.id.vn',
+    'https://d1qc4bz6yrxl8k.cloudfront.net',
+    'https://api.milkybloomtoystore.id.vn',
+  ],
+  credentials: true,
+}));
 
 app.use(
     session({
@@ -82,7 +81,9 @@ const loyaltyRoutes = require('./routes/loyalty.route.js');
 const discountRoutes = require('./routes/discount-code.routes.js');
 const monthlyJob = require('./utils/montly-loyalty.js');
 const voucherRoutes = require('./routes/voucher.route.js');
+const badgeRoutes = require("./routes/badge.route.js");
 const dashboardRoutes = require('./routes/dashboard.routes.js');
+const chatRoutes = require("./routes/chat.route.js");
 
 const errorHandler = require('./middlewares/error.middleware');
 
@@ -105,7 +106,9 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/loyalty', loyaltyRoutes);
 app.use('/api/discount', discountRoutes);
 app.use('/api/vouchers', voucherRoutes);
+app.use("/api/badges", badgeRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use("/api/chat", chatRoutes);
 
 const server = http.createServer(app);
 socket.init(server);

@@ -4,7 +4,7 @@ const addressSchema = new mongoose.Schema(
     {
         userId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
+            ref: "User",
             required: true,
             index: true, //truy vấn nhanh hơn
         },
@@ -59,7 +59,7 @@ const addressSchema = new mongoose.Schema(
         },
     },
     {
-        collection: 'addresses',
+        collection: "addresses",
         timestamps: true,
     },
 );

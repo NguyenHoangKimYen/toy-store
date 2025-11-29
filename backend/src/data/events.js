@@ -1,7 +1,7 @@
 module.exports = [
     {
-        code: 'BLACK_FRIDAY',
-        date: '11-29',
+        code: "BLACK_FRIDAY",
+        date: "11-29",
         discount: 20, // 20%
         maxUses: 1, // mỗi user chỉ dùng 1 lần
         autoGenerate: true,
@@ -21,7 +21,7 @@ module.exports = [
         autoGenerate: true,
     },
     {
-        code: 'PAYDAY',
+        code: "PAYDAY",
         dayRange: [25, 30], // mỗi tháng ngày 25 → 30 tự sinh voucher
         discount: 10,
         maxUses: 1,

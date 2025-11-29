@@ -69,7 +69,7 @@ const createUser = async (userData) => {
 const setUserVerified = async (id, isVerified = true) => {
     const verifiedUser = await userRepository.setVerified(id, isVerified);
     if (!verifiedUser)
-        throw new Error('User not found or verification update failed');
+        throw new Error("User not found or verification update failed");
     return verifiedUser;
 };
 
