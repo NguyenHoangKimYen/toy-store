@@ -108,7 +108,8 @@ const ProductDetail = () => {
       const apiStartTime = performance.now();
       
       // Add to cart and update toast based on result
-      addItem(product._id, quantity, selectedVariant._id)
+      // addItem expects (variantId, quantity)
+      addItem(selectedVariant._id, quantity)
         .then(() => {
           console.log('[PRODUCT DETAIL] Background API call completed in', (performance.now() - apiStartTime).toFixed(0), 'ms');
           toast.success(`${product.name} added to cart!`, {
