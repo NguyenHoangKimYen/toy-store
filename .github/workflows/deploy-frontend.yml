@@ -1,51 +1,54 @@
-name: Deploy Frontend to S3
+name: Deploy FE to S3 + Invalidate CloudFront
 
 on:
   push:
     branches:
       - main
       - frontend
-      - test
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      # 1 — Checkout source
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      # 2 — Install Node + Build Vite
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
-      - name: Install dependencies
+      - name: Install FE dependencies
         run: |
           cd test
           npm install
 
-      - name: Build frontend
+      - name: Build FE
         run: |
           cd test
           npm run build
 
-      - name: Sync build to S3
+      # 3 — Upload to S3 (GÁN CỨNG)
+      - name: Upload to S3
         uses: jakejarvis/s3-sync-action@v0.5.1
         env:
-          AWS_S3_BUCKET: "milkybloom-frontend"                 # 💥 GÁN CỨNG
-          AWS_REGION: "us-east-1"                              # 💥 GÁN CỨNG
-          AWS_ACCESS_KEY_ID: "***REMOVED***"       # 💥 GÁN CỨNG
-          AWS_SECRET_ACCESS_KEY: "***REMOVED***"       # 💥 GÁN CỨNG
+          AWS_S3_BUCKET: "milkybloom-frontend"
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "us-east-1"
           SOURCE_DIR: "test/dist"
         with:
           args: --delete
 
+      # 4 — CloudFront Invalidation (GÁN CỨNG)
       - name: Invalidate CloudFront cache
         uses: chetan/invalidate-cloudfront-action@v2
         env:
-          DISTRIBUTION: "E3ABCDEFG12345"        # 💥 GÁN CỨNG
-          PATHS: "/*"                                          
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: "us-east-1"
-          AWS_ACCESS_KEY_ID: "***REMOVED***"       # 💥 GÁN CỨNG
-          AWS_SECRET_ACCESS_KEY: "***REMOVED***"       # 💥 GÁN CỨNG
+          DISTRIBUTION: "E280MQAG8BNAG3"  # ID CHUẨN
+          PATHS: "/*"
