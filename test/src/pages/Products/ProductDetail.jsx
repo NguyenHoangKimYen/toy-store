@@ -260,8 +260,8 @@ const ProductDetail = () => {
         {/* Product Details Tabs */}
         <ProductTabs product={product} />
 
-        {/* Reviews Section */}
-        <ReviewSection productId={id} />
+        {/* Reviews Section - use product._id to ensure we pass MongoDB ObjectId, not slug */}
+        <ReviewSection productId={product._id} />
       </div>
 
       {/* Mobile Bottom Action Bar */}
