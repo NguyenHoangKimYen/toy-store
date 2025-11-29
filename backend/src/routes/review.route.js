@@ -6,7 +6,8 @@ const {
     updateReview,
     deleteReview,
     moderateReview,
-    getPendingReviews
+    getPendingReviews,
+    checkEligibility
 } = require("../controllers/review.controller");
 
 const { uploadReviewImages } = require("../middlewares/upload.middleware.js");
@@ -19,6 +20,7 @@ router.get("/product/:productId", getReviewsByProductId);
 // --- AUTHENTICATED ROUTES ---
 router.use(authMiddleware);
 router.get("/pending", getPendingReviews);
+router.get("/eligibility/:productId", checkEligibility); // Check if user can review a product
 router.post("/", uploadReviewImages, createReview);
 router.patch("/:reviewId", uploadReviewImages, updateReview);
 router.delete("/:reviewId", deleteReview);

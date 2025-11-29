@@ -3,10 +3,10 @@ const ReviewService = require('../services/review.service');
 const createReview = async (req, res, next) => {
     try {
         const userId = req.user._id || req.user.id;
-        // Lấy text data từ body
-        const { productId, variantId, rating, comment } = req.body;
+        // Get data from body - now uses orderItemId instead of variantId
+        const { productId, orderItemId, rating, comment } = req.body;
 
-        // Lấy files ảnh từ request (do middleware upload xử lý)
+        // Get image files from request (handled by upload middleware)
         const imgFiles = req.files;
 
         if (!rating || rating < 1 || rating > 5) {
@@ -15,18 +15,44 @@ const createReview = async (req, res, next) => {
                 .json({ message: 'Rating must be between 1 and 5 stars' });
         }
 
+        if (!orderItemId) {
+            return res
+                .status(400)
+                .json({ message: 'Order item ID is required' });
+        }
+
         const newReview = await ReviewService.createReview({
             userId,
             productId,
-            variantId,
+            orderItemId,
             rating,
             comment,
-            imgFiles, // Truyền file sang service
+            imgFiles,
         });
 
         return res.status(201).json({
             message: 'Product review created successfully!',
             metadata: newReview,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const checkEligibility = async (req, res, next) => {
+    try {
+        const userId = req.user._id || req.user.id;
+        const { productId } = req.params;
+
+        const result = await ReviewService.checkReviewEligibility(userId, productId);
+
+        return res.status(200).json({
+            success: true,
+            message: result.message,
+            metadata: {
+                canReview: result.canReview,
+                eligibleItems: result.eligibleItems,
+            },
         });
     } catch (error) {
         next(error);
@@ -154,5 +180,6 @@ module.exports = {
     updateReview,
     deleteReview,
     moderateReview,
-    getPendingReviews
+    getPendingReviews,
+    checkEligibility
 };
