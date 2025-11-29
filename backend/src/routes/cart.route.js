@@ -16,6 +16,7 @@ const {
 // Import Middlewares
 const authMiddleware = require('../middlewares/auth.middleware');
 const adminMiddleware = require('../middlewares/admin.middleware');
+const optionalAuth = require('../middlewares/optionalAuth.middleware');
 
 // ==========================================
 // 1. ADMIN ROUTES (Quản lý toàn bộ)
@@ -47,14 +48,15 @@ router.post('/', createCart);
 
 // Thêm sản phẩm (Add Item)
 // POST /api/carts/:cartId/items
-router.post('/:cartId/items', addItem);
+// Uses optionalAuth to populate req.user for socket events if logged in
+router.post('/:cartId/items', optionalAuth, addItem);
 
 // Xóa sản phẩm/Giảm số lượng (Remove Item)
 // DELETE /api/carts/:cartId/items (Hoặc dùng POST/PUT tùy frontend bạn)
 // Lưu ý: Nếu frontend bạn đang dùng POST cho xóa thì giữ nguyên POST
-router.post('/:cartId/remove-item', removeItem);
+router.post('/:cartId/remove-item', optionalAuth, removeItem);
 
 // Xóa sạch giỏ hàng
-router.delete('/:cartId/clear', clearCart);
+router.delete('/:cartId/clear', optionalAuth, clearCart);
 
 module.exports = router;
