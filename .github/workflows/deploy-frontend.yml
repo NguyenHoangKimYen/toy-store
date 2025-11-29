@@ -1,0 +1,47 @@
+name: Deploy Frontend to S3 + CloudFront
+
+on:
+  push:
+    branches:
+      - main
+      - frontend   # hoặc nhánh FE bạn đang dùng
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Sync build to S3
+        uses: aws-actions/aws-s3-sync@v1
+        with:
+          bucket: milkybloom-frontend
+          region: ${{ secrets.AWS_REGION }}
+          delete: true
+          source: ./dist      # Nếu bạn dùng Vite/React
+          # Nếu NextJS → đổi thành .next hoặc out/
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Invalidate CloudFront cache
+        uses: awact/cloudfront-action@v2
+        with:
+          distribution-id: E280MQAG8BNAG3
+          paths: "/*"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
