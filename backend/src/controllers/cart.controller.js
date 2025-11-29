@@ -60,26 +60,31 @@ const addItem = async (req, res, next) => {
 
         // 2. [SOCKET] Emit update to user
         // Priority: Token (req.user) > Cart's userId > Body (for testing)
-        const socketUserId =
-            (req.user && req.user._id)
-                ? req.user._id.toString()
-                : (updatedCart.userId ? updatedCart.userId.toString() : req.body.userId);
+        let socketUserId = null;
+        
+        if (req.user && req.user._id) {
+            socketUserId = req.user._id.toString();
+        } else if (updatedCart && updatedCart.userId) {
+            socketUserId = updatedCart.userId.toString();
+        } else if (req.body.userId) {
+            socketUserId = req.body.userId;
+        }
 
         if (socketUserId) {
             try {
                 const io = socket.getIO();
+                const roomName = `user_${socketUserId}`;
 
-                io.to(`user_${socketUserId}`).emit('cart_updated', {
+                const socketData = {
                     action: 'add_item',
                     totalItems: updatedCart.totalItems,
                     cart: updatedCart,
-                });
-                console.log(`📤 Socket emitted cart_updated to user_${socketUserId}`);
+                };
+                
+                io.to(roomName).emit('cart_updated', socketData);
             } catch (socketErr) {
                 console.error('Socket emit error:', socketErr.message);
             }
-        } else {
-            console.log('⚠️ No userId for socket emit (guest cart)');
         }
 
         return res.status(200).json({
@@ -97,7 +102,7 @@ const removeItem = async (req, res, next) => {
         const { cartId } = req.params;
         const { variantId, quantity } = req.body;
 
-        // Call service
+        // Call service - returns fully populated cart from _getPopulatedCartForSocket
         const updatedCart = await CartService.removeItem(
             cartId,
             { variantId, quantity },
@@ -113,24 +118,18 @@ const removeItem = async (req, res, next) => {
         if (socketUserId) {
             try {
                 const io = socket.getIO();
-                
-                // Get fully populated cart for socket
-                const fullCart = await CartService.getCartByUserOrSession({ 
-                    userId: socketUserId, 
-                    sessionId: null 
-                });
 
-                io.to(`user_${socketUserId}`).emit('cart_updated', {
+                const socketData = {
                     action: 'remove_item',
                     totalItems: updatedCart.totalItems,
-                    cart: fullCart || updatedCart,
-                });
-                console.log(`📤 Socket emitted cart_updated to user_${socketUserId}`);
+                    cart: updatedCart,
+                };
+                
+                io.to(`user_${socketUserId}`).emit('cart_updated', socketData);
             } catch (socketErr) {
                 console.error('Socket emit error:', socketErr.message);
             }
         } else {
-            console.log('⚠️ No userId for socket emit (guest cart)');
         }
 
         res.status(200).json(updatedCart);
@@ -158,7 +157,6 @@ const clearCart = async (req, res, next) => {
                     action: 'clear_cart',
                     cart: updated,
                 });
-                console.log(`📤 Socket emitted cart_updated (clear) to user_${socketUserId}`);
             } catch (e) {
                 console.error('Socket emit error:', e.message);
             }
