@@ -150,7 +150,7 @@ const Dashboard = () => {
   );
 
   return (
-    <div className='bg-white rounded-lg pb-6 shadow h-full'>
+    <div className='bg-white rounded-lg pb-6 shadow h-full overflow-y-auto'>
       <DashboardHeader />
 
       <div className='px-4'>

@@ -1,3 +1,4 @@
+import apiClient from './config';
 import { API_BASE_URL, ENDPOINTS } from './config';
 import { handleResponse, createUrl } from '../utils/apiHelpers';
 import { getAuthHeaders } from '../utils/authHelpers';
@@ -240,13 +241,7 @@ export const updateAvatar = async (id, file) => {
   const formData = new FormData();
   formData.append('avatar', file);
   
-  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.USERS}/${id}/avatar`, {
-    method: 'PATCH',
-    headers: {
-      ...getAuthHeaders(),
-    },
-    body: formData,
-  });
+  const response = await apiClient.patch(`/users/avatar?id=${id}`, formData);
   
-  return handleResponse(response);
+  return response;
 };

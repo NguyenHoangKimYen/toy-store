@@ -94,10 +94,10 @@ export const useOrders = () => {
       setError(null);
 
       const response = await getOrderById(orderId);
-      // Backend returns { success: true, order: {...} }
-      if (response.success && response.order) {
-        setCurrentOrder(response.order);
-        return response.order;
+      // Backend returns { success: true, data: {...} }
+      if (response.success && response.data) {
+        setCurrentOrder(response.data);
+        return response.data;
       } else {
         throw new Error(response.message || 'Failed to fetch order details');
       }

@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { formatPrice } from '@/utils/formatPrice'
 import OrderDetailModal from './components/OrderDetailModal'
 import OrderFilters from './components/OrderFilters'
+import { AdminContent } from '../components'
+import { PageHeader, SearchBar } from '@/components/common'
 
 const Orders = () => {
   const [orders, setOrders] = useState([])
@@ -87,64 +89,52 @@ const Orders = () => {
   const filteredOrders = orders
 
   return (
-    <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold flex items-center gap-2">
-            <Package className="w-6 h-6 sm:w-8 sm:h-8" />
-            Orders Management
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            Manage and track all customer orders
-          </p>
-        </div>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between">
-            <div className="flex-1 w-full">
-              <div className="relative">
-                <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
-                <Input
-                  placeholder="Search by order ID, customer, or email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 sm:pl-10 text-sm"
-                />
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center justify-center gap-2 text-sm"
-            >
-              <Filter size={16} />
-              <span className="hidden sm:inline">Filters</span>
-            </Button>
-          </div>
-        </CardHeader>
-
-        {showFilters && (
-          <OrderFilters
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            deliveryTypeFilter={deliveryTypeFilter}
-            setDeliveryTypeFilter={setDeliveryTypeFilter}
-            paymentMethodFilter={paymentMethodFilter}
-            setPaymentMethodFilter={setPaymentMethodFilter}
+    <>
+      <AdminContent
+        loading={loading}
+        header={
+          <PageHeader
+            icon={Package}
+            title="Orders Management"
+            description="Manage and track all customer orders"
           />
-        )}
-
-        <CardContent>
-          {loading ? (
-            <div className="text-center py-8">Loading orders...</div>
-          ) : filteredOrders.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No orders found
+        }
+        filters={
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between">
+              <SearchBar
+                value={searchTerm}
+                onChange={setSearchTerm}
+                placeholder="Search by order ID, customer, or email..."
+              />
+              <Button
+                variant="outline"
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center justify-center gap-2 text-sm"
+              >
+                <Filter size={16} />
+                <span className="hidden sm:inline">Filters</span>
+              </Button>
             </div>
-          ) : (
-            <div className="space-y-4">
+            {showFilters && (
+              <OrderFilters
+                statusFilter={statusFilter}
+                setStatusFilter={setStatusFilter}
+                deliveryTypeFilter={deliveryTypeFilter}
+                setDeliveryTypeFilter={setDeliveryTypeFilter}
+                paymentMethodFilter={paymentMethodFilter}
+                setPaymentMethodFilter={setPaymentMethodFilter}
+              />
+            )}
+          </div>
+        }
+      >
+        {filteredOrders.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            No orders found
+          </div>
+        ) : (
+          <div className="space-y-4">
               {filteredOrders.map((order) => {
                 const addressData = typeof order.addressId === 'object' ? order.addressId : null;
                 return (
@@ -227,8 +217,7 @@ const Orders = () => {
             })}
             </div>
           )}
-        </CardContent>
-      </Card>
+      </AdminContent>
 
       {showDetailModal && selectedOrder && (
         <OrderDetailModal
@@ -240,7 +229,7 @@ const Orders = () => {
           onStatusUpdate={handleStatusUpdate}
         />
       )}
-    </div>
+    </>
   )
 }
 
