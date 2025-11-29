@@ -78,11 +78,33 @@ export const useCart = () => {
     return sessionId;
   }, []);
 
-  // Extract items from cart response (backend returns populated items)
+  /**
+   * Extract and normalize cart items from cart response
+   * Backend structure: item.variant (populated), item.variant.product (nested)
+   * Frontend expects: item.product and item.variant at same level
+   */
   const extractCartItems = useCallback((cartData) => {
     if (!cartData) return [];
-    // Backend returns cart.items as populated CartItem documents
-    return cartData.items || [];
+    const items = cartData.items || [];
+    
+    // Normalize items to match what CartItem component expects
+    return items.map(item => {
+      // Handle both raw and toJSON transformed data
+      const variant = item.variant || item.variantId;
+      // Product can be nested in variant (from populate) or at root level
+      const product = item.product || item.productId || variant?.product || variant?.productId;
+      
+      return {
+        ...item,
+        id: item.id || item._id,
+        product: product,
+        variant: variant ? { ...variant, product: undefined, productId: undefined } : null,
+        // Ensure price is a number
+        price: typeof item.price === 'object' && item.price?.$numberDecimal
+          ? parseFloat(item.price.$numberDecimal)
+          : item.price,
+      };
+    });
   }, []);
 
   // Fetch cart based on user authentication status
