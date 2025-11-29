@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v3
 
       - name: Setup Node.js
@@ -24,27 +24,27 @@ jobs:
           cd test
           npm install
 
-      - name: Build project
+      - name: Build
         run: |
           cd test
           npm run build
 
-      - name: Upload to S3
+      - name: Sync to S3
         uses: jakejarvis/s3-sync-action@v0.5.1
         env:
-          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_S3_BUCKET: milkybloom-frontend   # 💥 GÁN CỨNG TÊN BUCKET
+          AWS_REGION: us-east-1               # 💥 GÁN CỨNG REGION
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}  # vẫn dùng secret
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
           SOURCE_DIR: "test/dist"
         with:
           args: --delete
 
-      - name: Invalidate CloudFront cache
+      - name: Invalidate CloudFront
         uses: chetan/invalidate-cloudfront-action@v2
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         with:
-          distribution-id: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+          distribution-id: E123ABC456XYZ   # 💥 bạn muốn gán cứng thì thay vào đây
           paths: "/*"
