@@ -1,16 +1,17 @@
 /* Horizontal scrolling products - Essential styles that can't be done with Tailwind */
 .products-horizontal-scroll {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 280px);
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, 260px);
+  gap: 16px;
   overflow-x: auto;
   overflow-y: hidden;
-  padding-bottom: 10px;
+  padding-bottom: 12px;
   scroll-behavior: smooth;
   grid-auto-flow: column;
-  grid-auto-columns: 280px;
+  grid-auto-columns: 260px;
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x mandatory;
+  scroll-padding: 0 16px;
 }
 
 .products-horizontal-scroll > * {
@@ -19,7 +20,7 @@
 
 /* Custom scrollbar styling */
 .products-horizontal-scroll::-webkit-scrollbar {
-  height: 3px;
+  height: 4px;
 }
 
 .products-horizontal-scroll::-webkit-scrollbar-track {
@@ -52,31 +53,34 @@
 /* Responsive adjustments */
 @media (max-width: 1400px) {
   .products-horizontal-scroll {
-    grid-auto-columns: 260px;
+    grid-auto-columns: 240px;
   }
 }
 
 @media (max-width: 1200px) {
   .products-horizontal-scroll {
-    grid-auto-columns: 240px;
+    grid-auto-columns: 220px;
+    gap: 14px;
   }
 }
 
 @media (max-width: 1024px) {
   .products-horizontal-scroll {
-    grid-auto-columns: 220px;
-    gap: 16px;
+    grid-auto-columns: 200px;
+    gap: 12px;
   }
 }
 
 @media (max-width: 768px) {
   .products-horizontal-scroll {
-    grid-auto-columns: 200px;
-    gap: 12px;
+    grid-auto-columns: 170px;
+    gap: 10px;
+    scroll-padding: 0 12px;
   }
 
   .scroll-indicator {
     display: block;
+    width: 30px;
   }
 
   .products-horizontal-scroll::-webkit-scrollbar {
@@ -86,8 +90,12 @@
 
 @media (max-width: 480px) {
   .products-horizontal-scroll {
-    grid-auto-columns: 170px;
-    gap: 10px;
-    scroll-padding: 0 16px;
+    grid-auto-columns: 145px;
+    gap: 8px;
+    scroll-padding: 0 8px;
+  }
+
+  .scroll-indicator {
+    width: 24px;
   }
 }
