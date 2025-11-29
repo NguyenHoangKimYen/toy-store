@@ -438,7 +438,7 @@ const Login = () => {
                     onClick={() => setShowForgotPassword(true)}
                     className="text-sm text-white/80 hover:text-white hover:underline font-medium [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)]"
                   >
-                    Forgot?
+                    Forgot password?
                   </button>
                 </div>
                 <div className="relative">

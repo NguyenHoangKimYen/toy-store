@@ -21,9 +21,11 @@ export function useCart(userId = null) {
   const [itemLoading, setItemLoading] = useState({});
 
   // Refs for tracking state and pending operations
-  const cartItemsRef = useRef([]);
+  const cartItemsRef = useRef([]); // Last known server state
+  const serverQuantitiesRef = useRef({}); // variantId -> last confirmed server quantity
   const debouncedUpdateRef = useRef({});
   const pendingQuantityRef = useRef({}); // Track what quantity we're aiming for
+  const variantTimestampsRef = useRef({}); // Track timestamps per variant for conflict resolution
 
   // Session ID for guest carts
   const getSessionId = useCallback(() => {
@@ -60,10 +62,21 @@ export function useCart(userId = null) {
         const cartItems = cartData.items || [];
         setItems(cartItems);
         cartItemsRef.current = cartItems;
+        
+        // Update server quantities ref with confirmed data
+        const serverQtys = {};
+        cartItems.forEach((item) => {
+          const variantId = item.variant?._id || item.variant?.id || item.variantId;
+          if (variantId) {
+            serverQtys[variantId] = item.quantity;
+          }
+        });
+        serverQuantitiesRef.current = serverQtys;
       } else {
         setCart(null);
         setItems([]);
         cartItemsRef.current = [];
+        serverQuantitiesRef.current = {};
       }
     } catch (err) {
       // 404 means no cart exists yet - that's okay
@@ -73,6 +86,7 @@ export function useCart(userId = null) {
       setCart(null);
       setItems([]);
       cartItemsRef.current = [];
+      serverQuantitiesRef.current = {};
     } finally {
       setLoading(false);
     }
@@ -93,6 +107,7 @@ export function useCart(userId = null) {
       setCart(newCart);
       setItems([]);
       cartItemsRef.current = [];
+      serverQuantitiesRef.current = {};
       return newCart;
     } catch (err) {
       setError(err.message || "Failed to create cart");
@@ -107,24 +122,25 @@ export function useCart(userId = null) {
     const cartId = cart?._id || cart?.id;
     if (!cartId) return;
 
-    // Get the server quantity
-    const serverItem = cartItemsRef.current.find((item) => {
-      const itemVariantId = item.variant?._id || item.variant?.id || item.variantId;
-      return itemVariantId === variantId;
-    });
-    
-    if (!serverItem) return;
-
     // Get the target quantity from ref
     const targetQty = pendingQuantityRef.current[variantId];
     if (targetQty === undefined) return;
 
-    const diff = targetQty - serverItem.quantity;
+    // Get the CONFIRMED server quantity (not optimistic UI state)
+    const serverQty = serverQuantitiesRef.current[variantId];
+    if (serverQty === undefined) {
+      // Item doesn't exist on server yet - this shouldn't happen for updateItemQuantity
+      console.warn(`syncQuantityToBackend: No server quantity for ${variantId}`);
+      return;
+    }
+
+    const diff = targetQty - serverQty;
     if (diff === 0) {
       delete pendingQuantityRef.current[variantId];
       return;
     }
 
+    console.log(`📤 Syncing ${variantId}: server=${serverQty} → target=${targetQty} (diff=${diff})`);
     setItemLoading((prev) => ({ ...prev, [variantId]: true }));
 
     try {
@@ -134,7 +150,10 @@ export function useCart(userId = null) {
         await removeItemFromCart(cartId, { variantId, quantity: Math.abs(diff) });
       }
       
-      // Update server state ref to match what we just sent
+      // Update server quantity ref to match what we just sent
+      serverQuantitiesRef.current[variantId] = targetQty;
+      
+      // Also update cartItemsRef for consistency
       const updatedItems = cartItemsRef.current.map((item) => {
         const itemVariantId = item.variant?._id || item.variant?.id || item.variantId;
         if (itemVariantId === variantId) {
@@ -144,15 +163,14 @@ export function useCart(userId = null) {
       });
       cartItemsRef.current = updatedItems;
 
-      // Broadcast to other tabs
-      socketService.broadcastCartUpdate({ ...cart, items: updatedItems });
+      console.log(`✅ Backend synced: ${variantId} = ${targetQty}`);
 
       // Clear the pending quantity
       delete pendingQuantityRef.current[variantId];
     } catch (err) {
       console.error("Failed to update quantity:", err);
       setError(err.message || "Failed to update quantity");
-      // Rollback on error
+      // Rollback on error - refetch to get actual server state
       delete pendingQuantityRef.current[variantId];
       await fetchCart(true);
     } finally {
@@ -255,6 +273,7 @@ export function useCart(userId = null) {
 
   /**
    * Update item quantity - instant UI, debounced backend sync
+   * Uses timestamp-based conflict resolution for cross-tab sync
    * @param {string} variantId - The variant ID to update
    * @param {number} newQuantity - New quantity to set
    */
@@ -262,18 +281,31 @@ export function useCart(userId = null) {
     (variantId, newQuantity) => {
       if (!variantId) return;
 
+      // Record timestamp for this update (used for conflict resolution)
+      const timestamp = socketService.recordLocalUpdate(variantId);
+      variantTimestampsRef.current[variantId] = timestamp;
+
       // Store the latest target quantity
       pendingQuantityRef.current[variantId] = newQuantity;
 
       // Instant optimistic UI update
-      setItems((prevItems) =>
-        prevItems.map((item) => {
-          const itemVariantId = item.variant?._id || item.variant?.id || item.variantId;
-          if (itemVariantId === variantId) {
-            return { ...item, quantity: newQuantity };
-          }
-          return item;
-        })
+      const updatedItems = items.map((item) => {
+        const itemVariantId = item.variant?._id || item.variant?.id || item.variantId;
+        if (itemVariantId === variantId) {
+          return { ...item, quantity: newQuantity };
+        }
+        return item;
+      });
+      
+      setItems(updatedItems);
+
+      // Immediately broadcast to other tabs with per-variant timestamps
+      socketService.broadcastCartUpdate(
+        {
+          items: updatedItems,
+          totalItems: updatedItems.reduce((sum, item) => sum + item.quantity, 0),
+        },
+        { [variantId]: timestamp }
       );
 
       // Clear existing timeout for this variant
@@ -285,9 +317,9 @@ export function useCart(userId = null) {
       debouncedUpdateRef.current[variantId] = setTimeout(() => {
         syncQuantityToBackend(variantId);
         delete debouncedUpdateRef.current[variantId];
-      }, 400);
+      }, 300);
     },
-    [syncQuantityToBackend]
+    [items, syncQuantityToBackend]
   );
 
   /**
@@ -334,6 +366,7 @@ export function useCart(userId = null) {
       await clearCart(cartId);
       setItems([]);
       cartItemsRef.current = [];
+      serverQuantitiesRef.current = {};
       // Refresh cart to get updated state (silent - no loading spinner)
       await fetchCart(true);
 
@@ -440,10 +473,9 @@ export function useCart(userId = null) {
     // Connect socket
     socketService.connect(userId);
 
-    // Listen for cart updates from socket (backend)
+    // Listen for cart updates from socket (backend) - these are CONFIRMED server updates
     const handleCartUpdate = (data) => {
-      console.log('🔔 Cart updated via socket:', data);
-      console.log('Current cart items:', items.length);
+      console.log('🔔 Cart updated via socket (server confirmed):', data);
       
       // Update cart state from socket data
       if (data.cart) {
@@ -452,6 +484,23 @@ export function useCart(userId = null) {
         console.log('📦 New cart items from socket:', cartItems.length);
         setItems(cartItems);
         cartItemsRef.current = cartItems;
+        
+        // Update server quantities - these are confirmed by backend
+        const serverQtys = {};
+        cartItems.forEach((item) => {
+          const variantId = item.variant?._id || item.variant?.id || item.variantId;
+          if (variantId) {
+            serverQtys[variantId] = item.quantity;
+          }
+        });
+        serverQuantitiesRef.current = serverQtys;
+        
+        // Clear pending updates for items that are now confirmed
+        Object.keys(pendingQuantityRef.current).forEach((variantId) => {
+          if (serverQtys[variantId] === pendingQuantityRef.current[variantId]) {
+            delete pendingQuantityRef.current[variantId];
+          }
+        });
       }
     };
 
@@ -462,16 +511,89 @@ export function useCart(userId = null) {
       console.log('🔌 Disconnecting socket listener');
       socketService.off('cart_updated', handleCartUpdate);
     };
-  }, [userId, items.length]);
+  }, [userId]); // Only re-run when userId changes
 
   // BroadcastChannel - Listen for cart updates from other tabs (same browser)
+  // Uses timestamp-based conflict resolution: newest update wins per variant
   useEffect(() => {
     const handleBroadcast = (data) => {
-      console.log('📢 Cart updated via BroadcastChannel:', data);
-      if (data.items) {
-        setItems(data.items);
-        cartItemsRef.current = data.items;
-      }
+      console.log('📢 Cart update received from another tab');
+      
+      if (!data.items) return;
+      
+      const incomingTimestamp = data._timestamp || 0;
+      const incomingVariantTimestamps = data._variantTimestamps || {};
+      
+      // Merge items with conflict resolution per variant
+      setItems((currentItems) => {
+        // Create a map of current items for easy lookup
+        const currentItemsMap = new Map();
+        currentItems.forEach((item) => {
+          const variantId = item.variant?._id || item.variant?.id || item.variantId;
+          if (variantId) {
+            currentItemsMap.set(variantId, item);
+          }
+        });
+        
+        // Create a map of incoming items
+        const incomingItemsMap = new Map();
+        data.items.forEach((item) => {
+          const variantId = item.variant?._id || item.variant?.id || item.variantId;
+          if (variantId) {
+            incomingItemsMap.set(variantId, item);
+          }
+        });
+        
+        // Merge with conflict resolution
+        const mergedItems = [];
+        const processedVariants = new Set();
+        
+        // Process all variants from both current and incoming
+        const allVariantIds = new Set([
+          ...currentItemsMap.keys(),
+          ...incomingItemsMap.keys(),
+        ]);
+        
+        allVariantIds.forEach((variantId) => {
+          const currentItem = currentItemsMap.get(variantId);
+          const incomingItem = incomingItemsMap.get(variantId);
+          const localTimestamp = variantTimestampsRef.current[variantId] || 0;
+          const remoteTimestamp = incomingVariantTimestamps[variantId] || incomingTimestamp;
+          
+          // If we have a pending local update that's newer, keep local state
+          if (pendingQuantityRef.current[variantId] !== undefined && localTimestamp >= remoteTimestamp) {
+            console.log(`🔒 Keeping local state for ${variantId} (local: ${localTimestamp}, remote: ${remoteTimestamp})`);
+            if (currentItem) {
+              mergedItems.push(currentItem);
+            }
+          } else if (incomingItem) {
+            // Remote is newer or no local pending update, use incoming for UI
+            console.log(`✅ Accepting remote state for ${variantId} (local: ${localTimestamp}, remote: ${remoteTimestamp})`);
+            mergedItems.push(incomingItem);
+            
+            // IMPORTANT: Update server quantity ref because the remote tab will sync this to backend
+            // This prevents this tab from syncing stale diffs
+            serverQuantitiesRef.current[variantId] = incomingItem.quantity;
+            
+            // Clear any pending updates for this variant since remote won
+            delete pendingQuantityRef.current[variantId];
+            if (debouncedUpdateRef.current[variantId]) {
+              clearTimeout(debouncedUpdateRef.current[variantId]);
+              delete debouncedUpdateRef.current[variantId];
+            }
+          } else if (currentItem) {
+            // Item only exists locally
+            mergedItems.push(currentItem);
+          }
+          
+          processedVariants.add(variantId);
+        });
+        
+        // Update ref
+        cartItemsRef.current = mergedItems;
+        
+        return mergedItems;
+      });
     };
 
     // Subscribe to broadcast channel (returns unsubscribe function)
