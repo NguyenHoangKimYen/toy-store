@@ -2,14 +2,15 @@ name: Deploy FE to S3 + CloudFront
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
+    - name: Checkout repo
       uses: actions/checkout@v3
 
     - name: Setup Node
@@ -17,11 +18,15 @@ jobs:
       with:
         node-version: 18
 
-    - name: Install
-      run: npm install
+    - name: Install dependencies
+      run: |
+        cd frontend/ecm-fe-test/test
+        npm install
 
-    - name: Build
-      run: npm run build
+    - name: Build project
+      run: |
+        cd frontend/ecm-fe-test/test
+        npm run build
 
     # Configure AWS credentials
     - name: Configure AWS credentials
@@ -31,13 +36,14 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
         aws-region: us-east-1
 
-    # Sync S3 using AWS CLI
-    - name: Upload to S3 bucket
-      run: aws s3 sync dist s3://${{ secrets.S3_BUCKET }} --delete
+    # Upload build to S3
+    - name: Upload to S3
+      run: |
+        aws s3 sync frontend/ecm-fe-test/test/dist s3://${{ secrets.S3_BUCKET }} --delete
 
-    # Invalidate CloudFront
-    - name: Invalidate CloudFront Cache
+    # CloudFront invalidate cache
+    - name: Invalidate CloudFront
       run: |
         aws cloudfront create-invalidation \
-          --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+          --distribution-id ${{ secrets.CF_DISTRIBUTION_ID }} \
           --paths "/*"
