@@ -86,7 +86,7 @@ export const useProducts = (options = {}) => {
       setLoading(true);
       setError(null);
 
-      const { variants, ...productWithoutVariants } = productData;
+      const { variants, pendingImageFiles, ...productWithoutVariants } = productData;
       
       const productPayload = {
         ...productWithoutVariants,
@@ -95,6 +95,20 @@ export const useProducts = (options = {}) => {
       };
 
       const newProduct = await productsService.createProduct(productPayload);
+      
+      // Upload pending image files if any
+      if (pendingImageFiles && pendingImageFiles.length > 0 && newProduct._id) {
+        try {
+          const formData = new FormData();
+          pendingImageFiles.forEach(file => {
+            formData.append('images', file);
+          });
+          await productsService.uploadProductImages(newProduct._id, formData);
+        } catch (uploadErr) {
+          console.error('Error uploading product images:', uploadErr);
+          toast.error('Some images failed to upload');
+        }
+      }
       
       // Create variants if provided
       if (variants && variants.length > 0) {

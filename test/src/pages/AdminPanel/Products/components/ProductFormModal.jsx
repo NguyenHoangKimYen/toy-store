@@ -8,6 +8,7 @@ import AttributeDefinitionBuilder from './AttributeDefinitionBuilder';
 import VariantList from './VariantList';
 import CategoryManager from './CategoryManager';
 import ImageGalleryManager from './ImageGalleryManager';
+import * as productsService from '@/services/products.service';
 
 const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' }) => {
   const [formData, setFormData] = useState({
@@ -22,9 +23,11 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
   });
 
   const [newImageUrl, setNewImageUrl] = useState('');
+  const [pendingImageFiles, setPendingImageFiles] = useState([]); // Files waiting to be uploaded
   const [attributeDefinitions, setAttributeDefinitions] = useState([]);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [deletedVariantIds, setDeletedVariantIds] = useState([]); // Track deleted variants
 
   useEffect(() => {
@@ -127,6 +130,38 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
       ...prev,
       imageUrls: prev.imageUrls.filter((_, i) => i !== index),
     }));
+  };
+
+  // File upload handlers
+  const addPendingFiles = (files) => {
+    setPendingImageFiles(prev => [...prev, ...files]);
+  };
+
+  const removePendingFile = (index) => {
+    setPendingImageFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Upload pending files to server
+  const uploadPendingFiles = async (productId) => {
+    if (pendingImageFiles.length === 0) return [];
+    
+    setUploading(true);
+    try {
+      const formDataUpload = new FormData();
+      pendingImageFiles.forEach(file => {
+        formDataUpload.append('images', file);
+      });
+      
+      const result = await productsService.uploadProductImages(productId, formDataUpload);
+      setPendingImageFiles([]);
+      return result.imageUrls || [];
+    } catch (error) {
+      console.error('Failed to upload images:', error);
+      toast.error('Failed to upload some images');
+      return [];
+    } finally {
+      setUploading(false);
+    }
   };
 
   const generateVariants = () => {
@@ -241,8 +276,17 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
       // Include deleted variant IDs for update operations
       const dataToSave = {
         ...formData,
+        pendingImageFiles, // Pass pending files to parent for upload after creation
         ...(mode === 'edit' && deletedVariantIds.length > 0 && { deletedVariantIds })
       };
+      
+      // For edit mode, upload pending images immediately if product exists
+      if (mode === 'edit' && product?._id && pendingImageFiles.length > 0) {
+        const uploadedUrls = await uploadPendingFiles(product._id);
+        if (uploadedUrls.length > 0) {
+          dataToSave.imageUrls = [...formData.imageUrls, ...uploadedUrls];
+        }
+      }
       
       await onSave(dataToSave);
       toast.success(`Product ${mode === 'create' ? 'created' : 'updated'} successfully`);
@@ -366,6 +410,10 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
               onAddImage={addImage}
               onRemoveImage={removeImage}
               onImageUrlChange={(e) => setNewImageUrl(e.target.value)}
+              pendingFiles={pendingImageFiles}
+              onAddFiles={addPendingFiles}
+              onRemoveFile={removePendingFile}
+              uploading={uploading}
             />
           </div>
 

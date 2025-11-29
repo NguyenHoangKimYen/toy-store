@@ -286,3 +286,42 @@ export const deleteVariant = async (variantId) => {
   
   return handleResponse(response);
 };
+
+/**
+ * Upload variant images
+ * @param {string} variantId - Variant ID
+ * @param {FormData} formData - Form data containing images
+ * @returns {Promise<Object>}
+ */
+export const uploadVariantImages = async (variantId, formData) => {
+  const response = await fetch(`${API_BASE_URL}/variants/${variantId}/images`, {
+    method: 'POST',
+    headers: {
+      ...getAuthHeaders(),
+    },
+    body: formData,
+  });
+  
+  return handleResponse(response);
+};
+
+/**
+ * Delete variant images
+ * @param {string} variantId - Variant ID
+ * @param {Array<string>} imageUrls - Array of image URLs to delete
+ * @returns {Promise<Object>}
+ */
+export const deleteVariantImages = async (variantId, imageUrls) => {
+  const removeImages = Array.isArray(imageUrls) ? imageUrls : [imageUrls];
+  
+  const response = await fetch(`${API_BASE_URL}/variants/${variantId}/images`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify({ removeImages }),
+  });
+  
+  return handleResponse(response);
+};

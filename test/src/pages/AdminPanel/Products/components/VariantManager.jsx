@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, PackagePlus } from 'lucide-react';
+import { Plus, Trash2, PackagePlus, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Badge from '@/components/ui/badge';
@@ -153,8 +153,22 @@ const VariantManager = ({ productId, variants: initialVariants = [], onUpdate })
           attributes: variant.attributes,
           price: parseFloat(variant.price),
           stockQuantity: parseInt(variant.stockQuantity) || 0,
+          imageUrls: variant.imageUrls || [],
         };
         const created = await productsService.createVariant(productId, variantData);
+        
+        // If there's a pending image file, upload it
+        if (variant.pendingImageFile && created._id) {
+          try {
+            const formData = new FormData();
+            formData.append('variantImages', variant.pendingImageFile);
+            await productsService.uploadVariantImages(created._id, formData);
+          } catch (uploadError) {
+            console.error('Failed to upload variant image:', uploadError);
+            // Continue even if image upload fails
+          }
+        }
+        
         createdVariants.push(created);
       }
       
@@ -482,22 +496,73 @@ const VariantManager = ({ productId, variants: initialVariants = [], onUpdate })
                           </div>
                         </div>
                         
-                        {/* Variant Image URL */}
+                        {/* Variant Image Upload */}
                         <div className='mt-3'>
                           <label className='text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block'>
-                            🖼️ Variant Image URL (optional)
+                            🖼️ Variant Image (optional)
                           </label>
-                          <Input
-                            value={variant.imageUrls?.[0] || ''}
-                            onChange={(e) => {
-                              const newImageUrls = e.target.value ? [e.target.value] : [];
-                              updateGeneratedVariant(index, 'imageUrls', newImageUrls);
-                            }}
-                            placeholder='https://example.com/variant-image.jpg'
-                            className='h-9'
-                          />
+                          <div className='flex gap-2 items-start'>
+                            {/* File Input */}
+                            <div className='flex-1'>
+                              <input
+                                type='file'
+                                accept='image/jpeg,image/png,image/webp,image/gif'
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    // Store file for later upload
+                                    updateGeneratedVariant(index, 'pendingImageFile', file);
+                                    updateGeneratedVariant(index, 'imagePreview', URL.createObjectURL(file));
+                                  }
+                                }}
+                                className='hidden'
+                                id={`variant-image-${index}`}
+                              />
+                              <label
+                                htmlFor={`variant-image-${index}`}
+                                className='flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 text-sm text-gray-600 dark:text-gray-400'
+                              >
+                                <Upload className='w-4 h-4' />
+                                {variant.pendingImageFile ? variant.pendingImageFile.name : 'Choose file...'}
+                              </label>
+                            </div>
+                            {/* URL fallback */}
+                            <div className='text-xs text-gray-500 dark:text-gray-400 pt-2'>or</div>
+                            <Input
+                              value={variant.imageUrls?.[0] || ''}
+                              onChange={(e) => {
+                                const newImageUrls = e.target.value ? [e.target.value] : [];
+                                updateGeneratedVariant(index, 'imageUrls', newImageUrls);
+                                updateGeneratedVariant(index, 'pendingImageFile', null);
+                                updateGeneratedVariant(index, 'imagePreview', null);
+                              }}
+                              placeholder='Or paste URL'
+                              className='h-9 flex-1'
+                            />
+                          </div>
+                          {/* Image Preview */}
+                          {(variant.imagePreview || variant.imageUrls?.[0]) && (
+                            <div className='mt-2 relative inline-block'>
+                              <img
+                                src={variant.imagePreview || variant.imageUrls?.[0]}
+                                alt='Variant preview'
+                                className='w-16 h-16 object-cover rounded-lg border border-gray-200 dark:border-gray-700'
+                              />
+                              <button
+                                type='button'
+                                onClick={() => {
+                                  updateGeneratedVariant(index, 'imageUrls', []);
+                                  updateGeneratedVariant(index, 'pendingImageFile', null);
+                                  updateGeneratedVariant(index, 'imagePreview', null);
+                                }}
+                                className='absolute -top-1 -right-1 bg-red-500 text-white p-0.5 rounded-full'
+                              >
+                                <X className='w-3 h-3' />
+                              </button>
+                            </div>
+                          )}
                           <p className='text-xs text-gray-500 mt-1'>
-                            Add a specific image for this variant. If empty, product's general images will be shown.
+                            Add a specific image for this variant (JPG, PNG, WebP, GIF - max 10MB)
                           </p>
                         </div>
                       </div>
