@@ -13,7 +13,7 @@ export const getProductReviews = async (productId, params = {}) => {
 
 /**
  * Create a new review for a product
- * @param {Object} reviewData - Review data { productId, variantId, rating, comment }
+ * @param {Object} reviewData - Review data { productId, orderItemId, rating, comment }
  * @returns {Promise<Object>} - Created review with populated user data
  */
 export const createReview = async (reviewData) => {
@@ -21,8 +21,8 @@ export const createReview = async (reviewData) => {
   if (!reviewData.productId) {
     throw new Error('Product ID is required');
   }
-  if (!reviewData.variantId) {
-    throw new Error('Variant ID is required');
+  if (!reviewData.orderItemId) {
+    throw new Error('Order item ID is required');
   }
   if (!reviewData.rating || reviewData.rating < 1 || reviewData.rating > 5) {
     throw new Error('Rating must be between 1 and 5');
@@ -30,11 +30,22 @@ export const createReview = async (reviewData) => {
 
   const response = await apiClient.post('/reviews', {
     productId: reviewData.productId,
-    variantId: reviewData.variantId,
+    orderItemId: reviewData.orderItemId,
     rating: reviewData.rating,
     comment: reviewData.comment?.trim() || '',
   });
   return response;
+};
+
+/**
+ * Check if user can review a product
+ * Returns eligible order items that haven't been reviewed yet
+ * @param {string} productId - Product ID
+ * @returns {Promise<Object>} - { canReview: boolean, eligibleItems: array }
+ */
+export const checkReviewEligibility = async (productId) => {
+  const response = await apiClient.get(`/reviews/eligibility/${productId}`);
+  return response.metadata;
 };
 
 /**
