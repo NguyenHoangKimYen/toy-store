@@ -416,9 +416,6 @@ module.exports = {
 
         // Address để tính ship + weather
         const address = await addressRepo.findById(order.addressId);
-        if (!address) {
-            return null;
-        }
 
         // Weather
         const weather = await getWeatherCondition(address.lat, address.lng);
@@ -449,10 +446,9 @@ module.exports = {
         // Payment
         const payment = await paymentRepo.findByOrderId(orderId);
 
-        // Trả về order detail đầy đủ với address object thay vì addressId
+        // Trả về order detail đầy đủ
         return {
             ...order,
-            addressId: address, // Replace addressId with full address object for frontend compatibility
             items,
             history,
             shipping,
