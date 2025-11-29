@@ -1,5 +1,5 @@
-const voucherService = require("../services/voucher.service");
-const voucherCollectService = require("../services/voucher-collect.service");
+const voucherService = require('../services/voucher.service');
+const voucherCollectService = require('../services/voucher-collect.service');
 
 module.exports = {
     // --- ADMIN ---

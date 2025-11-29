@@ -10,38 +10,40 @@ const {
 
 // MoMo helper
 const {
-  createMomoSignatureForCreatePayment,
-  createMomoSignatureForIpn,
-} = require("../utils/momo.helper");
+    createMomoSignatureForCreatePayment,
+    createMomoSignatureForIpn,
+} = require('../utils/momo.helper');
 
 function isExpired(order) {
-  const now = Date.now(); // timestamp VN hay UTC đều giống nhau
-  const createdAt = new Date(order.createdAt).getTime(); // UTC timestamp
-  const diffHours = (now - createdAt) / 3600000;
+    const now = Date.now(); // timestamp VN hay UTC đều giống nhau
+    const createdAt = new Date(order.createdAt).getTime(); // UTC timestamp
+    const diffHours = (now - createdAt) / 3600000;
 
-  return diffHours > 24;
+    return diffHours > 24;
 }
 
 // MoMo config
 const MOMO_CONFIG = {
-  partnerCode: process.env.MOMO_PARTNER_CODE,
-  accessKey: process.env.MOMO_ACCESS_KEY,
-  secretKey: process.env.MOMO_SECRET_KEY,
-  endpoint: process.env.MOMO_ENDPOINT,
-  redirectUrl: process.env.MOMO_REDIRECT_URL,
-  ipnUrl: process.env.MOMO_IPN_URL,
+    partnerCode: process.env.MOMO_PARTNER_CODE,
+    accessKey: process.env.MOMO_ACCESS_KEY,
+    secretKey: process.env.MOMO_SECRET_KEY,
+    endpoint: process.env.MOMO_ENDPOINT,
+    redirectUrl: process.env.MOMO_REDIRECT_URL,
+    ipnUrl: process.env.MOMO_IPN_URL,
 };
 
 //VietQr payment
 exports.createVietQR = async (req, res) => {
-  try {
-    const orderId = req.params.orderId;
-    const order = await orderRepository.findById(orderId);
+    try {
+        const orderId = req.params.orderId;
+        const order = await orderRepository.findById(orderId);
 
-    if (!order)
-      return res.status(404).json({ success: false, message: "Order not found" });
+        if (!order)
+            return res
+                .status(404)
+                .json({ success: false, message: 'Order not found' });
 
-    const amount = Number(order.totalAmount.toString());
+        const amount = Number(order.totalAmount.toString());
 
     const bank = "mb";
     const account = "195703200508";
@@ -52,31 +54,31 @@ exports.createVietQR = async (req, res) => {
       await orderRepository.updateById(orderId, { paymentMethod: "vietqr" });
     }
 
-    const base = `https://img.vietqr.io/image/${bank}-${account}`;
-    const bill = `${base}-bill.png?amount=${amount}&addInfo=${encodeURIComponent(
-      addInfo
-    )}`;
+        const base = `https://img.vietqr.io/image/${bank}-${account}`;
+        const bill = `${base}-bill.png?amount=${amount}&addInfo=${encodeURIComponent(addInfo)}`;
 
-    return res.json({
-      success: true,
-      orderId,
-      amount,
-      qr: { bill },
-    });
-  } catch (err) {
-    return res.status(500).json({ success: false, message: err.message });
-  }
+        return res.json({
+            success: true,
+            orderId,
+            amount,
+            qr: { bill },
+        });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
+    }
 };
 
 //confirm payment by customer
 exports.customerConfirmVietQR = async (req, res) => {
-  try {
-    const orderId = req.params.orderId;
-    const order = await orderRepository.findById(orderId);
+    try {
+        const orderId = req.params.orderId;
+        const order = await orderRepository.findById(orderId);
 
-    if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found" });
-    }
+        if (!order) {
+            return res
+                .status(404)
+                .json({ success: false, message: 'Order not found' });
+        }
 
     // Nếu quá 24h thì cancel
     if (isExpired(order)) {
@@ -86,12 +88,12 @@ exports.customerConfirmVietQR = async (req, res) => {
         paymentMethod: "vietqr",
       });
 
-      return res.status(400).json({
-        success: false,
-        message: "Đơn hàng đã quá hạn 24 giờ và đã bị hủy tự động.",
-        status: "cancelled",
-      });
-    }
+            return res.status(400).json({
+                success: false,
+                message: 'Đơn hàng đã quá hạn 24 giờ và đã bị hủy tự động.',
+                status: 'cancelled',
+            });
+        }
 
     // Nếu đã thanh toán
     if (order.paymentStatus === "paid" || order.status === "confirmed") {
@@ -137,32 +139,33 @@ exports.customerConfirmVietQR = async (req, res) => {
 };
 
 exports.getPendingVietQROrders = async (req, res) => {
-  try {
-    const orders = await orderRepository.findAll(
-      { status: "pending" },
-      { page: 1, limit: 50 }
-    );
+    try {
+        const orders = await orderRepository.findAll(
+            { status: 'pending' },
+            { page: 1, limit: 50 },
+        );
 
-    return res.json({
-      success: true,
-      orders,
-    });
-
-  } catch (err) {
-    console.log("getPendingVietQROrders ERROR:", err);
-    return res.status(500).json({ success: false, message: err.message });
-  }
+        return res.json({
+            success: true,
+            orders,
+        });
+    } catch (err) {
+        console.log('getPendingVietQROrders ERROR:', err);
+        return res.status(500).json({ success: false, message: err.message });
+    }
 };
 
 //accepted payment VietQR
 exports.adminConfirmVietQR = async (req, res) => {
-  try {
-    const orderId = req.params.orderId;
-    const order = await orderRepository.findById(orderId);
+    try {
+        const orderId = req.params.orderId;
+        const order = await orderRepository.findById(orderId);
 
-    if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found" });
-    }
+        if (!order) {
+            return res
+                .status(404)
+                .json({ success: false, message: 'Order not found' });
+        }
 
     // Nếu quá 24h thì cancel
     if (isExpired(order)) {
@@ -172,12 +175,13 @@ exports.adminConfirmVietQR = async (req, res) => {
         paymentMethod: "vietqr",
       });
 
-      return res.status(400).json({
-        success: false,
-        message: "Đơn hàng đã quá 24 giờ và bị hủy. Không thể xác nhận thanh toán.",
-        status: "cancelled",
-      });
-    }
+            return res.status(400).json({
+                success: false,
+                message:
+                    'Đơn hàng đã quá 24 giờ và bị hủy. Không thể xác nhận thanh toán.',
+                status: 'cancelled',
+            });
+        }
 
     if (order.paymentStatus === "paid" || order.status === "confirmed") {
       return res.json({
@@ -213,28 +217,29 @@ exports.adminConfirmVietQR = async (req, res) => {
       });
     }
 
-    return res.json({
-      success: true,
-      message: "Đã xác nhận thanh toán VietQR",
-      status: "confirmed",
-    });
-
-  } catch (err) {
-    console.log("adminConfirmVietQR ERROR:", err);
-    return res.status(500).json({ success: false, message: err.message });
-  }
+        return res.json({
+            success: true,
+            message: 'Đã xác nhận thanh toán VietQR',
+            status: 'confirmed',
+        });
+    } catch (err) {
+        console.log('adminConfirmVietQR ERROR:', err);
+        return res.status(500).json({ success: false, message: err.message });
+    }
 };
 
 //Payment Fail (admin)
 exports.adminRejectVietQR = async (req, res) => {
-  try {
-    const orderId = req.params.orderId;
-    const { reason } = req.body || {};
+    try {
+        const orderId = req.params.orderId;
+        const { reason } = req.body || {};
 
-    const order = await orderRepository.findById(orderId);
-    if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found" });
-    }
+        const order = await orderRepository.findById(orderId);
+        if (!order) {
+            return res
+                .status(404)
+                .json({ success: false, message: 'Order not found' });
+        }
 
     await orderRepository.updatePaymentStatus(orderId, {
       status: "cancelled",
@@ -340,137 +345,137 @@ exports.payByCash = async (req, res) => {
 
 //momo
 exports.createMomoPayment = async (req, res) => {
-  console.log("➡️ createMomoPayment CALLED");
-  try {
-    const orderIdParam = req.params.orderId;
-    const order = await orderRepository.findById(orderIdParam);
+    console.log('➡️ createMomoPayment CALLED');
+    try {
+        const orderIdParam = req.params.orderId;
+        const order = await orderRepository.findById(orderIdParam);
 
-    if (!order) throw new Error("Order not found");
+        if (!order) throw new Error('Order not found');
 
-    // TẠM THỜI: ép amount đúng số mà MoMo đang báo trong lỗi
-    const amount = 210000;
+        // TẠM THỜI: ép amount đúng số mà MoMo đang báo trong lỗi
+        const amount = 210000;
 
-    const partnerCode = MOMO_CONFIG.partnerCode;
-    const accessKey = MOMO_CONFIG.accessKey;
-    const redirectUrl = MOMO_CONFIG.redirectUrl;
-    const ipnUrl = MOMO_CONFIG.ipnUrl;
+        const partnerCode = MOMO_CONFIG.partnerCode;
+        const accessKey = MOMO_CONFIG.accessKey;
+        const redirectUrl = MOMO_CONFIG.redirectUrl;
+        const ipnUrl = MOMO_CONFIG.ipnUrl;
 
-    // TẠM THỜI: ép requestId bằng đúng cái trong message lỗi
-    const requestId = "1763538270486";
+        // TẠM THỜI: ép requestId bằng đúng cái trong message lỗi
+        const requestId = '1763538270486';
 
-    // TẠM THỜI: ép orderId giống trong message lỗi
-    const orderId = "691bcfc87e543228bd3bc06e";
+        // TẠM THỜI: ép orderId giống trong message lỗi
+        const orderId = '691bcfc87e543228bd3bc06e';
 
-    const requestType = "payWithMethod";
-    const extraData = "";
+        const requestType = 'payWithMethod';
+        const extraData = '';
 
-    const orderInfo = `Thanh toan don hang ${orderId}`
-      .normalize("NFKD")
-      .replace(/[\u0300-\u036f]/g, "");
+        const orderInfo = `Thanh toan don hang ${orderId}`
+            .normalize('NFKD')
+            .replace(/[\u0300-\u036f]/g, '');
 
-    // HARD-CODE RAW SIGNATURE VÀ SIGNATURE
-    const rawSignature =
-      "accessKey=8BLEw6zEZ0Svdvx5" +
-      "&amount=210000" +
-      "&extraData=" +
-      "&ipnUrl=https://milkybloomtoystore.id.vn/api/payments/momo/ipn" +
-      "&orderId=691bcfc87e543228bd3bc06e" +
-      "&orderInfo=Thanh toan don hang 691bcfc87e543228bd3bc06e" +
-      "&partnerCode=MOMOGEXT20251119_TEST" +
-      "&redirectUrl=https://milkybloomtoystore.id.vn/api/payments/momo/return" +
-      "&requestId=1763538270486" +
-      "&requestType=payWithMethod";
+        // HARD-CODE RAW SIGNATURE VÀ SIGNATURE
+        const rawSignature =
+            'accessKey=8BLEw6zEZ0Svdvx5' +
+            '&amount=210000' +
+            '&extraData=' +
+            '&ipnUrl=https://milkybloomtoystore.id.vn/api/payments/momo/ipn' +
+            '&orderId=691bcfc87e543228bd3bc06e' +
+            '&orderInfo=Thanh toan don hang 691bcfc87e543228bd3bc06e' +
+            '&partnerCode=MOMOGEXT20251119_TEST' +
+            '&redirectUrl=https://milkybloomtoystore.id.vn/api/payments/momo/return' +
+            '&requestId=1763538270486' +
+            '&requestType=payWithMethod';
 
-    const signature =
-      "efc0e887b15b27b39746decb1538a6f04e330f549ac5afbe454ef5894ea39cc1";
+        const signature =
+            'efc0e887b15b27b39746decb1538a6f04e330f549ac5afbe454ef5894ea39cc1';
 
-    console.log("RAW SIGNATURE (HARDCODE):", rawSignature);
-    console.log("SIGNATURE (HARDCODE):", signature);
+        console.log('RAW SIGNATURE (HARDCODE):', rawSignature);
+        console.log('SIGNATURE (HARDCODE):', signature);
 
-    const payload = {
-      partnerCode,
-      accessKey,
-      requestId,
-      amount,
-      orderId,
-      orderInfo,
-      redirectUrl,
-      ipnUrl,
-      requestType,
-      extraData,
-      lang: "vi",
-      signature,
-    };
+        const payload = {
+            partnerCode,
+            accessKey,
+            requestId,
+            amount,
+            orderId,
+            orderInfo,
+            redirectUrl,
+            ipnUrl,
+            requestType,
+            extraData,
+            lang: 'vi',
+            signature,
+        };
 
-    console.log("MOMO PAYLOAD (HARDCODE):", payload);
+        console.log('MOMO PAYLOAD (HARDCODE):', payload);
 
-    const response = await axios.post(MOMO_CONFIG.endpoint, payload);
+        const response = await axios.post(MOMO_CONFIG.endpoint, payload);
 
-    return res.json({
-      success: true,
-      orderId,
-      momo: response.data,
-    });
-  } catch (err) {
-    console.log("MoMo ERROR:", err.response?.data || err.message);
-    return res.status(500).json({
-      success: false,
-      message: "MoMo request failed",
-      momoError: err.response?.data || err.message,
-    });
-  }
+        return res.json({
+            success: true,
+            orderId,
+            momo: response.data,
+        });
+    } catch (err) {
+        console.log('MoMo ERROR:', err.response?.data || err.message);
+        return res.status(500).json({
+            success: false,
+            message: 'MoMo request failed',
+            momoError: err.response?.data || err.message,
+        });
+    }
 };
 
 exports.momoIpn = async (req, res) => {
-  try {
-    console.log("➡️ MoMo IPN BODY:", JSON.stringify(req.body, null, 2));
+    try {
+        console.log('➡️ MoMo IPN BODY:', JSON.stringify(req.body, null, 2));
 
-    const {
-      partnerCode,
-      accessKey,
-      requestId,
-      amount,
-      orderId,
-      orderInfo,
-      orderType,
-      transId,
-      resultCode,
-      message,
-      payType,
-      responseTime,
-      extraData,
-      signature,
-    } = req.body;
+        const {
+            partnerCode,
+            accessKey,
+            requestId,
+            amount,
+            orderId,
+            orderInfo,
+            orderType,
+            transId,
+            resultCode,
+            message,
+            payType,
+            responseTime,
+            extraData,
+            signature,
+        } = req.body;
 
-    // (OPTIONAL) Verify signature – có thể comment nếu chỉ test dev
-    // const { rawSignature, signature: expectedSignature } =
-    //   createMomoSignatureForIpn(
-    //     {
-    //       accessKey,
-    //       amount,
-    //       extraData,
-    //       message,
-    //       orderId,
-    //       orderInfo,
-    //       orderType,
-    //       partnerCode,
-    //       payType,
-    //       requestId,
-    //       responseTime,
-    //       resultCode,
-    //       transId,
-    //     },
-    //     MOMO_CONFIG.secretKey
-    //   );
-    //
-    // if (signature !== expectedSignature) {
-    //   console.log("MoMo IPN INVALID SIGNATURE", { rawSignature, expectedSignature, signature });
-    //   return res.json({ resultCode: 1, message: "Invalid signature" });
-    // }
+        // (OPTIONAL) Verify signature – có thể comment nếu chỉ test dev
+        // const { rawSignature, signature: expectedSignature } =
+        //   createMomoSignatureForIpn(
+        //     {
+        //       accessKey,
+        //       amount,
+        //       extraData,
+        //       message,
+        //       orderId,
+        //       orderInfo,
+        //       orderType,
+        //       partnerCode,
+        //       payType,
+        //       requestId,
+        //       responseTime,
+        //       resultCode,
+        //       transId,
+        //     },
+        //     MOMO_CONFIG.secretKey
+        //   );
+        //
+        // if (signature !== expectedSignature) {
+        //   console.log("MoMo IPN INVALID SIGNATURE", { rawSignature, expectedSignature, signature });
+        //   return res.json({ resultCode: 1, message: "Invalid signature" });
+        // }
 
-    if (!orderId) {
-      return res.json({ resultCode: 1, message: "Missing orderId" });
-    }
+        if (!orderId) {
+            return res.json({ resultCode: 1, message: 'Missing orderId' });
+        }
 
     const isSuccess = Number(resultCode) === 0;
     const update = isSuccess
@@ -479,37 +484,41 @@ exports.momoIpn = async (req, res) => {
 
     await orderRepository.updatePaymentStatus(orderId, update);
 
-    return res.json({ resultCode: 0, message: "OK" });
-  } catch (err) {
-    console.log("MoMo IPN ERROR", err);
-    return res.json({ resultCode: 1, message: err.message });
-  }
+        return res.json({ resultCode: 0, message: 'OK' });
+    } catch (err) {
+        console.log('MoMo IPN ERROR', err);
+        return res.json({ resultCode: 1, message: err.message });
+    }
 };
 
 //momo return
 exports.momoReturn = async (req, res) => {
-  try {
-    console.log("➡️ MoMo RETURN QUERY:", req.query);
-    const { resultCode, orderId } = req.query;
+    try {
+        console.log('➡️ MoMo RETURN QUERY:', req.query);
+        const { resultCode, orderId } = req.query;
 
-    if (resultCode === "0") {
-      return res.send(`🎉 Thanh toán thành công: ${orderId}`);
+        if (resultCode === '0') {
+            return res.send(`🎉 Thanh toán thành công: ${orderId}`);
+        }
+
+        return res.send(`❌ Thanh toán thất bại: ${orderId || 'unknown'}`);
+    } catch (err) {
+        return res
+            .status(500)
+            .send('Có lỗi xảy ra khi xử lý kết quả thanh toán MoMo.');
     }
-
-    return res.send(`❌ Thanh toán thất bại: ${orderId || "unknown"}`);
-  } catch (err) {
-    return res.status(500).send("Có lỗi xảy ra khi xử lý kết quả thanh toán MoMo.");
-  }
 };
 
 //zalopay
 exports.createZaloPayOrder = async (req, res) => {
-  try {
-    const { orderId } = req.params;
-    const order = await orderRepository.findById(orderId);
+    try {
+        const { orderId } = req.params;
+        const order = await orderRepository.findById(orderId);
 
-    if (!order)
-      return res.status(404).json({ success: false, message: "Order not found" });
+        if (!order)
+            return res
+                .status(404)
+                .json({ success: false, message: 'Order not found' });
 
     // Ghi nhận phương thức thanh toán nếu chưa có
     if (!order.paymentMethod) {
@@ -518,16 +527,15 @@ exports.createZaloPayOrder = async (req, res) => {
 
     const zaloResponse = await createZaloPayOrderService(order);
 
-    return res.json({
-      success: true,
-      orderId,
-      zaloPay: zaloResponse
-    });
-
-  } catch (err) {
-    console.log("ZaloPay Error:", err.response?.data || err.message);
-    return res.status(500).json({ success: false, message: err.message });
-  }
+        return res.json({
+            success: true,
+            orderId,
+            zaloPay: zaloResponse,
+        });
+    } catch (err) {
+        console.log('ZaloPay Error:', err.response?.data || err.message);
+        return res.status(500).json({ success: false, message: err.message });
+    }
 };
 
 //zalopay callback
@@ -560,9 +568,12 @@ exports.zaloPayCallback = async (req, res) => {
         null;
     }
 
-    if (!orderId) {
-      return res.json({ returncode: -1, returnmessage: "Missing orderId in callback" });
-    }
+        if (!orderId) {
+            return res.json({
+                returncode: -1,
+                returnmessage: 'Missing orderId in callback',
+            });
+        }
 
     const returnCodeRaw =
       data.returncode ??

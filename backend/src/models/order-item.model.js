@@ -1,17 +1,17 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const OrderItemSchema = new mongoose.Schema({
     // Khóa ngoại: Đơn hàng chứa mục này (FK → Order)
     orderId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Order",
+        ref: 'Order',
         required: true,
     },
 
     // Khóa ngoại: Sản phẩm được đặt hàng (FK → Product)
     productId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Product",
+        ref: 'Product',
         required: true,
     },
 
@@ -46,4 +46,4 @@ const OrderItemSchema = new mongoose.Schema({
 // Index để truy vấn nhanh các sản phẩm trong đơn hàng
 OrderItemSchema.index({ orderId: 1, productId: 1 });
 
-module.exports = mongoose.model("OrderItem", OrderItemSchema);
+module.exports = mongoose.model('OrderItem', OrderItemSchema);

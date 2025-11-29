@@ -1,6 +1,6 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-require("./category.model.js");
+require('./category.model.js');
 
 const ProductSchema = new mongoose.Schema(
     {
@@ -21,7 +21,7 @@ const ProductSchema = new mongoose.Schema(
         categoryId: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "Category",
+                ref: 'Category',
                 required: true,
                 index: true,
             },
@@ -66,14 +66,14 @@ const ProductSchema = new mongoose.Schema(
         variants: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "Variant",
+                ref: 'Variant',
             },
         ],
 
         status: {
             type: String,
-            enum: ["Draft", "Published", "Archived", "Disabled"],
-            default: "Draft",
+            enum: ['Draft', 'Published', 'Archived', 'Disabled'],
+            default: 'Draft',
             index: true,
         },
 
@@ -92,8 +92,8 @@ const ProductSchema = new mongoose.Schema(
     },
     {
         timestamps: true,
-        collection: "products",
+        collection: 'products',
     },
 );
 
-module.exports = mongoose.model("Product", ProductSchema);
+module.exports = mongoose.model('Product', ProductSchema);

@@ -1,5 +1,5 @@
-const dashboardService = require("../services/dashboard.service");
-const productAnalyticsService = require("../services/product-analytics.service");
+const dashboardService = require('../services/dashboard.service');
+const productAnalyticsService = require('../services/product-analytics.service');
 
 module.exports = {
     // --- EXISTING DASHBOARD CONTROLLERS ---

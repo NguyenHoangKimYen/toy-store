@@ -1,4 +1,4 @@
-const UserVoucher = require("../models/user-voucher.model");
+const UserVoucher = require('../models/user-voucher.model');
 
 module.exports = {
     create(data) {

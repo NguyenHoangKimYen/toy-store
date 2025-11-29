@@ -1,4 +1,4 @@
-const DiscountCode = require("../models/discount-code.model");
+const DiscountCode = require('../models/discount-code.model');
 
 const findById = (id) => {
     return DiscountCode.findById(id);

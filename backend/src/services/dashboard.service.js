@@ -1,5 +1,5 @@
-const dashboardRepo = require("../repositories/dashboard.repository");
-const branchRepository = require("../repositories/branch.repository");
+const dashboardRepo = require('../repositories/dashboard.repository');
+const branchRepository = require('../repositories/branch.repository');
 
 module.exports = {
     async getSalesDistribution() {

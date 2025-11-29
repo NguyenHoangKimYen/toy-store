@@ -41,9 +41,9 @@ router.get(
 
 //after login google
 router.get(
-    "/google/callback",
-    passportGoogle.authenticate("google", {
-        failureRedirect: "/login?error=google",
+    '/google/callback',
+    passportGoogle.authenticate('google', {
+        failureRedirect: '/login?error=google',
         session: false,
     }),
     (req, res) => {
@@ -111,11 +111,11 @@ router.get(
 
 router.get("/verify-email", verifyEmail);
 
-router.post("/register", register); //đăng ký
-router.post("/login", login); //đăng nhập
+router.post('/register', register); //đăng ký
+router.post('/login', login); //đăng nhập
 
-router.post("/forgot-password", forgotPassword); //quên mật khẩu
-router.post("/reset-password", resetPassword); //đặt lại mật khẩu
+router.post('/forgot-password', forgotPassword); //quên mật khẩu
+router.post('/reset-password', resetPassword); //đặt lại mật khẩu
 
 router.post("/login/verify-otp", verifyLoginOtp);
 router.post("/login/resend-otp", resendLoginOtp);

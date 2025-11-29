@@ -1,4 +1,4 @@
-const ReviewService = require("../services/review.service");
+const ReviewService = require('../services/review.service');
 
 const createReview = async (req, res, next) => {
     try {
@@ -12,7 +12,7 @@ const createReview = async (req, res, next) => {
         if (!rating || rating < 1 || rating > 5) {
             return res
                 .status(400)
-                .json({ message: "Rating must be between 1 and 5 stars" });
+                .json({ message: 'Rating must be between 1 and 5 stars' });
         }
 
         const newReview = await ReviewService.createReview({
@@ -25,7 +25,7 @@ const createReview = async (req, res, next) => {
         });
 
         return res.status(201).json({
-            message: "Product review created successfully!",
+            message: 'Product review created successfully!',
             metadata: newReview,
         });
     } catch (error) {
@@ -47,7 +47,7 @@ const updateReview = async (req, res, next) => {
         if (rating && (rating < 1 || rating > 5)) {
             return res
                 .status(400)
-                .json({ message: "Rating must be between 1 and 5 stars" });
+                .json({ message: 'Rating must be between 1 and 5 stars' });
         }
 
         const updatedReview = await ReviewService.updateReview({
@@ -60,7 +60,7 @@ const updateReview = async (req, res, next) => {
         });
 
         return res.status(200).json({
-            message: "Review updated successfully",
+            message: 'Review updated successfully',
             metadata: updatedReview,
         });
     } catch (error) {
@@ -79,7 +79,7 @@ const getReviewsByProductId = async (req, res, next) => {
             sort,
             filterRating: rating ? parseInt(rating) : null,
         });
-        return res.status(200).json({ message: "Success", metadata: result });
+        return res.status(200).json({ message: 'Success', metadata: result });
     } catch (error) {
         next(error);
     }
@@ -90,14 +90,14 @@ const deleteReview = async (req, res, next) => {
         const userId = req.user._id;
         const { reviewId } = req.params;
         const isAdmin = req.user.roles
-            ? req.user.roles.includes("admin")
+            ? req.user.roles.includes('admin')
             : false;
 
         await ReviewService.deleteReview({ userId, reviewId, isAdmin });
 
         return res
             .status(200)
-            .json({ message: "Deleted successfully", metadata: null });
+            .json({ message: 'Deleted successfully', metadata: null });
     } catch (error) {
         next(error);
     }
@@ -107,10 +107,10 @@ const moderateReview = async (req, res, next) => {
     try {
         // Check quyền Admin (nếu middleware auth chưa check kỹ)
         // Giả sử req.user.roles chứa mảng roles
-        if (!req.user.roles || !req.user.roles.includes("admin")) {
+        if (!req.user.roles || !req.user.roles.includes('admin')) {
             return res
                 .status(403)
-                .json({ message: "Access denied. Admin only." });
+                .json({ message: 'Access denied. Admin only.' });
         }
 
         const { reviewId } = req.params;
@@ -120,6 +120,7 @@ const moderateReview = async (req, res, next) => {
             reviewId,
             adminId: req.user._id,
             status,
+            reason,
             reason,
         });
 

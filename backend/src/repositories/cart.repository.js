@@ -1,16 +1,16 @@
-const Cart = require("../models/cart.model");
+const Cart = require('../models/cart.model');
 
 const findCartByUserId = async (userId) => {
     return Cart.findOne({ userId }).populate({
-        path: "items",
-        populate: { path: "productId" },
+        path: 'items',
+        populate: { path: 'productId' },
     });
 };
 
 const findCartBySessionId = async (sessionId) => {
     return Cart.findOne({ sessionId }).populate({
-        path: "items",
-        populate: { path: "productId" },
+        path: 'items',
+        populate: { path: 'productId' },
     });
 };
 
@@ -21,8 +21,8 @@ const create = async (cartData) => {
 
 const update = async (cartId, data) => {
     return await Cart.findByIdAndUpdate(cartId, data, { new: true }).populate({
-        path: "items",
-        populate: { path: "productId" },
+        path: 'items',
+        populate: { path: 'productId' },
     });
 };
 
@@ -32,8 +32,8 @@ const remove = async (cartId) => {
 
 const getAll = async () => {
     return await Cart.find().populate({
-        path: "items",
-        populate: { path: "productId" },
+        path: 'items',
+        populate: { path: 'productId' },
     });
 };
 

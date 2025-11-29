@@ -1,4 +1,4 @@
-const discountService = require("../services/discount-code.service");
+const discountService = require('../services/discount-code.service');
 
 module.exports = {
     async create(req, res) {
@@ -34,7 +34,7 @@ module.exports = {
             const id = req.params.id;
             await discountService.deleteDiscountCode(id);
 
-            return res.json({ success: true, message: "Deleted successfully" });
+            return res.json({ success: true, message: 'Deleted successfully' });
         } catch (err) {
             console.error(err);
             return res

@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const AnalyticsLogSchema = new mongoose.Schema({
     // Trường _id (PK) tự động được Mongoose/MongoDB tạo ra
@@ -36,9 +36,9 @@ const AnalyticsLogSchema = new mongoose.Schema({
     bestSellingProductIds: [
         {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Product", // Tham chiếu tới Model 'Product'
+            ref: 'Product', // Tham chiếu tới Model 'Product'
         },
     ],
 });
 
-module.exports = mongoose.model("AnalyticsLog", AnalyticsLogSchema);
+module.exports = mongoose.model('AnalyticsLog', AnalyticsLogSchema);

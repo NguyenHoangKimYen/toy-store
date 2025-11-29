@@ -52,7 +52,7 @@ async function sendVerifyEmail(user) {
 module.exports = {
     async createOrGetUserForGuest({ fullName, email, phone }) {
         const normalizedEmail = email.toLowerCase();
-        const baseUsername = normalizedEmail.split("@")[0];
+        const baseUsername = normalizedEmail.split('@')[0];
         const randomSuffix = Math.floor(1000 + Math.random() * 9000);
         const autoUsername = `${baseUsername}_${randomSuffix}`;
         const existing = await userRepository.findByEmailOrPhone(
@@ -71,13 +71,13 @@ module.exports = {
             username: autoUsername,
             password: hash,
             isVerified: false,
-            role: "customer",
+            role: 'customer',
         });
 
         try {
             await sendMail({
                 to: normalizedEmail,
-                subject: "Tài khoản của bạn tại MilkyBloom",
+                subject: 'Tài khoản của bạn tại MilkyBloom',
                 html: `
                 <p>Chào ${fullName},</p>
                 <p>Chúng tôi đã tạo tài khoản cho bạn.</p>
@@ -86,7 +86,7 @@ module.exports = {
             `,
             });
         } catch (err) {
-            console.error("SendMail guest error:", err);
+            console.error('SendMail guest error:', err);
         }
 
         return newUser;
@@ -104,8 +104,8 @@ module.exports = {
         } = payload;
 
         let finalDeliveryType = deliveryType;
-        if (!["standard", "express"].includes(finalDeliveryType)) {
-            finalDeliveryType = "standard";
+        if (!['standard', 'express'].includes(finalDeliveryType)) {
+            finalDeliveryType = 'standard';
         }
 
         // Lấy cart theo user hoặc session
@@ -117,6 +117,8 @@ module.exports = {
         if (!cart) throw new Error("Cart not found");
 
         const cartItems = await cartItemRepository.getAllByCartId(cart._id);
+        if (!cartItems || cartItems.length === 0)
+            throw new Error('Cart is empty');
         if (!cartItems || cartItems.length === 0)
             throw new Error("Cart is empty");
 
@@ -139,7 +141,7 @@ module.exports = {
             guestInfo: guestInfo || null,
             addressId: addressId || null,
             paymentMethod: paymentMethod || null,
-            deliveryType: deliveryType || "standard",
+            deliveryType: deliveryType || 'standard',
             items,
             discountCodeId: discountCodeId || cart.discountCodeId || null,
             totalAmount,
@@ -179,15 +181,15 @@ module.exports = {
         }
         let shippingAddress = null;
 
-        if (!["standard", "express"].includes(deliveryType))
-            deliveryType = "standard";
+        if (!['standard', 'express'].includes(deliveryType))
+            deliveryType = 'standard';
 
         // CASE USER LOGIN
         if (userId && !guestInfo) {
             if (!addressId) {
                 const defaultAddr =
                     await addressRepo.findDefaultByUserId(userId);
-                if (!defaultAddr) throw new Error("NO_DEFAULT_ADDRESS");
+                if (!defaultAddr) throw new Error('NO_DEFAULT_ADDRESS');
                 addressId = defaultAddr._id;
                 shippingAddress = defaultAddr;
             }
@@ -200,7 +202,7 @@ module.exports = {
         // CASE GUEST
         if (!userId) {
             if (!guestInfo.fullName || !guestInfo.email || !guestInfo.phone)
-                throw new Error("Guest must provide fullName, email, phone.");
+                throw new Error('Guest must provide fullName, email, phone.');
 
             const user = await this.createOrGetUserForGuest(guestInfo);
             userId = user._id;
@@ -218,6 +220,7 @@ module.exports = {
                 addressLine: guestInfo.addressLine,
                 lat: guestInfo.lat,
                 lng: guestInfo.lng,
+                isDefault: isFirstAddress,
                 isDefault: isFirstAddress,
             });
 
@@ -240,7 +243,7 @@ module.exports = {
             }
         }
 
-        if (!shippingAddress) throw new Error("SHIPPING_ADDRESS_NOT_FOUND");
+        if (!shippingAddress) throw new Error('SHIPPING_ADDRESS_NOT_FOUND');
 
         // TIỀN HÀNG GỐC
         const goodsTotal = Number(data.totalAmount);
@@ -253,7 +256,7 @@ module.exports = {
         if (pointsUsed > 0) {
             // Lấy thông tin user
             const user = await userRepository.findById(userId);
-            if (!user) throw new Error("User not found");
+            if (!user) throw new Error('User not found');
 
             // Kiểm tra đủ coin hay không
             if (pointsUsed > user.loyaltyPoints) {
@@ -274,10 +277,10 @@ module.exports = {
             // Ghi log coin transaction
             await CoinTransactionRepository.create({
                 userId,
-                type: "use",
+                type: 'use',
                 amount: pointsUsed,
                 balanceAfter: user.loyaltyPoints,
-                description: "Used coins for discount",
+                description: 'Used coins for discount',
             });
         }
 
@@ -298,7 +301,7 @@ module.exports = {
 
         if (voucherId) {
             if (!userId) {
-                throw new Error("Voucher chỉ áp dụng cho user đã đăng nhập.");
+                throw new Error('Voucher chỉ áp dụng cho user đã đăng nhập.');
             }
 
             const uv = await userVoucherRepository.findByUserAndVoucher(
@@ -307,11 +310,11 @@ module.exports = {
             );
 
             if (!uv) {
-                throw new Error("Bạn chưa thu thập voucher này.");
+                throw new Error('Bạn chưa thu thập voucher này.');
             }
 
             if (uv.used) {
-                throw new Error("Voucher đã được sử dụng.");
+                throw new Error('Voucher đã được sử dụng.');
             }
 
             const voucher = await voucherRepository.findById(voucherId);
@@ -324,7 +327,7 @@ module.exports = {
             if (endAt && endAt < now) throw new Error("Voucher đã hết hạn.");
 
             // Tính giảm giá
-            if (voucher.type === "fixed") {
+            if (voucher.type === 'fixed') {
                 voucherDiscount = voucher.value;
             }
 
@@ -398,7 +401,7 @@ module.exports = {
             })),
         );
 
-        await historyRepo.add(order._id, "pending");
+        await historyRepo.add(order._id, 'pending');
 
         return order;
     },
@@ -529,7 +532,7 @@ module.exports = {
         await historyRepo.add(orderId, newStatus);
 
         // Nếu đơn hoàn tất
-        if (newStatus === "completed" || newStatus === "delivered") {
+        if (newStatus === 'completed' || newStatus === 'delivered') {
             if (updated.userId && updated.totalAmount) {
                 const goodsAmount =
                     updated.totalAmount -
@@ -563,7 +566,7 @@ module.exports = {
                         }
                     }
                 } catch (err) {
-                    console.error("Loyalty/Badge update error:", err);
+                    console.error('Loyalty/Badge update error:', err);
                 }
             }
         }

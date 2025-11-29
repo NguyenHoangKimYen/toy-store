@@ -1,7 +1,7 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const loyaltyController = require("../controllers/loyalty.controller");
-const auth = require("../middlewares/auth.middleware");
+const loyaltyController = require('../controllers/loyalty.controller');
+const auth = require('../middlewares/auth.middleware');
 
 // Lấy thông tin loyalty của mình
 router.get("/me", auth, loyaltyController.getMyLoyalty);
