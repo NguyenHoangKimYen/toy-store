@@ -1,47 +1,45 @@
-name: Deploy Frontend to S3 + CloudFront
+name: Deploy FE to S3 + CloudFront
 
 on:
   push:
-    branches:
-      - main
-      - frontend   # hoặc nhánh FE bạn đang dùng
+    branches: [ main ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v3
+    - name: Checkout repo
+      uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
+    - name: Setup Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
 
-      - name: Install dependencies
-        run: npm install
+    - name: Install dependencies
+      run: npm install
 
-      - name: Build project
-        run: npm run build
+    - name: Build project
+      run: npm run build
 
-      - name: Sync build to S3
-        uses: aws-actions/aws-s3-sync@v1
-        with:
-          bucket: milkybloom-frontend
-          region: ${{ secrets.AWS_REGION }}
-          delete: true
-          source: ./dist      # Nếu bạn dùng Vite/React
-          # Nếu NextJS → đổi thành .next hoặc out/
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    - name: Sync S3
+      uses: aws-actions/s3-sync@v1
+      with:
+        bucket: ${{ secrets.S3_BUCKET }}
+        region: us-east-1
+        delete: true
+        source-dir: ./dist
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
 
-      - name: Invalidate CloudFront cache
-        uses: awact/cloudfront-action@v2
-        with:
-          distribution-id: E280MQAG8BNAG3
-          paths: "/*"
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    - name: Invalidate CloudFront
+      run: |
+        aws cloudfront create-invalidation \
+          --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+          --paths "/*"
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
+        AWS_REGION: us-east-1
