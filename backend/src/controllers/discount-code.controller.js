@@ -45,7 +45,7 @@ module.exports = {
 
     async getAll(req, res) {
         try {
-            const list = await discountService.getAll(req.query);
+            const list = await discountService.getAll();
             return res.json({ success: true, data: list });
         } catch (err) {
             console.error(err);
