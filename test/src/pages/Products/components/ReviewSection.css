@@ -241,18 +241,8 @@
   margin-bottom: 0.75rem;
 }
 
-.review-variant-info svg {
-  color: #6b7280;
-  flex-shrink: 0;
-}
-
 .review-variant-info strong {
   color: #1f2937;
-}
-
-.variant-attributes {
-  color: #6b7280;
-  font-size: 0.8rem;
 }
 
 /* Review Images */

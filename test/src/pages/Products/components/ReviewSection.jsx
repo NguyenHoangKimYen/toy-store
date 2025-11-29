@@ -231,15 +231,13 @@ const ReviewSection = ({ productId }) => {
                 </div>
                 
                 {/* Variant Info */}
-                {review.variantName && (
+                {(review.variantId?.attributes?.length > 0 || review.variantName) && (
                   <div className="review-variant-info">
-                    <ShoppingBag size={14} />
-                    <span>Purchased: <strong>{review.variantName}</strong></span>
-                    {review.variantId?.attributes && review.variantId.attributes.length > 0 && (
-                      <span className="variant-attributes">
-                        ({review.variantId.attributes.map(attr => `${attr.name}: ${attr.value}`).join(', ')})
-                      </span>
-                    )}
+                    <span>Purchased: <strong>
+                      {review.variantId?.attributes?.length > 0 
+                        ? review.variantId.attributes.map(attr => attr.value).join(', ')
+                        : review.variantName}
+                    </strong></span>
                   </div>
                 )}
 
