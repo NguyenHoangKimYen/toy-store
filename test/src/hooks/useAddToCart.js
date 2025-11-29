@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { useCart } from './useCart';
+import { useCartContext } from '@/context/CartProvider';
 
 /**
  * Hook for adding products to cart
@@ -8,7 +8,7 @@ import { useCart } from './useCart';
  */
 export const useAddToCart = () => {
   const [loading, setLoading] = useState(false);
-  const { addItem } = useCart();
+  const { addItem } = useCartContext();
 
   const handleAddToCart = async (product, variant = null) => {
     const startTime = performance.now();
@@ -27,14 +27,21 @@ export const useAddToCart = () => {
         return false;
       }
 
-      // Get variant ID if variant is provided
+      // Get variant ID - the backend cart API requires variantId
       const variantId = variant?._id || variant?.id;
+      
+      if (!variantId) {
+        toast.error('Invalid variant', {
+          description: 'Could not determine variant ID.',
+        });
+        return false;
+      }
 
       console.log('[ADD TO CART] Starting...', { productId: product._id, variantId });
       const addStartTime = performance.now();
       
-      // Add to cart using the cart hook with variantId
-      await addItem(product._id, 1, variantId);
+      // Add to cart using the cart context - addItem expects (variantId, quantity)
+      await addItem(variantId, 1);
       
       console.log('[ADD TO CART] Completed in', (performance.now() - addStartTime).toFixed(0), 'ms');
 

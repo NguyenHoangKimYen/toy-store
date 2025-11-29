@@ -3,6 +3,14 @@ import apiClient from './config';
 /**
  * Cart Service
  * Handles all cart-related API calls
+ * 
+ * Backend endpoints:
+ * - GET /carts/user/:userId - Get cart by user ID (auth required)
+ * - GET /carts/session/:sessionId - Get cart by session ID (guest)
+ * - POST /carts - Create new cart
+ * - POST /carts/:cartId/items - Add item to cart { variantId, quantity }
+ * - POST /carts/:cartId/remove-item - Remove/decrease item { variantId, quantity }
+ * - DELETE /carts/:cartId/clear - Clear all items
  */
 
 // Get all carts (admin only)
@@ -35,21 +43,41 @@ export const deleteCart = async (cartId) => {
   return await apiClient.delete(`/carts/${cartId}`);
 };
 
-// Cart Item operations
-export const createCartItem = async (cartItemData) => {
-  return await apiClient.post('/cart-items', cartItemData);
+/**
+ * Add item to cart
+ * @param {string} cartId - Cart ID
+ * @param {Object} itemData - { variantId, quantity }
+ * @returns {Promise<Object>} - Updated cart with items
+ */
+export const addItemToCart = async (cartId, itemData) => {
+  const response = await apiClient.post(`/carts/${cartId}/items`, itemData);
+  // Backend returns { success: true, data: cart }
+  return response.data || response;
 };
 
+/**
+ * Remove/decrease item from cart
+ * @param {string} cartId - Cart ID
+ * @param {Object} itemData - { variantId, quantity }
+ * @returns {Promise<Object>} - Updated cart
+ */
+export const removeItemFromCart = async (cartId, itemData) => {
+  const response = await apiClient.post(`/carts/${cartId}/remove-item`, itemData);
+  return response.data || response;
+};
+
+// Legacy aliases for backwards compatibility
+export const createCartItem = addItemToCart;
+export const updateCartItem = async (cartId, itemData) => {
+  // For quantity updates, we need to calculate the difference
+  // and call addItem or removeItem accordingly
+  return await addItemToCart(cartId, itemData);
+};
+export const deleteCartItem = removeItemFromCart;
 export const getCartItems = async (cartId) => {
-  return await apiClient.get(`/cart-items/cart/${cartId}`);
-};
-
-export const updateCartItem = async (cartItemId, cartItemData) => {
-  return await apiClient.put(`/cart-items/${cartItemId}`, cartItemData);
-};
-
-export const deleteCartItem = async (cartItemId) => {
-  return await apiClient.delete(`/cart-items/${cartItemId}`);
+  // Items are included in the cart response
+  const cart = await getCartBySession(cartId).catch(() => null);
+  return cart?.items || [];
 };
 
 export default {
@@ -59,8 +87,11 @@ export default {
   createCart,
   clearCart,
   deleteCart,
+  addItemToCart,
+  removeItemFromCart,
+  // Legacy
   createCartItem,
-  getCartItems,
   updateCartItem,
   deleteCartItem,
+  getCartItems,
 };

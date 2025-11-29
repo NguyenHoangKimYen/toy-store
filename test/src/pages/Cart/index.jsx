@@ -11,6 +11,27 @@ import EmptyCart from './components/EmptyCart';
 import { useCart } from './hooks/useCart';
 import './Cart.css';
 
+/**
+ * Transform backend cart item to frontend format
+ */
+const transformCartItem = (item) => {
+  // Get variant - backend populates variantId with full variant data
+  const variant = typeof item.variantId === 'object' ? item.variantId : null;
+  // Get product - it's nested inside variant.productId when populated
+  const product = variant?.productId || null;
+  // Get the variant ID string
+  const variantIdStr = variant?._id || item.variantId;
+
+  return {
+    id: variantIdStr, // Use variantId as the unique identifier
+    variantId: variantIdStr,
+    product: product,
+    variant: variant,
+    quantity: item.quantity,
+    price: item.price,
+  };
+};
+
 const Cart = () => {
   const navigate = useNavigate();
   const {
@@ -53,6 +74,9 @@ const Cart = () => {
     return <EmptyCart />;
   }
 
+  // Transform cart items for the CartItem component
+  const transformedItems = cartItems.map(transformCartItem);
+
   return (
     <div className="cart-container">
       {/* Header */}
@@ -60,7 +84,7 @@ const Cart = () => {
         <div className="cart-title-wrapper">
           <ShoppingBag size={32} />
           <h1 className="cart-title">Shopping Cart</h1>
-          <span className="cart-count">({cartItems.length} items)</span>
+          <span className="cart-count">({transformedItems.length} items)</span>
         </div>
         <Button
           variant="outline"
@@ -74,7 +98,7 @@ const Cart = () => {
       <div className="cart-content">
         {/* Cart Items List */}
         <div className="cart-items-section">
-          {cartItems.map((item) => (
+          {transformedItems.map((item) => (
             <CartItem
               key={item.id}
               item={item}

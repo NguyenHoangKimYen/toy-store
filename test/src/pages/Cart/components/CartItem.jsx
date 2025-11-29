@@ -10,6 +10,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
   const navigate = useNavigate();
   const product = item.product;
   const variant = item.variant;
+  const variantId = item.variantId || item.id;
   
   if (!product) {
     console.error('Cart item missing product data:', item);
@@ -17,7 +18,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
   }
   
   // Use variant price if available, otherwise use product price
-  const price = parsePrice(variant?.price || product.minPrice || product.price || 0);
+  const price = parsePrice(item.price || variant?.price || product.minPrice || product.price || 0);
   const imageUrl = variant?.imageUrls?.[0] || product.imageUrls?.[0] || '/placeholder.png';
   const stock = variant?.stockQuantity || product.stockQuantity || 999;
   const total = price * item.quantity;
@@ -40,13 +41,13 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
 
   const handleDecrement = () => {
     if (item.quantity > 1) {
-      onUpdateQuantity(item.id, item.quantity - 1);
+      onUpdateQuantity(variantId, item.quantity - 1);
     }
   };
 
   const handleIncrement = () => {
     if (item.quantity < stock) {
-      onUpdateQuantity(item.id, item.quantity + 1);
+      onUpdateQuantity(variantId, item.quantity + 1);
     }
   };
 
@@ -126,7 +127,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => onRemove(item.id)}
+        onClick={() => onRemove(variantId)}
         className="remove-btn"
       >
         <Trash2 size={20} />

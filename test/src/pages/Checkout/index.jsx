@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,27 @@ import ShippingForm from './components/ShippingForm';
 import PaymentMethodSelector from './components/PaymentMethodSelector';
 import { useCheckout } from './hooks/useCheckout';
 import './Checkout.css';
+
+/**
+ * Transform backend cart item to frontend format
+ */
+const transformCartItem = (item) => {
+  // Get variant - backend populates variantId with full variant data
+  const variant = typeof item.variantId === 'object' ? item.variantId : null;
+  // Get product - it's nested inside variant.productId when populated
+  const product = variant?.productId || null;
+  // Get the variant ID string
+  const variantIdStr = variant?._id || item.variantId;
+
+  return {
+    _id: variantIdStr, // Use variantId as the unique identifier
+    variantId: variantIdStr,
+    product: product,
+    variant: variant,
+    quantity: item.quantity,
+    price: item.price,
+  };
+};
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -31,6 +52,12 @@ const Checkout = () => {
     handlePointsApplied,
   } = useCheckout();
 
+  // Transform cart items for display
+  const transformedItems = useMemo(() => {
+    if (!cartItems) return [];
+    return cartItems.map(transformCartItem);
+  }, [cartItems]);
+
   if (loading) {
     return (
       <div className="checkout-loading">
@@ -48,7 +75,7 @@ const Checkout = () => {
     );
   }
 
-  if (!cartItems || cartItems.length === 0) {
+  if (!transformedItems || transformedItems.length === 0) {
     return (
       <div className="checkout-empty">
         <h2>Your cart is empty</h2>
@@ -97,7 +124,7 @@ const Checkout = () => {
         {/* Right Column - Order Summary */}
         <div className="checkout-summary">
           <OrderSummary
-            cartItems={cartItems}
+            cartItems={transformedItems}
             subtotal={subtotal}
             shipping={shipping}
             discount={discount}

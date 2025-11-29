@@ -4,13 +4,14 @@ import { useCartContext } from '@/context/CartProvider';
 
 export const useCart = () => {
   const {
-    cartItems,
+    items,
     loading,
     error,
     cartSummary,
     updateItemQuantity,
-    removeItem,
+    removeItemCompletely,
     clearAllItems,
+    getItemVariantId,
   } = useCartContext();
 
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -20,9 +21,9 @@ export const useCart = () => {
   // Calculate subtotal from cart summary
   const subtotal = cartSummary.subtotal;
 
-  const handleUpdateQuantity = async (itemId, newQuantity) => {
+  const handleUpdateQuantity = async (variantId, newQuantity) => {
     try {
-      await updateItemQuantity(itemId, newQuantity);
+      await updateItemQuantity(variantId, newQuantity);
       // No need to dispatch event - context handles reactivity
     } catch (err) {
       console.error('Error updating quantity:', err);
@@ -32,8 +33,8 @@ export const useCart = () => {
     }
   };
 
-  const handleRemoveItem = async (itemId) => {
-    setItemToRemove(itemId);
+  const handleRemoveItem = async (variantId) => {
+    setItemToRemove(variantId);
     setShowRemoveConfirm(true);
   };
 
@@ -41,7 +42,7 @@ export const useCart = () => {
     if (!itemToRemove) return;
     
     try {
-      await removeItem(itemToRemove);
+      await removeItemCompletely(itemToRemove);
       
       toast.success('Item removed from cart');
       // No need to dispatch event - context handles reactivity
@@ -77,7 +78,7 @@ export const useCart = () => {
   };
 
   return {
-    cartItems,
+    cartItems: items, // Map 'items' to 'cartItems' for backward compatibility
     loading,
     error,
     subtotal,
@@ -91,5 +92,7 @@ export const useCart = () => {
     setShowRemoveConfirm,
     confirmClearCart,
     confirmRemoveItem,
+    // Helper function
+    getItemVariantId,
   };
 };
