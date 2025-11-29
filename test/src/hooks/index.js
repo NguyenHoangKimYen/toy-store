@@ -23,9 +23,6 @@ export { useOrders } from './useOrders';
 // Category hooks - Manage categories
 export { useCategories } from './useCategories';
 
-// Admin hooks - Admin panel functionality
-export { useAdminProducts } from './useAdminProducts';
-
 // Auth hooks - Authentication and user context
 export { useAuth } from './useAuth';
 
