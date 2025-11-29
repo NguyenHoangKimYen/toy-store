@@ -36,38 +36,8 @@ module.exports = {
   },
 
     findAll(filter = {}, options = {}) {
-        const { page = 1, limit = 20, search, status, deliveryType, paymentMethod } = options;
-        
-        // Build MongoDB query
-        const query = { ...filter };
-        
-        // Add search filter if provided
-        if (search && search.trim()) {
-            const searchRegex = new RegExp(search.trim(), 'i');
-            query.$or = [
-                { _id: { $regex: searchRegex } },
-                { 'userId.email': { $regex: searchRegex } },
-                { 'userId.fullName': { $regex: searchRegex } },
-                { 'userId.username': { $regex: searchRegex } }
-            ];
-        }
-        
-        // Add status filter
-        if (status && status !== 'all') {
-            query.status = status;
-        }
-        
-        // Add delivery type filter
-        if (deliveryType && deliveryType !== 'all') {
-            query.deliveryType = deliveryType;
-        }
-        
-        // Add payment method filter
-        if (paymentMethod && paymentMethod !== 'all') {
-            query.paymentMethod = paymentMethod;
-        }
-        
-        return Order.find(query)
+        const { page = 1, limit = 20 } = options;
+        return Order.find(filter)
             .populate('userId', 'fullName email username phone')
             .populate('addressId', 'fullNameOfReceiver phone addressLine city postalCode lat lng')
             .populate('discountCodeId', 'code value')
