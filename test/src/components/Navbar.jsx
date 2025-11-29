@@ -375,31 +375,42 @@ const Navbar = () => {
     // Render search bar
     const renderSearchBar = () => (
         showSearch ? (
-            <form onSubmit={handleSearchSubmit} className='flex items-center gap-2 border border-gray-300 rounded-full px-4 py-1.5 bg-white shadow-sm'>
-                <Search className='w-4 text-gray-500' />
+            <form onSubmit={handleSearchSubmit} className='navbar-search-form expanded flex items-center gap-2 border border-gray-300 rounded-full px-3 py-1.5 bg-white shadow-sm'>
+                <Search className='w-4 h-4 text-gray-500 flex-shrink-0' />
                 <input
                     type='text'
                     value={searchQuery}
                     onChange={handleSearchChange}
                     placeholder='Search products...'
-                    className='outline-none text-sm w-48 bg-transparent'
+                    className='outline-none text-sm flex-1 min-w-0 bg-transparent'
                     autoFocus
                 />
                 <X 
-                    className='w-4 cursor-pointer text-gray-500 hover:text-gray-700' 
+                    className='w-4 h-4 cursor-pointer text-gray-500 hover:text-gray-700 flex-shrink-0' 
                     onClick={handleSearchClick}
                 />
             </form>
         ) : (
-            <Search className='w-5 cursor-pointer' onClick={handleSearchClick} />
+            <button 
+                className='navbar-icon-btn flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors'
+                onClick={handleSearchClick}
+                aria-label="Search"
+            >
+                <Search className='w-5 h-5' />
+            </button>
         )
     )
 
-    // Render user dropdown menu
+    // Render user dropdown menu - with mobile click support
     const renderUserMenu = () => (
-        <div className='group relative'>
-            <User className='w-5 cursor-pointer hover:text-gray-900 transition-colors' />
-            <div className='group-hover:block z-[1100] hidden absolute dropdown-menu right-0 pt-4'>
+        <div className='navbar-user-menu group relative'>
+            <button 
+                className='navbar-icon-btn flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors'
+                aria-label="User menu"
+            >
+                <User className='w-5 h-5' />
+            </button>
+            <div className='group-hover:block z-[1100] hidden absolute dropdown-menu right-0 pt-2'>
                 <div className='flex flex-col w-56 py-2 bg-white border border-gray-200 rounded-lg shadow-lg'>
                     {user ? (
                         <>
@@ -453,12 +464,12 @@ const Navbar = () => {
 
     // Render cart icon
     const renderCart = () => (
-        <Link to='/cart' className='relative'>
-            <ShoppingCart className='w-5 cursor-pointer' />
+        <Link to='/cart' className='navbar-icon-btn relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors'>
+            <ShoppingCart className='w-5 h-5' />
             {cartCount > 0 && (
-                <p className='absolute right-[-5px] bottom-[-5px] w-4 text-center leading-4 bg-black text-white aspect-square rounded-full text-[8px]'>
-                    {cartCount}
-                </p>
+                <span className='absolute top-0 right-0 w-5 h-5 text-center leading-5 bg-black text-white rounded-full text-[10px] font-medium'>
+                    {cartCount > 99 ? '99+' : cartCount}
+                </span>
             )}
         </Link>
     )
@@ -483,21 +494,23 @@ const Navbar = () => {
 
             {/* Main Navbar */}
             <nav className={`navbar-wrapper ${isVisible ? 'navbar-visible' : 'navbar-hidden'}`}>
-                <div className='px-2 sm:px-4 md:px-[5vw] lg:px-[7vw] xl:px-[3vw]'>
-                    <div className='flex items-center justify-between py-5 font-medium'>
+                <div className='navbar-container px-3 sm:px-4 md:px-[5vw] lg:px-[7vw] xl:px-[3vw]'>
+                    <div className='navbar-content flex items-center justify-between py-4 font-medium gap-4'>
                         {/* Mobile Menu Toggle */}
-                        <button className="mobile-menu-toggle" onClick={() => setShowMobileMenu(true)}>
+                        <button className="mobile-menu-toggle flex-shrink-0" onClick={() => setShowMobileMenu(true)}>
                             <Menu size={24} />
                         </button>
 
-                        {/* Logo */}
-                        <Link to='/' className='text-4xl'>LOGO</Link>
+                        {/* Logo - hidden when search is expanded on mobile */}
+                        <Link to='/' className={`navbar-logo text-2xl sm:text-3xl font-bold flex-shrink-0 ${showSearch ? 'navbar-logo-hidden' : ''}`}>
+                            LOGO
+                        </Link>
 
                         {/* Desktop Navigation */}
                         {renderDesktopNav()}
 
                         {/* Right Side Icons */}
-                        <div className='flex items-center gap-6'>
+                        <div className='navbar-actions flex items-center gap-1 sm:gap-2'>
                             {renderSearchBar()}
                             {renderUserMenu()}
                             {renderCart()}
