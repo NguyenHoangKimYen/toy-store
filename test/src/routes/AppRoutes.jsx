@@ -19,6 +19,7 @@ const Checkout = lazy(() => import('../pages/Checkout'));
 const Login = lazy(() => import('../pages/Auth/Login/Login'));
 const Signup = lazy(() => import('../pages/Auth/Signup/Signup'));
 const VerifyEmail = lazy(() => import('../pages/Auth/Signup/VerifyEmail'));
+const ResetPassword = lazy(() => import('../pages/Auth/ResetPassword'));
 const PlaceOrder = lazy(() => import('../pages/PlaceOrder'));
 const Orders = lazy(() => import('../pages/Orders'));
 const OrderHistory = lazy(() => import('../pages/OrderHistory'));
@@ -57,6 +58,16 @@ const router = createBrowserRouter([
       <Suspense fallback={<PageLoader />}>
         <GuestRoute>
           <Signup />
+        </GuestRoute>
+      </Suspense>
+    )
+  },
+  {
+    path: ROUTES.RESET_PASSWORD,
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <GuestRoute>
+          <ResetPassword />
         </GuestRoute>
       </Suspense>
     )

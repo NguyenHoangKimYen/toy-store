@@ -170,7 +170,7 @@ const Navbar = () => {
     const renderMobileMenu = () => (
         <div className={`mobile-menu ${showMobileMenu ? 'open' : ''}`}>
             <div className="mobile-menu-header">
-                <span className="logo">LOGO</span>
+                <span className="logo brand-logo">MilkyBloom</span>
                 <button className="mobile-menu-close" onClick={closeMobileMenu}>
                     <X size={20} />
                 </button>
@@ -502,8 +502,8 @@ const Navbar = () => {
                         </button>
 
                         {/* Logo - hidden when search is expanded on mobile */}
-                        <Link to='/' className={`navbar-logo text-2xl sm:text-3xl font-bold flex-shrink-0 ${showSearch ? 'navbar-logo-hidden' : ''}`}>
-                            LOGO
+                        <Link to='/' className={`navbar-logo text-4xl brand-logo flex-shrink-0 ${showSearch ? 'navbar-logo-hidden' : ''}`}>
+                            MilkyBloom
                         </Link>
 
                         {/* Desktop Navigation */}
