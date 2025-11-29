@@ -31,6 +31,78 @@ const _recalculateCartTotals = async (cartId) => {
     });
 };
 
+/**
+ * Helper function to convert Decimal128 to number
+ */
+const toNumber = (value) => {
+    if (value === null || value === undefined) return 0;
+    if (typeof value === 'number') return value;
+    if (value.$numberDecimal) return parseFloat(value.$numberDecimal);
+    if (typeof value.toString === 'function') return parseFloat(value.toString());
+    return 0;
+};
+
+/**
+ * Helper function to get fully populated cart with items
+ * Used by addItem, removeItem to return consistent cart structure for socket emission
+ */
+const _getPopulatedCartForSocket = async (cartId) => {
+    const cart = await Cart.findById(cartId);
+    if (!cart) return null;
+    
+    const cartItems = await CartItem.find({ cartId })
+        .populate({
+            path: 'variantId',
+            populate: { path: 'productId' },
+        })
+        .lean();
+
+    const fullItems = cartItems.map((item) => {
+        const variant = item.variantId;
+        const product = variant?.productId;
+        
+        return {
+            _id: item._id,
+            variantId: variant?._id || null,
+            variant: variant
+                ? {
+                      _id: variant._id,
+                      sku: variant.sku,
+                      price: toNumber(variant.price),
+                      size: variant.size,
+                      color: variant.color,
+                      attributes: variant.attributes || [],
+                      stockQuantity: variant.stockQuantity || 0,
+                      productId: product?._id || null,
+                      imageUrls: variant.imageUrls || [],
+                  }
+                : null,
+            product: product
+                ? {
+                      _id: product._id,
+                      name: product.name,
+                      slug: product.slug,
+                      imageUrls: product.imageUrls || product.images || [],
+                      minPrice: product.minPrice || 0,
+                      maxPrice: product.maxPrice || 0,
+                  }
+                : null,
+            quantity: item.quantity,
+            price: toNumber(item.price),
+        };
+    });
+
+    const cartObj = cart.toObject();
+    
+    const result = {
+        ...cartObj,
+        items: fullItems,
+        totalPrice: toNumber(cartObj.totalPrice), // Convert Decimal128 to number
+    };
+
+    return result;
+};
+
 // ==========================================
 // MAIN SERVICE FUNCTIONS
 // ==========================================
@@ -49,29 +121,8 @@ const getCartByUserOrSession = async ({ userId, sessionId }) => {
 
     if (!cartDoc) return null;
 
-    // 2. Chuyển sang Object để xử lý
-    const cart = cartDoc.toObject();
-
-    // 3. [FIX] POPULATE MẠNH MẼ HƠN
-    // Ta sẽ populate cả 2 đường:
-    // - Đường 1: productId trực tiếp (để dự phòng)
-    // - Đường 2: variantId -> rồi lồng vào productId bên trong variant
-    
-    const fullItems = await CartItem.find({ cartId: cart._id })
-        .populate({
-            path: 'variantId',   // Populate trường variantId
-            model: 'Variant',    // Chỉ định rõ Model là 'Variant'
-            populate: {
-                path: 'productId', // Tiếp tục populate productId bên trong Variant
-                model: 'Product',  // Chỉ định rõ Model
-                select: 'name imageUrls slug'
-            }
-        });
-
-    // 4. Gán items đã populate vào cart
-    cart.items = fullItems;
-
-    return cart;
+    // Use the shared helper for consistent cart structure
+    return await _getPopulatedCartForSocket(cartDoc._id);
 };
 
 const createCart = async ({ userId, sessionId }) => {
@@ -115,8 +166,9 @@ const addItem = async (cartId, itemData) => {
     }
 
     await _recalculateCartTotals(cartId);
-    // Gọi lại hàm get đầy đủ thông tin để trả về
-    return await getCartByUserOrSession({ userId: null, sessionId: null }).then(() => Cart.findById(cartId));
+    
+    // Return fully populated cart for socket emission
+    return await _getPopulatedCartForSocket(cartId);
 };
 
 /**
@@ -140,7 +192,9 @@ const removeItem = async (cartId, itemData) => {
     }
 
     await _recalculateCartTotals(cartId);
-    return await Cart.findById(cartId);
+    
+    // Return fully populated cart for socket emission
+    return await _getPopulatedCartForSocket(cartId);
 };
 
 /**

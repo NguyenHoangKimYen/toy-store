@@ -13,7 +13,6 @@ module.exports = {
         });
 
         io.on('connection', (socket) => {
-            console.log('🟢 Client connected to Socket:', socket.id);
 
             // --- QUAN TRỌNG: SỰ KIỆN JOIN ROOM ---
             // Khi Frontend login xong, nó sẽ gửi event này kèm userId
@@ -21,12 +20,10 @@ module.exports = {
                 if (userId) {
                     const roomName = `user_${userId}`;
                     socket.join(roomName);
-                    console.log(`👤 User ${userId} joined room: ${roomName}`);
                 }
             });
 
             socket.on('disconnect', () => {
-                console.log('🔴 Client disconnected:', socket.id);
             });
         });
 
