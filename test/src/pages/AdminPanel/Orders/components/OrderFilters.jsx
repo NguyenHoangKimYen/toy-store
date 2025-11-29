@@ -1,5 +1,4 @@
 import React from 'react'
-import { CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import {
@@ -19,7 +18,7 @@ const OrderFilters = ({
   setPaymentMethodFilter
 }) => {
   return (
-    <CardContent className="border-t pt-3 sm:pt-4">
+    <div className="border-t pt-3 sm:pt-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Status Filter */}
         <div>
@@ -87,7 +86,7 @@ const OrderFilters = ({
           </Button>
         </div>
       </div>
-    </CardContent>
+    </div>
   )
 }
 

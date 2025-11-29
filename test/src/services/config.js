@@ -15,7 +15,7 @@ export const getDefaultHeaders = () => ({
   'Content-Type': 'application/json',
 });
 
-export const REQUEST_TIMEOUT = 15000; // Reduced from 20s to 15s for faster failure detection
+export const REQUEST_TIMEOUT = 15000;
 
 // API Client with optimizations
 const apiClient = {
