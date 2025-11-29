@@ -1,6 +1,6 @@
 .order-history-page {
-  min-height: calc(100vh - 80px);
-  padding: 2rem 1rem;
+  min-height: calc(100vh - 160px);
+  padding: 1.5rem 1rem;
   background-color: #f8f9fa;
 }
 
@@ -10,19 +10,24 @@
 }
 
 .order-history-header {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
 }
 
 .order-history-header h1 {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #1a1a1a;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0;
 }
 
 .order-count {
   color: #666;
-  font-size: 0.95rem;
+  font-size: 0.875rem;
 }
 
 .order-history-loading,
@@ -35,26 +40,27 @@
 
 .no-orders {
   text-align: center;
-  padding: 4rem 2rem;
+  padding: 3rem 1.5rem;
   background: white;
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .no-orders p {
-  font-size: 1.1rem;
+  font-size: 1rem;
   color: #666;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .shop-now-link {
   display: inline-block;
-  padding: 0.75rem 2rem;
+  padding: 0.625rem 1.5rem;
   background-color: #000;
   color: white;
   text-decoration: none;
   border-radius: 8px;
   font-weight: 500;
+  font-size: 0.875rem;
   transition: background-color 0.3s;
 }
 
@@ -64,10 +70,34 @@
 
 @media (max-width: 768px) {
   .order-history-page {
-    padding: 1rem 0.5rem;
+    padding: 1rem 0.75rem;
+  }
+
+  .order-history-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
   }
 
   .order-history-header h1 {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
+  }
+
+  .no-orders {
+    padding: 2rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .order-history-page {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .order-history-header h1 {
+    font-size: 1.125rem;
+  }
+
+  .order-count {
+    font-size: 0.8125rem;
   }
 }
