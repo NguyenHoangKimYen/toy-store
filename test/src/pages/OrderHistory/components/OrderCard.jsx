@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronUp, Package, Clock, CheckCircle, XCircle, Truck } from 'lucide-react';
+import { ChevronDown, ChevronUp, Package, Clock, CheckCircle, XCircle, Truck, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Badge from '@/components/ui/badge';
 import { formatPrice } from '@/utils/formatPrice';
@@ -93,6 +93,11 @@ const OrderCard = ({ order }) => {
     toast.info('Buy Again feature coming soon!');
   };
 
+  const handleWriteReview = (productId) => {
+    // Navigate to product page with reviews section anchor
+    navigate(`${ROUTES.PRODUCT_DETAIL.replace(':id', productId)}#reviews`);
+  };
+
   const totalAmount = parseDecimal(order.totalAmount);
   const shippingFee = parseDecimal(order.shippingFee);
   const discountAmount = parseDecimal(order.discountAmount);
@@ -134,6 +139,8 @@ const OrderCard = ({ order }) => {
             <h4 className="order-items-title">Items ({order.items?.length || 0})</h4>
             {order.items?.map((item, index) => {
               const itemSubtotal = parseDecimal(item.subtotal);
+              const isDelivered = order.status.toLowerCase() === 'delivered';
+              const productId = item.productId?._id || item.productId;
               
               return (
                 <div key={index} className="order-item">
@@ -150,6 +157,20 @@ const OrderCard = ({ order }) => {
                       </p>
                     )}
                     <p className="order-item-quantity">Qty: {item.quantity}</p>
+                    {isDelivered && productId && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-2 text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleWriteReview(productId);
+                        }}
+                      >
+                        <Star size={14} className="mr-1" />
+                        Write Review
+                      </Button>
+                    )}
                   </div>
                   <p className="order-item-price">{formatPrice(itemSubtotal)}</p>
                 </div>
