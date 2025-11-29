@@ -12,17 +12,18 @@ import './Checkout.css';
 
 /**
  * Transform backend cart item to frontend format
+ * Backend CartItem toJSON transforms:
+ * - productId → product (but not populated directly)
+ * - variantId → variant (with nested productId populated)
  */
 const transformCartItem = (item) => {
-  // Get variant - backend populates variantId with full variant data
-  const variant = typeof item.variantId === 'object' ? item.variantId : null;
-  // Get product - it's nested inside variant.productId when populated
-  const product = variant?.productId || null;
-  // Get the variant ID string
-  const variantIdStr = variant?._id || item.variantId;
+  const variant = item.variant || null;
+  // Product is populated inside variant.productId (nested populate)
+  const product = variant?.productId || item.product || null;
+  const variantIdStr = variant?._id || variant?.id;
 
   return {
-    _id: variantIdStr, // Use variantId as the unique identifier
+    _id: variantIdStr,
     variantId: variantIdStr,
     product: product,
     variant: variant,

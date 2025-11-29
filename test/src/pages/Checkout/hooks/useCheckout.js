@@ -8,7 +8,7 @@ import { payByCash, getShippingFeeByUser } from '@/services';
 
 export const useCheckout = () => {
   const navigate = useNavigate();
-  const { cart, cartItems, cartSummary, loading: cartLoading, clearAllItems } = useCartContext();
+  const { cart, cartItems, cartSummary, loading: cartLoading, clearAllItems, flushPendingUpdates } = useCartContext();
   const { checkoutCart, loading: orderLoading } = useOrders();
   const { user } = useAuth();
   
@@ -91,6 +91,9 @@ export const useCheckout = () => {
     try {
       setSubmitting(true);
       setError(null);
+
+      // Flush any pending cart updates before checkout
+      await flushPendingUpdates();
 
       // Prepare checkout data
       let checkoutData;
