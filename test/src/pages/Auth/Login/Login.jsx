@@ -230,13 +230,13 @@ const Login = () => {
     setForgotPasswordLoading(true)
 
     const formData = new FormData(e.target)
-    const email = formData.get('forgotEmail')
+    const emailOrPhoneOrUsername = formData.get('forgotEmail')
 
     try {
       const res = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ emailOrPhoneOrUsername })
       })
 
       const data = await res.json()

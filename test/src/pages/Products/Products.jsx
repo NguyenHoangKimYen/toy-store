@@ -1,8 +1,8 @@
 import React, { useState, lazy, Suspense } from 'react';
 import { useProductCatalog } from './hooks';
 import './Products.css';
-import catalogBanner from '@/assets/images/catalog_banner.webp';
-import catalogBannerVideo from '@/assets/media/video.mp4';
+
+const catalogBannerVideo = 'https://toy-store-project-of-springwang.s3.ap-southeast-2.amazonaws.com/banner/THE+MONSTERS+BIG+INTO+ENERGY+Series.mp4';
 
 // Lazy load heavy components
 const ProductToolbar = lazy(() => import('./components/ProductToolbar'));
@@ -51,17 +51,14 @@ const Products = () => {
                   muted
                   loop
                   playsInline
-                  poster={catalogBanner}
                   onError={() => setVideoError(true)}
                 >
                   <source src={catalogBannerVideo} type="video/mp4" />
                 </video>
               ) : (
-                <img 
-                  src={catalogBanner} 
-                  alt="Product Catalog Banner" 
-                  className="products-banner-image"
-                />
+                <div className="products-banner-fallback" aria-label="Product Catalog Banner">
+                  MilkyBloom Collection
+                </div>
               )}
             </div>
             {filters.search && (

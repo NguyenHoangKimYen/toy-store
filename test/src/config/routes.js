@@ -12,6 +12,7 @@ export const PUBLIC_ROUTES = {
   CHECKOUT: '/checkout',
   PLACE_ORDER: '/place-order',
   PAYMENT: '/payment/:orderId',
+  RESET_PASSWORD: '/reset-password',
   ORDERS: '/orders/:id',
   ORDER_HISTORY: '/order-history',
   PROFILE: '/profile',

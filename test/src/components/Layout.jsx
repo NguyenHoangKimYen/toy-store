@@ -3,6 +3,7 @@ import Navbar from './Navbar'
 import { Outlet } from 'react-router-dom'
 import { Fragment } from 'react'
 import { Toaster } from './ui/sonner'
+import Footer from './Footer'
 
 const Layout = () => {
     return (
@@ -13,6 +14,7 @@ const Layout = () => {
             <main className='w-full relative z-10 pt-[73px]'>
                 <Outlet />
             </main>
+            <Footer />
             <Toaster />
         </div>
     )

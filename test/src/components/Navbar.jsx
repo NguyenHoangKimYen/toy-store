@@ -170,7 +170,7 @@ const Navbar = () => {
     const renderMobileMenu = () => (
         <div className={`mobile-menu ${showMobileMenu ? 'open' : ''}`}>
             <div className="mobile-menu-header">
-                <span className="logo">LOGO</span>
+                <span className="logo brand-logo">MilkyBloom</span>
                 <button className="mobile-menu-close" onClick={closeMobileMenu}>
                     <X size={20} />
                 </button>
@@ -491,7 +491,7 @@ const Navbar = () => {
                         </button>
 
                         {/* Logo */}
-                        <Link to='/' className='text-4xl'>LOGO</Link>
+                        <Link to='/' className='text-4xl brand-logo'>MilkyBloom</Link>
 
                         {/* Desktop Navigation */}
                         {renderDesktopNav()}
