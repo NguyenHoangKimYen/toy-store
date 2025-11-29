@@ -1,47 +1,54 @@
-name: Deploy Frontend to S3 + CloudFront
+name: Deploy FE to S3 + Invalidate CloudFront
 
 on:
   push:
     branches:
       - main
-      - frontend   # hoặc nhánh FE bạn đang dùng
+      - frontend
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
+      # 1 — Checkout source
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
+      # 2 — Install Node + Build Vite
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install FE dependencies
+        run: |
+          cd test
+          npm install
 
-      - name: Build project
-        run: npm run build
+      - name: Build FE
+        run: |
+          cd test
+          npm run build
 
-      - name: Sync build to S3
-        uses: aws-actions/aws-s3-sync@v1
-        with:
-          bucket: milkybloom-frontend
-          region: ${{ secrets.AWS_REGION }}
-          delete: true
-          source: ./dist      # Nếu bạn dùng Vite/React
-          # Nếu NextJS → đổi thành .next hoặc out/
+      # 3 — Upload to S3 (GÁN CỨNG)
+      - name: Upload to S3
+        uses: jakejarvis/s3-sync-action@v0.5.1
         env:
+          AWS_S3_BUCKET: "milkybloom-frontend"
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "us-east-1"
+          SOURCE_DIR: "test/dist"
+        with:
+          args: --delete
 
+      # 4 — CloudFront Invalidation (GÁN CỨNG)
       - name: Invalidate CloudFront cache
-        uses: awact/cloudfront-action@v2
-        with:
-          distribution-id: E280MQAG8BNAG3
-          paths: "/*"
+        uses: chetan/invalidate-cloudfront-action@v2
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "us-east-1"
+          DISTRIBUTION: "E280MQAG8BNAG3"  # ID CHUẨN
+          PATHS: "/*"
