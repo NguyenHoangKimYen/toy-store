@@ -173,51 +173,75 @@
     transform: scale(0.98);
   }
 
-  .product-name {
-    font-size: 14px;
-  }
-
-  .product-category {
-    font-size: 12px;
-  }
-
-  .current-price {
-    font-size: 16px;
-  }
-
-  .add-to-cart-btn {
-    width: 44px;
-    height: 44px;
-  }
-
-  .badge {
-    top: 8px;
-    right: 8px;
-    padding: 4px 10px;
-    font-size: 10px;
-  }
-
-  .product-hover-overlay {
-    display: none;
-  }
-}
-
-@media (max-width: 480px) {
   .product-info {
     padding: 12px 0;
   }
 
   .product-name {
     font-size: 13px;
+    line-height: 1.3;
+  }
+
+  .product-category {
+    font-size: 11px;
+    margin-bottom: 8px;
   }
 
   .current-price {
     font-size: 15px;
   }
 
+  .original-price {
+    font-size: 12px;
+  }
+
   .add-to-cart-btn {
     width: 40px;
     height: 40px;
+  }
+
+  .badge {
+    top: 6px;
+    right: 6px;
+    padding: 3px 8px;
+    font-size: 9px;
+  }
+
+  .product-hover-overlay {
+    display: none;
+  }
+
+  .product-footer {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-info {
+    padding: 10px 0;
+  }
+
+  .product-name {
+    font-size: 12px;
+  }
+
+  .product-category {
+    font-size: 10px;
+    margin-bottom: 6px;
+  }
+
+  .current-price {
+    font-size: 14px;
+  }
+
+  .add-to-cart-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .add-to-cart-btn svg {
+    width: 16px;
+    height: 16px;
   }
 }
 
