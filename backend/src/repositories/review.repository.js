@@ -47,7 +47,8 @@ const getReviewsByProductId = async ({
         sort === 'oldest' ? { createdAt: 1 } : { createdAt: -1 };
 
     const reviews = await Review.find(query)
-        .populate('userId', 'name avatar email')
+        .populate('userId', 'fullName avatar email username')
+        .populate('variantId', 'attributes imageUrls price')
         .sort(sortCondition)
         .skip(skip)
         .limit(limit)
