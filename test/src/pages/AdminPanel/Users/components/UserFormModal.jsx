@@ -112,10 +112,11 @@ const UserFormModal = ({ user, isOpen, onClose, onSave, mode = 'create' }) => {
       }
       
       await onSave(dataToSave);
-      toast.success(`User ${mode === 'create' ? 'created' : 'updated'} successfully`);
+      // Toast is shown by the hook, no need to duplicate here
       onClose();
     } catch (error) {
-      toast.error(error.message || 'Failed to save user');
+      // Error toast is shown by the hook
+      console.error('Save failed:', error);
     } finally {
       setSaving(false);
     }
