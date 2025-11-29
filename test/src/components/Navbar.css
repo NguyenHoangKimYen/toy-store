@@ -441,16 +441,55 @@
 }
 
 /* Responsive Breakpoints */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .mobile-menu-toggle {
     display: flex;
   }
 
-  /* Navbar icon buttons - consistent sizing */
+  /* Hide desktop nav on mobile */
+  .navbar-content > ul {
+    display: none;
+  }
+
+  /* Navbar container - tighter padding on mobile */
+  .navbar-container {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  /* Navbar content layout */
+  .navbar-content {
+    min-height: 52px;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+    gap: 8px !important;
+  }
+
+  /* Logo - smaller on mobile */
+  .navbar-logo {
+    font-size: 1.5rem !important;
+  }
+
+  /* Navbar icon buttons - smaller touch targets on mobile */
   .navbar-icon-btn {
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+  }
+
+  .navbar-icon-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Cart badge - smaller on mobile */
+  .navbar-icon-btn .absolute {
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    font-size: 9px;
+    top: -2px;
+    right: -2px;
   }
 
   /* Hide logo when search is expanded */
@@ -469,34 +508,68 @@
     font-size: 16px; /* Prevent zoom on iOS */
   }
 
-  /* User menu - use click instead of hover on mobile */
+  /* User menu - position for mobile */
   .navbar-user-menu .dropdown-menu {
-    right: -40px;
-  }
-
-  /* Make dropdown work on touch */
-  .navbar-user-menu:focus-within .dropdown-menu {
-    display: block;
+    right: -60px;
+    min-width: 200px;
   }
 
   /* Actions container - tighter spacing */
   .navbar-actions {
     gap: 2px !important;
   }
+
+  /* Mobile menu toggle - proper sizing */
+  .mobile-menu-toggle {
+    width: 36px;
+    height: 36px;
+  }
+
+  .mobile-menu-toggle svg {
+    width: 20px;
+    height: 20px;
+  }
 }
 
-@media (min-width: 641px) and (max-width: 768px) {
+@media (max-width: 640px) {
+  /* Even smaller on very small screens */
+  .navbar-logo {
+    font-size: 1.25rem !important;
+  }
+
+  .navbar-icon-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+  }
+
+  .navbar-icon-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
   .mobile-menu-toggle {
-    display: flex;
+    width: 32px;
+    height: 32px;
   }
 
-  .navbar-logo-hidden {
-    display: none !important;
+  .mobile-menu-toggle svg {
+    width: 18px;
+    height: 18px;
   }
 
-  .navbar-search-form.expanded {
-    flex: 1;
-    max-width: 280px;
+  /* Search form styling */
+  .navbar-search-form {
+    padding: 6px 10px !important;
+  }
+
+  .navbar-search-form input {
+    font-size: 14px !important;
+  }
+
+  .navbar-search-form svg {
+    width: 14px;
+    height: 14px;
   }
 }
 

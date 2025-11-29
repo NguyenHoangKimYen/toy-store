@@ -4,6 +4,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { getCategories } from '@/services/categories.service'
 import { useAuth } from '@/hooks/useAuth'
+import { useCart } from '@/hooks/useCart'
 import './Navbar.css'
 
 // Navigation links configuration
@@ -23,7 +24,7 @@ const USER_MENU_LINKS = [
 const Navbar = () => {
     const navigate = useNavigate()
     const { user, logout: authLogout } = useAuth()
-    const [cartCount, setCartCount] = useState(0)
+    const { cartSummary } = useCart()
     const [showSearch, setShowSearch] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [showMobileMenu, setShowMobileMenu] = useState(false)
@@ -32,11 +33,8 @@ const Navbar = () => {
     const [lastScrollY, setLastScrollY] = useState(0)
     const [categories, setCategories] = useState([])
 
-    const updateCartCount = () => {
-        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-        const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
-        setCartCount(totalItems);
-    }
+    // Get cart count from the cart hook
+    const cartCount = cartSummary?.itemCount || 0
 
     const handleScroll = () => {
         const currentScrollY = window.scrollY;
@@ -107,9 +105,6 @@ const Navbar = () => {
     }
 
     useEffect(() => {
-        // Initial load
-        updateCartCount();
-        
         // Fetch categories
         const fetchCategories = async () => {
             try {
@@ -121,12 +116,10 @@ const Navbar = () => {
         };
         fetchCategories();
 
-        // Listen for cart updates
-        window.addEventListener('cartUpdated', updateCartCount);
+        // Listen for scroll
         window.addEventListener('scroll', handleScroll, { passive: true });
 
         return () => {
-            window.removeEventListener('cartUpdated', updateCartCount);
             window.removeEventListener('scroll', handleScroll);
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
