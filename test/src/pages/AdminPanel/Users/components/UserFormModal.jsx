@@ -125,8 +125,8 @@ const UserFormModal = ({ user, isOpen, onClose, onSave, mode = 'create' }) => {
 
   return createPortal(
     <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-[2000] p-4'>
-      <div className='bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto'>
-        <div className='sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between'>
+      <div className='bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col'>
+        <div className='flex-shrink-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between rounded-t-lg'>
           <h2 className='text-xl font-semibold text-gray-900 dark:text-white'>
             {mode === 'create' ? 'Add New User' : 'Edit User'}
           </h2>
@@ -135,7 +135,7 @@ const UserFormModal = ({ user, isOpen, onClose, onSave, mode = 'create' }) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className='p-6 space-y-6'>
+        <form id='user-form' onSubmit={handleSubmit} className='flex-1 overflow-y-auto p-6 space-y-6'>
           {/* Basic Info */}
           <div className='grid grid-cols-2 gap-4'>
             <div>
@@ -293,17 +293,18 @@ const UserFormModal = ({ user, isOpen, onClose, onSave, mode = 'create' }) => {
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className='flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700'>
-            <Button type='button' variant='outline' onClick={onClose} disabled={saving}>
-              Cancel
-            </Button>
-            <Button type='submit' disabled={saving} className='bg-blue-600 hover:bg-blue-700'>
-              <Save className='w-4 h-4 mr-2' />
-              {saving ? 'Saving...' : mode === 'create' ? 'Create User' : 'Save Changes'}
-            </Button>
-          </div>
         </form>
+
+        {/* Action Buttons - Sticky Footer */}
+        <div className='flex-shrink-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-end gap-3 rounded-b-lg'>
+          <Button type='button' variant='outline' onClick={onClose} disabled={saving}>
+            Cancel
+          </Button>
+          <Button type='submit' form='user-form' disabled={saving} className='bg-blue-600 hover:bg-blue-700'>
+            <Save className='w-4 h-4 mr-2' />
+            {saving ? 'Saving...' : mode === 'create' ? 'Create User' : 'Save Changes'}
+          </Button>
+        </div>
       </div>
     </div>,
     document.body

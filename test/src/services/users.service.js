@@ -123,7 +123,7 @@ export const createUser = async (userData) => {
  * @returns {Promise<Object>}
  */
 export const updateUser = async (id, userData) => {
-  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.USERS}/${id}`, {
+  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.USERS}?id=${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -142,7 +142,7 @@ export const updateUser = async (id, userData) => {
  * @returns {Promise<Object>}
  */
 export const patchUser = async (id, userData) => {
-  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.USERS}/${id}`, {
+  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.USERS}?id=${id}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
@@ -160,7 +160,7 @@ export const patchUser = async (id, userData) => {
  * @returns {Promise<Object>}
  */
 export const deleteUser = async (id) => {
-  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.USERS}/${id}`, {
+  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.USERS}?id=${id}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
