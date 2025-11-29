@@ -98,12 +98,16 @@ const getReviewsByProductId = async (req, res, next) => {
     try {
         const { productId } = req.params;
         const { page, limit, sort, rating } = req.query;
+        // Get user ID if authenticated (optional)
+        const currentUserId = req.user?._id || req.user?.id || null;
+        
         const result = await ReviewService.getReviewsByProductId({
             productId,
             page: parseInt(page) || 1,
             limit: parseInt(limit) || 5,
             sort,
             filterRating: rating ? parseInt(rating) : null,
+            currentUserId,
         });
         return res.status(200).json({ message: 'Success', metadata: result });
     } catch (error) {
