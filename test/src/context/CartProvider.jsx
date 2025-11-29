@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react';
 import { useCart as useCartHook } from '@/hooks/useCart';
+import { useAuth } from '@/hooks/useAuth';
 
 // Create Cart Context
 export const CartContext = createContext(null);
@@ -9,7 +10,9 @@ export const CartContext = createContext(null);
  * This ensures all components share the same cart state
  */
 export const CartProvider = ({ children }) => {
-  const cartState = useCartHook();
+  const { user } = useAuth();
+  const userId = user?._id || user?.id || null;
+  const cartState = useCartHook(userId);
 
   return (
     <CartContext.Provider value={cartState}>
