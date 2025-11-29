@@ -7,8 +7,8 @@ module.exports = {
 
     findByOrder(orderId) {
         return OrderItem.find({ orderId })
-            .populate('productId', 'name images description')
-            .populate('variantId', 'color size price stock')
+            .populate('productId', 'name imageUrls description slug')
+            .populate('variantId', 'attributes imageUrls price stockQuantity')
             .lean();
     },
 };
