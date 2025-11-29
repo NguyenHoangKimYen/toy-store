@@ -43,6 +43,21 @@ const crystals = [
   { top: '36%', left: '70%', delay: '0.8s', twinkle: '3.3s', drift: '15.5s', scale: 0.92, wanderX: '20px', wanderY: '16px', spin: '0s' },
 ]
 
+const flowLines = [
+  { top: '14%', blur: '10px', alpha: 0.4, duration: 16, delay: 0 },
+  { top: '30%', blur: '12px', alpha: 0.28, duration: 18, delay: 2 },
+  { top: '46%', blur: '8px', alpha: 0.35, duration: 15, delay: 1 },
+  { top: '62%', blur: '14px', alpha: 0.22, duration: 20, delay: 3 },
+  { top: '78%', blur: '10px', alpha: 0.3, duration: 17, delay: 4 },
+];
+
+const glowOrbs = [
+  { size: 160, top: '12%', left: '14%', hue: 'rgba(99,102,241,0.25)', delay: 0 },
+  { size: 190, top: '68%', left: '12%', hue: 'rgba(14,165,233,0.22)', delay: 1.2 },
+  { size: 140, top: '26%', left: '76%', hue: 'rgba(236,72,153,0.24)', delay: 0.7 },
+  { size: 200, top: '70%', left: '78%', hue: 'rgba(126, 87, 194,0.22)', delay: 1.5 },
+];
+
 const Contact = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-100 via-white to-indigo-100 text-gray-900 dark:from-slate-900 dark:via-slate-950 dark:to-[#0b1021] relative overflow-hidden">
@@ -50,6 +65,37 @@ const Contact = () => {
         className="contact-animated-bg animated-gradient"
         aria-hidden="true"
       />
+      <div className="flow-lines" aria-hidden="true">
+        {flowLines.map((line, idx) => (
+          <span
+            key={idx}
+            className="flow-line"
+            style={{
+              top: line.top,
+              filter: `blur(${line.blur})`,
+              opacity: line.alpha,
+              animationDuration: `${line.duration}s`,
+              animationDelay: `${line.delay}s`,
+            }}
+          />
+        ))}
+      </div>
+      <div className="floating-orbs" aria-hidden="true">
+        {glowOrbs.map((orb, idx) => (
+          <span
+            key={idx}
+            className="floating-orb"
+            style={{
+              width: `${orb.size}px`,
+              height: `${orb.size}px`,
+              top: orb.top,
+              left: orb.left,
+              background: orb.hue,
+              animationDelay: `${orb.delay}s`,
+            }}
+          />
+        ))}
+      </div>
       <div className="butterfly-layer" aria-hidden="true">
         {crystals.map((c, idx) => (
           <span
@@ -115,8 +161,8 @@ const Contact = () => {
             {contributors.map((person, idx) => (
               <Card
                 key={person.github}
-                className="floating-card group h-full border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-slate-900/70 shadow-sm hover:-translate-y-1 hover:shadow-2xl transition-all duration-300"
-                style={{ animationDelay: `${idx * 0.25}s` }}
+                className="floating-card group h-full border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-slate-900/70 shadow-sm hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 card-enter"
+                style={{ animationDelay: `${idx * 0.18}s` }}
               >
                 <CardHeader className="pb-2 flex-row items-center gap-4">
                   <div className="relative">
