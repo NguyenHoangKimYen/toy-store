@@ -76,9 +76,7 @@ const apiClient = {
 
       const response = await fetch(fullUrl, config);
       clearTimeout(timeoutId);
-      
-      console.log('API Response Status:', response.status, 'URL:', fullUrl);
-      
+
       if (!response.ok) {
         const error = await response.json().catch(() => ({
           message: `HTTP error! status: ${response.status}`,
@@ -96,7 +94,6 @@ const apiClient = {
       }
 
       const result = await response.json();
-      console.log('API Success Response:', result);
       return result;
     } catch (error) {
       // Don't log 404 errors (expected for non-existent carts)

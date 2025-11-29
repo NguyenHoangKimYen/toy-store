@@ -54,9 +54,6 @@ class SocketService {
           });
         }
       };
-      console.log('📡 BroadcastChannel initialized, Tab ID:', this.tabId);
-    } else {
-      console.warn('⚠️ BroadcastChannel not supported in this browser');
     }
   }
 
@@ -68,7 +65,6 @@ class SocketService {
     if (this.socket?.connected) {
       if (userId) {
         this.socket.emit('join_user_room', userId);
-        console.log('👤 [Socket] Joined room (already connected):', `user_${userId}`);
       }
       return this.socket;
     }
@@ -79,9 +75,6 @@ class SocketService {
       this.socket = null;
     }
 
-    console.log('🔌 [Socket] Connecting to:', SOCKET_URL);
-    console.log('🔌 [Socket] User ID:', userId);
-
     this.socket = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],
       reconnection: true,
@@ -91,37 +84,31 @@ class SocketService {
     });
 
     this.socket.on('connect', () => {
-      console.log('🟢 [Socket] Connected! ID:', this.socket.id);
       this.connected = true;
 
       // Join user room
       if (this.userId) {
         this.socket.emit('join_user_room', this.userId);
-        console.log('👤 [Socket] Joining room:', `user_${this.userId}`);
       }
     });
 
-    this.socket.on('disconnect', (reason) => {
-      console.log('🔴 [Socket] Disconnected:', reason);
+    this.socket.on('disconnect', () => {
       this.connected = false;
     });
 
-    this.socket.on('reconnect', (attemptNumber) => {
-      console.log('🔄 [Socket] Reconnected after', attemptNumber, 'attempts');
+    this.socket.on('reconnect', () => {
       // Rejoin room on reconnect
       if (this.userId) {
         this.socket.emit('join_user_room', this.userId);
-        console.log('👤 [Socket] Rejoined room after reconnect:', `user_${this.userId}`);
       }
     });
 
-    this.socket.on('connect_error', (error) => {
-      console.error('❌ [Socket] Connection error:', error.message);
+    this.socket.on('connect_error', () => {
+      // Connection error - socket.io will auto-retry
     });
 
     // Set up the main cart_updated listener that dispatches to all registered callbacks
     this.socket.on('cart_updated', (data) => {
-      console.log('📥 [Socket] Received cart_updated:', data?.action);
       this._dispatchEvent('cart_updated', data);
     });
 
@@ -132,7 +119,6 @@ class SocketService {
   _dispatchEvent(event, data) {
     const callbacks = this.socketCallbacks.get(event);
     if (callbacks) {
-      console.log(`📡 [Socket] Dispatching ${event} to ${callbacks.size} listener(s)`);
       callbacks.forEach(callback => {
         try {
           callback(data);
@@ -158,7 +144,6 @@ class SocketService {
       this.socketCallbacks.set(event, new Set());
     }
     this.socketCallbacks.get(event).add(callback);
-    console.log(`📡 [Socket] Registered listener for: ${event}, total: ${this.socketCallbacks.get(event).size}`);
   }
 
   // Unregister a callback for socket events
@@ -166,7 +151,6 @@ class SocketService {
     const callbacks = this.socketCallbacks.get(event);
     if (callbacks) {
       callbacks.delete(callback);
-      console.log(`📡 [Socket] Unregistered listener for: ${event}, remaining: ${callbacks.size}`);
     }
   }
 
