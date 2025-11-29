@@ -1,6 +1,18 @@
 import apiClient from './config';
 
 /**
+ * Reviews Service
+ * 
+ * Backend endpoints:
+ * - GET /reviews/product/:productId - Get reviews for a product
+ * - GET /reviews/pending - Get products pending review (auth required)
+ * - POST /reviews - Create review with FormData (auth required, supports images)
+ * - PATCH /reviews/:reviewId - Update review with FormData (auth required)
+ * - DELETE /reviews/:reviewId - Delete review (auth required)
+ * - PATCH /reviews/:reviewId/moderate - Admin moderate review
+ */
+
+/**
  * Get reviews for a product
  * @param {string} productId - Product ID
  * @param {Object} params - Query parameters (page, limit, sort, rating)
@@ -12,8 +24,19 @@ export const getProductReviews = async (productId, params = {}) => {
 };
 
 /**
+ * Get products pending review for current user
+ * Returns products from delivered orders that haven't been reviewed yet
+ * @returns {Promise<Array>} - List of products to review
+ */
+export const getPendingReviews = async () => {
+  const response = await apiClient.get('/reviews/pending');
+  return response.data || response;
+};
+
+/**
  * Create a new review for a product
- * @param {Object} reviewData - Review data { productId, variantId, rating, comment }
+ * Supports image uploads via FormData
+ * @param {Object} reviewData - Review data { productId, variantId, rating, comment, images? }
  * @returns {Promise<Object>} - Created review with populated user data
  */
 export const createReview = async (reviewData) => {
@@ -28,6 +51,26 @@ export const createReview = async (reviewData) => {
     throw new Error('Rating must be between 1 and 5');
   }
 
+  // Use FormData if images are included
+  if (reviewData.images && reviewData.images.length > 0) {
+    const formData = new FormData();
+    formData.append('productId', reviewData.productId);
+    formData.append('variantId', reviewData.variantId);
+    formData.append('rating', reviewData.rating);
+    formData.append('comment', reviewData.comment?.trim() || '');
+    
+    // Append images (backend expects 'images' field from multer)
+    reviewData.images.forEach((image) => {
+      formData.append('images', image);
+    });
+
+    const response = await apiClient.post('/reviews', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response;
+  }
+
+  // No images - use JSON
   const response = await apiClient.post('/reviews', {
     productId: reviewData.productId,
     variantId: reviewData.variantId,
@@ -39,8 +82,9 @@ export const createReview = async (reviewData) => {
 
 /**
  * Update a review
+ * Supports image uploads and deletions
  * @param {string} reviewId - Review ID
- * @param {Object} reviewData - Updated review data { rating, comment }
+ * @param {Object} reviewData - Updated review data { rating, comment, images?, deletedImages? }
  * @returns {Promise<Object>} - Updated review with populated user data
  */
 export const updateReview = async (reviewId, reviewData) => {
@@ -48,6 +92,41 @@ export const updateReview = async (reviewId, reviewData) => {
     throw new Error('Rating must be between 1 and 5');
   }
 
+  // Use FormData if new images are included or images are being deleted
+  if ((reviewData.images && reviewData.images.length > 0) || reviewData.deletedImages) {
+    const formData = new FormData();
+    
+    if (reviewData.rating) {
+      formData.append('rating', reviewData.rating);
+    }
+    if (reviewData.comment !== undefined) {
+      formData.append('comment', reviewData.comment?.trim() || '');
+    }
+    
+    // Images to delete
+    if (reviewData.deletedImages) {
+      const deletedArr = Array.isArray(reviewData.deletedImages) 
+        ? reviewData.deletedImages 
+        : [reviewData.deletedImages];
+      deletedArr.forEach(url => {
+        formData.append('deletedImages', url);
+      });
+    }
+    
+    // New images to upload
+    if (reviewData.images) {
+      reviewData.images.forEach((image) => {
+        formData.append('images', image);
+      });
+    }
+
+    const response = await apiClient.patch(`/reviews/${reviewId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response;
+  }
+
+  // No image changes - use JSON
   const response = await apiClient.patch(`/reviews/${reviewId}`, {
     rating: reviewData.rating,
     comment: reviewData.comment?.trim(),

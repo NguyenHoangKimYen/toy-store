@@ -5,23 +5,31 @@ import {
   createCart,
   clearCart,
   deleteCart,
-  createCartItem,
-  getCartItems,
-  updateCartItem,
-  deleteCartItem,
+  addItemToCart,
+  removeItemFromCart,
 } from '../services';
 import { useAuth } from './useAuth';
 
 /**
  * Custom hook for cart management
  * Handles both authenticated user carts and guest session carts
+ * 
+ * Backend API:
+ * - GET /carts/user/:userId - Get cart with populated items
+ * - GET /carts/session/:sessionId - Get cart with populated items
+ * - POST /carts - Create new cart
+ * - POST /carts/:cartId/items - Add item { variantId, quantity }
+ * - POST /carts/:cartId/remove-item - Remove/decrease item { variantId, quantity }
+ * - DELETE /carts/:cartId/clear - Clear all items
+ * 
+ * Backend returns cart.items already populated with variant and product info
  */
 export const useCart = () => {
   const { user, loading: authLoading } = useAuth();
   
   const [cart, setCart] = useState(null);
   const [cartItems, setCartItems] = useState([]);
-  const [loading, setLoading] = useState(false); // Only for initial load or major actions (clear/delete)
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
   // REFS:
@@ -39,15 +47,26 @@ export const useCart = () => {
 
   // Cleanup on unmount
   useEffect(() => {
+    const timeouts = updateTimeoutsRef.current;
     return () => {
-      // Clear all pending timeouts when component unmounts
-      updateTimeoutsRef.current.forEach((timeoutId) => clearTimeout(timeoutId));
-      updateTimeoutsRef.current.clear();
+      timeouts.forEach((timeoutId) => clearTimeout(timeoutId));
+      timeouts.clear();
     };
   }, []);
 
   // Helper: Normalize ID (handle _id vs id)
   const getItemId = (item) => item?.id || item?._id;
+  
+  // Helper: Get variant ID from item (handles populated vs unpopulated)
+  const getVariantId = (item) => {
+    if (!item) return null;
+    // If variantId is populated object
+    if (item.variantId && typeof item.variantId === 'object') {
+      return item.variantId._id || item.variantId.id;
+    }
+    // If variantId is string ID
+    return item.variantId;
+  };
 
   // Get or create session ID for guest users
   const getSessionId = useCallback(() => {
@@ -59,6 +78,13 @@ export const useCart = () => {
     return sessionId;
   }, []);
 
+  // Extract items from cart response (backend returns populated items)
+  const extractCartItems = useCallback((cartData) => {
+    if (!cartData) return [];
+    // Backend returns cart.items as populated CartItem documents
+    return cartData.items || [];
+  }, []);
+
   // Fetch cart based on user authentication status
   const fetchCart = useCallback(async () => {
     if (authLoading) return;
@@ -67,23 +93,19 @@ export const useCart = () => {
       setLoading(true);
       setError(null);
 
-      let cartData;
+      let cartData = null;
       
       if (user?._id) {
         try {
           cartData = await getCartByUser(user._id);
         } catch (userErr) {
-          // If user cart fetch fails with 404, the user ID might be invalid
-          // Fall back to guest session cart
+          // If user cart not found, try guest session as fallback
           if (userErr.response?.status === 404 || userErr.message?.includes('not found') || userErr.message?.includes('404')) {
-            console.warn('User cart not found, falling back to guest session');
-            
-            // Try guest cart as fallback
+            console.warn('User cart not found, trying guest session');
             const sessionId = getSessionId();
             try {
               cartData = await getCartBySession(sessionId);
             } catch (sessionErr) {
-              // Both failed - treat as no cart
               if (sessionErr.response?.status === 404 || sessionErr.message?.includes('not found') || sessionErr.message?.includes('404')) {
                 cartData = null;
               } else {
@@ -96,24 +118,24 @@ export const useCart = () => {
         }
       } else {
         const sessionId = getSessionId();
-        cartData = await getCartBySession(sessionId);
+        try {
+          cartData = await getCartBySession(sessionId);
+        } catch (err) {
+          if (err.response?.status === 404 || err.message?.includes('not found') || err.message?.includes('404')) {
+            cartData = null;
+          } else {
+            throw err;
+          }
+        }
       }
 
       setCart(cartData);
-
-      const cartId = cartData?.id || cartData?._id;
-      if (cartId) {
-        const items = await getCartItems(cartId);
-        setCartItems(items);
-      } else {
-        setCartItems([]);
-      }
+      setCartItems(extractCartItems(cartData));
     } catch (err) {
       if (err.response?.status === 404 || err.message?.includes('not found') || err.message?.includes('404')) {
-        // Cart not found is normal for new users or after clearing
         setCart(null);
         setCartItems([]);
-        setError(null); // Don't show error for missing cart
+        setError(null);
       } else {
         setError(err.message || 'Failed to fetch cart');
         console.error('Error fetching cart:', err);
@@ -121,7 +143,7 @@ export const useCart = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, getSessionId, authLoading]);
+  }, [user, getSessionId, authLoading, extractCartItems]);
 
   // Initialize cart on mount
   useEffect(() => {
@@ -130,7 +152,6 @@ export const useCart = () => {
 
   // Create or get cart
   const ensureCart = useCallback(async () => {
-    // Check current state or ref
     if (cart?.id || cart?._id) return cart;
 
     try {
@@ -148,183 +169,191 @@ export const useCart = () => {
     }
   }, [cart, user, getSessionId]);
 
-  // Add item to cart
+  /**
+   * Add item to cart
+   * Uses backend POST /carts/:cartId/items
+   * @param {string} productId - Product ID (for reference, backend uses variantId)
+   * @param {number} quantity - Quantity to add
+   * @param {string} variantId - Variant ID (required by backend)
+   */
   const addItem = useCallback(
     async (productId, quantity = 1, variantId = null) => {
-      // NOTE: removed setLoading(true) to avoid full page spinner on "Add to Cart"
+      if (!variantId) {
+        console.error('variantId is required for addItem');
+        throw new Error('Variant ID is required');
+      }
+
       try {
         setError(null);
         const currentCart = await ensureCart();
         const currentCartId = getItemId(currentCart);
 
-        // Check against REF to avoid stale closure issues
+        // Optimistic update - find existing item by variantId
         const existingItem = cartItemsRef.current.find((item) => {
-          if (variantId) {
-            return item.productId === productId && item.variantId === variantId;
-          }
-          return item.productId === productId && !item.variantId;
+          const itemVariantId = getVariantId(item);
+          return itemVariantId === variantId;
         });
 
         if (existingItem) {
-          // Optimistic Update for existing item
           const existingId = getItemId(existingItem);
           const newQuantity = existingItem.quantity + quantity;
 
           setCartItems((prev) => prev.map((item) => 
             getItemId(item) === existingId ? { ...item, quantity: newQuantity } : item
           ));
-
-          await updateCartItem(existingId, { quantity: newQuantity });
-        } else {
-          // For new items, we can't fully optimistic update because we need the real ID from DB.
-          // However, we can wait for the response without blocking the whole UI global loader.
-          const newItem = await createCartItem({
-            cartId: currentCartId,
-            variantId: variantId || undefined,
-            quantity,
-          });
-
-          setCartItems((prev) => [...prev, newItem]);
         }
-        
-        // Update cart totals (Optimistic-ish)
-        if (cart) {
-          setCart((prev) => ({
-            ...prev,
-            itemCount: (prev.itemCount || 0) + quantity,
-          }));
+
+        // Call backend - it handles both add and increment
+        const updatedCart = await addItemToCart({
+          cartId: currentCartId,
+          variantId,
+          quantity,
+          userId: user?._id, // For socket notification
+        });
+
+        // Sync with backend response
+        if (updatedCart) {
+          setCart(updatedCart);
+          setCartItems(extractCartItems(updatedCart));
         }
       } catch (err) {
         console.error('[CART] addItem failed:', err);
         setError(err.message || 'Failed to add item to cart');
-        // Revert/Sync on error
+        // Revert by re-fetching
         fetchCart();
         throw err;
       }
     },
-    [ensureCart, cart, fetchCart] // Removed cartItems from dependency to prevent churn
+    [ensureCart, user, fetchCart, extractCartItems]
   );
 
-  // Remove item from cart
+  /**
+   * Remove item completely from cart
+   * @param {string} itemId - Cart item ID
+   */
   const removeItem = useCallback(
     async (itemId) => {
-      // Capture item from Ref to ensure we have data for revert
       const itemToRemove = cartItemsRef.current.find(item => getItemId(item) === itemId);
-      
+      if (!itemToRemove) return;
+
+      const variantId = getVariantId(itemToRemove);
+      const currentCartId = getItemId(cart);
+
+      if (!currentCartId || !variantId) {
+        console.error('Missing cartId or variantId for removeItem');
+        return;
+      }
+
       try {
         setError(null);
         
         // Optimistic update
         setCartItems((prev) => prev.filter((item) => getItemId(item) !== itemId));
 
-        if (cart && itemToRemove) {
-          setCart((prev) => ({
-            ...prev,
-            itemCount: Math.max(0, (prev.itemCount || 0) - (itemToRemove.quantity || 1)),
-          }));
-        }
+        // Call backend with quantity equal to item quantity to remove completely
+        const updatedCart = await removeItemFromCart(currentCartId, {
+          variantId,
+          quantity: itemToRemove.quantity, // Remove all
+          userId: user?._id,
+        });
 
-        await deleteCartItem(itemId);
+        // Sync with backend
+        if (updatedCart) {
+          setCart(updatedCart);
+          setCartItems(extractCartItems(updatedCart));
+        }
       } catch (err) {
         setError(err.message || 'Failed to remove item');
         console.error('Error removing item:', err);
-        
-        // Revert optimistic update
-        if (itemToRemove) {
-          setCartItems((prev) => [...prev, itemToRemove]);
-          // Revert totals
-          if (cart) {
-            setCart((prev) => ({
-              ...prev,
-              itemCount: (prev.itemCount || 0) + (itemToRemove.quantity || 1),
-            }));
-          }
-        }
+        // Revert
+        fetchCart();
         throw err;
       }
     },
-    [cart] // Removed cartItems dependency
+    [cart, user, fetchCart, extractCartItems]
   );
 
-  // Update item quantity with debouncing
+  /**
+   * Update item quantity with debouncing
+   * Uses add-item for increases, remove-item for decreases
+   */
   const updateItemQuantity = useCallback(
-    async (itemId, quantity) => {
-      // 1. Get current item state from Ref (avoid stale closure)
+    async (itemId, newQuantity) => {
       const oldItem = cartItemsRef.current.find(item => getItemId(item) === itemId);
+      if (!oldItem) return;
+
       setError(null);
 
-      if (quantity <= 0) {
+      if (newQuantity <= 0) {
         await removeItem(itemId);
         return;
       }
 
-      // 2. Optimistic update
-      const quantityDiff = oldItem ? quantity - oldItem.quantity : 0;
-      
+      const variantId = getVariantId(oldItem);
+      const currentCartId = getItemId(cart);
+      const quantityDiff = newQuantity - oldItem.quantity;
+
+      if (quantityDiff === 0) return;
+
+      // Optimistic update
       setCartItems((prev) => prev.map((item) => 
-        getItemId(item) === itemId ? { ...item, quantity } : item
+        getItemId(item) === itemId ? { ...item, quantity: newQuantity } : item
       ));
 
-      if (cart && oldItem) {
-        setCart((prev) => ({
-          ...prev,
-          itemCount: Math.max(0, (prev.itemCount || 0) + quantityDiff),
-        }));
-      }
-
-      // 3. Clear existing timeout
+      // Clear existing timeout for this item
       if (updateTimeoutsRef.current.has(itemId)) {
         clearTimeout(updateTimeoutsRef.current.get(itemId));
       }
 
-      // 4. Track Request ID
+      // Track request ID for race condition handling
       const prevReqId = requestIdRef.current.get(itemId) || 0;
       const newReqId = prevReqId + 1;
       requestIdRef.current.set(itemId, newReqId);
 
-      // 5. Debounce API Call
+      // Debounce API call
       const timeoutId = setTimeout(async () => {
         try {
-          const updatedItem = await updateCartItem(itemId, { quantity });
+          let updatedCart;
+          
+          if (quantityDiff > 0) {
+            // Increase quantity - use add-item
+            updatedCart = await addItemToCart({
+              cartId: currentCartId,
+              variantId,
+              quantity: quantityDiff,
+              userId: user?._id,
+            });
+          } else {
+            // Decrease quantity - use remove-item
+            updatedCart = await removeItemFromCart(currentCartId, {
+              variantId,
+              quantity: Math.abs(quantityDiff),
+              userId: user?._id,
+            });
+          }
 
-          // 6. Race Condition Check: Only apply if this is the LATEST request
+          // Only apply if this is the latest request
           if (requestIdRef.current.get(itemId) === newReqId) {
-            setCartItems((prev) => prev.map((item) =>
-              getItemId(item) === getItemId(updatedItem) ? updatedItem : item
-            ));
-            
-            // Clean up refs
+            if (updatedCart) {
+              setCart(updatedCart);
+              setCartItems(extractCartItems(updatedCart));
+            }
             updateTimeoutsRef.current.delete(itemId);
             requestIdRef.current.delete(itemId);
           }
         } catch (err) {
-          // Only revert if this matches the latest request ID
           if (requestIdRef.current.get(itemId) === newReqId) {
             setError(err.message || 'Failed to update quantity');
             console.error('Error updating quantity:', err);
-            
-            // Revert to old item
-            if (oldItem) {
-              setCartItems((prev) => prev.map((item) => 
-                getItemId(item) === itemId ? oldItem : item
-              ));
-              
-              // Revert totals
-              if (cart) {
-                const revertDiff = oldItem.quantity - quantity;
-                setCart((prev) => ({
-                  ...prev,
-                  itemCount: Math.max(0, (prev.itemCount || 0) + revertDiff),
-                }));
-              }
-            }
+            // Revert
+            fetchCart();
           }
         }
-      }, 300); // 300ms debounce
+      }, 300);
 
       updateTimeoutsRef.current.set(itemId, timeoutId);
     },
-    [cart, removeItem]
+    [cart, user, removeItem, fetchCart, extractCartItems]
   );
 
   // Clear all items from cart
@@ -333,14 +362,12 @@ export const useCart = () => {
     if (!currentCartId) return;
 
     try {
-      setLoading(true); // Keep global loading for destructive full-cart actions
+      setLoading(true);
       setError(null);
 
       await clearCart(currentCartId);
       setCartItems([]);
-      // Optionally fetchCart here if you need to sync totals from server
-      // await fetchCart(); 
-      setCart((prev) => ({ ...prev, itemCount: 0, totalPrice: 0 }));
+      setCart((prev) => prev ? { ...prev, items: [], totalItems: 0, totalPrice: 0 } : null);
     } catch (err) {
       setError(err.message || 'Failed to clear cart');
       console.error('Error clearing cart:', err);
@@ -372,12 +399,22 @@ export const useCart = () => {
   }, [cart]);
 
   // Calculate cart summary (memoized)
-  const cartSummary = useMemo(() => ({
-    itemCount: cartItems.reduce((sum, item) => sum + item.quantity, 0),
-    subtotal: cartItems.reduce((sum, item) => sum + item.quantity * (item.price || 0), 0),
-    total: cart?.totalPrice || 0,
-    discount: cart?.discountAmount || 0,
-  }), [cartItems, cart?.totalPrice, cart?.discountAmount]);
+  const cartSummary = useMemo(() => {
+    const itemCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+    const subtotal = cartItems.reduce((sum, item) => {
+      const price = typeof item.price === 'object' && item.price?.$numberDecimal 
+        ? parseFloat(item.price.$numberDecimal)
+        : (item.price || 0);
+      return sum + (item.quantity || 0) * price;
+    }, 0);
+    
+    return {
+      itemCount,
+      subtotal,
+      total: cart?.totalPrice || subtotal,
+      discount: cart?.discountAmount || 0,
+    };
+  }, [cartItems, cart?.totalPrice, cart?.discountAmount]);
 
   // Clear session ID (called after login)
   const clearGuestSession = useCallback(() => {
