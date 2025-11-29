@@ -13,16 +13,13 @@ import './Cart.css';
 
 /**
  * Transform backend cart item to frontend format
- * Backend CartItem toJSON transforms:
- * - productId → product (but not populated directly)
- * - variantId → variant (with nested productId populated)
+ * Backend sends: { product: {...}, variant: {...}, quantity, price }
  */
 const transformCartItem = (item) => {
   const variant = item.variant || null;
-  // Product is populated inside variant.productId (nested populate)
-  // item.product may exist but might not be populated
-  const product = variant?.productId || item.product || null;
-  const variantIdStr = variant?._id || variant?.id;
+  // Product is sent directly as item.product (already populated by backend)
+  const product = item.product || null;
+  const variantIdStr = variant?._id || variant?.id || item.variantId;
 
   return {
     id: variantIdStr,
