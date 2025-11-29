@@ -84,9 +84,6 @@ async function updateProductPrices(productId) {
         const prices = activeVariants.map((v) =>
             parseFloat(v.price.toString()),
         );
-        const prices = activeVariants.map((v) =>
-            parseFloat(v.price.toString()),
-        );
 
         minPrice = Math.min(...prices);
         maxPrice = Math.max(...prices);

@@ -17,7 +17,8 @@ const {
 } = require('../controllers/variant.controller.js');
 
 const { uploadProductImages } = require('../middlewares/upload.middleware.js');
-
+const authMiddleware = require('../middlewares/auth.middleware.js');
+const adminOnly = require('../middlewares/admin.middleware.js');
 const router = express.Router();
 
 router.get("/", getAllProducts);
@@ -26,7 +27,8 @@ router.get("/price/range", getProductByPrice);
 router.get("/:productId/variants", getVariantsByProduct);
 router.get("/:id", getProductById);
 
-router.use(adminMiddlewares);
+router.use(authMiddleware);
+router.use(adminOnly);
 router.post("/", uploadProductImages, createProduct);
 router.delete("/:id", deleteProduct);
 router.patch("/:id", updateProduct);

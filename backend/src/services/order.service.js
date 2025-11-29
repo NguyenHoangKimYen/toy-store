@@ -183,8 +183,6 @@ module.exports = {
 
         if (!['standard', 'express'].includes(deliveryType))
             deliveryType = 'standard';
-        if (!["standard", "express"].includes(deliveryType))
-            deliveryType = "standard";
 
         // CASE USER LOGIN
         if (userId && !guestInfo) {
@@ -192,9 +190,6 @@ module.exports = {
                 const defaultAddr =
                     await addressRepo.findDefaultByUserId(userId);
                 if (!defaultAddr) throw new Error('NO_DEFAULT_ADDRESS');
-                const defaultAddr =
-                    await addressRepo.findDefaultByUserId(userId);
-                if (!defaultAddr) throw new Error("NO_DEFAULT_ADDRESS");
                 addressId = defaultAddr._id;
                 shippingAddress = defaultAddr;
             }
