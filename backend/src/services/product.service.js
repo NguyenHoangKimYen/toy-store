@@ -1,8 +1,8 @@
-const mongoose = require("mongoose");
-const productRepository = require("../repositories/product.repository.js");
-const variantRepository = require("../repositories/variant.repository.js");
-const { uploadToS3, deleteFromS3 } = require("../utils/s3.helper.js");
-const { default: slugify } = require("slugify");
+const mongoose = require('mongoose');
+const productRepository = require('../repositories/product.repository.js');
+const variantRepository = require('../repositories/variant.repository.js');
+const { uploadToS3, deleteFromS3 } = require('../utils/s3.helper.js');
+const { default: slugify } = require('slugify');
 
 /**
  * Lấy danh sách sản phẩm (có lọc + phân trang)
@@ -15,33 +15,33 @@ const getAllProducts = async (query) => {
     const params = new URLSearchParams(Object.entries(query || {}));
 
     // Phân trang
-    const page = Math.max(1, parseInt(params.get("page") || "1", 10));
-    const limit = Math.max(1, parseInt(params.get("limit") || "20", 10));
+    const page = Math.max(1, parseInt(params.get('page') || '1', 10));
+    const limit = Math.max(1, parseInt(params.get('limit') || '20', 10));
 
     // Sắp xếp
-    const sortParam = params.get("sort") || null;
+    const sortParam = params.get('sort') || null;
 
     // 2. Xây dựng đối tượng 'filter' (bộ lọc)
     const filter = {};
 
     // --- Lọc theo Keyword (cho name và slug) ---
-    const keyword = params.get("keyword") || null;
+    const keyword = params.get('keyword') || null;
     if (keyword) {
         filter.$or = [
-            { name: { $regex: keyword, $options: "i" } },
-            { slug: { $regex: keyword, $options: "i" } },
+            { name: { $regex: keyword, $options: 'i' } },
+            { slug: { $regex: keyword, $options: 'i' } },
         ];
     }
 
     // --- Lọc theo Category ---
-    const categoryId = params.get("categoryId") || null;
+    const categoryId = params.get('categoryId') || null;
     if (categoryId) {
         filter.categoryId = categoryId;
     }
 
     // --- Lọc theo Khoảng giá (Price Range) ---
-    const minPrice = parseFloat(params.get("minPrice") || "0");
-    const maxPrice = parseFloat(params.get("maxPrice") || "0");
+    const minPrice = parseFloat(params.get('minPrice') || '0');
+    const maxPrice = parseFloat(params.get('maxPrice') || '0');
 
     if (minPrice > 0) {
         filter.maxPrice = { $gte: minPrice };
@@ -51,13 +51,13 @@ const getAllProducts = async (query) => {
     }
 
     // --- Lọc theo Đánh giá (Rating) ---
-    const minRating = parseFloat(params.get("minRating") || "0");
+    const minRating = parseFloat(params.get('minRating') || '0');
     if (minRating > 0) {
         filter.averageRating = { $gte: minRating };
     }
 
     // --- Lọc theo Nổi bật (Featured) ---
-    if (params.get("isFeatured") === "true") {
+    if (params.get('isFeatured') === 'true') {
         filter.isFeatured = true;
     }
 
@@ -70,7 +70,7 @@ const getAllProducts = async (query) => {
 
     // Lọc theo 'daysAgo' (ví dụ: ?daysAgo=7)
     // Ưu tiên hơn startDate nếu cả hai đều được cung cấp
-    const daysAgo = parseInt(params.get("daysAgo") || "0", 10);
+    const daysAgo = parseInt(params.get('daysAgo') || '0', 10);
     if (daysAgo > 0) {
         const pastDate = new Date();
         pastDate.setDate(new Date().getDate() - daysAgo);
@@ -79,7 +79,7 @@ const getAllProducts = async (query) => {
         filter.createdAt.$gte = pastDate;
     } else {
         // Nếu không có daysAgo, kiểm tra startDate
-        const startDate = params.get("startDate") || null; // Dạng "YYYY-MM-DD"
+        const startDate = params.get('startDate') || null; // Dạng "YYYY-MM-DD"
         if (startDate) {
             // $gte: Lớn hơn hoặc bằng (từ 00:00:00 của ngày bắt đầu)
             filter.createdAt.$gte = new Date(startDate);
@@ -87,7 +87,7 @@ const getAllProducts = async (query) => {
     }
 
     // Lọc theo endDate (ví dụ: ?endDate=2025-11-15)
-    const endDate = params.get("endDate") || null; // Dạng "YYYY-MM-DD"
+    const endDate = params.get('endDate') || null; // Dạng "YYYY-MM-DD"
     if (endDate) {
         // $lte: Nhỏ hơn hoặc bằng (đến 23:59:59 của ngày kết thúc)
         const endOfDay = new Date(endDate);
@@ -114,8 +114,8 @@ const getAllProducts = async (query) => {
 
     const defaultSort = { createdAt: -1 };
     if (sortParam) {
-        const [key, order] = sortParam.split(":");
-        options.sort[key] = order === "desc" ? -1 : 1;
+        const [key, order] = sortParam.split(':');
+        options.sort[key] = order === 'desc' ? -1 : 1;
     } else {
         options.sort = defaultSort;
     }
@@ -143,7 +143,7 @@ const getAllProducts = async (query) => {
  */
 const getProductById = async (id) => {
     const product = await productRepository.findById(id);
-    if (!product) throw new Error("Product not found");
+    if (!product) throw new Error('Product not found');
     return product;
 };
 
@@ -166,7 +166,7 @@ const createProduct = async (productData, imgFiles) => {
     try {
         // 1. Validate cơ bản
         if (!productData.name) {
-            throw new Error("Product name is required.");
+            throw new Error('Product name is required.');
         }
 
         // 2. Tạo Slug
@@ -183,7 +183,7 @@ const createProduct = async (productData, imgFiles) => {
         // 3. Upload ảnh chính của Product (nếu có)
         let imageUrls = [];
         if (imgFiles && imgFiles.length > 0) {
-            imageUrls = await uploadToS3(imgFiles, "productImages");
+            imageUrls = await uploadToS3(imgFiles, 'productImages');
         }
 
         // 4. Parse dữ liệu Variants
@@ -192,12 +192,12 @@ const createProduct = async (productData, imgFiles) => {
         if (productData.variants) {
             try {
                 variantsInput =
-                    typeof productData.variants === "string"
+                    typeof productData.variants === 'string'
                         ? JSON.parse(productData.variants)
                         : productData.variants;
             } catch (e) {
                 throw new Error(
-                    "Invalid variants data format. Must be a valid JSON array.",
+                    'Invalid variants data format. Must be a valid JSON array.',
                 );
             }
         }
@@ -253,12 +253,13 @@ const createProduct = async (productData, imgFiles) => {
                     productId: newProduct._id,
                     name:
                         v.name ||
-                        `${productData.name} - ${attrs.map((a) => a.value).join(" ")}`,
+                        `${productData.name} - ${attrs.map((a) => a.value).join(' ')}`,
                     sku: v.sku,
                     weight: parseInt(v.weight || 100),
                     price: parseFloat(v.price || 0),
                     stock: parseInt(v.stock || 0),
                     attributes: attrs,
+                    imageUrls: [], // Chưa có ảnh
                     imageUrls: [], // Chưa có ảnh
                 });
 
@@ -270,7 +271,9 @@ const createProduct = async (productData, imgFiles) => {
             // Giả sử variantRepository.createMany hỗ trợ session
             const createdVariants = await variantRepository.createMany(
                 variantDocs,
-                { session },
+                {
+                    session,
+                },
             );
 
             createdVariantIds = createdVariants.map((v) => v._id);
@@ -320,7 +323,7 @@ const createProduct = async (productData, imgFiles) => {
 
 const deleteProduct = async (id) => {
     const product = await productRepository.findById(id);
-    if (!product) throw new Error("Product not found");
+    if (!product) throw new Error('Product not found');
 
     if (product.imageUrls?.length) {
         await deleteFromS3(product.imageUrls);
@@ -332,7 +335,7 @@ const deleteProduct = async (id) => {
     // Delete the product itself
     await productRepository.remove(id);
 
-    return { message: "Product deleted successfully" };
+    return { message: 'Product deleted successfully' };
 };
 
 /**
@@ -342,15 +345,15 @@ const updateProduct = async (id, updateData) => {
     const existingProduct = await productRepository.findById(id);
     if (!existingProduct) throw new Error("Product not found");
 
-    const validStatuses = ["Draft", "Published", "Archived", "Disabled"];
+    const validStatuses = ['Draft', 'Published', 'Archived', 'Disabled'];
 
     const allowedUpdates = [
-        "name",
-        "slug",
-        "description",
-        "status",
-        "isFeatured",
-        "categoryId",
+        'name',
+        'slug',
+        'description',
+        'status',
+        'isFeatured',
+        'categoryId',
     ];
 
     const updatePayload = {};
@@ -360,10 +363,10 @@ const updateProduct = async (id, updateData) => {
             const value = updateData[key];
 
             if (value !== undefined) {
-                if (key === "status") {
+                if (key === 'status') {
                     if (!validStatuses.includes(value)) {
                         throw new Error(
-                            `Invalid status: '${value}'. Must be one of: ${validStatuses.join(", ")}`,
+                            `Invalid status: '${value}'. Must be one of: ${validStatuses.join(', ')}`,
                         );
                     }
                 }
@@ -387,13 +390,13 @@ const updateProduct = async (id, updateData) => {
  * Thêm ảnh mới vào product (upload lên S3)
  */
 const addImagesToProduct = async (id, files) => {
-    const uploadedUrls = await uploadToS3(files, "productImages");
+    const uploadedUrls = await uploadToS3(files, 'productImages');
 
     const updated = await productRepository.update(id, {
         $push: { imageUrls: { $each: uploadedUrls } },
     });
 
-    if (!updated) throw new Error("Product not found");
+    if (!updated) throw new Error('Product not found');
     return updated;
 };
 
@@ -407,7 +410,7 @@ const removeImagesFromProduct = async (id, urlsToRemove) => {
         $pull: { imageUrls: { $in: urlsToRemove } },
     });
 
-    if (!updated) throw new Error("Product not found");
+    if (!updated) throw new Error('Product not found');
     return updated;
 };
 

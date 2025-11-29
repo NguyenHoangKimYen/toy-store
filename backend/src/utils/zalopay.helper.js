@@ -1,6 +1,6 @@
-const axios = require("axios");
-const qs = require("qs");
-const crypto = require("crypto");
+const axios = require('axios');
+const qs = require('qs');
+const crypto = require('crypto');
 
 const ZALOPAY_CONFIG = {
     appid: process.env.ZALOPAY_APP_ID,

@@ -1,15 +1,15 @@
-const router = require("express").Router();
+const router = require('express').Router();
 
 const {
-  createVietQR,
-  customerConfirmVietQR,     // KH bấm "Tôi đã chuyển khoản"
-  getPendingVietQROrders,    // Admin xem DS đang chờ xác nhận
-  adminConfirmVietQR,        // Admin xác nhận đã nhận tiền
-  adminRejectVietQR,         // Admin từ chối thanh toán
+    createVietQR,
+    customerConfirmVietQR, // KH bấm "Tôi đã chuyển khoản"
+    getPendingVietQROrders, // Admin xem DS đang chờ xác nhận
+    adminConfirmVietQR, // Admin xác nhận đã nhận tiền
+    adminRejectVietQR, // Admin từ chối thanh toán
 
-  createMomoPayment,
-  momoIpn,
-  momoReturn,
+    createMomoPayment,
+    momoIpn,
+    momoReturn,
 
   createZaloPayOrder,
   zaloPayCallback,
@@ -18,17 +18,17 @@ const {
   payByCash,
 } = require("../controllers/payment.controller.js");
 
-const auth = require("../middlewares/auth.middleware.js");
-const adminOnly = require("../middlewares/admin.middleware.js");
+const auth = require('../middlewares/auth.middleware.js');
+const adminOnly = require('../middlewares/admin.middleware.js');
 
 // ===================== VIETQR =====================
-router.get("/vietqr/:orderId", createVietQR);
+router.get('/vietqr/:orderId', createVietQR);
 
 // KHÁCH HÀNG bấm "Đã chuyển khoản"
-router.post("/vietqr/customer-confirm/:orderId", customerConfirmVietQR);
+router.post('/vietqr/customer-confirm/:orderId', customerConfirmVietQR);
 
 // ADMIN lấy danh sách đơn đang chờ xác nhận
-router.get("/vietqr/admin/pending", auth, adminOnly, getPendingVietQROrders);
+router.get('/vietqr/admin/pending', auth, adminOnly, getPendingVietQROrders);
 
 // ADMIN xác nhận đã nhận tiền
 router.post(

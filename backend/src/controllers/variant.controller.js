@@ -1,5 +1,5 @@
-const variantService = require("../services/variant.service");
-const { mongo } = require("mongoose");
+const variantService = require('../services/variant.service');
+const { mongo } = require('mongoose');
 
 /** Lấy danh sách variant theo product */
 const getVariantsByProduct = async (req, res, next) => {
@@ -20,7 +20,7 @@ const getVariantById = async (req, res, next) => {
         if (!mongo.ObjectId.isValid(id)) {
             return res
                 .status(400)
-                .json({ success: false, message: "Invalid ID format" });
+                .json({ success: false, message: 'Invalid ID format' });
         }
 
         const variant = await variantService.getVariantById(id);
@@ -79,7 +79,7 @@ const addVariantImages = async (req, res, next) => {
         const { id } = req.params;
         const files = req.files;
         if (!files?.length)
-            return res.status(400).json({ message: "No files uploaded" });
+            return res.status(400).json({ message: 'No files uploaded' });
 
         const updated = await variantService.addVariantImages(id, files);
         res.json({ success: true, data: updated });
@@ -94,7 +94,7 @@ const removeVariantImages = async (req, res, next) => {
         const { id } = req.params;
         const { removeImages } = req.body;
         if (!Array.isArray(removeImages) || !removeImages.length)
-            return res.status(400).json({ message: "No image URLs provided" });
+            return res.status(400).json({ message: 'No image URLs provided' });
 
         const updated = await variantService.removeVariantImages(
             id,

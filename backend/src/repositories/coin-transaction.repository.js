@@ -1,4 +1,4 @@
-const CoinTransaction = require("../models/coin-transaction.model");
+const CoinTransaction = require('../models/coin-transaction.model');
 
 module.exports = {
     create: (data) => CoinTransaction.create(data),

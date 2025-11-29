@@ -1,15 +1,15 @@
-const User = require("../models/user.model");
-const CoinTransactionRepository = require("../repositories/coin-transaction.repository");
-const UserVoucherLog = require("../models/user-voucher-log.model");
-const DiscountCode = require("../models/discount-code.model");
-const { checkAndAssignBadges } = require("../services/badge.service");
+const User = require('../models/user.model');
+const CoinTransactionRepository = require('../repositories/coin-transaction.repository');
+const UserVoucherLog = require('../models/user-voucher-log.model');
+const DiscountCode = require('../models/discount-code.model');
+const { checkAndAssignBadges } = require('../services/badge.service');
 
 //Ưu tiên theo thứ tự từ cao xuống thấp
 const TIER_RULE = [
-    { tier: "diamond", min: 20_000_000 },
-    { tier: "gold", min: 5_000_000 },
-    { tier: "silver", min: 1_000_000 },
-    { tier: "none", min: 0 },
+    { tier: 'diamond', min: 20_000_000 },
+    { tier: 'gold', min: 5_000_000 },
+    { tier: 'silver', min: 1_000_000 },
+    { tier: 'none', min: 0 },
 ];
 
 //Xác định tier dựa theo tổng chi tiêu 12 tháng gần nhất
@@ -17,17 +17,17 @@ const getTierFromSpent = (spentLast12Months) => {
     for (const rule of TIER_RULE) {
         if (spentLast12Months >= rule.min) return rule.tier;
     }
-    return "none";
+    return 'none';
 };
 
 //Hệ số quy đổi coin dựa theo tier
 const getCoinMultiplier = (tier) => {
     switch (tier) {
-        case "diamond":
+        case 'diamond':
             return 1.5;
-        case "gold":
+        case 'gold':
             return 1.0;
-        case "silver":
+        case 'silver':
             return 0.5;
         default:
             return 0.25; // user none vẫn được coin nhỏ
@@ -43,7 +43,7 @@ const getCoinMultiplier = (tier) => {
  */
 const handleOrderCompleted = async (userId, orderAmount, orderId) => {
     const user = await User.findById(userId);
-    if (!user) throw new Error("User not found");
+    if (!user) throw new Error('User not found');
 
     // 1. Cập nhật chi tiêu
     user.lifetimeSpent += orderAmount;
@@ -76,7 +76,7 @@ const handleOrderCompleted = async (userId, orderAmount, orderId) => {
     // 5. Log coin transaction
     await CoinTransactionRepository.create({
         userId,
-        type: "earn",
+        type: 'earn',
         amount: earnedCoins,
         balanceAfter: user.loyaltyPoints,
         orderId,
@@ -96,7 +96,7 @@ const getMyLoyaltyInfo = async (userId) => {
     const user = await User.findById(userId).select(
         "loyaltyTier loyaltyPoints lifetimeSpent spentLast12Months",
     );
-    if (!user) throw new Error("User not found");
+    if (!user) throw new Error('User not found');
     return user;
 };
 
@@ -115,7 +115,7 @@ const MONTHLY_VOUCHERS = {
 
 async function giveMonthlyVoucher(user) {
     const tier = user.loyaltyTier;
-    if (!tier || tier === "none") return null;
+    if (!tier || tier === 'none') return null;
 
     const now = new Date();
     const month = now.getMonth() + 1;

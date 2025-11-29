@@ -1,5 +1,5 @@
-const { mongo } = require("mongoose");
-const productService = require("../services/product.service.js");
+const { mongo } = require('mongoose');
+const productService = require('../services/product.service.js');
 
 /** Lấy danh sách sản phẩm */
 const getAllProducts = async (req, res, next) => {
@@ -18,13 +18,13 @@ const getProductById = async (req, res, next) => {
         if (!mongo.ObjectId.isValid(id))
             return res
                 .status(400)
-                .json({ success: false, message: "Invalid ID" });
+                .json({ success: false, message: 'Invalid ID' });
 
         const product = await productService.getProductById(id);
         if (!product) {
             return res
                 .status(404)
-                .json({ success: false, message: "Product not found" });
+                .json({ success: false, message: 'Product not found' });
         }
         res.json({ success: true, data: product });
     } catch (err) {
@@ -39,7 +39,7 @@ const getProductBySlug = async (req, res) => {
         if (!product) {
             return res
                 .status(404)
-                .json({ success: false, message: "Product not found" });
+                .json({ success: false, message: 'Product not found' });
         }
         return res.json({ success: true, data: product });
     } catch (error) {
@@ -90,7 +90,7 @@ const updateProduct = async (req, res, next) => {
         if (!mongo.ObjectId.isValid(id)) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid product ID",
+                message: 'Invalid product ID',
             });
         }
 
@@ -123,7 +123,7 @@ const addProductImages = async (req, res, next) => {
         const { id } = req.params;
         const files = req.files;
         if (!files?.length)
-            return res.status(400).json({ message: "No files uploaded" });
+            return res.status(400).json({ message: 'No files uploaded' });
 
         const updated = await productService.addImagesToProduct(id, files);
         res.json({ success: true, data: updated });
@@ -138,7 +138,7 @@ const removeProductImages = async (req, res, next) => {
         const { id } = req.params;
         const { removeImages } = req.body;
         if (!Array.isArray(removeImages) || !removeImages.length)
-            return res.status(400).json({ message: "No image URLs provided" });
+            return res.status(400).json({ message: 'No image URLs provided' });
 
         const updated = await productService.removeImagesFromProduct(
             id,

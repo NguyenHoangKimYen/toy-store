@@ -1,12 +1,12 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-require("./cart-item.model");
+require('./cart-item.model');
 
 const CartSchema = new mongoose.Schema(
     {
         userId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
+            ref: 'User',
             required: false, // Cho phép null/undefined (khách vãng lai)
             // DON'T set default: null - omit the field entirely for guests
             // Nên tạo index độc nhất nếu userId tồn tại để 1 user chỉ có 1 cart
@@ -37,13 +37,13 @@ const CartSchema = new mongoose.Schema(
 
         discountCodeId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "DiscountCode", // Tham chiếu đến Model 'DiscountCode'
+            ref: 'DiscountCode', // Tham chiếu đến Model 'DiscountCode'
             default: null,
         },
     },
     {
         timestamps: true,
-        collection: "carts",
+        collection: 'carts',
         toJSON: {
             transform: function (doc, ret) {
                 ret.id = ret._id.toString();
@@ -65,4 +65,4 @@ const CartSchema = new mongoose.Schema(
 CartSchema.index({ userId: 1 }, { unique: true, sparse: true });
 CartSchema.index({ sessionId: 1 }); // Not unique to allow nulls for user carts
 
-module.exports = mongoose.model("Cart", CartSchema);
+module.exports = mongoose.model('Cart', CartSchema);

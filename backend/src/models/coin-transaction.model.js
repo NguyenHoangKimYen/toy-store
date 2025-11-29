@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const coinTransactionSchema = new mongoose.Schema(
     {
@@ -41,4 +41,4 @@ const coinTransactionSchema = new mongoose.Schema(
     },
 );
 
-module.exports = mongoose.model("CoinTransaction", coinTransactionSchema);
+module.exports = mongoose.model('CoinTransaction', coinTransactionSchema);

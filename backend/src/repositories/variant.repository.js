@@ -1,4 +1,4 @@
-const Variant = require("../models/variant.model");
+const Variant = require('../models/variant.model');
 
 const findByProductId = async (productId) => {
     return await Variant.find({ productId }).lean();

@@ -7,7 +7,10 @@ const axios = require("axios");
 const qs = require("qs");
 
 const orderRepository = require('../repositories/order.repository');
-const { buildRawSignature, generateSignature } = require('../utils/momo.helper');
+const {
+    buildRawSignature,
+    generateSignature,
+} = require('../utils/momo.helper');
 const { hmacSHA256 } = require('../utils/zalopay.helper');
 const { updateStatus: updateOrderStatus } = require('./order.service');
 
@@ -33,20 +36,20 @@ const ZALOPAY_CONFIG = {
 
 async function createMomoPayment(orderId) {
     const order = await orderRepository.findById(orderId);
-    if (!order) throw new Error("Order not found");
+    if (!order) throw new Error('Order not found');
 
     const amount = Number(order.totalAmount);
-    if (!amount || amount < 1000) throw new Error("Invalid MoMo amount");
+    if (!amount || amount < 1000) throw new Error('Invalid MoMo amount');
 
     const requestId = Date.now().toString();
     const momoOrderId = order._id.toString();
-    const requestType = "payWithMethod";
+    const requestType = 'payWithMethod';
     const orderInfo = `Thanh toan don hang ${momoOrderId}`;
 
     const signatureObj = {
         accessKey: MOMO_CONFIG.accessKey,
         amount,
-        extraData: "",
+        extraData: '',
         ipnUrl: MOMO_CONFIG.ipnUrl,
         orderId: momoOrderId,
         orderInfo,
@@ -62,7 +65,7 @@ async function createMomoPayment(orderId) {
     const payload = {
         ...signatureObj,
         signature,
-        lang: "vi",
+        lang: 'vi',
     };
 
     const res = await axios.post(MOMO_CONFIG.endpoint, payload);
@@ -84,31 +87,31 @@ async function createMomoPayment(orderId) {
 
 async function handleMomoIpn(body) {
     const { orderId, resultCode } = body;
-    if (!orderId) return { success: false, message: "Missing orderId" };
+    if (!orderId) return { success: false, message: 'Missing orderId' };
 
     if (resultCode === 0) {
         await orderRepository.updatePaymentStatus(orderId, {
             paymentStatus: "paid",
             status: "confirmed",
         });
-        return { success: true, message: "Payment success" };
+        return { success: true, message: 'Payment success' };
     }
 
     await orderRepository.updatePaymentStatus(orderId, {
-        paymentStatus: "failed",
-        status: "cancelled",
+        paymentStatus: 'failed',
+        status: 'cancelled',
     });
 
-    return { success: false, message: "Payment failed" };
+    return { success: false, message: 'Payment failed' };
 }
 
 async function handleMomoReturn(query) {
     const { resultCode, orderId } = query;
 
     return {
-        success: resultCode === "0",
+        success: resultCode === '0',
         orderId,
-        message: resultCode === "0" ? "Payment success" : "Payment failed",
+        message: resultCode === '0' ? 'Payment success' : 'Payment failed',
     };
 }
 
@@ -118,11 +121,11 @@ async function createZaloPayOrderService(order) {
     const { appId, key1, endpoint, redirectUrl, callbackUrl } = ZALOPAY_CONFIG;
 
     const date = new Date();
-    const yyMMdd = date.toISOString().slice(2, 10).replace(/-/g, "");
-    const random = String(Math.floor(Math.random() * 999999)).padStart(6, "0");
+    const yyMMdd = date.toISOString().slice(2, 10).replace(/-/g, '');
+    const random = String(Math.floor(Math.random() * 999999)).padStart(6, '0');
     const apptransid = `${yyMMdd}_${random}`;
 
-    const amount = parseInt(order.totalAmount?.toString() || "0", 10);
+    const amount = parseInt(order.totalAmount?.toString() || '0', 10);
     const apptime = Date.now();
     const appuser = (order.userId || "guest_user").toString();
     
@@ -145,7 +148,7 @@ async function createZaloPayOrderService(order) {
         apptime,
         embeddata,
         item,
-    ].join("|");
+    ].join('|');
 
     const mac = hmacSHA256(data, key1);
 

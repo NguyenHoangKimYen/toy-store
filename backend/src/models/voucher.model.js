@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 // Voucher model tương tự DiscountCode nhưng dành cho các voucher chung, không cá nhân hóa
 //user lưu trữ voucher đã được người dùng nhận
 const voucherSchema = new mongoose.Schema(
@@ -22,4 +22,4 @@ const voucherSchema = new mongoose.Schema(
     { timestamps: true },
 );
 
-module.exports = mongoose.model("Voucher", voucherSchema);
+module.exports = mongoose.model('Voucher', voucherSchema);
