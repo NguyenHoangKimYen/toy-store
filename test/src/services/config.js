@@ -45,8 +45,11 @@ const apiClient = {
     // Get guest sessionId if user is not logged in
     const sessionId = !token ? localStorage.getItem('guestSessionId') : null;
     
+    // Check if data is FormData
+    const isFormData = data instanceof FormData;
+    
     const defaultHeaders = {
-      ...getDefaultHeaders(),
+      ...(isFormData ? {} : getDefaultHeaders()), // Don't set Content-Type for FormData
       'Connection': 'keep-alive', // Enable HTTP connection reuse
       ...(token && { Authorization: `Bearer ${token}` }),
       ...(sessionId && { 'X-Session-Id': sessionId }),
@@ -61,7 +64,8 @@ const apiClient = {
     };
 
     if (data) {
-      config.body = JSON.stringify(data);
+      // Don't stringify FormData
+      config.body = isFormData ? data : JSON.stringify(data);
     }
 
     try {
