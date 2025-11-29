@@ -21,15 +21,17 @@ const getAddressesByUserId = async (req, res, next) => {
         if (!mongo.ObjectId.isValid(userId)) {
             return res
                 .status(400)
-                .json({ success: false, message: "Invalid user ID" });
+                .json({ success: false, message: 'Invalid user ID' });
         }
 
         const addresses = await addressService.getAddressesByUserId(userId);
         if (!addresses || addresses.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "No addresses found for this user",
-            });
+            return res
+                .status(404)
+                .json({
+                    success: false,
+                    message: 'No addresses found for this user',
+                });
         }
 
         return res.json({ success: true, data: addresses });
@@ -45,14 +47,14 @@ const getAddressById = async (req, res, next) => {
         if (!mongo.ObjectId.isValid(id)) {
             return res
                 .status(400)
-                .json({ success: false, message: "Invalid address ID" });
+                .json({ success: false, message: 'Invalid address ID' });
         }
 
         const address = await addressService.getAddressById(id);
         if (!address) {
             return res
                 .status(404)
-                .json({ success: false, message: "Address not found" });
+                .json({ success: false, message: 'Address not found' });
         }
 
         return res.json({ success: true, data: address });
@@ -86,7 +88,7 @@ const createAddress = async (req, res, next) => {
             data: address,
         });
     } catch (error) {
-        console.error("createAddress error:", error);
+        console.error('createAddress error:', error);
         return next(error);
     }
 };
@@ -98,7 +100,7 @@ const updateAddress = async (req, res, next) => {
         if (!mongo.ObjectId.isValid(id)) {
             return res
                 .status(400)
-                .json({ success: false, message: "Invalid address ID" });
+                .json({ success: false, message: 'Invalid address ID' });
         }
 
         //kiểm tra địa chỉ mới có hợp lệ không
@@ -108,12 +110,12 @@ const updateAddress = async (req, res, next) => {
             );
             if (!valid) {
                 console.warn(
-                    "VietMap xác minh thất bại cho:",
+                    'VietMap xác minh thất bại cho:',
                     req.body.addressLine,
                 );
                 return res.status(400).json({
                     success: false,
-                    message: "Invalid Address!",
+                    message: 'Invalid Address!',
                 });
             }
 
@@ -128,7 +130,7 @@ const updateAddress = async (req, res, next) => {
                 res.status(404),
                 json({
                     success: false,
-                    message: "Address not found or update failed",
+                    message: 'Address not found or update failed',
                 })
             );
         }
@@ -152,10 +154,12 @@ const setDefaultAddress = async (req, res, next) => {
             !mongo.ObjectId.isValid(userId) ||
             !mongo.ObjectId.isValid(addressId)
         ) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid user ID or address ID",
-            });
+            return res
+                .status(400)
+                .json({
+                    success: false,
+                    message: 'Invalid user ID or address ID',
+                });
         }
 
         const updated = await addressService.setDefaultAddress(
@@ -163,15 +167,17 @@ const setDefaultAddress = async (req, res, next) => {
             addressId,
         );
         if (!updated) {
-            return res.status(404).json({
-                success: false,
-                message: "Failed to set default address",
-            });
+            return res
+                .status(404)
+                .json({
+                    success: false,
+                    message: 'Failed to set default address',
+                });
         }
 
         return res.json({
             success: true,
-            message: "Default address updated successfully",
+            message: 'Default address updated successfully',
             data: updated,
         });
     } catch (error) {
@@ -186,14 +192,14 @@ const deleteAddress = async (req, res, next) => {
         if (!mongo.ObjectId.isValid(id)) {
             return res
                 .status(400)
-                .json({ success: false, message: "Invalid address ID" });
+                .json({ success: false, message: 'Invalid address ID' });
         }
 
         const address = await addressService.deleteAddress(id);
         if (!address) {
             return res.status(404).json({
                 success: false,
-                message: "Address not found or delete failed",
+                message: 'Address not found or delete failed',
             });
         }
 

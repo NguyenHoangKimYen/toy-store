@@ -1,4 +1,4 @@
-const loyaltyService = require("../services/loyalty.service");
+const loyaltyService = require('../services/loyalty.service');
 
 module.exports = {
     async getMyLoyalty(req, res) {

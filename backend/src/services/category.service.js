@@ -1,8 +1,8 @@
-const categoryRepository = require("../repositories/category.repository.js");
-const productRepository = require("../repositories/product.repository.js");
-const { uploadToS3, deleteFromS3 } = require("../utils/s3.helper.js");
+const categoryRepository = require('../repositories/category.repository.js');
+const productRepository = require('../repositories/product.repository.js');
+const { uploadToS3, deleteFromS3 } = require('../utils/s3.helper.js');
 
-const { default: slugify } = require("slugify");
+const { default: slugify } = require('slugify');
 
 const createCategory = async (data, imgFiles) => {
     if (!data.slug && data.name) {
@@ -11,12 +11,12 @@ const createCategory = async (data, imgFiles) => {
 
     const existing = await categoryRepository.findBySlug(data.slug);
     if (existing) {
-        throw new Error("Slug already exists");
+        throw new Error('Slug already exists');
     }
 
     let imageUrl = null;
     if (imgFiles && imgFiles.length > 0) {
-        const uploadedUrls = await uploadToS3(imgFiles, "categoryImages");
+        const uploadedUrls = await uploadToS3(imgFiles, 'categoryImages');
         imageUrl = uploadedUrls[0];
     }
 
@@ -31,19 +31,19 @@ const getAllCategories = async () => {
 
 const getCategoryById = async (id) => {
     const category = await categoryRepository.findById(id);
-    if (!category) throw new Error("Category not found");
+    if (!category) throw new Error('Category not found');
     return category;
 };
 
 const getCategoryBySlug = async (slug) => {
     const category = await categoryRepository.findBySlug(slug);
-    if (!category) throw new Error("Category not found");
+    if (!category) throw new Error('Category not found');
     return category;
 };
 
 const updateCategory = async (id, data, imgFiles) => {
     const category = await categoryRepository.findById(id);
-    if (!category) throw new Error("Category not found");
+    if (!category) throw new Error('Category not found');
 
     if (data.name && !data.slug) {
         data.slug = slugify(data.name, { lower: true, strict: true });
@@ -58,7 +58,7 @@ const updateCategory = async (id, data, imgFiles) => {
             await deleteFromS3([category.imageUrl]); // deleteFromS3 nhận vào mảng
         }
         // 1.2. Upload ảnh mới
-        const uploadedUrls = await uploadToS3(imgFiles, "categoryImages");
+        const uploadedUrls = await uploadToS3(imgFiles, 'categoryImages');
         newImageUrl = uploadedUrls[0];
     }
     // Trường hợp 2: Không upload ảnh mới, nhưng muốn xóa ảnh cũ
@@ -93,8 +93,8 @@ const deleteCategory = async (id) => {
     }
 
     const deleted = await categoryRepository.remove(id);
-    if (!deleted) throw new Error("Category not found");
-    return { message: "Category deleted successfully" };
+    if (!deleted) throw new Error('Category not found');
+    return { message: 'Category deleted successfully' };
 };
 
 module.exports = {

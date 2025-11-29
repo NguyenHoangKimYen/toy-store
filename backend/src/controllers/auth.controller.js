@@ -1,5 +1,5 @@
 // const { Result } = require('pg');
-const authService = require("../services/auth.service.js");
+const authService = require('../services/auth.service.js');
 // const { expression } = require('joi');
 const { generateToken, sha256 } = require("../utils/token.js");
 const userRepository = require("../repositories/user.repository.js");
@@ -8,6 +8,7 @@ const { message } = require("statuses");
 const jwt = require("jsonwebtoken");
 
 const resolveUserId = (req) =>
+   
     req.user?.id || req.params?.id || req.body?.userId;
 
 const register = async (req, res, next) => {
@@ -15,7 +16,7 @@ const register = async (req, res, next) => {
         const { user, token } = await authService.register(req.body); //gọi service đăng ký
         res.status(201).json({
             success: true,
-            message: "Register Successfully",
+            message: 'Register Successfully',
             data: { user, token },
         });
     } catch (error) {
@@ -29,14 +30,14 @@ const verifyEmail = async (req, res, next) => {
         if (!uid || !token) {
             return res.status(400).json({
                 success: false,
-                message: "Missing token or user id",
+                message: 'Missing token or user id',
             });
         }
 
         if (!mongo.ObjectId.isValid(uid)) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid user id",
+                message: 'Invalid user id',
             });
         }
 
@@ -44,29 +45,29 @@ const verifyEmail = async (req, res, next) => {
         if (!user) {
             return res.status(404).json({
                 success: false,
-                message: "User not found",
+                message: 'User not found',
             });
         }
 
         if (!user.resetTokenHash || !user.resetTokenExpiresAt) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid or already verified",
+                message: 'Invalid or already verified',
             });
         }
 
         if (user.resetTokenExpiresAt < new Date()) {
             return res.status(400).json({
                 success: false,
-                message: "Token expired",
+                message: 'Token expired',
             });
         }
 
-        const expected = sha256("verify:" + token);
+        const expected = sha256('verify:' + token);
         if (expected !== user.resetTokenHash) {
             return res.status(400).json({
                 success: false,
-                message: "Token invalid",
+                message: 'Token invalid',
             });
         }
 
@@ -120,7 +121,7 @@ const login = async (req, res, next) => {
                 success: false,
                 needOtp: true,
                 message:
-                    message || "Account need OTP Verification before Login",
+                    message || 'Account need OTP Verification before Login',
             });
         }
 
@@ -158,7 +159,7 @@ const login = async (req, res, next) => {
         return res.json({
             //Valid Login
             success: true,
-            message: "Login Successfully",
+            message: 'Login Successfully',
             data: { user, token },
         });
     } catch (error) {
@@ -218,7 +219,7 @@ const profile = async (req, res, next) => {
         const userProfile = await authService.profile(req.user.id); //gọi service lấy thông tin người dùng
         res.json({
             success: true,
-            message: "Lấy thông tin người dùng thành công",
+            message: 'Lấy thông tin người dùng thành công',
             data: userProfile,
         });
     } catch (error) {

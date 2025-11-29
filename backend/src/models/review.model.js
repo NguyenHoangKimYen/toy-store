@@ -1,24 +1,24 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const ReviewSchema = new mongoose.Schema(
     {
         productId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Product",
+            ref: 'Product',
             required: true,
             index: true,
         },
 
         userId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
+            ref: 'User',
             required: true,
             index: true,
         },
 
         variantId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Variant",
+            ref: 'Variant',
             required: true,
         },
 
@@ -30,7 +30,7 @@ const ReviewSchema = new mongoose.Schema(
 
         imageUrls: {
             type: [String],
-            validate: [arrayLimit, "{PATH} exceeds the limit of 5 images"],
+            validate: [arrayLimit, '{PATH} exceeds the limit of 5 images'],
             default: [],
         },
 
@@ -50,8 +50,8 @@ const ReviewSchema = new mongoose.Schema(
 
         status: {
             type: String,
-            enum: ["pending", "approved", "rejected", "flagged"],
-            default: "pending",
+            enum: ['pending', 'approved', 'rejected', 'flagged'],
+            default: 'pending',
             index: true,
         },
 
@@ -64,7 +64,7 @@ const ReviewSchema = new mongoose.Schema(
 
         moderatedBy: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User", // Admin nào duyệt
+            ref: 'User', // Admin nào duyệt
             default: null,
         },
 
@@ -73,7 +73,7 @@ const ReviewSchema = new mongoose.Schema(
     },
     {
         timestamps: true,
-        collection: "reviews",
+        collection: 'reviews',
     },
 );
 
@@ -88,26 +88,26 @@ ReviewSchema.statics.calcAverageRatings = async function (productId) {
         },
         {
             $group: {
-                _id: "$productId",
+                _id: '$productId',
                 nRating: { $sum: 1 },
-                avgRating: { $avg: "$rating" },
+                avgRating: { $avg: '$rating' },
             },
         },
     ]);
 
     if (stats.length > 0) {
-        await mongoose.model("Product").findByIdAndUpdate(productId, {
+        await mongoose.model('Product').findByIdAndUpdate(productId, {
             averageRating: Math.round(stats[0].avgRating * 10) / 10,
         });
     } else {
-        await mongoose.model("Product").findByIdAndUpdate(productId, {
+        await mongoose.model('Product').findByIdAndUpdate(productId, {
             averageRating: 0,
         });
     }
 };
 
 // --- MIDDLEWARE ---
-ReviewSchema.post("save", function () {
+ReviewSchema.post('save', function () {
     this.constructor.calcAverageRatings(this.productId);
 });
 
@@ -116,4 +116,4 @@ function arrayLimit(val) {
     return val.length <= 5;
 }
 
-module.exports = mongoose.model("Review", ReviewSchema);
+module.exports = mongoose.model('Review', ReviewSchema);

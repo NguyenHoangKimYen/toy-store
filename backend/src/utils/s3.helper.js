@@ -1,7 +1,7 @@
-const s3 = require("../config/s3");
-const { v4: uuidv4 } = require("uuid");
+const s3 = require('../config/s3');
+const { v4: uuidv4 } = require('uuid');
 
-const uploadToS3 = async (files, folder = "Uncategorized") => {
+const uploadToS3 = async (files, folder = 'Uncategorized') => {
     const uploadedUrls = [];
 
     for (const file of files) {
@@ -22,14 +22,14 @@ const uploadToS3 = async (files, folder = "Uncategorized") => {
 const deleteFromS3 = async (urls) => {
     for (const url of urls) {
         try {
-            const key = url.split(".amazonaws.com/")[1];
+            const key = url.split('.amazonaws.com/')[1];
             if (!key) {
-                console.warn("Could not extract key from URL:", url);
+                console.warn('Could not extract key from URL:', url);
                 continue;
             }
 
-            const decodedKey = decodeURIComponent(key.replace(/\+/g, " "));
-            console.log("Extracted and decoded key:", decodedKey);
+            const decodedKey = decodeURIComponent(key.replace(/\+/g, ' '));
+            console.log('Extracted and decoded key:', decodedKey);
 
             const params = {
                 Bucket: process.env.AWS_BUCKET_NAME,
@@ -38,7 +38,7 @@ const deleteFromS3 = async (urls) => {
 
             await s3.deleteObject(params).promise();
         } catch (error) {
-            console.error("❌ Error deleting image from S3:", error.message);
+            console.error('❌ Error deleting image from S3:', error.message);
         }
     }
 };

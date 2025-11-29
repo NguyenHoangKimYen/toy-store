@@ -197,12 +197,12 @@ async function calculateShippingFee(
     }
 
     // ⭐⭐⭐ ÁP DỤNG LOYALTY TIER ⭐⭐⭐
-    let tier = "none";
+    let tier = 'none';
     let discountFromTier = 0;
 
     if (address?.userId) {
-        const user = await User.findById(address.userId).select("loyaltyTier");
-        if (user) tier = user.loyaltyTier || "none";
+        const user = await User.findById(address.userId).select('loyaltyTier');
+        if (user) tier = user.loyaltyTier || 'none';
     }
 
     // Nhận số tiền giảm từ helper

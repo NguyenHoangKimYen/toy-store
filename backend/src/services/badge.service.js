@@ -1,5 +1,5 @@
-const Badge = require("../models/badge.model");
-const User = require("../models/user.model");
+const Badge = require('../models/badge.model');
+const User = require('../models/user.model');
 
 async function checkAndAssignBadges(user) {
     const badges = await Badge.find();
@@ -9,11 +9,11 @@ async function checkAndAssignBadges(user) {
         let achieved = false;
 
         switch (badge.type) {
-            case "spent":
+            case 'spent':
                 achieved = user.lifetimeSpent >= badge.threshold;
                 break;
 
-            case "orders":
+            case 'orders':
                 achieved = (user.totalOrders || 0) >= badge.threshold;
                 break;
         }

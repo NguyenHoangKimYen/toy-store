@@ -1,5 +1,5 @@
-const categoryService = require("../services/category.service.js");
-const { mongo } = require("mongoose");
+const categoryService = require('../services/category.service.js');
+const { mongo } = require('mongoose');
 
 /** Tạo mới */
 const createCategory = async (req, res, next) => {
@@ -31,7 +31,7 @@ const getCategoryById = async (req, res, next) => {
         if (!mongo.ObjectId.isValid(id)) {
             return res
                 .status(400)
-                .json({ success: false, message: "Invalid ID format" });
+                .json({ success: false, message: 'Invalid ID format' });
         }
         const category = await categoryService.getCategoryById(id);
         res.status(200).json({ success: true, data: category });
@@ -58,7 +58,7 @@ const updateCategory = async (req, res, next) => {
         if (!mongo.ObjectId.isValid(id)) {
             return res
                 .status(400)
-                .json({ success: false, message: "Invalid ID format" });
+                .json({ success: false, message: 'Invalid ID format' });
         }
 
         const category = await categoryService.updateCategory(
@@ -79,7 +79,7 @@ const deleteCategory = async (req, res, next) => {
         if (!mongo.ObjectId.isValid(id)) {
             return res
                 .status(400)
-                .json({ success: false, message: "Invalid ID format" });
+                .json({ success: false, message: 'Invalid ID format' });
         }
         const result = await categoryService.deleteCategory(id);
         res.status(200).json({ success: true, message: result.message });

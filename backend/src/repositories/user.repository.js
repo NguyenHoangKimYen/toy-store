@@ -1,5 +1,5 @@
-const { token } = require("morgan");
-const User = require("../models/user.model.js");
+const { token } = require('morgan');
+const User = require('../models/user.model.js');
 
 const findAll = async (filter = {}, options = {}) => {
     return User.find(filter)
@@ -76,7 +76,7 @@ const create = async (data) => {
 
 // Các trường không nên trả về công khai
 const PUBLIC_PROJECTION =
-    "-password -__v -resetTokenHash -resetTokenExpiresAt -resetOtpHash -resetOtpExpiresAt";
+    '-password -__v -resetTokenHash -resetTokenExpiresAt -resetOtpHash -resetOtpExpiresAt';
 
 // Đánh dấu người dùng đã được xác minh
 const setVerified = (id, isVerified = true) => {
@@ -131,8 +131,8 @@ const accountIsVerified = (id) => {
                 verifiedAt: new Date(),
             },
             $unset: {
-                resetTokenHash: "",
-                resetTokenExpiresAt: "",
+                resetTokenHash: '',
+                resetTokenExpiresAt: '',
             },
         },
         { new: true },

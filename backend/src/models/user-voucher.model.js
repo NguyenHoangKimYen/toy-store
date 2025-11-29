@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 //Lưu trữ các voucher mà người dùng đã nhận và sử dụng
 const userVoucherSchema = new mongoose.Schema(
     {
@@ -9,4 +9,4 @@ const userVoucherSchema = new mongoose.Schema(
     { timestamps: true },
 );
 
-module.exports = mongoose.model("UserVoucher", userVoucherSchema);
+module.exports = mongoose.model('UserVoucher', userVoucherSchema);

@@ -1,6 +1,6 @@
-const variantRepository = require("../repositories/variant.repository");
-const productRepository = require("../repositories/product.repository");
-const { uploadToS3, deleteFromS3 } = require("../utils/s3.helper");
+const variantRepository = require('../repositories/variant.repository');
+const productRepository = require('../repositories/product.repository');
+const { uploadToS3, deleteFromS3 } = require('../utils/s3.helper');
 
 const updateProductPriceRange = async (productId) => {
     const variants = await variantRepository.findByProductId(productId);
@@ -24,7 +24,7 @@ const getVariantsByProduct = async (productId) => {
 const getVariantById = async (id) => {
     const variant = await variantRepository.findById(id);
     if (!variant) {
-        throw new Error("Variant not found");
+        throw new Error('Variant not found');
     }
     return variant;
 };
@@ -32,7 +32,7 @@ const getVariantById = async (id) => {
 const createVariant = async (productId, variantData, imgFiles) => {
     const product = await productRepository.findById(productId);
     if (!product) {
-        throw new Error("Product not found");
+        throw new Error('Product not found');
     }
 
     const allowedAttributes = product.attributes;
@@ -69,7 +69,7 @@ const createVariant = async (productId, variantData, imgFiles) => {
 
     let imageUrls = [];
     if (imgFiles && imgFiles.length > 0) {
-        imageUrls = await uploadToS3(imgFiles, "variantImages");
+        imageUrls = await uploadToS3(imgFiles, 'variantImages');
     }
 
     const newVariant = {
@@ -92,7 +92,7 @@ const createVariant = async (productId, variantData, imgFiles) => {
 
 const updateVariant = async (id, data) => {
     const updated = await variantRepository.update(id, data);
-    if (!updated) throw new Error("Variant not found");
+    if (!updated) throw new Error('Variant not found');
 
     await updateProductPriceRange(updated.productId);
     return updated;
@@ -100,7 +100,7 @@ const updateVariant = async (id, data) => {
 
 const deleteVariant = async (id) => {
     const variant = await variantRepository.findById(id);
-    if (!variant) throw new Error("Variant not found");
+    if (!variant) throw new Error('Variant not found');
 
     if (variant.imageUrls?.length) {
         await deleteFromS3(variant.imageUrls);
@@ -114,17 +114,17 @@ const deleteVariant = async (id) => {
 
     await updateProductPriceRange(variant.productId);
 
-    return { message: "Variant deleted successfully" };
+    return { message: 'Variant deleted successfully' };
 };
 
 const addVariantImages = async (id, files) => {
-    const uploadedUrls = await uploadToS3(files, "variantImages");
+    const uploadedUrls = await uploadToS3(files, 'variantImages');
 
     const updated = await variantRepository.update(id, {
         $push: { imageUrls: { $each: uploadedUrls } },
     });
 
-    if (!updated) throw new Error("Variant not found");
+    if (!updated) throw new Error('Variant not found');
     return updated;
 };
 
@@ -135,7 +135,7 @@ const removeVariantImages = async (id, urlsToRemove) => {
         $pull: { imageUrls: { $in: urlsToRemove } },
     });
 
-    if (!updated) throw new Error("Variant not found");
+    if (!updated) throw new Error('Variant not found');
     return updated;
 };
 

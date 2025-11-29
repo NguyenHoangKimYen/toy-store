@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 // [XÓA] Dòng dưới đây gây ra lỗi Circular Dependency
 // const CartRepository = require("../repositories/cart.repository");
 
@@ -6,19 +6,19 @@ const CartItemSchema = new mongoose.Schema(
     {
         cartId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Cart",
+            ref: 'Cart',
             required: true,
         },
 
         productId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Product",
+            ref: 'Product',
             required: true,
         },
 
         variantId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Variant",
+            ref: 'Variant',
             required: true,
         },
         quantity: {
@@ -69,7 +69,7 @@ CartItemSchema.index({ cartId: 1, variantId: 1 }, { unique: true });
 async function recalculateCart(cartId) {
     if (!cartId) return;
 
-    const items = await mongoose.model("CartItem").find({ cartId: cartId });
+    const items = await mongoose.model('CartItem').find({ cartId: cartId });
 
     let newTotalPrice = 0;
     const itemIds = [];
@@ -83,7 +83,7 @@ async function recalculateCart(cartId) {
         }, 0);
     }
 
-    await mongoose.model("Cart").findByIdAndUpdate(cartId, {
+    await mongoose.model('Cart').findByIdAndUpdate(cartId, {
         totalPrice: newTotalPrice,
         items: itemIds,
     });
@@ -103,4 +103,4 @@ CartItemSchema.post("findOneAndDelete", async function (doc) {
     }
 });
 
-module.exports = mongoose.model("CartItem", CartItemSchema);
+module.exports = mongoose.model('CartItem', CartItemSchema);

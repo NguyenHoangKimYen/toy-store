@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const CategorySchema = new mongoose.Schema(
     {
@@ -30,8 +30,8 @@ const CategorySchema = new mongoose.Schema(
     },
     {
         timestamps: true,
-        collection: "categories",
+        collection: 'categories',
     },
 );
 
-module.exports = mongoose.model("Category", CategorySchema);
+module.exports = mongoose.model('Category', CategorySchema);

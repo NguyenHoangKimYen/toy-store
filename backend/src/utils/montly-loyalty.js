@@ -1,12 +1,12 @@
-const User = require("../models/user.model");
-const { giveMonthlyVoucher } = require("../services/loyalty.service");
+const User = require('../models/user.model');
+const { giveMonthlyVoucher } = require('../services/loyalty.service');
 
 module.exports = async function giveMonthlyLoyaltyRewards() {
-    const users = await User.find({ loyaltyTier: { $ne: "none" } });
+    const users = await User.find({ loyaltyTier: { $ne: 'none' } });
 
     for (const u of users) {
         await giveMonthlyVoucher(u);
     }
 
-    console.log("Monthly loyalty vouchers delivered!");
+    console.log('Monthly loyalty vouchers delivered!');
 };
