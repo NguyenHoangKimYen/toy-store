@@ -32,12 +32,16 @@ app.use(express.urlencoded({ extended: true })); // Cho phép phân tích cú ph
 app.use(cors({
   origin: [
     'http://localhost:5173',
+    'http://localhost:5174',
     process.env.FRONTEND_URL,
     'https://www.milkybloomtoystore.id.vn',
+    'https://milkybloomtoystore.id.vn',
     'https://d1qc4bz6yrxl8k.cloudfront.net',
     'https://api.milkybloomtoystore.id.vn',
   ],
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
 }));
 
 app.use(
