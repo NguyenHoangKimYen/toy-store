@@ -241,6 +241,49 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
     });
   };
 
+  // Update variant image (file or URL)
+  const updateVariantImage = (index, imageData) => {
+    setFormData(prev => ({
+      ...prev,
+      variants: prev.variants.map((v, i) => {
+        if (i !== index) return v;
+        
+        if (imageData === null) {
+          // Remove image
+          return {
+            ...v,
+            pendingImageFile: null,
+            pendingImagePreview: null,
+            pendingImageUrl: '',
+            imageUrls: [],
+          };
+        }
+        
+        if (imageData.file) {
+          // File upload
+          return {
+            ...v,
+            pendingImageFile: imageData.file,
+            pendingImagePreview: imageData.previewUrl,
+            pendingImageUrl: '',
+          };
+        }
+        
+        if (imageData.url !== undefined) {
+          // URL input
+          return {
+            ...v,
+            pendingImageFile: null,
+            pendingImagePreview: null,
+            pendingImageUrl: imageData.url,
+          };
+        }
+        
+        return v;
+      }),
+    }));
+  };
+
   const validateForm = () => {
     const newErrors = {};
     
@@ -273,9 +316,19 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
 
     setSaving(true);
     try {
+      // Prepare variants data - include pending image info for upload after creation
+      const variantsWithImageInfo = formData.variants.map(v => ({
+        ...v,
+        // Include image URL if provided via URL input
+        imageUrls: v.pendingImageUrl ? [v.pendingImageUrl] : (v.imageUrls || []),
+        // Pass pending file info for upload after variant creation
+        pendingImageFile: v.pendingImageFile || null,
+      }));
+
       // Include deleted variant IDs for update operations
       const dataToSave = {
         ...formData,
+        variants: variantsWithImageInfo,
         pendingImageFiles, // Pass pending files to parent for upload after creation
         ...(mode === 'edit' && deletedVariantIds.length > 0 && { deletedVariantIds })
       };
@@ -433,6 +486,7 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
               variants={formData.variants}
               onUpdatePrice={updateVariantPrice}
               onUpdateStock={updateVariantStock}
+              onUpdateImage={updateVariantImage}
               onRemove={removeVariant}
             />
           </div>

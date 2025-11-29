@@ -124,10 +124,23 @@ export const useProducts = (options = {}) => {
               stockQuantity: variant.stockQuantity || 0,
               sku: variant.sku || '',
               isActive: variant.isActive !== false,
+              // Include image URLs if provided
+              imageUrls: variant.imageUrls || [],
             };
             
             const createdVariant = await productsService.createVariant(newProduct._id, variantPayload);
             variantIds.push(createdVariant._id);
+            
+            // Upload variant image file if provided
+            if (variant.pendingImageFile && createdVariant._id) {
+              try {
+                const formData = new FormData();
+                formData.append('variantImages', variant.pendingImageFile);
+                await productsService.uploadVariantImages(createdVariant._id, formData);
+              } catch (imgErr) {
+                console.error('Error uploading variant image:', imgErr);
+              }
+            }
           } catch (variantErr) {
             console.error('Error creating variant:', variantErr);
           }
@@ -200,9 +213,22 @@ export const useProducts = (options = {}) => {
                 price: variant.price,
                 stockQuantity: variant.stockQuantity ?? 0,
                 isActive: variant.isActive !== false,
+                // Include image URLs if provided via URL input
+                ...(variant.imageUrls && variant.imageUrls.length > 0 && { imageUrls: variant.imageUrls }),
               };
               
               await productsService.updateVariant(variant._id, variantPayload);
+              
+              // Upload variant image file if provided
+              if (variant.pendingImageFile) {
+                try {
+                  const formData = new FormData();
+                  formData.append('variantImages', variant.pendingImageFile);
+                  await productsService.uploadVariantImages(variant._id, formData);
+                } catch (imgErr) {
+                  console.error('Error uploading variant image:', imgErr);
+                }
+              }
             } else {
               // Create new variant
               const variantPayload = {
@@ -214,9 +240,22 @@ export const useProducts = (options = {}) => {
                 stockQuantity: variant.stockQuantity ?? 0,
                 sku: variant.sku || '',
                 isActive: variant.isActive !== false,
+                // Include image URLs if provided
+                imageUrls: variant.imageUrls || [],
               };
               
-              await productsService.createVariant(id, variantPayload);
+              const createdVariant = await productsService.createVariant(id, variantPayload);
+              
+              // Upload variant image file if provided
+              if (variant.pendingImageFile && createdVariant._id) {
+                try {
+                  const formData = new FormData();
+                  formData.append('variantImages', variant.pendingImageFile);
+                  await productsService.uploadVariantImages(createdVariant._id, formData);
+                } catch (imgErr) {
+                  console.error('Error uploading variant image:', imgErr);
+                }
+              }
             }
           } catch (variantErr) {
             console.error('Error updating variant:', variantErr);
