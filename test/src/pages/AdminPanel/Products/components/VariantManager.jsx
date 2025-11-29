@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, PackagePlus, Upload, X } from 'lucide-react';
+import { Plus, Trash2, PackagePlus, Upload, X, Edit2, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Badge from '@/components/ui/badge';
@@ -23,6 +23,7 @@ const VariantManager = ({ productId, variants: initialVariants = [], onUpdate })
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Attribute definition state (Step 1 & 2)
   const [attributeDefinitions, setAttributeDefinitions] = useState([]);
@@ -217,6 +218,59 @@ const VariantManager = ({ productId, variants: initialVariants = [], onUpdate })
     return attributes.map(attr => `${attr.name}: ${attr.value}`).join(', ');
   };
 
+  // Handle variant image upload for existing variants
+  const handleVariantImageUpload = async (variantId, file) => {
+    if (!file) return;
+    
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('variantImages', file);
+      
+      const result = await productsService.uploadVariantImages(variantId, formData);
+      
+      // Update the variant in local state with new images
+      setVariants(prev => prev.map(v => 
+        v._id === variantId 
+          ? { ...v, imageUrls: result.imageUrls || [...(v.imageUrls || []), ...result.addedImages] }
+          : v
+      ));
+      
+      toast.success('Image uploaded successfully');
+      
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      console.error('Failed to upload variant image:', error);
+      toast.error(error.message || 'Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  // Handle variant image delete
+  const handleVariantImageDelete = async (variantId, imageUrl) => {
+    setUploadingImage(true);
+    try {
+      await productsService.deleteVariantImages(variantId, [imageUrl]);
+      
+      // Update the variant in local state
+      setVariants(prev => prev.map(v => 
+        v._id === variantId 
+          ? { ...v, imageUrls: (v.imageUrls || []).filter(url => url !== imageUrl) }
+          : v
+      ));
+      
+      toast.success('Image deleted successfully');
+      
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      console.error('Failed to delete variant image:', error);
+      toast.error(error.message || 'Failed to delete image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   return (
     <div className='space-y-4'>
       <div className='flex items-center justify-between'>
@@ -241,52 +295,118 @@ const VariantManager = ({ productId, variants: initialVariants = [], onUpdate })
         </div>
       ) : (
         <div className='grid gap-3'>
+          {uploadingImage && (
+            <div className='flex items-center justify-center p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800'>
+              <span className='text-sm text-blue-600 dark:text-blue-400'>Uploading image...</span>
+            </div>
+          )}
           {variants.map((variant) => (
             <div
               key={variant._id}
-              className='flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700'
+              className='p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700'
             >
-              <div className='flex-1'>
-                <div className='flex items-center gap-3 mb-1'>
-                  <span className='font-mono text-sm font-semibold text-gray-900 dark:text-white'>
-                    {variant.sku}
-                  </span>
-                  <span className={`px-2 py-0.5 text-xs rounded-full ${
-                    variant.isActive
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                      : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
-                  }`}>
-                    {variant.isActive ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
-                <p className='text-sm text-gray-600 dark:text-gray-400'>
-                  {formatAttributes(variant.attributes)}
-                </p>
-                <div className='flex items-center gap-4 mt-2 text-sm'>
-                  <span className='font-medium text-gray-900 dark:text-white'>
-                    {formatPrice(variant.price)}
-                  </span>
-                  <span className='text-gray-600 dark:text-gray-400'>
-                    Stock: {variant.stockQuantity || 0}
-                  </span>
-                  {variant.weight > 0 && (
-                    <span className='text-gray-600 dark:text-gray-400'>
-                      Weight: {variant.weight}kg
-                    </span>
+              <div className='flex items-start gap-4'>
+                {/* Variant Image */}
+                <div className='flex-shrink-0'>
+                  {variant.imageUrls && variant.imageUrls.length > 0 ? (
+                    <div className='relative group'>
+                      <img
+                        src={variant.imageUrls[0]}
+                        alt={variant.sku}
+                        className='w-16 h-16 object-cover rounded-lg border border-gray-200 dark:border-gray-700'
+                      />
+                      <button
+                        onClick={() => handleVariantImageDelete(variant._id, variant.imageUrls[0])}
+                        className='absolute -top-1 -right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity'
+                        title='Remove image'
+                        disabled={uploadingImage}
+                      >
+                        <X className='w-3 h-3' />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className='w-16 h-16 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-colors'>
+                      <input
+                        type='file'
+                        accept='image/jpeg,image/png,image/webp'
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleVariantImageUpload(variant._id, file);
+                        }}
+                        className='hidden'
+                      />
+                      <Image className='w-5 h-5 text-gray-400' />
+                      <span className='text-[10px] text-gray-400 mt-1'>Add</span>
+                    </label>
                   )}
                 </div>
-              </div>
-              <div className='flex items-center gap-2'>
-                <Button
-                  onClick={() => {
-                    setSelectedVariant(variant);
-                    setShowDeleteDialog(true);
-                  }}
-                  variant='destructive'
-                  size='sm'
-                >
-                  <Trash2 className='w-4 h-4' />
-                </Button>
+
+                {/* Variant Info */}
+                <div className='flex-1 min-w-0'>
+                  <div className='flex items-center gap-3 mb-1'>
+                    <span className='font-mono text-sm font-semibold text-gray-900 dark:text-white'>
+                      {variant.sku}
+                    </span>
+                    <span className={`px-2 py-0.5 text-xs rounded-full ${
+                      variant.isActive
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                        : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+                    }`}>
+                      {variant.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                  <p className='text-sm text-gray-600 dark:text-gray-400'>
+                    {formatAttributes(variant.attributes)}
+                  </p>
+                  <div className='flex items-center gap-4 mt-2 text-sm'>
+                    <span className='font-medium text-gray-900 dark:text-white'>
+                      {formatPrice(variant.price)}
+                    </span>
+                    <span className='text-gray-600 dark:text-gray-400'>
+                      Stock: {variant.stockQuantity || 0}
+                    </span>
+                    {variant.weight > 0 && (
+                      <span className='text-gray-600 dark:text-gray-400'>
+                        Weight: {variant.weight}kg
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className='flex items-center gap-2'>
+                  {/* Upload/Change Image Button */}
+                  <label className='cursor-pointer'>
+                    <input
+                      type='file'
+                      accept='image/jpeg,image/png,image/webp'
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleVariantImageUpload(variant._id, file);
+                      }}
+                      className='hidden'
+                    />
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      asChild
+                    >
+                      <span>
+                        <Upload className='w-4 h-4' />
+                      </span>
+                    </Button>
+                  </label>
+                  <Button
+                    onClick={() => {
+                      setSelectedVariant(variant);
+                      setShowDeleteDialog(true);
+                    }}
+                    variant='destructive'
+                    size='sm'
+                  >
+                    <Trash2 className='w-4 h-4' />
+                  </Button>
+                </div>
               </div>
             </div>
           ))}
