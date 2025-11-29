@@ -18,13 +18,26 @@ const getReviewsByProductId = async ({
     limit = 10,
     sort = 'newest',
     filterRating = null,
+    currentUserId = null, // Optional: include this user's reviews regardless of status
 }) => {
     const skip = (page - 1) * limit;
 
-    const query = {
-        productId: new Types.ObjectId(productId),
-        status: 'approved',
-    };
+    // Build query: approved reviews OR current user's own reviews (any status)
+    let query;
+    if (currentUserId) {
+        query = {
+            productId: new Types.ObjectId(productId),
+            $or: [
+                { status: 'approved' },
+                { userId: new Types.ObjectId(currentUserId) }
+            ]
+        };
+    } else {
+        query = {
+            productId: new Types.ObjectId(productId),
+            status: 'approved',
+        };
+    }
 
     if (filterRating) {
         query.rating = filterRating;

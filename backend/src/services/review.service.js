@@ -193,6 +193,7 @@ const getReviewsByProductId = async ({
     limit,
     sort,
     filterRating,
+    currentUserId = null,
 }) => {
     return await reviewRepo.getReviewsByProductId({
         productId,
@@ -200,6 +201,7 @@ const getReviewsByProductId = async ({
         limit,
         sort,
         filterRating,
+        currentUserId,
     });
 };
 
