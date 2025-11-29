@@ -103,11 +103,27 @@ const removeItem = async (req, res, next) => {
             { variantId, quantity }, // Truyền object itemData
         );
 
-        // [SOCKET] Logic bắn tin (Giữ nguyên như cũ)
+        // [SOCKET] Bắn tin cập nhật cho user (giống addItem)
         const socketUserId =
             req.user && req.user._id ? req.user._id.toString() : userId;
         if (socketUserId) {
-            // ... bắn socket emit "cart_updated"
+            try {
+                const io = socket.getIO();
+                
+                // Get fully populated cart for socket
+                const fullCart = await CartService.getCartByUserOrSession({ 
+                    userId: socketUserId, 
+                    sessionId: null 
+                });
+
+                io.to(`user_${socketUserId}`).emit('cart_updated', {
+                    action: 'remove_item',
+                    totalItems: updatedCart.totalItems,
+                    cart: fullCart || updatedCart,
+                });
+            } catch (socketErr) {
+                console.error('Socket emit error:', socketErr.message);
+            }
         }
 
         res.status(200).json(updatedCart);
