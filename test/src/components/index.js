@@ -8,7 +8,6 @@ export * from './ui/card';
 export * from './ui/input';
 export * from './ui/label';
 export * from './ui/sonner';
-export * from './ui/toaster';
 
 // Common Components (re-export for convenience)
 export * from './common';
