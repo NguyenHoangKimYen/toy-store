@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
-  getCartByUserId,
-  getCartBySessionId,
+  getCartByUser,
+  getCartBySession,
   createCart,
   addItemToCart,
   removeItemFromCart,
   clearCart,
+  socketService,
 } from "@/services";
 
 /**
@@ -21,7 +22,8 @@ export function useCart(userId = null) {
 
   // Refs for tracking state and pending operations
   const cartItemsRef = useRef([]);
-  const updateTimeoutsRef = useRef({});
+  const debouncedUpdateRef = useRef({});
+  const pendingQuantityRef = useRef({}); // Track what quantity we're aiming for
 
   // Session ID for guest carts
   const getSessionId = useCallback(() => {
@@ -35,18 +37,21 @@ export function useCart(userId = null) {
 
   /**
    * Fetch cart data and extract items
+   * @param {boolean} silent - If true, don't show loading state (for background refreshes)
    */
-  const fetchCart = useCallback(async () => {
-    setLoading(true);
+  const fetchCart = useCallback(async (silent = false) => {
+    if (!silent) {
+      setLoading(true);
+    }
     setError(null);
     try {
       let cartData = null;
 
       if (userId) {
-        cartData = await getCartByUserId(userId);
+        cartData = await getCartByUser(userId);
       } else {
         const sessionId = getSessionId();
-        cartData = await getCartBySessionId(sessionId);
+        cartData = await getCartBySession(sessionId);
       }
 
       if (cartData) {
@@ -96,6 +101,66 @@ export function useCart(userId = null) {
   }, [cart, userId, getSessionId]);
 
   /**
+   * Sync quantity change to backend (debounced helper)
+   */
+  const syncQuantityToBackend = useCallback(async (variantId) => {
+    const cartId = cart?._id || cart?.id;
+    if (!cartId) return;
+
+    // Get the server quantity
+    const serverItem = cartItemsRef.current.find((item) => {
+      const itemVariantId = item.variant?._id || item.variant?.id || item.variantId;
+      return itemVariantId === variantId;
+    });
+    
+    if (!serverItem) return;
+
+    // Get the target quantity from ref
+    const targetQty = pendingQuantityRef.current[variantId];
+    if (targetQty === undefined) return;
+
+    const diff = targetQty - serverItem.quantity;
+    if (diff === 0) {
+      delete pendingQuantityRef.current[variantId];
+      return;
+    }
+
+    setItemLoading((prev) => ({ ...prev, [variantId]: true }));
+
+    try {
+      if (diff > 0) {
+        await addItemToCart({ cartId, variantId, quantity: diff });
+      } else {
+        await removeItemFromCart(cartId, { variantId, quantity: Math.abs(diff) });
+      }
+      
+      // Update server state ref to match what we just sent
+      const updatedItems = cartItemsRef.current.map((item) => {
+        const itemVariantId = item.variant?._id || item.variant?.id || item.variantId;
+        if (itemVariantId === variantId) {
+          return { ...item, quantity: targetQty };
+        }
+        return item;
+      });
+      cartItemsRef.current = updatedItems;
+
+      // Broadcast to other tabs
+      socketService.broadcastCartUpdate({ ...cart, items: updatedItems });
+
+      // Clear the pending quantity
+      delete pendingQuantityRef.current[variantId];
+    } catch (err) {
+      console.error("Failed to update quantity:", err);
+      setError(err.message || "Failed to update quantity");
+      // Rollback on error
+      delete pendingQuantityRef.current[variantId];
+      await fetchCart(true);
+    } finally {
+      setItemLoading((prev) => ({ ...prev, [variantId]: false }));
+    }
+  }, [cart, fetchCart]);
+
+  /**
    * Add item to cart
    * @param {string} variantId - The variant ID to add
    * @param {number} quantity - Quantity to add (default: 1)
@@ -112,26 +177,35 @@ export function useCart(userId = null) {
       try {
         // Ensure we have a cart
         const currentCart = await ensureCart();
+        
+        // Get cart ID - handle both _id and id formats
+        const cartId = currentCart._id || currentCart.id;
+        
+        if (!cartId) {
+          console.error("addItem: cart ID not found", currentCart);
+          throw new Error("Cart ID not found");
+        }
 
         // Call API to add item
-        const updatedCart = await addItemToCart({
-          cartId: currentCart._id,
+        await addItemToCart({
+          cartId,
           variantId,
           quantity,
         });
 
-        // Update state with response
-        if (updatedCart) {
-          setCart(updatedCart);
-          const cartItems = updatedCart.items || [];
-          setItems(cartItems);
-          cartItemsRef.current = cartItems;
-        }
+        // Refetch cart to get fully populated items (silent - no loading spinner)
+        await fetchCart(true);
+
+        // Broadcast to other tabs
+        socketService.broadcastCartUpdate({
+          items: cartItemsRef.current,
+          totalItems: cartItemsRef.current.reduce((sum, item) => sum + item.quantity, 0),
+        });
       } catch (err) {
         console.error("Failed to add item to cart:", err);
         setError(err.message || "Failed to add item to cart");
-        // Refresh cart to get accurate state
-        await fetchCart();
+        // Refresh cart to get accurate state (silent - no loading spinner)
+        await fetchCart(true);
       } finally {
         setItemLoading((prev) => ({ ...prev, [variantId]: false }));
       }
@@ -146,7 +220,8 @@ export function useCart(userId = null) {
    */
   const removeItem = useCallback(
     async (variantId, quantity = 1) => {
-      if (!cart?._id || !variantId) {
+      const cartId = cart?._id || cart?.id;
+      if (!cartId || !variantId) {
         console.error("removeItem: cart and variantId are required");
         return;
       }
@@ -154,21 +229,23 @@ export function useCart(userId = null) {
       setItemLoading((prev) => ({ ...prev, [variantId]: true }));
 
       try {
-        const updatedCart = await removeItemFromCart(cart._id, {
+        await removeItemFromCart(cartId, {
           variantId,
           quantity,
         });
 
-        if (updatedCart) {
-          setCart(updatedCart);
-          const cartItems = updatedCart.items || [];
-          setItems(cartItems);
-          cartItemsRef.current = cartItems;
-        }
+        // Refetch cart to get fully populated items (silent - no loading spinner)
+        await fetchCart(true);
+
+        // Broadcast to other tabs
+        socketService.broadcastCartUpdate({
+          items: cartItemsRef.current,
+          totalItems: cartItemsRef.current.reduce((sum, item) => sum + item.quantity, 0),
+        });
       } catch (err) {
         console.error("Failed to remove item from cart:", err);
         setError(err.message || "Failed to remove item from cart");
-        await fetchCart();
+        await fetchCart(true);
       } finally {
         setItemLoading((prev) => ({ ...prev, [variantId]: false }));
       }
@@ -177,46 +254,21 @@ export function useCart(userId = null) {
   );
 
   /**
-   * Update item quantity (replaces the quantity entirely)
+   * Update item quantity - instant UI, debounced backend sync
    * @param {string} variantId - The variant ID to update
    * @param {number} newQuantity - New quantity to set
    */
   const updateItemQuantity = useCallback(
-    async (variantId, newQuantity) => {
-      if (!cart?._id || !variantId) {
-        console.error("updateItemQuantity: cart and variantId are required");
-        return;
-      }
+    (variantId, newQuantity) => {
+      if (!variantId) return;
 
-      // Find current item
-      const currentItem = items.find((item) => {
-        const itemVariantId =
-          typeof item.variantId === "object"
-            ? item.variantId._id
-            : item.variantId;
-        return itemVariantId === variantId;
-      });
+      // Store the latest target quantity
+      pendingQuantityRef.current[variantId] = newQuantity;
 
-      if (!currentItem) {
-        console.error("updateItemQuantity: item not found");
-        return;
-      }
-
-      const currentQuantity = currentItem.quantity;
-      const diff = newQuantity - currentQuantity;
-
-      // Cancel any pending update for this variant
-      if (updateTimeoutsRef.current[variantId]) {
-        clearTimeout(updateTimeoutsRef.current[variantId]);
-      }
-
-      // Optimistic update
+      // Instant optimistic UI update
       setItems((prevItems) =>
         prevItems.map((item) => {
-          const itemVariantId =
-            typeof item.variantId === "object"
-              ? item.variantId._id
-              : item.variantId;
+          const itemVariantId = item.variant?._id || item.variant?.id || item.variantId;
           if (itemVariantId === variantId) {
             return { ...item, quantity: newQuantity };
           }
@@ -224,44 +276,18 @@ export function useCart(userId = null) {
         })
       );
 
-      // Debounce the API call
-      updateTimeoutsRef.current[variantId] = setTimeout(async () => {
-        setItemLoading((prev) => ({ ...prev, [variantId]: true }));
+      // Clear existing timeout for this variant
+      if (debouncedUpdateRef.current[variantId]) {
+        clearTimeout(debouncedUpdateRef.current[variantId]);
+      }
 
-        try {
-          let updatedCart;
-          if (diff > 0) {
-            // Need to add more items
-            updatedCart = await addItemToCart({
-              cartId: cart._id,
-              variantId,
-              quantity: diff,
-            });
-          } else if (diff < 0) {
-            // Need to remove items
-            updatedCart = await removeItemFromCart(cart._id, {
-              variantId,
-              quantity: Math.abs(diff),
-            });
-          }
-
-          if (updatedCart) {
-            setCart(updatedCart);
-            const cartItems = updatedCart.items || [];
-            setItems(cartItems);
-            cartItemsRef.current = cartItems;
-          }
-        } catch (err) {
-          console.error("Failed to update item quantity:", err);
-          setError(err.message || "Failed to update quantity");
-          // Rollback on error
-          await fetchCart();
-        } finally {
-          setItemLoading((prev) => ({ ...prev, [variantId]: false }));
-        }
-      }, 500); // 500ms debounce
+      // Schedule new sync - it will read the latest value from pendingQuantityRef
+      debouncedUpdateRef.current[variantId] = setTimeout(() => {
+        syncQuantityToBackend(variantId);
+        delete debouncedUpdateRef.current[variantId];
+      }, 400);
     },
-    [cart, items, fetchCart]
+    [syncQuantityToBackend]
   );
 
   /**
@@ -270,17 +296,15 @@ export function useCart(userId = null) {
    */
   const removeItemCompletely = useCallback(
     async (variantId) => {
-      if (!cart?._id || !variantId) {
+      const cartId = cart?._id || cart?.id;
+      if (!cartId || !variantId) {
         console.error("removeItemCompletely: cart and variantId are required");
         return;
       }
 
-      // Find current item to get its quantity
+      // Find current item to get its quantity - backend transforms variantId → variant
       const currentItem = items.find((item) => {
-        const itemVariantId =
-          typeof item.variantId === "object"
-            ? item.variantId._id
-            : item.variantId;
+        const itemVariantId = item.variant?._id || item.variant?.id || item.variantId;
         return itemVariantId === variantId;
       });
 
@@ -299,22 +323,29 @@ export function useCart(userId = null) {
    * Clear all items from cart
    */
   const clearAllItems = useCallback(async () => {
-    if (!cart?._id) {
+    const cartId = cart?._id || cart?.id;
+    if (!cartId) {
       console.error("clearAllItems: no cart exists");
       return;
     }
 
     setLoading(true);
     try {
-      await clearCart(cart._id);
+      await clearCart(cartId);
       setItems([]);
       cartItemsRef.current = [];
-      // Refresh cart to get updated state
-      await fetchCart();
+      // Refresh cart to get updated state (silent - no loading spinner)
+      await fetchCart(true);
+
+      // Broadcast to other tabs
+      socketService.broadcastCartUpdate({
+        items: [],
+        totalItems: 0,
+      });
     } catch (err) {
       console.error("Failed to clear cart:", err);
       setError(err.message || "Failed to clear cart");
-      await fetchCart();
+      await fetchCart(true);
     } finally {
       setLoading(false);
     }
@@ -340,12 +371,12 @@ export function useCart(userId = null) {
 
   /**
    * Helper to get variant ID from an item
+   * Backend transforms variantId → variant in toJSON
    */
   const getItemVariantId = useCallback((item) => {
     if (!item) return null;
-    return typeof item.variantId === "object"
-      ? item.variantId._id
-      : item.variantId;
+    // After toJSON transform: item.variant is the variant object
+    return item.variant?._id || item.variant?.id || item.variantId;
   }, []);
 
   /**
@@ -371,14 +402,90 @@ export function useCart(userId = null) {
     [items, getItemVariantId]
   );
 
+  /**
+   * Flush all pending quantity updates immediately
+   * Call this before checkout to ensure cart is synced
+   */
+  const flushPendingUpdates = useCallback(async () => {
+    // Cancel all pending timeouts
+    Object.keys(debouncedUpdateRef.current).forEach((variantId) => {
+      clearTimeout(debouncedUpdateRef.current[variantId]);
+      delete debouncedUpdateRef.current[variantId];
+    });
+
+    // Sync all pending quantities
+    const pendingVariants = Object.keys(pendingQuantityRef.current);
+    if (pendingVariants.length === 0) return;
+
+    // Execute all syncs in parallel
+    await Promise.all(
+      pendingVariants.map((variantId) => syncQuantityToBackend(variantId))
+    );
+  }, [syncQuantityToBackend]);
+
   // Initial fetch
   useEffect(() => {
     fetchCart();
   }, [fetchCart]);
 
-  // Cleanup timeouts on unmount
+  // Socket.io - Listen for cart updates from other tabs/devices
   useEffect(() => {
-    const timeouts = updateTimeoutsRef.current;
+    if (!userId) {
+      console.log('⚠️ No userId - skipping socket connection');
+      return;
+    }
+
+    console.log('🔌 Connecting socket for user:', userId);
+    
+    // Connect socket
+    socketService.connect(userId);
+
+    // Listen for cart updates from socket (backend)
+    const handleCartUpdate = (data) => {
+      console.log('🔔 Cart updated via socket:', data);
+      console.log('Current cart items:', items.length);
+      
+      // Update cart state from socket data
+      if (data.cart) {
+        setCart(data.cart);
+        const cartItems = data.cart.items || [];
+        console.log('📦 New cart items from socket:', cartItems.length);
+        setItems(cartItems);
+        cartItemsRef.current = cartItems;
+      }
+    };
+
+    socketService.on('cart_updated', handleCartUpdate);
+
+    // Cleanup
+    return () => {
+      console.log('🔌 Disconnecting socket listener');
+      socketService.off('cart_updated', handleCartUpdate);
+    };
+  }, [userId, items.length]);
+
+  // BroadcastChannel - Listen for cart updates from other tabs (same browser)
+  useEffect(() => {
+    const handleBroadcast = (data) => {
+      console.log('📢 Cart updated via BroadcastChannel:', data);
+      if (data.items) {
+        setItems(data.items);
+        cartItemsRef.current = data.items;
+      }
+    };
+
+    // Subscribe to broadcast channel (returns unsubscribe function)
+    const unsubscribe = socketService.onCartUpdate(handleBroadcast);
+
+    // Cleanup
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    const timeouts = debouncedUpdateRef.current;
     return () => {
       Object.values(timeouts).forEach(clearTimeout);
     };
@@ -400,6 +507,7 @@ export function useCart(userId = null) {
     removeItemCompletely,
     clearAllItems,
     refetch: fetchCart,
+    flushPendingUpdates,
 
     // Computed
     cartSummary,
