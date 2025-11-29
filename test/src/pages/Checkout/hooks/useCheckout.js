@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useCart, useOrders, useAuth } from '@/hooks';
+import { useOrders, useAuth } from '@/hooks';
+import { useCartContext } from '@/context/CartProvider';
 import { ROUTES } from '@/config/routes';
 import { payByCash, getShippingFeeByUser } from '@/services';
 
 export const useCheckout = () => {
   const navigate = useNavigate();
-  const { cart, cartItems, cartSummary, loading: cartLoading, clearAllItems } = useCart();
+  const { cart, cartItems, cartSummary, loading: cartLoading, clearAllItems } = useCartContext();
   const { checkoutCart, loading: orderLoading } = useOrders();
   const { user } = useAuth();
   

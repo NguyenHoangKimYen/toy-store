@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { useCart as useGlobalCart } from '@/hooks';
+import { useCartContext } from '@/context/CartProvider';
 
 export const useCart = () => {
   const {
@@ -11,7 +11,7 @@ export const useCart = () => {
     updateItemQuantity,
     removeItem,
     clearAllItems,
-  } = useGlobalCart();
+  } = useCartContext();
 
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
@@ -23,9 +23,7 @@ export const useCart = () => {
   const handleUpdateQuantity = async (itemId, newQuantity) => {
     try {
       await updateItemQuantity(itemId, newQuantity);
-      
-      // Dispatch event to update navbar cart count
-      window.dispatchEvent(new Event('cartUpdated'));
+      // No need to dispatch event - context handles reactivity
     } catch (err) {
       console.error('Error updating quantity:', err);
       toast.error('Failed to update quantity', {
@@ -46,9 +44,7 @@ export const useCart = () => {
       await removeItem(itemToRemove);
       
       toast.success('Item removed from cart');
-      
-      // Dispatch event to update navbar cart count
-      window.dispatchEvent(new Event('cartUpdated'));
+      // No need to dispatch event - context handles reactivity
     } catch (err) {
       console.error('Error removing item:', err);
       toast.error('Remove failed', {
@@ -69,9 +65,7 @@ export const useCart = () => {
       await clearAllItems();
       
       toast.success('Cart cleared');
-      
-      // Dispatch event to update navbar cart count
-      window.dispatchEvent(new Event('cartUpdated'));
+      // No need to dispatch event - context handles reactivity
     } catch (err) {
       console.error('Error clearing cart:', err);
       toast.error('Clear failed', {

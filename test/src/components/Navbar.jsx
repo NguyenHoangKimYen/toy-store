@@ -4,7 +4,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { getCategories } from '@/services/categories.service'
 import { useAuth } from '@/hooks/useAuth'
-import { useCart } from '@/hooks/useCart'
+import { useCartContext } from '@/context/CartProvider'
 import './Navbar.css'
 
 // Navigation links configuration
@@ -24,7 +24,7 @@ const USER_MENU_LINKS = [
 const Navbar = () => {
     const navigate = useNavigate()
     const { user, logout: authLogout } = useAuth()
-    const { cartSummary } = useCart()
+    const { cartSummary } = useCartContext()
     const [showSearch, setShowSearch] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [showMobileMenu, setShowMobileMenu] = useState(false)

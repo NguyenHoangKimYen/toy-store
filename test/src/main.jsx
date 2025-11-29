@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.jsx'
 import AppRoutes from './routes/AppRoutes'
 import { AuthProvider } from './context/AuthProvider'
+import { CartProvider } from './context/CartProvider'
 import { initAPIPreconnect } from './utils/prefetch'
 import { initPerformanceTracking } from './utils/performance'
 
@@ -39,7 +40,9 @@ async function enableMocking() {
 enableMocking().then(() => {
   createRoot(document.getElementById('root')).render(
     <AuthProvider>
-      <App />
+      <CartProvider>
+        <App />
+      </CartProvider>
     </AuthProvider>
   );
 });
