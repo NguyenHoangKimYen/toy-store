@@ -58,12 +58,12 @@ const addItem = async (req, res, next) => {
         // 1. Save to DB
         const updatedCart = await CartService.addItem(cartId, itemData);
 
-        // 2. [SOCKET] Bắn tin cập nhật cho user
-        // Ưu tiên lấy từ Token (req.user), nếu không có thì lấy từ Body (hỗ trợ test/guest)
+        // 2. [SOCKET] Emit update to user
+        // Priority: Token (req.user) > Cart's userId > Body (for testing)
         const socketUserId =
-            req.user && req.user._id
+            (req.user && req.user._id)
                 ? req.user._id.toString()
-                : req.body.userId;
+                : (updatedCart.userId ? updatedCart.userId.toString() : req.body.userId);
 
         if (socketUserId) {
             try {
@@ -74,10 +74,12 @@ const addItem = async (req, res, next) => {
                     totalItems: updatedCart.totalItems,
                     cart: updatedCart,
                 });
+                console.log(`📤 Socket emitted cart_updated to user_${socketUserId}`);
             } catch (socketErr) {
-                // Vẫn nên giữ console.error để biết nếu socket bị lỗi hệ thống
                 console.error('Socket emit error:', socketErr.message);
             }
+        } else {
+            console.log('⚠️ No userId for socket emit (guest cart)');
         }
 
         return res.status(200).json({
@@ -93,19 +95,21 @@ const addItem = async (req, res, next) => {
 const removeItem = async (req, res, next) => {
     try {
         const { cartId } = req.params;
-        // Body bây giờ chỉ cần variantId và quantity (giống hệt add-item)
-        // userId có thể lấy từ token hoặc body để bắn socket
-        const { variantId, quantity, userId } = req.body;
+        const { variantId, quantity } = req.body;
 
-        // Gọi service
+        // Call service
         const updatedCart = await CartService.removeItem(
             cartId,
-            { variantId, quantity }, // Truyền object itemData
+            { variantId, quantity },
         );
 
-        // [SOCKET] Bắn tin cập nhật cho user (giống addItem)
+        // [SOCKET] Emit update to user
+        // Priority: Token (req.user) > Cart's userId
         const socketUserId =
-            req.user && req.user._id ? req.user._id.toString() : userId;
+            (req.user && req.user._id) 
+                ? req.user._id.toString() 
+                : (updatedCart.userId ? updatedCart.userId.toString() : null);
+                
         if (socketUserId) {
             try {
                 const io = socket.getIO();
@@ -121,9 +125,12 @@ const removeItem = async (req, res, next) => {
                     totalItems: updatedCart.totalItems,
                     cart: fullCart || updatedCart,
                 });
+                console.log(`📤 Socket emitted cart_updated to user_${socketUserId}`);
             } catch (socketErr) {
                 console.error('Socket emit error:', socketErr.message);
             }
+        } else {
+            console.log('⚠️ No userId for socket emit (guest cart)');
         }
 
         res.status(200).json(updatedCart);
@@ -137,16 +144,23 @@ const clearCart = async (req, res, next) => {
     try {
         const updated = await CartService.clearCart(req.params.cartId);
 
-        // [SOCKET] Emit a message when clearing the entire cart
-        if (req.user && req.user._id) {
+        // [SOCKET] Emit update to user
+        // Priority: Token (req.user) > Cart's userId
+        const socketUserId =
+            (req.user && req.user._id) 
+                ? req.user._id.toString() 
+                : (updated.userId ? updated.userId.toString() : null);
+
+        if (socketUserId) {
             try {
                 const io = socket.getIO();
-                io.to(`user_${req.user._id}`).emit('cart_updated', {
+                io.to(`user_${socketUserId}`).emit('cart_updated', {
                     action: 'clear_cart',
                     cart: updated,
                 });
+                console.log(`📤 Socket emitted cart_updated (clear) to user_${socketUserId}`);
             } catch (e) {
-                console.error(e);
+                console.error('Socket emit error:', e.message);
             }
         }
 
