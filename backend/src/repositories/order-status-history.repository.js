@@ -1,4 +1,4 @@
-const OrderStatusHistory = require('../models/order-status-history.model');
+const OrderStatusHistory = require("../models/order-status-history.model");
 
 module.exports = {
     add(orderId, status) {

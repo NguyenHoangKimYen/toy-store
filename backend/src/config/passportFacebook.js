@@ -1,6 +1,6 @@
-const passportFacebook = require('passport');
-const FacebookStrategy = require('passport-facebook').Strategy;
-const User = require('../models/user.model');
+const passportFacebook = require("passport");
+const FacebookStrategy = require("passport-facebook").Strategy;
+const User = require("../models/user.model");
 
 module.exports = function setupFacebookPassport() {
     passportFacebook.use(
@@ -23,6 +23,10 @@ module.exports = function setupFacebookPassport() {
                         profile.emails?.[0]?.value?.toLowerCase() || null;
                     const fullName = profile.displayName || 'Facebook User';
 
+                    // Trích xuất ảnh và kiểm tra có phải ảnh mặc định không
+                    const pictureData = profile.photos?.[0];
+                    const isSilhouette = pictureData?.is_silhouette ?? true;
+                    const facebookAvatar = pictureData?.value || null;
                     // Trích xuất ảnh và kiểm tra có phải ảnh mặc định không
                     const pictureData = profile.photos?.[0];
                     const isSilhouette = pictureData?.is_silhouette ?? true;

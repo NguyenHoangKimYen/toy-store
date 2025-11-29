@@ -8,6 +8,10 @@ const createCategory = async (req, res, next) => {
             req.body,
             req.files,
         );
+        const category = await categoryService.createCategory(
+            req.body,
+            req.files,
+        );
         res.status(201).json({ success: true, data: category });
     } catch (err) {
         next(err); // Chuyển lỗi cho error handler

@@ -150,7 +150,7 @@ const getProductById = async (id) => {
 const getProductBySlug = async (slug) => {
     const product = await productRepository.findBySlug(slug);
     if (!product) {
-        throw new Error('Product not found');
+        throw new Error("Product not found");
     }
     return product;
 };
@@ -216,6 +216,18 @@ const createProduct = async (productData, imgFiles) => {
             },
             { session },
         ); // Quan trọng: Truyền session
+        const newProduct = await productRepository.create(
+            {
+                ...productData,
+                slug: slugToCreate,
+                imageUrls: imageUrls,
+                variants: [],
+                attributes: [],
+                minPrice: 0,
+                maxPrice: 0,
+            },
+            { session },
+        ); // Quan trọng: Truyền session
 
         // 6. Xử lý Variants & Attributes
         let createdVariantIds = [];
@@ -260,6 +272,7 @@ const createProduct = async (productData, imgFiles) => {
                     stock: parseInt(v.stock || 0),
                     attributes: attrs,
                     imageUrls: [], // Chưa có ảnh
+                    imageUrls: [], // Chưa có ảnh
                 });
 
                 prices.push(parseFloat(v.price || 0));
@@ -298,7 +311,7 @@ const createProduct = async (productData, imgFiles) => {
         );
 
         // Recalculate totalStock within transaction (insertMany doesn't trigger save middleware)
-        const Variant = require('../models/variant.model');
+        const Variant = require("../models/variant.model");
         await Variant.recalculateProductData(newProduct._id);
 
         // 8. Commit Transaction (Lưu tất cả)
@@ -342,7 +355,7 @@ const deleteProduct = async (id) => {
  */
 const updateProduct = async (id, updateData) => {
     const existingProduct = await productRepository.findById(id);
-    if (!existingProduct) throw new Error('Product not found');
+    if (!existingProduct) throw new Error("Product not found");
 
     const validStatuses = ['Draft', 'Published', 'Archived', 'Disabled'];
 

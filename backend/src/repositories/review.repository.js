@@ -40,7 +40,6 @@ const getReviewsByProductId = async ({
         .limit(limit)
         .lean();
 
-    // Đếm tổng số để Frontend làm phân trang (1, 2, 3...)
     const totalCount = await Review.countDocuments(query);
 
     return {
@@ -65,6 +64,11 @@ const deleteReviewById = async (reviewId) => {
     return await Review.findByIdAndDelete(reviewId);
 };
 
+const getReviewedProductIdsByUser = async (userId) => {
+    const reviews = await Review.find({ userId: userId }).select("productId").lean();
+    return reviews.map(r => r.productId.toString());
+};
+
 module.exports = {
     createReview,
     findReviewByUserAndProduct,
@@ -72,4 +76,5 @@ module.exports = {
     findReviewById,
     updateReviewById,
     deleteReviewById,
+    getReviewedProductIdsByUser,
 };

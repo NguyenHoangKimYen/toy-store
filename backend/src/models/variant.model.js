@@ -33,6 +33,7 @@ const VariantSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.Decimal128,
             min: 0,
             default: 0,
+            default: 0,
         },
 
         stockQuantity: {
@@ -83,6 +84,9 @@ async function updateProductPrices(productId) {
         const prices = activeVariants.map((v) =>
             parseFloat(v.price.toString()),
         );
+        const prices = activeVariants.map((v) =>
+            parseFloat(v.price.toString()),
+        );
 
         minPrice = Math.min(...prices);
         maxPrice = Math.max(...prices);
@@ -101,6 +105,9 @@ async function updateProductPrices(productId) {
                 totalStock: totalStock,
             },
         },
+    );
+    console.log(
+        `Updated min/max price and totalStock for Product ${productId}: ${minPrice} - ${maxPrice}, Stock: ${totalStock}`,
     );
     console.log(
         `Updated min/max price and totalStock for Product ${productId}: ${minPrice} - ${maxPrice}, Stock: ${totalStock}`,

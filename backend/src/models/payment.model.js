@@ -2,11 +2,10 @@ const mongoose = require('mongoose');
 
 // Định nghĩa các phương thức thanh toán có thể có
 const PAYMENT_METHOD_ENUM = [
-    'cod', // Thanh toán khi nhận hàng
-    'credit_card',
-    'momo',
-    'zalopay',
-    'bank_transfer',
+    "momo",
+    "zalopay",
+    "vietqr",
+    "cashondelivery", // Thanh toán tiền mặt
 ];
 
 // Định nghĩa các trạng thái thanh toán

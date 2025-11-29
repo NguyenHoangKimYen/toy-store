@@ -14,13 +14,16 @@ router.put('/:id', auth, adminOnly, voucherController.updateVoucher);
 router.delete('/:id', auth, adminOnly, voucherController.deleteVoucher);
 
 // Admin lấy danh sách voucher
-router.get('/', auth, adminOnly, voucherController.getAllVouchers);
+router.get("/", auth, adminOnly, voucherController.getAllVouchers);
+
+// User xem danh sách voucher đang mở để thu thập
+router.get("/collectable", auth, voucherController.getCollectable);
 
 // User dùng được voucher nào
 router.get('/usable', auth, voucherController.getUsableVouchers);
 
 // User thu thập voucher
-router.post('/collect', auth, voucherController.collectVoucher);
+router.post("/collect", auth, voucherController.collectVoucher);
 1;
 // User xem voucher đã thu thập
 router.get('/mine', auth, voucherController.getMyVouchers);

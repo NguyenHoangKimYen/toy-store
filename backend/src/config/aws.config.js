@@ -1,4 +1,4 @@
-const AWS = require('aws-sdk');
+const AWS = require("aws-sdk");
 
 // Configure the shared AWS SDK instance once during boot
 AWS.config.update({

@@ -12,6 +12,32 @@ const getAllUsers = async (req, res, next) => {
     }
 };
 
+// GET USER BY ID (ADMIN ONLY)
+const getUserById = async (req, res, next) => {
+    try {
+        const { userId } = req.params;
+
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing user id",
+            });
+        }
+
+        const user = await userRepository.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        res.json({ success: true, data: user });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // CREATE USER (ADMIN ONLY)
 const createUser = async (req, res, next) => {
     try {
@@ -200,8 +226,57 @@ const updateAvatar = async (req, res, next) => {
     }
 };
 
+// CHECK USERNAME AVAILABILITY (PUBLIC)
+const checkUsername = async (req, res, next) => {
+    try {
+        const { username } = req.query;
+        
+        if (!username) {
+            return res.status(400).json({
+                success: false,
+                message: "Username is required"
+            });
+        }
+        
+        const existingUser = await userRepository.findByUsername(username);
+        
+        res.json({
+            success: true,
+            available: !existingUser,
+            message: existingUser ? "Username is already taken" : "Username is available"
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// CHECK EMAIL AVAILABILITY (PUBLIC)
+const checkEmail = async (req, res, next) => {
+    try {
+        const { email } = req.query;
+        
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: "Email is required"
+            });
+        }
+        
+        const existingUser = await userRepository.findByEmail(email);
+        
+        res.json({
+            success: true,
+            available: !existingUser,
+            message: existingUser ? "Email is already taken" : "Email is available"
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     getAllUsers,
+    getUserById,
     createUser,
     verifyUser,
     setUserPassword,
@@ -209,4 +284,6 @@ module.exports = {
     deleteUser,
     uploadAvatar,
     updateAvatar,
+    checkUsername,
+    checkEmail,
 };

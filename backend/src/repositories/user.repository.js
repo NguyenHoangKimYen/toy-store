@@ -4,31 +4,31 @@ const User = require('../models/user.model.js');
 const findAll = async (filter = {}, options = {}) => {
     return User.find(filter)
         .populate({
-            path: 'defaultAddressId',
-            select: 'fullName phone addressLine city postalCode isDefault',
+            path: "defaultAddressId",
+            select: "fullName phone addressLine city postalCode isDefault",
         })
         .skip(options.skip || 0)
         .limit(options.limit || 20)
         .sort(options.sort || { createdAt: -1 })
-        .select('-password'); //không trả về password
+        .select("-password"); //không trả về password
 };
 
 const findById = async (id) => {
     return User.findById(id)
         .populate({
-            path: 'defaultAddressId',
-            select: 'fullName phone addressLine city postalCode isDefault',
+            path: "defaultAddressId",
+            select: "fullName phone addressLine city postalCode isDefault",
         })
-        .select('-password'); //không trả về password
+        .select("-password"); //không trả về password
 };
 
 const findByEmail = async (email, includePassword = false) => {
     return User.findOne({ email })
         .populate({
-            path: 'defaultAddressId',
-            select: 'fullName phone addressLine city postalCode isDefault',
+            path: "defaultAddressId",
+            select: "fullName phone addressLine city postalCode isDefault",
         })
-        .select(includePassword ? '+password' : '-password'); //hiển thị hoặc không hiển thị password
+        .select(includePassword ? "+password" : "-password"); //hiển thị hoặc không hiển thị password
 };
 
 const findByEmailOrPhone = async (email, phone) => {
@@ -36,35 +36,35 @@ const findByEmailOrPhone = async (email, phone) => {
         $or: [{ email }, { phone }],
     })
         .populate({
-            path: 'defaultAddressId',
-            select: 'fullName phone addressLine city postalCode isDefault',
+            path: "defaultAddressId",
+            select: "fullName phone addressLine city postalCode isDefault",
         })
-        .select('-password');
+        .select("-password");
 };
 
 const findByPhone = async (phone, includePassword = false) => {
     return User.findOne({ phone })
         .populate({
-            path: 'defaultAddressId',
-            select: 'fullName phone addressLine city postalCode isDefault',
+            path: "defaultAddressId",
+            select: "fullName phone addressLine city postalCode isDefault",
         })
-        .select(includePassword ? '+password' : '-password'); //hiển thị hoặc không hiển thị password
+        .select(includePassword ? "+password" : "-password"); //hiển thị hoặc không hiển thị password
 };
 
 const findByUsername = async (username, includePassword = false) => {
-    return User.findOne({ username })
+    return User.findOne({ username: { $regex: new RegExp(`^${username}$`, 'i') } })
         .populate({
-            path: 'defaultAddressId',
-            select: 'fullName phone addressLine city postalCode isDefault',
+            path: "defaultAddressId",
+            select: "fullName phone addressLine city postalCode isDefault",
         })
-        .select(includePassword ? '+password' : '-password'); //hiển thị hoặc không hiển thị password
+        .select(includePassword ? "+password" : "-password");
 };
 
 // Tìm người dùng theo ID và bao gồm trường mật khẩu
 const findByIdWithPassword = async (id) => {
-    return User.findById(id).select('+password').populate({
-        path: 'defaultAddressId',
-        select: 'fullName phone addressLine city postalCode isDefault',
+    return User.findById(id).select("+password").populate({
+        path: "defaultAddressId",
+        select: "fullName phone addressLine city postalCode isDefault",
     });
 };
 
@@ -143,11 +143,11 @@ const findByIdWithSecrets = async (id) => {
     // Tìm người dùng theo ID bao gồm tất cả các trường bí mật
     return User.findById(id)
         .select(
-            '+password +resetTokenHash +resetTokenExpiresAt +resetOtpHash +resetOtpExpiresAt +changeEmailOldOtpHash +changeEmailOldOtpExpiresAt +verifyNewEmailTokenHash +verifyNewEmailExpiresAt +changePhoneOtpHash +changePhoneOtpExpiresAt',
+            "+password +resetTokenHash +resetTokenExpiresAt +resetOtpHash +resetOtpExpiresAt +changeEmailOldOtpHash +changeEmailOldOtpExpiresAt +verifyNewEmailTokenHash +verifyNewEmailExpiresAt +changePhoneOtpHash +changePhoneOtpExpiresAt",
         )
         .populate({
-            path: 'defaultAddressId',
-            select: 'fullName phone addressLine city postalCode isDefault',
+            path: "defaultAddressId",
+            select: "fullName phone addressLine city postalCode isDefault",
         });
 };
 
@@ -158,7 +158,7 @@ const incFailLogin = async (id) => {
         id,
         { $inc: { failLoginAttempts: 1 } },
         { new: true, runValidators: false },
-    ).select('+password'); //so sánh mật khẩu
+    ).select("+password"); //so sánh mật khẩu
 };
 
 const resetFailLogin = async (id) => {
@@ -277,13 +277,13 @@ const update = async (id, data) => {
     return User.findByIdAndUpdate(id, data, {
         new: true,
         runValidators: true,
-        context: 'query', //để các validator hoạt động đúng trong update
+        context: "query", //để các validator hoạt động đúng trong update
     })
         .populate({
-            path: 'defaultAddressId',
-            select: 'fullName phone addressLine city postalCode isDefault',
+            path: "defaultAddressId",
+            select: "fullName phone addressLine city postalCode isDefault",
         })
-        .select('-password'); //không trả về password
+        .select("-password"); //không trả về password
 };
 
 const remove = async (id) => {

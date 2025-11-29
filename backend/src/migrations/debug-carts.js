@@ -2,18 +2,18 @@
  * Debug script to check all carts and their userId/sessionId status
  */
 
-const mongoose = require('mongoose');
-require('dotenv').config();
+const mongoose = require("mongoose");
+require("dotenv").config();
 
 async function debugCarts() {
     try {
         const mongoUri =
-            process.env.MONGO_URI || 'mongodb://localhost:27017/milkybloom';
+            process.env.MONGO_URI || "mongodb://localhost:27017/milkybloom";
         await mongoose.connect(mongoUri);
-        console.log('✅ Connected to MongoDB');
+        console.log("✅ Connected to MongoDB");
 
         const db = mongoose.connection.db;
-        const cartsCollection = db.collection('carts');
+        const cartsCollection = db.collection("carts");
 
         const allCarts = await cartsCollection.find({}).toArray();
 
@@ -22,10 +22,10 @@ async function debugCarts() {
         allCarts.forEach((cart, index) => {
             console.log(`Cart ${index + 1}:`);
             console.log(`  _id: ${cart._id}`);
-            console.log(`  userId: ${cart.userId || 'null'}`);
-            console.log(`  sessionId: ${cart.sessionId || 'null'}`);
+            console.log(`  userId: ${cart.userId || "null"}`);
+            console.log(`  sessionId: ${cart.sessionId || "null"}`);
             console.log(`  items: ${cart.items?.length || 0}`);
-            console.log('');
+            console.log("");
         });
 
         const stats = {
@@ -40,7 +40,7 @@ async function debugCarts() {
             ).length,
         };
 
-        console.log('\n📊 Statistics:');
+        console.log("\n📊 Statistics:");
         console.log(`  Total carts: ${stats.total}`);
         console.log(`  With userId: ${stats.hasUserId}`);
         console.log(`  With sessionId: ${stats.hasSessionId}`);
@@ -50,9 +50,9 @@ async function debugCarts() {
         );
 
         await mongoose.disconnect();
-        console.log('\n✅ Disconnected from MongoDB');
+        console.log("\n✅ Disconnected from MongoDB");
     } catch (error) {
-        console.error('\n❌ Error:', error);
+        console.error("\n❌ Error:", error);
         process.exit(1);
     }
 }

@@ -1,11 +1,11 @@
-const Address = require('../models/address.model');
-const User = require('../models/user.model');
-const { calculateShippingFee } = require('../services/shipping.service.js');
-const { verifyAddress } = require('../utils/vietmap.helper.js');
+const Address = require("../models/address.model");
+const User = require("../models/user.model");
+const { calculateShippingFee } = require("../services/shipping.service.js");
+const { verifyAddress } = require("../utils/vietmap.helper.js");
 
 // Ghi log khi bị từ chối giao hoả tốc
 function logExpressRejected(context) {
-    const { userId = 'guest', province, region } = context;
+    const { userId = "guest", province, region } = context;
     console.warn(`${userId} - ${province} (${region}) không thể giao hoả tốc`);
 }
 
@@ -18,7 +18,7 @@ exports.calculateShippingFeeByUser = async (req, res) => {
         if (!user)
             return res
                 .status(404)
-                .json({ success: false, message: 'Không tìm thấy user' });
+                .json({ success: false, message: "Không tìm thấy user" });
 
         // Lấy địa chỉ mặc định
         let address = null;
@@ -29,17 +29,15 @@ exports.calculateShippingFeeByUser = async (req, res) => {
         }
 
         if (!address)
-            return res
-                .status(400)
-                .json({
-                    success: false,
-                    message: 'User chưa có địa chỉ mặc định',
-                });
+            return res.status(400).json({
+                success: false,
+                message: "User chưa có địa chỉ mặc định",
+            });
 
         const weightGram = Number(req.query.weightGram) || 1000;
         const orderValue = Number(req.query.orderValue) || 0;
-        const hasFreeship = req.query.hasFreeship === 'true';
-        const deliveryType = req.query.deliveryType || 'standard';
+        const hasFreeship = req.query.hasFreeship === "true";
+        const deliveryType = req.query.deliveryType || "standard";
 
         //Tự động định vị nếu thiếu toạ độ
         let { lat, lng } = address;
@@ -55,7 +53,7 @@ exports.calculateShippingFeeByUser = async (req, res) => {
             } else {
                 return res.status(400).json({
                     success: false,
-                    message: 'Không thể xác định tọa độ từ địa chỉ',
+                    message: "Không thể xác định tọa độ từ địa chỉ",
                 });
             }
         }
@@ -72,7 +70,7 @@ exports.calculateShippingFeeByUser = async (req, res) => {
             deliveryType,
         );
 
-        if (deliveryType === 'express' && !result.isExpressAllowed) {
+        if (deliveryType === "express" && !result.isExpressAllowed) {
             logExpressRejected({
                 userId,
                 province: address.city,
@@ -93,7 +91,7 @@ exports.calculateShippingFeeByUser = async (req, res) => {
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, message: 'Lỗi máy chủ' });
+        res.status(500).json({ success: false, message: "Lỗi máy chủ" });
     }
 };
 
@@ -123,7 +121,7 @@ exports.getShippingFee = async (req, res) => {
             } else {
                 return res.status(400).json({
                     success: false,
-                    message: 'Không thể xác định toạ độ từ địa chỉ',
+                    message: "Không thể xác định toạ độ từ địa chỉ",
                 });
             }
         }
@@ -133,11 +131,11 @@ exports.getShippingFee = async (req, res) => {
             { lat, lng, province, district },
             Number(weightGram) || 1000,
             Number(orderValue) || 0,
-            hasFreeship === true || hasFreeship === 'true',
-            deliveryType || 'standard',
+            hasFreeship === true || hasFreeship === "true",
+            deliveryType || "standard",
         );
 
-        if (deliveryType === 'express' && !result.isExpressAllowed) {
+        if (deliveryType === "express" && !result.isExpressAllowed) {
             logExpressRejected({ province, region: result.region });
         }
 

@@ -19,12 +19,21 @@ const generateUniqueUsername = async (profile) => {
         sanitize(fromEmail) || sanitize(fromName) || `google${profile.id}`;
     let candidate = base;
     let attempt = 0;
+    let base =
+        sanitize(fromEmail) || sanitize(fromName) || `google${profile.id}`;
+    let candidate = base;
+    let attempt = 0;
 
     while (await User.exists({ username: candidate })) {
         attempt++;
         candidate = `${base}${attempt}`;
     }
+    while (await User.exists({ username: candidate })) {
+        attempt++;
+        candidate = `${base}${attempt}`;
+    }
 
+    return candidate;
     return candidate;
 };
 
@@ -36,7 +45,16 @@ passport.use(
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
             callbackURL: process.env.GOOGLE_CALLBACK_URL,
         },
+    new GoogleStrategy(
+        {
+            clientID: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            callbackURL: process.env.GOOGLE_CALLBACK_URL,
+        },
 
+        async (accessToken, refreshToken, profile, done) => {
+            try {
+                const email = profile.emails?.[0]?.value;
         async (accessToken, refreshToken, profile, done) => {
             try {
                 const email = profile.emails?.[0]?.value;
@@ -52,6 +70,8 @@ passport.use(
                     process.env.DEFAULT_AVATAR_URL ||
                     'https://toy-store-project-of-springwang.s3.ap-southeast-2.amazonaws.com/defaults/unknownAvatar.png';
 
+                //KIỂM TRA EMAIL TRƯỚC
+                let user = await User.findOne({ email });
                 //KIỂM TRA EMAIL TRƯỚC
                 let user = await User.findOne({ email });
 
@@ -73,10 +93,16 @@ passport.use(
 
                     user.isVerified = true;
                     await user.save();
+                    user.isVerified = true;
+                    await user.save();
 
                     return done(null, user);
                 }
+                    return done(null, user);
+                }
 
+                //CHƯA TỒN TẠI → TẠO MỚI
+                const username = await generateUniqueUsername(profile);
                 //CHƯA TỒN TẠI → TẠO MỚI
                 const username = await generateUniqueUsername(profile);
 
@@ -111,10 +137,17 @@ passport.use(
 // SERIALIZE
 passport.serializeUser((user, done) => {
     done(null, user.id);
+    done(null, user.id);
 });
 
 // DESERIALIZE
 passport.deserializeUser(async (id, done) => {
+    try {
+        const user = await User.findById(id);
+        done(null, user);
+    } catch (err) {
+        done(err, null);
+    }
     try {
         const user = await User.findById(id);
         done(null, user);

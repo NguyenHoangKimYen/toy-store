@@ -1,12 +1,14 @@
 // const { Result } = require('pg');
 const authService = require('../services/auth.service.js');
 // const { expression } = require('joi');
-const { generateToken, sha256 } = require('../utils/token.js');
-const userRepository = require('../repositories/user.repository.js');
-const { mongo } = require('mongoose');
-const { message } = require('statuses');
+const { generateToken, sha256 } = require("../utils/token.js");
+const userRepository = require("../repositories/user.repository.js");
+const { mongo } = require("mongoose");
+const { message } = require("statuses");
+const jwt = require("jsonwebtoken");
 
 const resolveUserId = (req) =>
+   
     req.user?.id || req.params?.id || req.body?.userId;
 
 const register = async (req, res, next) => {
@@ -70,10 +72,38 @@ const verifyEmail = async (req, res, next) => {
         }
 
         await userRepository.accountIsVerified(uid);
-        return res.json({
-            success: true,
-            message: 'Email verified successfully! You can now login.',
+
+        if (!process.env.JWT_SECRET) {
+            return res.status(500).json({
+                success: false,
+                message: "JWT secret is not configured",
+            });
+        }
+
+        const loginToken = jwt.sign(
+            {
+                id: user._id,
+                email: user.email,
+                role: user.role,
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" },
+        );
+
+        const target = new URL("https://www.milkybloomtoystore.id.vn");
+        target.searchParams.set("verified", "true");
+        target.searchParams.set("token", loginToken);
+
+        res.cookie("token", loginToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none", // cho phép dùng giữa api.milkybloom... và www.milkybloom...
+            domain: ".milkybloomtoystore.id.vn",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            path: "/",
         });
+
+        return res.redirect(target.toString());
     } catch (err) {
         next(err);
     }
@@ -96,32 +126,32 @@ const login = async (req, res, next) => {
         }
 
         // Merge guest cart into user cart if sessionId provided
-        const sessionId = req.headers['x-session-id'] || req.body.sessionId;
+        const sessionId = req.headers["x-session-id"] || req.body.sessionId;
         console.log(
-            '🔑 Login - sessionId from header:',
+            "🔑 Login - sessionId from header:",
             sessionId,
-            'userId:',
+            "userId:",
             user._id,
         );
         if (sessionId && user._id) {
             try {
-                const cartService = require('../services/cart.service');
-                console.log('📞 Calling mergeGuestCartIntoUserCart...');
+                const cartService = require("../services/cart.service");
+                console.log("📞 Calling mergeGuestCartIntoUserCart...");
                 await cartService.mergeGuestCartIntoUserCart(
                     user._id,
                     sessionId,
                 );
-                console.log('✅ Cart merge completed successfully');
+                console.log("✅ Cart merge completed successfully");
                 // Clear the guest sessionId from client after merge
             } catch (cartError) {
-                console.error('❌ Error merging carts on login:', cartError);
+                console.error("❌ Error merging carts on login:", cartError);
                 // Don't fail login if cart merge fails
             }
         } else {
             console.log(
-                '⚠️ Skipping merge - sessionId:',
+                "⚠️ Skipping merge - sessionId:",
                 !!sessionId,
-                'userId:',
+                "userId:",
                 !!user._id,
             );
         }
@@ -176,10 +206,10 @@ const googleCallback = (req, res) => {
         const token = generateToken(req.user);
         res.status(200).json({ success: true, token });
     } catch (error) {
-        console.error('Google callback error:', error);
+        console.error("Google callback error:", error);
         res.status(500).json({
             success: false,
-            message: 'Google login failed',
+            message: "Google login failed",
         });
     }
 };
@@ -226,7 +256,7 @@ const requestOldEmailOtpController = async (req, res, next) => {
         if (!userId) {
             return res
                 .status(400)
-                .json({ success: false, message: 'User id is required' });
+                .json({ success: false, message: "User id is required" });
         }
         const result = await authService.requestChangeEmailOldOtp(userId);
         res.json({ success: true, ...result });
@@ -242,12 +272,12 @@ const verifyOldEmailOtpController = async (req, res, next) => {
         if (!userId) {
             return res
                 .status(400)
-                .json({ success: false, message: 'User id is required' });
+                .json({ success: false, message: "User id is required" });
         }
         if (!otp) {
             return res
                 .status(400)
-                .json({ success: false, message: 'OTP is required' });
+                .json({ success: false, message: "OTP is required" });
         }
         const result = await authService.verifyChangeEmailOldOtp(userId, otp);
         res.json({ success: true, ...result });
@@ -263,12 +293,12 @@ const requestNewEmailVerifyLinkController = async (req, res, next) => {
         if (!userId) {
             return res
                 .status(400)
-                .json({ success: false, message: 'User id is required' });
+                .json({ success: false, message: "User id is required" });
         }
         if (!newEmail) {
             return res
                 .status(400)
-                .json({ success: false, message: 'New email is required' });
+                .json({ success: false, message: "New email is required" });
         }
         const result = await authService.requestNewEmailVerifyLink(
             userId,
@@ -286,7 +316,7 @@ const confirmNewEmailController = async (req, res, next) => {
         if (!uid || !token) {
             return res
                 .status(400)
-                .json({ success: false, message: 'Missing uid or token' });
+                .json({ success: false, message: "Missing uid or token" });
         }
         const result = await authService.confirmNewEmail(uid, token);
         res.json({ success: true, ...result });

@@ -1,22 +1,22 @@
 function formatTag(id, value) {
-    const length = value.length.toString().padStart(2, '0');
+    const length = value.length.toString().padStart(2, "0");
     return `${id}${length}${value}`;
 }
 
 function generateVietQR({ bankBin, accountNumber, amount, content }) {
-    const payloadFormat = formatTag('00', '01');
-    const initMethod = formatTag('01', '11');
+    const payloadFormat = formatTag("00", "01");
+    const initMethod = formatTag("01", "11");
 
     const merchantInfo = formatTag(
-        '38',
-        formatTag('00', 'QRIBFTTA') +
-            formatTag('01', bankBin) +
-            formatTag('02', accountNumber),
+        "38",
+        formatTag("00", "QRIBFTTA") +
+            formatTag("01", bankBin) +
+            formatTag("02", accountNumber),
     );
 
-    const transAmount = formatTag('54', amount.toString());
-    const nationCode = formatTag('58', 'VN');
-    const addInfo = formatTag('62', formatTag('08', content));
+    const transAmount = formatTag("54", amount.toString());
+    const nationCode = formatTag("58", "VN");
+    const addInfo = formatTag("62", formatTag("08", content));
 
     let qrString =
         payloadFormat +
@@ -25,12 +25,12 @@ function generateVietQR({ bankBin, accountNumber, amount, content }) {
         transAmount +
         nationCode +
         addInfo +
-        '6304'; // Placeholder CRC
+        "6304"; // Placeholder CRC
 
     const crcValue = crc16XModem(qrString)
         .toString(16)
         .toUpperCase()
-        .padStart(4, '0');
+        .padStart(4, "0");
 
     return qrString + crcValue;
 }

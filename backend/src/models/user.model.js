@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-require('./address.model.js');
+const mongoose = require("mongoose");
+require("./address.model.js");
 
 const ROLE_ENUM = ['customer', 'admin'];
 
@@ -56,21 +56,21 @@ const userSchema = new mongoose.Schema(
         role: {
             type: String,
             enum: ROLE_ENUM,
-            default: 'customer',
-            set: (value) => (ROLE_ENUM.includes(value) ? value : 'customer'),
+            default: "customer",
+            set: (value) => (ROLE_ENUM.includes(value) ? value : "customer"),
         },
 
         isVerified: { type: Boolean, default: false },
 
         defaultAddressId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Address',
+            ref: "Address",
             default: null,
         },
 
         socialProvider: {
             type: String,
-            enum: ['google', 'facebook', 'github', 'apple', null],
+            enum: ["google", "facebook", "github", "apple", null],
             default: null,
         },
 
@@ -79,8 +79,8 @@ const userSchema = new mongoose.Schema(
         // Loyalty system
         loyaltyRank: {
             type: String,
-            enum: ['none', 'silver', 'gold', 'diamond'],
-            default: 'none',
+            enum: ["none", "silver", "gold", "diamond"],
+            default: "none",
         },
 
         loyaltyPoints: {
@@ -101,7 +101,7 @@ const userSchema = new mongoose.Schema(
 
         badges: [
             {
-                badgeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Badge' },
+                badgeId: { type: mongoose.Schema.Types.ObjectId, ref: "Badge" },
                 receivedAt: Date,
             },
         ],
@@ -136,4 +136,4 @@ userSchema.index({
     phone: 'text',
 });
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model("User", userSchema);

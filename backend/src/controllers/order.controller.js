@@ -1,6 +1,6 @@
-const orderService = require('../services/order.service');
-const loyaltyService = require('../services/loyalty.service');
-const badgeService = require('../services/badge.service');
+const orderService = require("../services/order.service");
+const loyaltyService = require("../services/loyalty.service");
+const badgeService = require("../services/badge.service");
 
 module.exports = {
     async create(req, res) {
@@ -20,13 +20,13 @@ module.exports = {
         if (!order)
             return res
                 .status(404)
-                .json({ success: false, message: 'Order not found' });
+                .json({ success: false, message: "Order not found" });
 
         return res.json({ success: true, order });
     },
 
     async getMyOrders(req, res) {
-        const orders = await orderService.getOrdersByUser(req.user._id);
+        const orders = await orderService.getOrdersByUser(req.user.id);
         return res.json({ success: true, orders });
     },
 
@@ -34,7 +34,7 @@ module.exports = {
     async checkoutFromCartForUser(req, res, next) {
         try {
             const userId = req.user.id;
-            const { addressId, discountCodeId, pointsToUse, voucherId } =
+            const { addressId, discountCodeId, pointsToUse, voucherId, paymentMethod, deliveryType } =
                 req.body;
 
             const detail = await orderService.createOrderFromCart({
@@ -43,6 +43,8 @@ module.exports = {
                 discountCodeId: discountCodeId || null,
                 voucherId: voucherId || null,
                 pointsToUse: Number(pointsToUse) || 0,
+                paymentMethod: paymentMethod || 'cashondelivery',
+                deliveryType: deliveryType || 'standard',
             });
 
             res.status(201).json({ success: true, data: detail });
@@ -54,7 +56,7 @@ module.exports = {
     // Checkout từ cart cho guest (session)
     async checkoutFromCartForGuest(req, res, next) {
         try {
-            const { sessionId, guestInfo, discountCodeId, pointsToUse } =
+            const { sessionId, guestInfo, discountCodeId, pointsToUse, paymentMethod } =
                 req.body;
 
             const detail = await orderService.createOrderFromCart({
@@ -62,6 +64,7 @@ module.exports = {
                 guestInfo,
                 discountCodeId: discountCodeId || null,
                 pointsToUse: Number(pointsToUse) || 0,
+                paymentMethod: paymentMethod || 'cashondelivery',
             });
 
             res.status(201).json({ success: true, data: detail });
@@ -84,7 +87,7 @@ module.exports = {
             if (!updated)
                 return res
                     .status(404)
-                    .json({ success: false, message: 'Order not found' });
+                    .json({ success: false, message: "Order not found" });
 
             return res.json({
                 success: true,
@@ -92,7 +95,66 @@ module.exports = {
                 newBadges: updated.newBadges || [],
             });
         } catch (err) {
-            console.error('Update Order Status Error:', err);
+            console.error("Update Order Status Error:", err);
+            return res
+                .status(500)
+                .json({ success: false, message: err.message });
+        }
+    },
+
+    async getOrdersByDiscountCode(req, res) {
+        try {
+            const { discountCodeId } = req.params;
+            const orders = await orderService.getOrdersByDiscountCode(discountCodeId);
+            return res.json({ success: true, orders });
+        } catch (err) {
+            console.error("Get Orders By Discount Code Error:", err);
+            return res
+                .status(500)
+                .json({ success: false, message: err.message });
+        }
+    },
+
+    async cancelOrder(req, res) {
+        try {
+            const orderId = req.params.id;
+            const userId = req.user?.id;
+            
+            // Get order to check ownership and status
+            const order = await orderService.getOrderDetail(orderId);
+            
+            if (!order) {
+                return res.status(404).json({ 
+                    success: false, 
+                    message: "Order not found" 
+                });
+            }
+            
+            // Check if user owns this order (unless admin)
+            if (req.user?.role !== 'admin' && order.userId.toString() !== userId) {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: "You can only cancel your own orders" 
+                });
+            }
+            
+            // Check if order can be cancelled
+            if (!['pending', 'confirmed'].includes(order.status)) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: `Cannot cancel order with status: ${order.status}` 
+                });
+            }
+            
+            // Cancel the order
+            const cancelled = await orderService.updateStatus(orderId, 'cancelled');
+            
+            return res.json({
+                success: true,
+                order: cancelled,
+            });
+        } catch (err) {
+            console.error("Cancel Order Error:", err);
             return res
                 .status(500)
                 .json({ success: false, message: err.message });

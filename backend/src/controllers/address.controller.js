@@ -1,8 +1,8 @@
-const { mongo } = require('mongoose');
-const addressService = require('../services/address.service.js');
-const addressRepository = require('../repositories/address.repository.js');
-const { verifyAddress } = require('../utils/vietmap.helper.js');
-const { date } = require('joi');
+const { mongo } = require("mongoose");
+const addressService = require("../services/address.service.js");
+const addressRepository = require("../repositories/address.repository.js");
+const { verifyAddress } = require("../utils/vietmap.helper.js");
+const { date } = require("joi");
 
 // Lấy tất cả địa chỉ (có thể lọc theo userId)
 const getAllAddresses = async (req, res, next) => {
@@ -36,6 +36,7 @@ const getAddressesByUserId = async (req, res, next) => {
 
         return res.json({ success: true, data: addresses });
     } catch (error) {
+    } catch (error) {
         return next(error);
     }
 };
@@ -59,6 +60,7 @@ const getAddressById = async (req, res, next) => {
 
         return res.json({ success: true, data: address });
     } catch (error) {
+    } catch (error) {
         return next(error);
     }
 };
@@ -71,16 +73,16 @@ const createAddress = async (req, res, next) => {
         //Kiem tra dia chi hop le
         const { valid, formatted, lat, lng } = await verifyAddress(addressLine);
         if (!valid) {
-            console.warn('VietMap xác minh thất bại cho:', addressLine);
+            console.warn("VietMap xác minh thất bại cho:", addressLine);
             return res.status(400).json({
                 success: false,
-                message: 'Địa chỉ không hợp lệ!',
+                message: "Địa chỉ không hợp lệ!",
             });
         }
 
         req.body.addressLine = formatted;
-        req.body.lat = typeof lat === 'number' ? lat : null;
-        req.body.lng = typeof lng === 'number' ? lng : null;
+        req.body.lat = typeof lat === "number" ? lat : null;
+        req.body.lng = typeof lng === "number" ? lng : null;
 
         const address = await addressService.createAddress(req.body);
         res.status(201).json({
@@ -108,6 +110,9 @@ const updateAddress = async (req, res, next) => {
             const { valid, formatted, lat, lng } = await verifyAddress(
                 req.body.addressLine,
             );
+            const { valid, formatted, lat, lng } = await verifyAddress(
+                req.body.addressLine,
+            );
             if (!valid) {
                 console.warn(
                     'VietMap xác minh thất bại cho:',
@@ -120,8 +125,8 @@ const updateAddress = async (req, res, next) => {
             }
 
             req.body.addressLine = formatted;
-            req.body.lat = typeof lat === 'number' ? lat : null;
-            req.body.lng = typeof lng === 'number' ? lng : null;
+            req.body.lat = typeof lat === "number" ? lat : null;
+            req.body.lng = typeof lng === "number" ? lng : null;
         }
 
         const address = await addressService.updateAddress(id, req.body);
@@ -140,7 +145,7 @@ const updateAddress = async (req, res, next) => {
             data: address,
         });
     } catch (error) {
-        console.error('updateAddress error:', error);
+        console.error("updateAddress error:", error);
         return next(error);
     }
 };
@@ -166,6 +171,10 @@ const setDefaultAddress = async (req, res, next) => {
             userId,
             addressId,
         );
+        const updated = await addressService.setDefaultAddress(
+            userId,
+            addressId,
+        );
         if (!updated) {
             return res
                 .status(404)
@@ -180,6 +189,7 @@ const setDefaultAddress = async (req, res, next) => {
             message: 'Default address updated successfully',
             data: updated,
         });
+    } catch (error) {
     } catch (error) {
         return next(error);
     }

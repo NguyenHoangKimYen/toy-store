@@ -1,22 +1,53 @@
-const orderRepository = require('../repositories/order.repository');
-const itemRepo = require('../repositories/order-item.repository');
-const historyRepo = require('../repositories/order-status-history.repository');
-const bcrypt = require('bcrypt');
-const userRepository = require('../repositories/user.repository.js');
-const addressRepo = require('../repositories/address.repository');
-const paymentRepo = require('../repositories/payment.repository');
-const { sendMail } = require('../libs/mailer.js');
-const { calculateShippingFee } = require('../services/shipping.service');
-const { getWeatherCondition } = require('../services/weather.service');
-const cartRepository = require('../repositories/cart.repository');
-const cartItemRepository = require('../repositories/cart-item.repository');
-const loyaltyService = require('../services/loyalty.service');
-const badgeService = require('../services/badge.service');
-const CoinTransactionRepository = require('../repositories/coin-transaction.repository');
-const discountCodeRepository = require('../repositories/discount-code.repository');
-const { checkAndAssignBadges } = require('../services/badge.service');
-const voucherRepository = require('../repositories/voucher.repository');
-const userVoucherRepository = require('../repositories/user-voucher.repository');
+const orderRepository = require("../repositories/order.repository");
+const itemRepo = require("../repositories/order-item.repository");
+const historyRepo = require("../repositories/order-status-history.repository");
+const bcrypt = require("bcrypt");
+const userRepository = require("../repositories/user.repository.js");
+const addressRepo = require("../repositories/address.repository");
+const paymentRepo = require("../repositories/payment.repository");
+const { sendMail } = require("../libs/mailer.js");
+const { generateToken, sha256 } = require("../utils/token.js");
+const { calculateShippingFee } = require("../services/shipping.service");
+const { getWeatherCondition } = require("../services/weather.service");
+const cartRepository = require("../repositories/cart.repository");
+const cartItemRepository = require("../repositories/cart-item.repository");
+const loyaltyService = require("../services/loyalty.service");
+const badgeService = require("../services/badge.service");
+const CoinTransactionRepository = require("../repositories/coin-transaction.repository");
+const discountCodeService = require("../services/discount-code.service");
+const { checkAndAssignBadges } = require("../services/badge.service");
+const voucherRepository = require("../repositories/voucher.repository");
+const userVoucherRepository = require("../repositories/user-voucher.repository");
+
+const VERIFY_TTL_MINUTES = Number(process.env.VERIFY_TTL_MINUTES || 15);
+const BACKEND_URL =
+    process.env.BACKEND_URL ||
+    process.env.BASE_URL ||
+    "https://api.milkybloomtoystore.id.vn";
+
+async function sendVerifyEmail(user) {
+    const token = generateToken();
+    const tokenHash = sha256("verify:" + token);
+    const expiresAt = new Date(Date.now() + VERIFY_TTL_MINUTES * 60 * 1000);
+
+    await userRepository.setResetToken(user._id, { tokenHash, expiresAt });
+
+    const verifyLink = `${BACKEND_URL}/api/auth/verify-email?uid=${user._id}&token=${token}`;
+    try {
+        await sendMail({
+            to: user.email,
+            subject: "Xác thực email đặt hàng MilkyBloom",
+            html: `
+                <p>Xin chào ${user.fullName || "bạn"},</p>
+                <p>Vui lòng xác thực email trước khi hoàn tất đặt hàng:</p>
+                <p><a href="${verifyLink}">${verifyLink}</a></p>
+                <p>Liên kết có hiệu lực ${VERIFY_TTL_MINUTES} phút.</p>
+            `,
+        });
+    } catch (err) {
+        console.error("[MAIL ERROR][VERIFY EMAIL GUEST]", err?.message || err);
+    }
+}
 
 module.exports = {
     async createOrGetUserForGuest({ fullName, email, phone }) {
@@ -83,11 +114,13 @@ module.exports = {
         else if (sessionId)
             cart = await cartRepository.findCartBySessionId(sessionId);
 
-        if (!cart) throw new Error('Cart not found');
+        if (!cart) throw new Error("Cart not found");
 
         const cartItems = await cartItemRepository.getAllByCartId(cart._id);
         if (!cartItems || cartItems.length === 0)
             throw new Error('Cart is empty');
+        if (!cartItems || cartItems.length === 0)
+            throw new Error("Cart is empty");
 
         // Convert CartItem -> OrderItems
         let totalAmount = 0;
@@ -137,10 +170,21 @@ module.exports = {
             paymentMethod,
             deliveryType,
         } = data;
+
+        // Chuẩn hóa COD naming để khớp với luồng thanh toán
+        if (
+            paymentMethod === "cod" ||
+            paymentMethod === "cash" ||
+            paymentMethod === "cashondelivery"
+        ) {
+            paymentMethod = "cashondelivery";
+        }
         let shippingAddress = null;
 
         if (!['standard', 'express'].includes(deliveryType))
             deliveryType = 'standard';
+        if (!["standard", "express"].includes(deliveryType))
+            deliveryType = "standard";
 
         // CASE USER LOGIN
         if (userId && !guestInfo) {
@@ -148,6 +192,9 @@ module.exports = {
                 const defaultAddr =
                     await addressRepo.findDefaultByUserId(userId);
                 if (!defaultAddr) throw new Error('NO_DEFAULT_ADDRESS');
+                const defaultAddr =
+                    await addressRepo.findDefaultByUserId(userId);
+                if (!defaultAddr) throw new Error("NO_DEFAULT_ADDRESS");
                 addressId = defaultAddr._id;
                 shippingAddress = defaultAddr;
             }
@@ -179,6 +226,7 @@ module.exports = {
                 lat: guestInfo.lat,
                 lng: guestInfo.lng,
                 isDefault: isFirstAddress,
+                isDefault: isFirstAddress,
             });
 
             if (isFirstAddress) {
@@ -189,6 +237,15 @@ module.exports = {
 
             addressId = addr._id;
             shippingAddress = addr;
+
+            // Yêu cầu xác thực email trước khi tiếp tục
+            if (!user.isVerified) {
+                await sendVerifyEmail(user);
+                throw Object.assign(
+                    new Error("Vui lòng xác thực email trước khi đặt hàng."),
+                    { status: 400, code: "EMAIL_NOT_VERIFIED" },
+                );
+            }
         }
 
         if (!shippingAddress) throw new Error('SHIPPING_ADDRESS_NOT_FOUND');
@@ -236,12 +293,12 @@ module.exports = {
         let discountAmount = 0;
 
         if (discountCodeId) {
-            const discount = await discountCodeRepository.validateAndApply(
-                discountCodeId,
+            const discount = await discountCodeService.validateAndApply({
                 userId,
-                goodsTotal,
-            );
-            discountAmount = discount.discountAmount || 0;
+                discountCodeId,
+                orderAmount: goodsTotal,
+            });
+            discountAmount = discount.discountValue || 0;
         }
 
         // ⭐ XỬ LÝ COLLECTED VOUCHER
@@ -266,17 +323,20 @@ module.exports = {
             }
 
             const voucher = await voucherRepository.findById(voucherId);
+            if (!voucher) throw new Error("Voucher không tồn tại.");
 
-            if (!voucher || voucher.expiredAt < new Date()) {
-                throw new Error('Voucher đã hết hạn.');
-            }
+            const now = new Date();
+            const startAt = voucher.startDate || voucher.createdAt || now;
+            const endAt = voucher.endDate || voucher.expiredAt;
+            if (startAt && startAt > now) throw new Error("Voucher chưa bắt đầu.");
+            if (endAt && endAt < now) throw new Error("Voucher đã hết hạn.");
 
             // Tính giảm giá
             if (voucher.type === 'fixed') {
                 voucherDiscount = voucher.value;
             }
 
-            if (voucher.type === 'percent') {
+            if (voucher.type === "percent") {
                 voucherDiscount = Math.floor(
                     goodsTotal * (voucher.value / 100),
                 );
@@ -297,8 +357,8 @@ module.exports = {
 
         const goodsAfterDiscount = Math.max(
             goodsTotal - discountAmount - coinDiscount - voucherDiscount,
-            0,
-        )(goodsTotal - discountAmount - coinDiscount - voucherDiscount, 0);
+            0
+        );
 
         // TÍNH PHÍ SHIP
         const ship = await calculateShippingFee(
@@ -405,8 +465,21 @@ module.exports = {
     },
 
     // Lấy toàn bộ đơn của user
-    getOrdersByUser(userId) {
-        return orderRepository.findByUser(userId);
+    async getOrdersByUser(userId) {
+        const orders = await orderRepository.findByUser(userId);
+        
+        // Populate items for each order
+        const ordersWithItems = await Promise.all(
+            orders.map(async (order) => {
+                const items = await itemRepo.findByOrder(order._id);
+                return {
+                    ...order,
+                    items
+                };
+            })
+        );
+        
+        return ordersWithItems;
     },
 
     // Admin: lấy tất cả
@@ -417,6 +490,45 @@ module.exports = {
     async updateStatus(orderId, newStatus) {
         const updated = await orderRepository.updateStatus(orderId, newStatus);
         if (!updated) return null;
+
+        // COD/cashondelivery: chỉ ghi nhận đã thanh toán khi giao/hoàn tất
+        if (
+            (updated.paymentMethod === "cashondelivery" ||
+                updated.paymentMethod === "cod" ||
+                updated.paymentMethod === "cash") &&
+            updated.paymentStatus !== "paid" &&
+            (newStatus === "delivered" || newStatus === "completed")
+        ) {
+            const now = new Date();
+
+            await orderRepository.updatePaymentStatus(orderId, {
+                status: newStatus,
+                paymentStatus: "paid",
+                paymentMethod: "cashondelivery",
+            });
+
+            const existingPayment = await paymentRepo.findByOrderId(orderId);
+            const txId = existingPayment?.transactionId || `CASH-${orderId}`;
+
+            const paymentPayload = {
+                method: "cashondelivery",
+                status: "success",
+                transactionId: txId,
+                paidAt: now,
+            };
+
+            if (existingPayment) {
+                await paymentRepo.updateByOrderId(orderId, paymentPayload);
+            } else {
+                await paymentRepo.create({
+                    orderId,
+                    ...paymentPayload,
+                });
+            }
+
+            updated.paymentStatus = "paid";
+            updated.paymentMethod = "cashondelivery";
+        }
 
         await historyRepo.add(orderId, newStatus);
 
@@ -462,4 +574,10 @@ module.exports = {
 
         return updated;
     },
+
+    async getOrdersByDiscountCode(discountCodeId) {
+        const orders = await orderRepository.findByDiscountCode(discountCodeId);
+        return orders;
+    }
+
 };

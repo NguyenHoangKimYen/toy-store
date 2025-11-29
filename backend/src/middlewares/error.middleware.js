@@ -2,12 +2,12 @@ const multer = require('multer');
 
 const errorHandler = (err, req, res, next) => {
     if (err instanceof multer.MulterError) {
-        if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-            if (err.field === 'categoryImages') {
+        if (err.code === "LIMIT_UNEXPECTED_FILE") {
+            if (err.field === "categoryImages") {
                 return res.status(400).json({
                     success: false,
                     message:
-                        'You are only allowed to upload a maximum of 1 image for the category!',
+                        "You are only allowed to upload a maximum of 1 image for the category!",
                 });
             }
 
@@ -18,11 +18,11 @@ const errorHandler = (err, req, res, next) => {
         }
 
         // Error: LIMIT_FILE_SIZE (File is too large)
-        if (err.code === 'LIMIT_FILE_SIZE') {
+        if (err.code === "LIMIT_FILE_SIZE") {
             return res.status(400).json({
                 success: false,
                 message:
-                    'Image file is too large! Please choose a smaller image.',
+                    "Image file is too large! Please choose a smaller image.",
             });
         }
     }

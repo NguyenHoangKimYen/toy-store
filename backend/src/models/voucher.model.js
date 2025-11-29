@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const voucherSchema = new mongoose.Schema(
     {
         name: String,
-        type: { type: String, enum: ['percent', 'fixed'] },
+        type: { type: String, enum: ["percent", "fixed"] },
         value: Number,
         maxDiscount: Number,
         minOrderValue: Number,
@@ -15,7 +15,7 @@ const voucherSchema = new mongoose.Schema(
         isCollectable: Boolean, // như Shopee collect voucher
         eventId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Event',
+            ref: "Event",
             default: null,
         },
     },

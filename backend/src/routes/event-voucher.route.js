@@ -13,7 +13,7 @@ router.put('/events/:id', auth, adminOnly, eventVoucherController.updateEvent);
 
 // Admin xoá event
 router.delete(
-    '/events/:id',
+    "/events/:id",
     auth,
     adminOnly,
     eventVoucherController.deleteEvent,
@@ -24,7 +24,7 @@ router.get('/events', auth, adminOnly, eventVoucherController.getEvents);
 
 // User xem voucher từ event (những voucher hợp lệ / đang chạy)
 router.get(
-    '/events/active-vouchers',
+    "/events/active-vouchers",
     auth,
     eventVoucherController.getActiveVouchers,
 );

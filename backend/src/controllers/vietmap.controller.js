@@ -1,4 +1,4 @@
-const { suggestAddress } = require('../utils/vietmap.helper.js');
+const { suggestAddress } = require("../utils/vietmap.helper.js");
 
 // GET /api/addresses/suggest?text=76/12 Bà Hom
 const getAddressSuggestions = async (req, res, next) => {
@@ -6,10 +6,10 @@ const getAddressSuggestions = async (req, res, next) => {
         let { text } = req.query;
 
         // Chuẩn hóa input
-        if (!text || typeof text !== 'string') {
+        if (!text || typeof text !== "string") {
             return res.status(400).json({
                 success: false,
-                message: 'Missing address text parameter',
+                message: "Missing address text parameter",
             });
         }
 
@@ -17,7 +17,7 @@ const getAddressSuggestions = async (req, res, next) => {
         if (text.length < 2) {
             return res.status(400).json({
                 success: false,
-                message: 'Please enter at least 2 characters to search address',
+                message: "Please enter at least 2 characters to search address",
             });
         }
 
@@ -29,7 +29,7 @@ const getAddressSuggestions = async (req, res, next) => {
             data: suggestions,
         });
     } catch (error) {
-        console.error('getAddressSuggestions error:', error.message);
+        console.error("getAddressSuggestions error:", error.message);
         next(error);
     }
 };
