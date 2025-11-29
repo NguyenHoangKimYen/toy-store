@@ -394,64 +394,72 @@ const Navbar = () => {
         )
     )
 
+    const [showUserMenu, setShowUserMenu] = useState(false);
+
     // Render user dropdown menu - with mobile click support
     const renderUserMenu = () => (
-        <div className='navbar-user-menu group relative'>
+        <div className='navbar-user-menu relative'>
             <button 
                 className='navbar-icon-btn flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors'
                 aria-label="User menu"
+                onClick={() => setShowUserMenu(!showUserMenu)}
             >
                 <User className='w-5 h-5' />
             </button>
-            <div className='group-hover:block z-[1100] hidden absolute dropdown-menu right-0 pt-2'>
-                <div className='flex flex-col w-56 py-2 bg-white border border-gray-200 rounded-lg shadow-lg'>
-                    {user ? (
-                        <>
-                            <div className='px-4 py-3 border-b border-gray-100'>
-                                <p className='text-sm font-semibold text-gray-900'>{user.fullname || user.username || 'User'}</p>
-                                <p className='text-xs text-gray-500 mt-1'>{user.email || ''}</p>
-                                {user.role === 'admin' && (
-                                    <span className='inline-block mt-1 px-2 py-0.5 text-xs font-semibold text-white bg-orange-500 rounded'>
-                                        Admin
-                                    </span>
-                                )}
-                            </div>
-                            <div className='py-1'>
-                                {/* eslint-disable-next-line no-unused-vars */}
-                                {USER_MENU_LINKS.map(({ to, label, icon: Icon }) => (
-                                    <Link key={to} to={to} className='flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors'>
-                                        <Icon className='w-4 h-4' />
-                                        <span>{label}</span>
-                                    </Link>
-                                ))}
-                            </div>
-                            <div className='border-t border-gray-100 py-1'>
-                                <button onClick={handleLogout} className='flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors'>
-                                    <LogOut className='w-4 h-4' />
-                                    <span>Logout</span>
-                                </button>
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            <div className='px-4 py-3 border-b border-gray-100'>
-                                <p className='text-sm font-semibold text-gray-900'>Welcome!</p>
-                                <p className='text-xs text-gray-500 mt-1'>Sign in to your account</p>
-                            </div>
-                            <div className='py-1'>
-                                <Link to='/login' className='flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors'>
-                                    <UserCircle className='w-4 h-4' />
-                                    <span>Login</span>
-                                </Link>
-                                <Link to='/register' className='flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors'>
-                                    <User className='w-4 h-4' />
-                                    <span>Sign Up</span>
-                                </Link>
-                            </div>
-                        </>
-                    )}
-                </div>
-            </div>
+            {showUserMenu && (
+                <>
+                    <div className='fixed inset-0 z-[1050]' onClick={() => setShowUserMenu(false)} />
+                    <div className='z-[1100] absolute dropdown-menu right-0 pt-2'>
+                        <div className='flex flex-col w-56 py-2 bg-white border border-gray-200 rounded-lg shadow-lg'>
+                            {user ? (
+                                <>
+                                    <div className='px-4 py-3 border-b border-gray-100'>
+                                        <p className='text-sm font-semibold text-gray-900'>{user.fullname || user.username || 'User'}</p>
+                                        <p className='text-xs text-gray-500 mt-1'>{user.email || ''}</p>
+                                        {user.role === 'admin' && (
+                                            <span className='inline-block mt-1 px-2 py-0.5 text-xs font-semibold text-white bg-orange-500 rounded'>
+                                                Admin
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className='py-1'>
+                                        {/* eslint-disable-next-line no-unused-vars */}
+                                        {USER_MENU_LINKS.map(({ to, label, icon: Icon }) => (
+                                            <Link key={to} to={to} onClick={() => setShowUserMenu(false)} className='flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors'>
+                                                <Icon className='w-4 h-4' />
+                                                <span>{label}</span>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                    <div className='border-t border-gray-100 py-1'>
+                                        <button onClick={() => { setShowUserMenu(false); handleLogout(); }} className='flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors'>
+                                            <LogOut className='w-4 h-4' />
+                                            <span>Logout</span>
+                                        </button>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className='px-4 py-3 border-b border-gray-100'>
+                                        <p className='text-sm font-semibold text-gray-900'>Welcome!</p>
+                                        <p className='text-xs text-gray-500 mt-1'>Sign in to your account</p>
+                                    </div>
+                                    <div className='py-1'>
+                                        <Link to='/login' onClick={() => setShowUserMenu(false)} className='flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors'>
+                                            <UserCircle className='w-4 h-4' />
+                                            <span>Login</span>
+                                        </Link>
+                                        <Link to='/register' onClick={() => setShowUserMenu(false)} className='flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors'>
+                                            <User className='w-4 h-4' />
+                                            <span>Sign Up</span>
+                                        </Link>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </>
+            )}
         </div>
     )
 
@@ -495,7 +503,7 @@ const Navbar = () => {
                         </button>
 
                         {/* Logo - hidden when search is expanded on mobile */}
-                        <Link to='/' className={`navbar-logo text-4xl brand-logo flex-shrink-0 ${showSearch ? 'navbar-logo-hidden' : ''}`}>
+                        <Link to='/' className={`navbar-logo text-4xl brand-logo flex-shrink-0 flex items-center ${showSearch ? 'navbar-logo-hidden' : ''}`}>
                             MilkyBloom
                         </Link>
 

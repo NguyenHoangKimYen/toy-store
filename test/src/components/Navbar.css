@@ -52,6 +52,9 @@
 /* Navbar Logo */
 .navbar-logo {
   transition: opacity 0.2s ease, transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  line-height: 1;
 }
 
 /* Navbar Icon Buttons - consistent touch targets */
