@@ -358,32 +358,117 @@ const updateProduct = async (id, updateData) => {
 
     const updatePayload = {};
 
-    Object.keys(updateData).forEach((key) => {
-        if (allowedUpdates.includes(key)) {
-            const value = updateData[key];
+        Object.keys(updateData).forEach(key => {
+            if (allowedUpdates.includes(key)) {
+                // Parse JSON nếu cần (vì FormData gửi mọi thứ là string)
+                if (key === 'categoryId' && typeof updateData[key] === 'string') {
+                    try { updatePayload[key] = JSON.parse(updateData[key]); } catch (e) { updatePayload[key] = updateData[key]; }
+                } else {
+                    updatePayload[key] = updateData[key];
+                }
+            }
+        });
 
-            if (value !== undefined) {
-                if (key === 'status') {
-                    if (!validStatuses.includes(value)) {
-                        throw new Error(
-                            `Invalid status: '${value}'. Must be one of: ${validStatuses.join(', ')}`,
-                        );
+        // 2. Xử lý Ảnh Product
+        // A. Thêm ảnh mới
+        let currentImages = product.imageUrls || [];
+        if (imgFiles && imgFiles.length > 0) {
+            const newImageUrls = await uploadToS3(imgFiles, 'productImages');
+            currentImages = [...currentImages, ...newImageUrls];
+        }
+
+        // B. Xóa ảnh cũ (nếu frontend gửi danh sách removeImages)
+        if (updateData.removeImages) {
+            let removeList = updateData.removeImages;
+            if (typeof removeList === 'string') {
+                try { removeList = JSON.parse(removeList); } catch (e) { removeList = [removeList]; }
+            }
+            if (Array.isArray(removeList) && removeList.length > 0) {
+                await deleteFromS3(removeList);
+                currentImages = currentImages.filter(url => !removeList.includes(url));
+            }
+        }
+        updatePayload.imageUrls = currentImages;
+
+        // 3. Xử lý Variants (Đồng bộ hóa)
+        if (updateData.variants) {
+            let variantsInput = updateData.variants;
+            if (typeof variantsInput === 'string') {
+                try { variantsInput = JSON.parse(variantsInput); } catch (e) { console.error("Parse variants failed"); }
+            }
+
+            if (Array.isArray(variantsInput)) {
+                const existingVariantIds = (product.variants || []).map(v => v.toString());
+                const incomingVariantIds = [];
+                const prices = []; // Để tính lại min/max price
+
+                for (const v of variantsInput) {
+                    const variantData = {
+                        price: v.price?.$numberDecimal || v.price,
+                        stockQuantity: v.stockQuantity || v.stock, // Support cả 2 tên field
+                        sku: v.sku,
+                        attributes: v.attributes,
+                        isActive: v.isActive !== false
+                    };
+                    
+                    // Collect price for recalculation
+                    prices.push(parseFloat(variantData.price));
+
+                    if (v._id && !v._id.startsWith('var_')) {
+                        // UPDATE variant cũ
+                        await variantRepository.update(v._id, variantData, { session });
+                        incomingVariantIds.push(v._id);
+                    } else {
+                        // CREATE variant mới
+                        // Lưu ý: Nếu variant có ảnh riêng, logic upload ảnh variant cần xử lý riêng hoặc upload trước
+                        const newVariant = await variantRepository.create({
+                            ...variantData,
+                            productId: id
+                        }, { session });
+                        incomingVariantIds.push(newVariant._id.toString());
                     }
                 }
 
-                updatePayload[key] = value;
+                // DELETE các variant không còn tồn tại trong danh sách gửi lên
+                // (Logic này tùy chọn: Nếu bạn muốn xóa variant khi user xóa dòng trên UI)
+                if (updateData.deletedVariantIds) {
+                     let deletedIds = updateData.deletedVariantIds;
+                     if (typeof deletedIds === 'string') try { deletedIds = JSON.parse(deletedIds); } catch(e){}
+                     
+                     if (Array.isArray(deletedIds)) {
+                         for (const delId of deletedIds) {
+                             await variantRepository.deleteById(delId, { session });
+                         }
+                         // Filter out deleted IDs from incoming list just in case
+                         // ...
+                     }
+                }
+
+                // Cập nhật danh sách variants ID vào Product
+                // updatePayload.variants = incomingVariantIds; // Cẩn thận chỗ này nếu logic delete phức tạp
+
+                // Cập nhật Min/Max Price
+                if (prices.length > 0) {
+                    updatePayload.minPrice = Math.min(...prices);
+                    updatePayload.maxPrice = Math.max(...prices);
+                }
             }
         }
-    });
 
-    if (updateData.attributes || updateData.variants || updateData.imageUrls) {
-        console.warn(
-            `[WARN] Attempted to update restricted fields (attributes, variants, imageUrls) on product ${id}. These fields must be updated via their dedicated endpoints.`,
-        );
+        // 4. Lưu Product
+        await productRepository.update(id, updatePayload, { session });
+
+        await session.commitTransaction();
+        
+        // Trả về data mới nhất
+        return await productRepository.findById(id);
+
+    } catch (error) {
+        await session.abortTransaction();
+        throw error;
+    } finally {
+        session.endSession();
     }
-
-    const updatedProduct = await productRepository.update(id, updatePayload);
-    return updatedProduct;
 };
 
 /**
