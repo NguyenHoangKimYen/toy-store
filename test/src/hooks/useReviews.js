@@ -5,7 +5,6 @@ import {
   updateReview,
   deleteReview,
   hasUserReviewedProduct,
-  getPendingReviews,
 } from '../services/reviews.service';
 
 /**
@@ -202,41 +201,6 @@ export const useReviews = (productId, options = {}) => {
     editReview,
     removeReview,
     checkUserReview,
-  };
-};
-
-/**
- * Hook to get products pending review for the current user
- * Returns products from delivered orders that haven't been reviewed yet
- */
-export const usePendingReviews = () => {
-  const [pendingProducts, setPendingProducts] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const loadPendingReviews = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await getPendingReviews();
-      setPendingProducts(result || []);
-    } catch (err) {
-      setError(err.message || 'Failed to load pending reviews');
-      console.error('Error loading pending reviews:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadPendingReviews();
-  }, [loadPendingReviews]);
-
-  return {
-    pendingProducts,
-    loading,
-    error,
-    refresh: loadPendingReviews,
   };
 };
 
