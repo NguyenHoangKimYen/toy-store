@@ -1,4 +1,4 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Khởi tạo Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -6,7 +6,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const analyzeReviewContent = async (text) => {
     try {
         // Sử dụng model flash cho tốc độ nhanh
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
         // --- TỐI ƯU PROMPT SONG NGỮ (ANH - VIỆT) ---
         const prompt = `
@@ -45,8 +45,8 @@ const analyzeReviewContent = async (text) => {
 
         // Clean string (xóa markdown ```json nếu có)
         textResponse = textResponse
-            .replace(/```json/g, "")
-            .replace(/```/g, "")
+            .replace(/```json/g, '')
+            .replace(/```/g, '')
             .trim();
 
         const jsonResult = JSON.parse(textResponse);
@@ -60,12 +60,12 @@ const analyzeReviewContent = async (text) => {
                 jsonResult.isSafe && (jsonResult.toxicScore || 0) < 0.3,
         };
     } catch (error) {
-        console.error("Gemini AI Error:", error);
+        console.error('Gemini AI Error:', error);
         // Fallback: Nếu AI lỗi, chặn lại để Admin duyệt tay
         return {
             isSafe: false,
             toxicScore: 0,
-            flaggedCategories: ["ai_error"],
+            flaggedCategories: ['ai_error'],
             autoApprove: false,
         };
     }

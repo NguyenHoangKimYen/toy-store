@@ -1,4 +1,4 @@
-const socketIo = require("socket.io");
+const socketIo = require('socket.io');
 
 let io;
 
@@ -7,17 +7,17 @@ module.exports = {
     init: (httpServer) => {
         io = socketIo(httpServer, {
             cors: {
-                origin: "*", // Cho phép mọi nguồn (Frontend) kết nối. Khi deploy nhớ đổi lại domain cụ thể.
-                methods: ["GET", "POST"],
+                origin: '*', // Cho phép mọi nguồn (Frontend) kết nối. Khi deploy nhớ đổi lại domain cụ thể.
+                methods: ['GET', 'POST'],
             },
         });
 
-        io.on("connection", (socket) => {
-            console.log("🟢 Client connected to Socket:", socket.id);
+        io.on('connection', (socket) => {
+            console.log('🟢 Client connected to Socket:', socket.id);
 
             // --- QUAN TRỌNG: SỰ KIỆN JOIN ROOM ---
             // Khi Frontend login xong, nó sẽ gửi event này kèm userId
-            socket.on("join_user_room", (userId) => {
+            socket.on('join_user_room', (userId) => {
                 if (userId) {
                     const roomName = `user_${userId}`;
                     socket.join(roomName);
@@ -25,8 +25,8 @@ module.exports = {
                 }
             });
 
-            socket.on("disconnect", () => {
-                console.log("🔴 Client disconnected:", socket.id);
+            socket.on('disconnect', () => {
+                console.log('🔴 Client disconnected:', socket.id);
             });
         });
 
@@ -36,7 +36,7 @@ module.exports = {
     // Hàm lấy instance IO (Gọi bên Controller)
     getIO: () => {
         if (!io) {
-            throw new Error("Socket.io not initialized!");
+            throw new Error('Socket.io not initialized!');
         }
         return io;
     },

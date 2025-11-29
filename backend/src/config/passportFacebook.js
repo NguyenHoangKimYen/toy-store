@@ -10,10 +10,10 @@ module.exports = function setupFacebookPassport() {
                 clientSecret: process.env.FACEBOOK_APP_SECRET,
                 callbackURL: process.env.FACEBOOK_CALLBACK_URL,
                 profileFields: [
-                    "id",
-                    "displayName",
-                    "emails",
-                    "picture.type(large){url,is_silhouette}",
+                    'id',
+                    'displayName',
+                    'emails',
+                    'picture.type(large){url,is_silhouette}',
                 ],
             },
             async (accessToken, refreshToken, profile, done) => {
@@ -21,7 +21,7 @@ module.exports = function setupFacebookPassport() {
                     const socialId = profile.id;
                     const email =
                         profile.emails?.[0]?.value?.toLowerCase() || null;
-                    const fullName = profile.displayName || "Facebook User";
+                    const fullName = profile.displayName || 'Facebook User';
 
                     // Trích xuất ảnh và kiểm tra có phải ảnh mặc định không
                     const pictureData = profile.photos?.[0];
@@ -33,18 +33,18 @@ module.exports = function setupFacebookPassport() {
                         !isSilhouette && facebookAvatar
                             ? facebookAvatar
                             : process.env.DEFAULT_AVATAR_URL ||
-                              "https://toy-store-project-of-springwang.s3.ap-southeast-2.amazonaws.com/defaults/unknownAvatar.png";
+                              'https://toy-store-project-of-springwang.s3.ap-southeast-2.amazonaws.com/defaults/unknownAvatar.png';
 
                     // Kiểm tra user
                     let user = await User.findOne({
                         socialId,
-                        socialProvider: "facebook",
+                        socialProvider: 'facebook',
                     });
 
                     if (!user && email) {
                         user = await User.findOne({ email });
                         if (user) {
-                            user.socialProvider = "facebook";
+                            user.socialProvider = 'facebook';
                             user.socialId = socialId;
                             if (!user.avatar) user.avatar = avatar;
                             await user.save();
@@ -53,7 +53,7 @@ module.exports = function setupFacebookPassport() {
 
                     if (!user) {
                         const baseUsername = fullName
-                            .replace(/\s+/g, "")
+                            .replace(/\s+/g, '')
                             .toLowerCase();
                         let candidate = baseUsername;
                         let attempt = 0;
@@ -66,7 +66,7 @@ module.exports = function setupFacebookPassport() {
                             fullName,
                             username: candidate,
                             email,
-                            socialProvider: "facebook",
+                            socialProvider: 'facebook',
                             socialId,
                             avatar,
                             isVerified: true,
@@ -78,7 +78,7 @@ module.exports = function setupFacebookPassport() {
 
                     return done(null, user);
                 } catch (err) {
-                    console.error("Facebook login error:", err);
+                    console.error('Facebook login error:', err);
                     return done(err, null);
                 }
             },

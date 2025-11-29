@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 require("./address.model.js");
 
-const ROLE_ENUM = ["customer", "admin"];
+const ROLE_ENUM = ['customer', 'admin'];
 
 const userSchema = new mongoose.Schema(
     {
@@ -121,19 +121,19 @@ const userSchema = new mongoose.Schema(
     },
     {
         timestamps: true,
-        collection: "users",
+        collection: 'users',
     },
 );
 
 // Cho phép setters chạy khi dùng update
-userSchema.set("settersOnQuery", true);
+userSchema.set('settersOnQuery', true);
 
 // 🔥 TEXT INDEX - bắt buộc để /users?keyword hoạt động
 userSchema.index({
-    fullName: "text",
-    username: "text",
-    email: "text",
-    phone: "text",
+    fullName: 'text',
+    username: 'text',
+    email: 'text',
+    phone: 'text',
 });
 
 module.exports = mongoose.model("User", userSchema);

@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const badgeSchema = new mongoose.Schema({
     name: String,
@@ -13,4 +13,4 @@ const badgeSchema = new mongoose.Schema({
     threshold: { type: Number, required: true },
 });
 
-module.exports = mongoose.model("Badge", badgeSchema);
+module.exports = mongoose.model('Badge', badgeSchema);

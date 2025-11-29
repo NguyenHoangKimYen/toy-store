@@ -1,5 +1,5 @@
-const Review = require("../models/review.model");
-const { Types } = require("mongoose");
+const Review = require('../models/review.model');
+const { Types } = require('mongoose');
 
 const createReview = async (data) => {
     return await Review.create(data);
@@ -16,14 +16,14 @@ const getReviewsByProductId = async ({
     productId,
     page = 1,
     limit = 10,
-    sort = "newest",
+    sort = 'newest',
     filterRating = null,
 }) => {
     const skip = (page - 1) * limit;
 
     const query = {
         productId: new Types.ObjectId(productId),
-        isPublished: true,
+        status: 'approved',
     };
 
     if (filterRating) {
@@ -31,10 +31,10 @@ const getReviewsByProductId = async ({
     }
 
     const sortCondition =
-        sort === "oldest" ? { createdAt: 1 } : { createdAt: -1 };
+        sort === 'oldest' ? { createdAt: 1 } : { createdAt: -1 };
 
     const reviews = await Review.find(query)
-        .populate("userId", "name avatar email")
+        .populate('userId', 'name avatar email')
         .sort(sortCondition)
         .skip(skip)
         .limit(limit)

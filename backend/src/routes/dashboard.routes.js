@@ -1,7 +1,7 @@
-const router = require("express").Router();
-const dashboardController = require("../controllers/ dashboard.controller");
-const auth = require("../middlewares/auth.middleware");
-const adminOnly = require("../middlewares/admin.middleware");
+const router = require('express').Router();
+const dashboardController = require('../controllers/ dashboard.controller');
+const auth = require('../middlewares/auth.middleware');
+const adminOnly = require('../middlewares/admin.middleware');
 
 // Layout Section 2: Sales Overview + Revenue Updates + Yearly Sales
 router.get(

@@ -55,14 +55,14 @@ module.exports = {
                     as: "product",
                 },
             },
-            { $unwind: "$product" },
+            { $unwind: '$product' },
             { $sort: { quantitySold: -1 } },
             { $limit: limit },
             {
                 $project: {
                     _id: 1,
-                    name: "$product.name",
-                    image: "$product.thumbnail",
+                    name: '$product.name',
+                    image: '$product.thumbnail',
                     quantitySold: 1,
                     revenue: 1,
                 },
@@ -145,11 +145,11 @@ module.exports = {
                     as: "product",
                 },
             },
-            { $unwind: "$product" },
+            { $unwind: '$product' },
             {
                 $project: {
                     _id: 1,
-                    name: "$product.name",
+                    name: '$product.name',
                     revenue: 1,
                     totalQuantity: 1,
                     thumbnail: "$product.thumbnail",
@@ -171,7 +171,7 @@ module.exports = {
                     as: "product",
                 },
             },
-            { $unwind: "$product" },
+            { $unwind: '$product' },
             {
                 $group: {
                     _id: "$product.categoryId",
@@ -187,11 +187,11 @@ module.exports = {
                     as: "category",
                 },
             },
-            { $unwind: "$category" },
+            { $unwind: '$category' },
             {
                 $project: {
                     _id: 1,
-                    name: "$category.name",
+                    name: '$category.name',
                     totalSold: 1,
                     revenue: 1,
                 },

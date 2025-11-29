@@ -1,4 +1,4 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 const {
     getVariantById,
@@ -7,17 +7,17 @@ const {
     deleteVariant,
     addVariantImages,
     removeVariantImages,
-} = require("../controllers/variant.controller");
-const { uploadVariantImages } = require("../middlewares/upload.middleware"); // nếu bạn có multer
+} = require('../controllers/variant.controller');
+const { uploadVariantImages } = require('../middlewares/upload.middleware'); // nếu bạn có multer
 
 // CRUD cơ bản
-router.get("/:id", getVariantById);
-router.post("/:productId", uploadVariantImages, createVariant);
-router.patch("/:id", updateVariant);
-router.delete("/:id", deleteVariant);
+router.get('/:id', getVariantById);
+router.post('/:productId', uploadVariantImages, createVariant);
+router.patch('/:id', updateVariant);
+router.delete('/:id', deleteVariant);
 
 // Quản lý ảnh variant
-router.post("/:id/images", uploadVariantImages, addVariantImages);
-router.delete("/:id/images", removeVariantImages);
+router.post('/:id/images', uploadVariantImages, addVariantImages);
+router.delete('/:id/images', removeVariantImages);
 
 module.exports = router;

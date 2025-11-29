@@ -1,9 +1,9 @@
-const express = require("express");
-const auth = require("../middlewares/auth.middleware.js");
-const adminOnly = require("../middlewares/admin.middleware.js");
+const express = require('express');
+const auth = require('../middlewares/auth.middleware.js');
+const adminOnly = require('../middlewares/admin.middleware.js');
 const {
     uploadAvatar: uploadAvatarMiddleware,
-} = require("../middlewares/upload.middleware.js");
+} = require('../middlewares/upload.middleware.js');
 
 const {
     getAllUsers,

@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const CollectVoucherSchema = new mongoose.Schema({
     userId: {
@@ -15,4 +15,4 @@ const CollectVoucherSchema = new mongoose.Schema({
     used: { type: Boolean, default: false },
 });
 
-module.exports = mongoose.model("CollectVoucher", CollectVoucherSchema);
+module.exports = mongoose.model('CollectVoucher', CollectVoucherSchema);

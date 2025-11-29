@@ -1,14 +1,14 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 const orderController = require("../controllers/order.controller");
 const auth = require("../middlewares/auth.middleware");
 const adminOnly = require("../middlewares/admin.middleware");
 
 // User tạo đơn
-router.post("/", orderController.create);
+router.post('/', orderController.create);
 
 // Admin thay đổi trạng thái đơn
-router.put("/:id/status", auth, adminOnly, orderController.updateStatus);
+router.put('/:id/status', auth, adminOnly, orderController.updateStatus);
 
 // Admin lấy orders theo discount code
 router.get("/discount/:discountCodeId", auth, adminOnly, orderController.getOrdersByDiscountCode);

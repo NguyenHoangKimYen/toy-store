@@ -1,4 +1,4 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 const {
     getReviewsByProductId,
@@ -11,19 +11,20 @@ const {
 
 const { uploadReviewImages } = require("../middlewares/upload.middleware.js");
 const authMiddleware = require("../middlewares/auth.middleware.js");
-const adminMiddlewares = require("../middlewares/admin.middleware.js");
+const adminOnly = require("../middlewares/admin.middleware.js");
 
+// --- PUBLIC ROUTES ---
 router.get("/product/:productId", getReviewsByProductId);
 
-
+// --- AUTHENTICATED ROUTES ---
 router.use(authMiddleware);
 router.get("/pending", getPendingReviews);
 router.post("/", uploadReviewImages, createReview);
 router.patch("/:reviewId", uploadReviewImages, updateReview);
 router.delete("/:reviewId", deleteReview);
 
-
-router.use(adminMiddlewares);
-router.patch("/:reviewId/moderate", adminMiddlewares, moderateReview); 
+// --- ADMIN ROUTES ---
+router.use(adminOnly);
+router.patch("/:reviewId/moderate", moderateReview); 
 
 module.exports = router;
