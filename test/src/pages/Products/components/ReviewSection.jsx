@@ -121,19 +121,24 @@ const ReviewSection = ({ productId }) => {
           </div>
         ) : (
           <>
-            {reviews.map((review) => (
+            {reviews.map((review) => {
+              // Handle backend's populated userId object
+              const userName = review.userName || review.userId?.name || review.userId?.fullName || 'Anonymous';
+              const userAvatar = review.userAvatar || review.userId?.avatar;
+              
+              return (
               <Card key={review._id} className="review-card">
                 <div className="review-header-info">
                   <div className="reviewer-info">
-                    {review.userAvatar ? (
-                      <img src={review.userAvatar} alt={review.userName} className="reviewer-avatar" />
+                    {userAvatar ? (
+                      <img src={userAvatar} alt={userName} className="reviewer-avatar" />
                     ) : (
                       <div className="reviewer-avatar-placeholder">
-                        {review.userName?.charAt(0).toUpperCase() || 'A'}
+                        {userName?.charAt(0).toUpperCase() || 'A'}
                       </div>
                     )}
                     <div>
-                      <p className="reviewer-name">{review.userName || 'Anonymous'}</p>
+                      <p className="reviewer-name">{userName}</p>
                       <p className="review-date">{formatDate(review.createdAt)}</p>
                     </div>
                   </div>
@@ -142,7 +147,7 @@ const ReviewSection = ({ productId }) => {
                   )}
                 </div>
 
-                <p className="review-content">{review.content}</p>
+                <p className="review-content">{review.comment || review.content}</p>
 
                 <div className="review-actions">
                   <Button variant="ghost" size="sm">
@@ -155,7 +160,8 @@ const ReviewSection = ({ productId }) => {
                   </Button>
                 </div>
               </Card>
-            ))}
+              );
+            })}
 
             {hasMore && (
               <div className="load-more">

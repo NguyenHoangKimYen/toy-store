@@ -65,7 +65,17 @@ export const useProductReviews = (productId) => {
   const submitReview = async (reviewData) => {
     try {
       setSubmitting(true);
-      const result = await createReview(reviewData);
+      
+      // Transform frontend field names to backend field names
+      const backendData = {
+        productId,
+        variantId: reviewData.variantId, // Must be provided
+        rating: reviewData.rating,
+        comment: reviewData.content || reviewData.comment, // Frontend uses 'content', backend uses 'comment'
+        images: reviewData.images, // Optional images for upload
+      };
+      
+      const result = await createReview(backendData);
       
       const newReview = result.metadata;
       
