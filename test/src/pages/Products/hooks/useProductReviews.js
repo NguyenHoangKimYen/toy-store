@@ -102,6 +102,7 @@ export const useProductReviews = (productId) => {
         orderItemId: reviewData.orderItemId, // Required - links to specific order
         rating: reviewData.rating,
         comment: reviewData.content || reviewData.comment,
+        images: reviewData.images || [], // Include images if provided
       };
       
       const result = await createReview(backendData);

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Star, ThumbsUp, Flag, ShoppingBag } from 'lucide-react';
+import { Star, ThumbsUp, Flag, ShoppingBag, Clock, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -32,6 +32,7 @@ const ReviewSection = ({ productId }) => {
     const success = await submitReview({
       ...reviewData,
       orderItemId: selectedOrderItem.orderItemId,
+      images: reviewData.images || [], // Pass images to the hook
     });
     if (success) {
       setShowForm(false);
@@ -167,9 +168,11 @@ const ReviewSection = ({ productId }) => {
 
           {stats.averageRating > 0 && (
             <div className="rating-distribution">
-              {[5, 4, 3, 2, 1].map((rating) => 
-                renderRatingBar(rating, stats.distribution[rating] || 0, stats.total)
-              )}
+              {[5, 4, 3, 2, 1].map((rating) => (
+                <div key={rating}>
+                  {renderRatingBar(rating, stats.distribution[rating] || 0, stats.total)}
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -185,12 +188,26 @@ const ReviewSection = ({ productId }) => {
         ) : (
           <>
             {reviews.map((review) => {
-              // Handle backend's populated userId object
-              const userName = review.userName || review.userId?.name || review.userId?.fullName || 'Anonymous';
-              const userAvatar = review.userAvatar || review.userId?.avatar;
+              // Handle backend's populated userId object - use fullName field
+              const userName = review.userId?.fullName || review.userId?.username || review.userName || 'Anonymous';
+              const userAvatar = review.userId?.avatar || review.userAvatar;
+              const isOwnReview = user && (review.userId?._id === user._id || review.userId === user._id);
+              const isPending = review.status === 'pending' || review.status === 'flagged';
               
               return (
-              <Card key={review._id} className="review-card">
+              <Card key={review._id} className={`review-card ${isPending ? 'review-pending' : ''}`}>
+                {/* Pending/Flagged notice for own reviews */}
+                {isOwnReview && isPending && (
+                  <div className="review-pending-notice">
+                    <AlertTriangle size={16} />
+                    <span>
+                      {review.status === 'flagged' 
+                        ? 'Your review may contain inappropriate content and is being reviewed by our team.'
+                        : 'Your review is pending approval and will be visible to others once approved.'}
+                    </span>
+                  </div>
+                )}
+                
                 <div className="review-header-info">
                   <div className="reviewer-info">
                     {userAvatar ? (
@@ -201,7 +218,10 @@ const ReviewSection = ({ productId }) => {
                       </div>
                     )}
                     <div>
-                      <p className="reviewer-name">{userName}</p>
+                      <p className="reviewer-name">
+                        {userName}
+                        {isOwnReview && <span className="own-review-badge">You</span>}
+                      </p>
                       <p className="review-date">{formatDate(review.createdAt)}</p>
                     </div>
                   </div>
@@ -209,18 +229,48 @@ const ReviewSection = ({ productId }) => {
                     <div className="review-rating">{renderStars(review.rating)}</div>
                   )}
                 </div>
+                
+                {/* Variant Info */}
+                {review.variantName && (
+                  <div className="review-variant-info">
+                    <ShoppingBag size={14} />
+                    <span>Purchased: <strong>{review.variantName}</strong></span>
+                    {review.variantId?.attributes && review.variantId.attributes.length > 0 && (
+                      <span className="variant-attributes">
+                        ({review.variantId.attributes.map(attr => `${attr.name}: ${attr.value}`).join(', ')})
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 <p className="review-content">{review.comment || review.content}</p>
+                
+                {/* Review Images */}
+                {review.imageUrls && review.imageUrls.length > 0 && (
+                  <div className="review-images">
+                    {review.imageUrls.map((img, idx) => (
+                      <img 
+                        key={idx} 
+                        src={img} 
+                        alt={`Review image ${idx + 1}`} 
+                        className="review-image"
+                        onClick={() => window.open(img, '_blank')}
+                      />
+                    ))}
+                  </div>
+                )}
 
                 <div className="review-actions">
                   <Button variant="ghost" size="sm">
                     <ThumbsUp size={16} />
                     Helpful
                   </Button>
-                  <Button variant="ghost" size="sm">
-                    <Flag size={16} />
-                    Report
-                  </Button>
+                  {!isOwnReview && (
+                    <Button variant="ghost" size="sm">
+                      <Flag size={16} />
+                      Report
+                    </Button>
+                  )}
                 </div>
               </Card>
               );

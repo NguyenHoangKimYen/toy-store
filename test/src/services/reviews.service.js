@@ -13,7 +13,7 @@ export const getProductReviews = async (productId, params = {}) => {
 
 /**
  * Create a new review for a product
- * @param {Object} reviewData - Review data { productId, orderItemId, rating, comment }
+ * @param {Object} reviewData - Review data { productId, orderItemId, rating, comment, images }
  * @returns {Promise<Object>} - Created review with populated user data
  */
 export const createReview = async (reviewData) => {
@@ -28,6 +28,28 @@ export const createReview = async (reviewData) => {
     throw new Error('Rating must be between 1 and 5');
   }
 
+  // Use FormData if images are provided
+  if (reviewData.images && reviewData.images.length > 0) {
+    const formData = new FormData();
+    formData.append('productId', reviewData.productId);
+    formData.append('orderItemId', reviewData.orderItemId);
+    formData.append('rating', reviewData.rating);
+    formData.append('comment', reviewData.comment?.trim() || '');
+    
+    // Append each image file
+    reviewData.images.forEach((image) => {
+      formData.append('images', image);
+    });
+
+    const response = await apiClient.post('/reviews', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response;
+  }
+
+  // No images - use regular JSON
   const response = await apiClient.post('/reviews', {
     productId: reviewData.productId,
     orderItemId: reviewData.orderItemId,
