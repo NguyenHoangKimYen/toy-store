@@ -216,18 +216,6 @@ const createProduct = async (productData, imgFiles) => {
             },
             { session },
         ); // Quan trọng: Truyền session
-        const newProduct = await productRepository.create(
-            {
-                ...productData,
-                slug: slugToCreate,
-                imageUrls: imageUrls,
-                variants: [],
-                attributes: [],
-                minPrice: 0,
-                maxPrice: 0,
-            },
-            { session },
-        ); // Quan trọng: Truyền session
 
         // 6. Xử lý Variants & Attributes
         let createdVariantIds = [];

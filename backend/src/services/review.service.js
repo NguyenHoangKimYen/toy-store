@@ -44,7 +44,7 @@ const createReview = async ({
     // 1. Check Verified Purchase
     const deliveredOrders = await Order.find({
         userId: new Types.ObjectId(userId),
-        status: "delivered",,
+        status: "delivered",
     }).select("_id");
 
     if (!deliveredOrders || deliveredOrders.length === 0) {
@@ -52,7 +52,6 @@ const createReview = async ({
             'You have not purchased or received any products to review.',
         );
     }
-    const deliveredOrderIds = deliveredOrders.map((order) => order._id);
     const deliveredOrderIds = deliveredOrders.map((order) => order._id);
 
     const hasPurchasedItem = await OrderItem.findOne({

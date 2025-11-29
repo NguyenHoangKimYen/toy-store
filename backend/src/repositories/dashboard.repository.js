@@ -43,10 +43,6 @@ module.exports = {
             .filter((x) => COD_METHODS.includes(x._id))
             .reduce((sum, x) => sum + x.total, 0);
 
-        const codTotal = raw
-            .filter((x) => COD_METHODS.includes(x._id))
-            .reduce((sum, x) => sum + x.total, 0);
-
         return {
             website: raw.find((x) => x._id === "website")?.total || 0,
             mobile: raw.find((x) => x._id === "mobile")?.total || 0,
@@ -169,10 +165,6 @@ module.exports = {
                 },
             },
         ]);
-
-        const codTotal = raw
-            .filter((x) => COD_METHODS.includes(x._id))
-            .reduce((sum, x) => sum + x.total, 0);
 
         const codTotal = raw
             .filter((x) => COD_METHODS.includes(x._id))

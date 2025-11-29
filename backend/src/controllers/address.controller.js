@@ -36,7 +36,6 @@ const getAddressesByUserId = async (req, res, next) => {
 
         return res.json({ success: true, data: addresses });
     } catch (error) {
-    } catch (error) {
         return next(error);
     }
 };
@@ -59,7 +58,6 @@ const getAddressById = async (req, res, next) => {
         }
 
         return res.json({ success: true, data: address });
-    } catch (error) {
     } catch (error) {
         return next(error);
     }
@@ -107,9 +105,6 @@ const updateAddress = async (req, res, next) => {
 
         //kiểm tra địa chỉ mới có hợp lệ không
         if (req.body.addressLine) {
-            const { valid, formatted, lat, lng } = await verifyAddress(
-                req.body.addressLine,
-            );
             const { valid, formatted, lat, lng } = await verifyAddress(
                 req.body.addressLine,
             );
@@ -171,10 +166,6 @@ const setDefaultAddress = async (req, res, next) => {
             userId,
             addressId,
         );
-        const updated = await addressService.setDefaultAddress(
-            userId,
-            addressId,
-        );
         if (!updated) {
             return res
                 .status(404)
@@ -189,7 +180,6 @@ const setDefaultAddress = async (req, res, next) => {
             message: 'Default address updated successfully',
             data: updated,
         });
-    } catch (error) {
     } catch (error) {
         return next(error);
     }

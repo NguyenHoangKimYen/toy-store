@@ -27,10 +27,6 @@ module.exports = function setupFacebookPassport() {
                     const pictureData = profile.photos?.[0];
                     const isSilhouette = pictureData?.is_silhouette ?? true;
                     const facebookAvatar = pictureData?.value || null;
-                    // Trích xuất ảnh và kiểm tra có phải ảnh mặc định không
-                    const pictureData = profile.photos?.[0];
-                    const isSilhouette = pictureData?.is_silhouette ?? true;
-                    const facebookAvatar = pictureData?.value || null;
 
                     // Nếu là ảnh mặc định của Facebook → dùng ảnh mặc định của bạn
                     const avatar =

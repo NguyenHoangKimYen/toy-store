@@ -46,7 +46,6 @@ const getProductBySlug = async (req, res) => {
         return next(error);
     }
 };
-};
 
 const getProductByPrice = async (req, res, next) => {
     try {
@@ -55,15 +54,10 @@ const getProductByPrice = async (req, res, next) => {
             parseFloat(min),
             parseFloat(max),
         );
-        const products = await productService.getProductByPrice(
-            parseFloat(min),
-            parseFloat(max),
-        );
         return res.json({ success: true, data: products });
     } catch (error) {
         return next(error);
     }
-};
 };
 
 const getProductByRating = async (req, res, next) => {
@@ -72,14 +66,10 @@ const getProductByRating = async (req, res, next) => {
         const products = await productService.getProductByRating(
             parseFloat(minRating),
         );
-        const products = await productService.getProductByRating(
-            parseFloat(minRating),
-        );
         return res.json({ success: true, data: products });
     } catch (error) {
         return next(error);
     }
-};
 };
 
 /** Tạo sản phẩm mới */
@@ -90,7 +80,6 @@ const createProduct = async (req, res) => {
     } catch (error) {
         res.status(400).json({ success: false, message: error.message });
     }
-};
 };
 
 /** Cập nhật thông tin sản phẩm */
