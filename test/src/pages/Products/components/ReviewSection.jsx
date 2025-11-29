@@ -10,7 +10,8 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import './ReviewSection.css';
 
 const ReviewSection = ({ productId }) => {
-  const { isAuthenticated } = useAuth();
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
   const { reviews, stats, loading, submitting, hasMore, eligibility, submitReview, loadMore, refetch } = useProductReviews(productId);
   const [showForm, setShowForm] = useState(false);
   const [selectedOrderItem, setSelectedOrderItem] = useState(null);

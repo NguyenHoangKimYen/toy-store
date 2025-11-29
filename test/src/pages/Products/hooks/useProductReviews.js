@@ -4,7 +4,8 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks';
 
 export const useProductReviews = (productId) => {
-  const { isAuthenticated } = useAuth();
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
   const [reviews, setReviews] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
