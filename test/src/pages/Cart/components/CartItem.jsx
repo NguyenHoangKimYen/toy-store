@@ -12,15 +12,14 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
   const variant = item.variant;
   const variantId = item.variantId || item.id;
   
-  if (!product) {
-    console.error('Cart item missing product data:', item);
-    return null;
-  }
+  // Get product name - product comes from backend transform
+  const productName = product?.name || 'Unknown Product';
+  const productId = product?._id || product?.id;
   
-  // Use variant price if available, otherwise use product price
-  const price = parsePrice(item.price || variant?.price || product.minPrice || product.price || 0);
-  const imageUrl = variant?.imageUrls?.[0] || product.imageUrls?.[0] || '/placeholder.png';
-  const stock = variant?.stockQuantity || product.stockQuantity || 999;
+  // Use item.price first (already calculated by backend), then fallback to variant/product
+  const price = parsePrice(item.price || variant?.price || product?.minPrice || product?.price || 0);
+  const imageUrl = product?.imageUrls?.[0] || variant?.imageUrls?.[0] || '/placeholder.png';
+  const stock = variant?.stockQuantity || product?.stockQuantity || 999;
   const total = price * item.quantity;
   
   // Get variant attributes for display - handle both array and object formats
@@ -52,7 +51,9 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
   };
 
   const handleNavigateToProduct = () => {
-    navigate(`/products/${product._id}`);
+    if (productId) {
+      navigate(`/products/${productId}`);
+    }
   };
 
   return (
@@ -61,15 +62,15 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
       <div className="cart-item-image-wrapper" onClick={handleNavigateToProduct}>
         <img
           src={imageUrl}
-          alt={product.name}
+          alt={productName}
           className="cart-item-image"
         />
       </div>
 
       {/* Product Info */}
       <div className="cart-item-info">
-        <h3 className="cart-item-name" onClick={handleNavigateToProduct}>{product.name}</h3>
-        {product.categoryId?.[0]?.name && (
+        <h3 className="cart-item-name" onClick={handleNavigateToProduct}>{productName}</h3>
+        {product?.categoryId?.[0]?.name && (
           <p className="cart-item-category">{product.categoryId[0].name}</p>
         )}
         {variantAttributes && (
