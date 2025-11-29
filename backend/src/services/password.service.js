@@ -29,7 +29,10 @@ const requestReset = async (identifier, finders) => {
 
     await userRepository.setResetToken(user._id, { tokenHash, expiresAt }); // lưu token đã băm và thời gian hết hạn vào cơ sở dữ liệu
 
-    const linkBase = process.env.CLIENT_URL || "http://localhost:3000";
+    const linkBase =
+        process.env.CLIENT_URL ||
+        process.env.FRONTEND_URL ||
+        "https://www.milkybloomtoystore.id.vn";
     const link = `${linkBase}/reset-password?uid=${user._id}&token=${token}`; //tạo link đặt lại mật khẩu
     console.log("Reset link:", link);
 
