@@ -45,12 +45,11 @@ export const deleteCart = async (cartId) => {
 
 /**
  * Add item to cart
- * @param {string} cartId - Cart ID
- * @param {Object} itemData - { variantId, quantity }
+ * @param {Object} params - { cartId, variantId, quantity }
  * @returns {Promise<Object>} - Updated cart with items
  */
-export const addItemToCart = async (cartId, itemData) => {
-  const response = await apiClient.post(`/carts/${cartId}/items`, itemData);
+export const addItemToCart = async ({ cartId, variantId, quantity }) => {
+  const response = await apiClient.post(`/carts/${cartId}/items`, { variantId, quantity });
   // Backend returns { success: true, data: cart }
   return response.data || response;
 };
@@ -67,11 +66,12 @@ export const removeItemFromCart = async (cartId, itemData) => {
 };
 
 // Legacy aliases for backwards compatibility
-export const createCartItem = addItemToCart;
-export const updateCartItem = async (cartId, itemData) => {
+export const createCartItem = ({ cartId, variantId, quantity }) => 
+  addItemToCart({ cartId, variantId, quantity });
+export const updateCartItem = async ({ cartId, variantId, quantity }) => {
   // For quantity updates, we need to calculate the difference
   // and call addItem or removeItem accordingly
-  return await addItemToCart(cartId, itemData);
+  return await addItemToCart({ cartId, variantId, quantity });
 };
 export const deleteCartItem = removeItemFromCart;
 export const getCartItems = async (cartId) => {
