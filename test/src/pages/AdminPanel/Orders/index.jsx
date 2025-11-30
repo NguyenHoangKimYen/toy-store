@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
-import { Package, Truck, CheckCircle, XCircle, Clock, Eye, Filter } from 'lucide-react'
+import { Package, Truck, CheckCircle, XCircle, Clock, Eye } from 'lucide-react'
 import { getAllOrders, updateOrderStatus } from '@/services/orders.service'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -10,11 +10,12 @@ import { formatPrice } from '@/utils/formatPrice'
 import OrderDetailModal from './components/OrderDetailModal'
 import OrderFilters from './components/OrderFilters'
 import { AdminContent } from '../components'
-import { PageHeader } from '@/components/common'
+import { PageHeader, SearchBar } from '@/components/common'
 
 const Orders = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [deliveryTypeFilter, setDeliveryTypeFilter] = useState('all')
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('all')
@@ -28,6 +29,7 @@ const Orders = () => {
       setLoading(true)
       // Send filter params to backend
       const params = {
+        search: searchTerm || undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,
         deliveryType: deliveryTypeFilter !== 'all' ? deliveryTypeFilter : undefined,
         paymentMethod: paymentMethodFilter !== 'all' ? paymentMethodFilter : undefined,
@@ -46,7 +48,7 @@ const Orders = () => {
     } finally {
       setLoading(false)
     }
-  }, [statusFilter, deliveryTypeFilter, paymentMethodFilter])
+  }, [searchTerm, statusFilter, deliveryTypeFilter, paymentMethodFilter])
 
   useEffect(() => {
     fetchOrders()
@@ -118,16 +120,13 @@ const Orders = () => {
         }
         filters={
           <>
-            <div className="flex justify-end mb-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2"
-              >
-                <Filter size={16} />
-                Filters
-              </Button>
-            </div>
+            <SearchBar
+              searchQuery={searchTerm}
+              onSearchChange={setSearchTerm}
+              showFilters={showFilters}
+              onFilterClick={() => setShowFilters(!showFilters)}
+              placeholder="Search by order ID, email, or customer name..."
+            />
             <OrderFilters
               statusFilter={statusFilter}
               setStatusFilter={setStatusFilter}

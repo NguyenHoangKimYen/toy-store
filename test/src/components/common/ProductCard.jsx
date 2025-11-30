@@ -80,7 +80,9 @@ const ProductCard = ({
           loading="lazy"
         />
         {showBadges && product.isNew && (
-          <span className="badge badge-new">New</span>
+          <div className="badge-container">
+            <span className="badge badge-new">New</span>
+          </div>
         )}
         {totalStock === 0 && (
           <div className="out-of-stock-overlay">
