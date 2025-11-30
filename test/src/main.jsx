@@ -52,10 +52,6 @@ async function enableMocking() {
 
 enableMocking().then(() => {
   createRoot(document.getElementById('root')).render(
-    <AuthProvider>
-      <CartProvider>
-        <App />
-      </CartProvider>
-    </AuthProvider>
+    <App />
   );
 });

@@ -1,14 +1,16 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { Plus, Search, Filter } from 'lucide-react'
+import { Plus, Search, Filter, Package, Star } from 'lucide-react'
 import ProductGrid from './components/ProductGrid'
 import ProductStats from './components/ProductStats'
 import ProductDetailModal from './components/ProductDetailModal'
 import ProductFormModal from './components/ProductFormModal'
 import ProductFilters from './components/ProductFilters'
+import ReviewsManagement from './components/ReviewsManagement'
 import { AdminContent } from '../components'
 import { useProducts, useDebounce } from '@/hooks' // Using global hook
 import { PageHeader, SearchBar } from '@/components/common'
 import { getCategories } from '@/services/categories.service'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +23,7 @@ import {
 } from '@/components/ui/alert-dialog'
 
 const Products = () => {
+  const [activeTab, setActiveTab] = useState('products')
   const [searchQuery, setSearchQuery] = useState('')
   const debouncedSearch = useDebounce(searchQuery, 400) // Debounce search input
   const [selectedProduct, setSelectedProduct] = useState(null)
@@ -227,27 +230,68 @@ const Products = () => {
     </div>
   )
 
+  const reviewsHeader = (
+    <div className='admin-card bg-white/85 backdrop-blur-md border border-purple-100/70 rounded-2xl shadow-[0_18px_42px_-28px_rgba(124,58,237,0.22)] p-5 md:p-6'>
+      <div className='space-y-1'>
+        <h2 className='text-2xl font-semibold text-slate-900'>Reviews Management</h2>
+        <p className='text-sm text-slate-500'>Moderate and manage customer reviews</p>
+      </div>
+    </div>
+  )
+
   return (
     <>
-      <AdminContent
-        header={headerCard}
-        filters={null}
-        stats={<ProductStats stats={stats} />}
-        loading={loading}
-        error={error}
-        onRetry={() => window.location.reload()}
-      >
-        <ProductGrid 
-          products={products} 
-          onViewDetails={handleViewDetails}
-          onEdit={(product) => {
-            setSelectedProduct(product);
-            setFormMode('edit');
-            setIsFormModalOpen(true);
-          }}
-          onDelete={handleDeleteProduct}
-        />
-      </AdminContent>
+      <div className='space-y-4'>
+        {/* Horizontal Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className='w-full'>
+          <TabsList className='bg-white/80 border border-purple-100/60 p-1 rounded-xl'>
+            <TabsTrigger 
+              value='products' 
+              className='flex items-center gap-2 data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 px-4 py-2 rounded-lg transition-all'
+            >
+              <Package size={16} />
+              Products
+            </TabsTrigger>
+            <TabsTrigger 
+              value='reviews'
+              className='flex items-center gap-2 data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 px-4 py-2 rounded-lg transition-all'
+            >
+              <Star size={16} />
+              Reviews
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Products Tab Content */}
+          <TabsContent value='products' className='mt-4'>
+            <AdminContent
+              header={headerCard}
+              filters={null}
+              stats={<ProductStats stats={stats} />}
+              loading={loading}
+              error={error}
+              onRetry={() => window.location.reload()}
+            >
+              <ProductGrid 
+                products={products} 
+                onViewDetails={handleViewDetails}
+                onEdit={(product) => {
+                  setSelectedProduct(product);
+                  setFormMode('edit');
+                  setIsFormModalOpen(true);
+                }}
+                onDelete={handleDeleteProduct}
+              />
+            </AdminContent>
+          </TabsContent>
+
+          {/* Reviews Tab Content */}
+          <TabsContent value='reviews' className='mt-4'>
+            <AdminContent header={reviewsHeader}>
+              <ReviewsManagement />
+            </AdminContent>
+          </TabsContent>
+        </Tabs>
+      </div>
 
       {/* Product Detail Modal */}
       {isDetailModalOpen && selectedProduct && (

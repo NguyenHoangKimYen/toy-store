@@ -1,11 +1,13 @@
 import React, { lazy, Suspense } from 'react'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom'
 import Layout from '../components/Layout'
 import ErrorBoundary from '../components/ErrorBoundary'
 import ProtectedRoute from '../components/ProtectedRoute'
 import GuestRoute from '../components/GuestRoute'
 import { ROUTES } from '../config/routes'
 import { LoadingSpinner } from '../components/common'
+import { AuthProvider } from '../context/AuthProvider'
+import { CartProvider } from '../context/CartProvider'
 
 // Lazy load route components for code splitting
 const Home = lazy(() => import('../pages/Home'));
@@ -41,142 +43,156 @@ const PageLoader = () => (
   </div>
 );
 
+// Root layout that wraps everything with providers
+const RootLayout = () => (
+  <AuthProvider>
+    <CartProvider>
+      <Outlet />
+    </CartProvider>
+  </AuthProvider>
+);
+
 const router = createBrowserRouter([
   {
-    path: ROUTES.LOGIN,
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <GuestRoute>
-          <Login />
-        </GuestRoute>
-      </Suspense>
-    )
-  },
-  {
-    path: ROUTES.REGISTER,
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <GuestRoute>
-          <Signup />
-        </GuestRoute>
-      </Suspense>
-    )
-  },
-  {
-    path: ROUTES.RESET_PASSWORD,
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <GuestRoute>
-          <ResetPassword />
-        </GuestRoute>
-      </Suspense>
-    )
-  },
-  {
-    path: "/verify-email",
-    element: <Suspense fallback={<PageLoader />}><VerifyEmail /></Suspense>
-  },
-  
-  // Admin routes with nested routing
-  {
-    path: ROUTES.ADMIN,
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <ProtectedRoute adminOnly={true}>
-          <AdminPanel />
-        </ProtectedRoute>
-      </Suspense>
-    ),
+    element: <RootLayout />,
     children: [
       {
-        index: true,
-        element: <Suspense fallback={<PageLoader />}><Dashboard /></Suspense>
+        path: ROUTES.LOGIN,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <GuestRoute>
+              <Login />
+            </GuestRoute>
+          </Suspense>
+        )
       },
       {
-        path: 'users',
-        element: <Suspense fallback={<PageLoader />}><Users /></Suspense>
+        path: ROUTES.REGISTER,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <GuestRoute>
+              <Signup />
+            </GuestRoute>
+          </Suspense>
+        )
       },
       {
-        path: 'products',
-        element: <Suspense fallback={<PageLoader />}><AdminProducts /></Suspense>
+        path: ROUTES.RESET_PASSWORD,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <GuestRoute>
+              <ResetPassword />
+            </GuestRoute>
+          </Suspense>
+        )
       },
       {
-        path: 'orders',
-        element: <Suspense fallback={<PageLoader />}><AdminOrders /></Suspense>
+        path: "/verify-email",
+        element: <Suspense fallback={<PageLoader />}><VerifyEmail /></Suspense>
       },
+      
+      // Admin routes with nested routing
       {
-        path: 'discount-codes',
-        element: <Suspense fallback={<PageLoader />}><DiscountCodes /></Suspense>
-      }
-    ]
-  },
+        path: ROUTES.ADMIN,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <ProtectedRoute adminOnly={true}>
+              <AdminPanel />
+            </ProtectedRoute>
+          </Suspense>
+        ),
+        children: [
+          {
+            index: true,
+            element: <Suspense fallback={<PageLoader />}><Dashboard /></Suspense>
+          },
+          {
+            path: 'users',
+            element: <Suspense fallback={<PageLoader />}><Users /></Suspense>
+          },
+          {
+            path: 'products',
+            element: <Suspense fallback={<PageLoader />}><AdminProducts /></Suspense>
+          },
+          {
+            path: 'orders',
+            element: <Suspense fallback={<PageLoader />}><AdminOrders /></Suspense>
+          },
+          {
+            path: 'discount-codes',
+            element: <Suspense fallback={<PageLoader />}><DiscountCodes /></Suspense>
+          }
+        ]
+      },
 
-  // Main app routes with Layout
-  {
-    element: <Layout />,
-    errorElement: <ErrorBoundary />,
-    children: [
+      // Main app routes with Layout
       {
-        path: ROUTES.HOME,
-        element: <Suspense fallback={<PageLoader />}><Home /></Suspense>,
-        errorElement: <ErrorBoundary />
-      },
-      {
-        path: ROUTES.COLLECTION,
-        element: <Suspense fallback={<PageLoader />}><Collection /></Suspense>,
-        errorElement: <ErrorBoundary />
-      },
-      {
-        path: ROUTES.PRODUCTS,
-        element: <Suspense fallback={<PageLoader />}><Products /></Suspense>
-      },
-      {
-        path: ROUTES.PRODUCT_DETAIL,
-        element: <Suspense fallback={<PageLoader />}><ProductDetail /></Suspense>
-      },
-      {
-        path: ROUTES.ABOUT,
-        element: <Suspense fallback={<PageLoader />}><About /></Suspense>
-      },
-      {
-        path: ROUTES.CONTACT,
-        element: <Suspense fallback={<PageLoader />}><Contact /></Suspense>
-      },
-      {
-        path: ROUTES.CART,
-        element: <Suspense fallback={<PageLoader />}><Cart /></Suspense>
-      },
-      {
-        path: ROUTES.CHECKOUT,
-        element: <Suspense fallback={<PageLoader />}><Checkout /></Suspense>
-      },
-      {
-        path: ROUTES.PLACE_ORDER,
-        element: <Suspense fallback={<PageLoader />}><PlaceOrder /></Suspense>
-      },
-      {
-        path: ROUTES.PAYMENT,
-        element: <Suspense fallback={<PageLoader />}><Payment /></Suspense>
-      },
-      {
-        path: ROUTES.ORDERS,
-        element: <Suspense fallback={<PageLoader />}><Orders /></Suspense>
-      },
-      {
-        path: ROUTES.ORDER_HISTORY,
-        element: <Suspense fallback={<PageLoader />}><OrderHistory /></Suspense>
-      },
-      {
-        path: `${ROUTES.ORDER_HISTORY}/:orderId`,
-        element: <Suspense fallback={<PageLoader />}><OrderDetail /></Suspense>
-      },
-      {
-        path: ROUTES.PROFILE,
-        element: <Suspense fallback={<PageLoader />}><Profile /></Suspense>
-      },
-      {
-        path: '/carousel-demo',
-        element: <Suspense fallback={<PageLoader />}><CarouselDemo /></Suspense>
+        element: <Layout />,
+        errorElement: <ErrorBoundary />,
+        children: [
+          {
+            path: ROUTES.HOME,
+            element: <Suspense fallback={<PageLoader />}><Home /></Suspense>,
+            errorElement: <ErrorBoundary />
+          },
+          {
+            path: ROUTES.COLLECTION,
+            element: <Suspense fallback={<PageLoader />}><Collection /></Suspense>,
+            errorElement: <ErrorBoundary />
+          },
+          {
+            path: ROUTES.PRODUCTS,
+            element: <Suspense fallback={<PageLoader />}><Products /></Suspense>
+          },
+          {
+            path: ROUTES.PRODUCT_DETAIL,
+            element: <Suspense fallback={<PageLoader />}><ProductDetail /></Suspense>
+          },
+          {
+            path: ROUTES.ABOUT,
+            element: <Suspense fallback={<PageLoader />}><About /></Suspense>
+          },
+          {
+            path: ROUTES.CONTACT,
+            element: <Suspense fallback={<PageLoader />}><Contact /></Suspense>
+          },
+          {
+            path: ROUTES.CART,
+            element: <Suspense fallback={<PageLoader />}><Cart /></Suspense>
+          },
+          {
+            path: ROUTES.CHECKOUT,
+            element: <Suspense fallback={<PageLoader />}><Checkout /></Suspense>
+          },
+          {
+            path: ROUTES.PLACE_ORDER,
+            element: <Suspense fallback={<PageLoader />}><PlaceOrder /></Suspense>
+          },
+          {
+            path: ROUTES.PAYMENT,
+            element: <Suspense fallback={<PageLoader />}><Payment /></Suspense>
+          },
+          {
+            path: ROUTES.ORDERS,
+            element: <Suspense fallback={<PageLoader />}><Orders /></Suspense>
+          },
+          {
+            path: ROUTES.ORDER_HISTORY,
+            element: <Suspense fallback={<PageLoader />}><OrderHistory /></Suspense>
+          },
+          {
+            path: `${ROUTES.ORDER_HISTORY}/:orderId`,
+            element: <Suspense fallback={<PageLoader />}><OrderDetail /></Suspense>
+          },
+          {
+            path: ROUTES.PROFILE,
+            element: <Suspense fallback={<PageLoader />}><Profile /></Suspense>
+          },
+          {
+            path: '/carousel-demo',
+            element: <Suspense fallback={<PageLoader />}><CarouselDemo /></Suspense>
+          }
+        ]
       }
     ]
   }
