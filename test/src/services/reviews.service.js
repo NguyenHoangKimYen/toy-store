@@ -30,22 +30,24 @@ export const createReview = async (reviewData) => {
 
   // Use FormData if images are provided
   if (reviewData.images && reviewData.images.length > 0) {
+    // Validate max 5 images
+    if (reviewData.images.length > 5) {
+      throw new Error('Maximum 5 images allowed per review');
+    }
+
     const formData = new FormData();
     formData.append('productId', reviewData.productId);
     formData.append('orderItemId', reviewData.orderItemId);
     formData.append('rating', reviewData.rating);
     formData.append('comment', reviewData.comment?.trim() || '');
     
-    // Append each image file
+    // Append each image file - backend expects 'reviewImages' field name
     reviewData.images.forEach((image) => {
-      formData.append('images', image);
+      formData.append('reviewImages', image);
     });
 
-    const response = await apiClient.post('/reviews', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    // Don't set Content-Type header - let browser set it with boundary
+    const response = await apiClient.post('/reviews', formData);
     return response;
   }
 
