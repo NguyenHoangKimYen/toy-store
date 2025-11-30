@@ -181,8 +181,13 @@ const createProduct = async (productData, imgFiles) => {
         }
 
         // 3. Upload ảnh chính của Product (nếu có)
+        // hoặc sử dụng imageUrls đã upload sẵn từ client
         let imageUrls = [];
-        if (imgFiles && imgFiles.length > 0) {
+        if (productData.imageUrls && Array.isArray(productData.imageUrls)) {
+            // Client đã upload trước, gửi URLs
+            imageUrls = productData.imageUrls;
+        } else if (imgFiles && imgFiles.length > 0) {
+            // Upload từ server (legacy support)
             imageUrls = await uploadToS3(imgFiles, 'productImages');
         }
 
@@ -249,18 +254,26 @@ const createProduct = async (productData, imgFiles) => {
                 });
 
                 // c. Chuẩn bị object Variant
+                // Auto-generate SKU nếu không có (vì createMany không trigger pre-save middleware)
+                let variantSku = v.sku;
+                if (!variantSku || variantSku.trim() === '') {
+                    const timestamp = Date.now().toString(36).toUpperCase();
+                    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+                    variantSku = `VAR-${timestamp}-${random}`;
+                }
+
                 variantDocs.push({
                     productId: newProduct._id,
                     name:
                         v.name ||
                         `${productData.name} - ${attrs.map((a) => a.value).join(' ')}`,
-                    sku: v.sku,
+                    sku: variantSku,
                     weight: parseInt(v.weight || 100),
                     price: parseFloat(v.price || 0),
-                    stock: parseInt(v.stock || 0),
+                    stockQuantity: parseInt(v.stock || v.stockQuantity || 0),
                     attributes: attrs,
-                    imageUrls: [], // Chưa có ảnh
-                    imageUrls: [], // Chưa có ảnh
+                    imageUrls: v.imageUrls || [], // Sử dụng imageUrls từ client hoặc rỗng
+                    isActive: v.isActive !== false,
                 });
 
                 prices.push(parseFloat(v.price || 0));
@@ -298,16 +311,18 @@ const createProduct = async (productData, imgFiles) => {
             { session },
         );
 
-        // Recalculate totalStock within transaction (insertMany doesn't trigger save middleware)
-        const Variant = require("../models/variant.model");
-        await Variant.recalculateProductData(newProduct._id);
-
         // 8. Commit Transaction (Lưu tất cả)
         await session.commitTransaction();
 
+        // 9. Recalculate prices and stock AFTER transaction commit
+        // (insertMany doesn't trigger save middleware, so we need manual recalculation)
+        const Variant = require("../models/variant.model");
+        await Variant.recalculateProductData(newProduct._id);
+
         // Trả về sản phẩm hoàn chỉnh
         // Có thể cần gọi lại getById để lấy data đầy đủ populate
-        return await productRepository.findById(newProduct._id);
+        const finalProduct = await productRepository.findById(newProduct._id);
+        return finalProduct;
     } catch (error) {
         // 9. Rollback (Hủy tất cả thao tác DB)
         await session.abortTransaction();
@@ -352,7 +367,7 @@ const updateProduct = async (id, updateData, retryCount = 0) => {
             try {
                 await deleteFromS3(updateData.deletedImageUrls);
             } catch (err) {
-                // Continue even if S3 deletion fails
+                console.error('❌ S3 deletion failed:', err.message);
             }
         }
         
@@ -367,7 +382,7 @@ const updateProduct = async (id, updateData, retryCount = 0) => {
                 'status',
                 'isFeatured',
                 'categoryId',
-                'imageUrls', // Allow updating image URLs
+                'imageUrls',
             ];
 
             const updatePayload = {};
@@ -385,24 +400,40 @@ const updateProduct = async (id, updateData, retryCount = 0) => {
             if (Array.isArray(variantsInput)) {
                 const existingVariantIds = (product.variants || []).map(v => v.toString());
                 const incomingVariantIds = [];
-                const prices = []; // Để tính lại min/max price
+                const prices = [];
+                const newAttributes = [];
 
                 for (const v of variantsInput) {
                     const variantData = {
                         price: v.price?.$numberDecimal || v.price,
-                        stockQuantity: v.stockQuantity || v.stock, // Support cả 2 tên field
+                        stockQuantity: v.stockQuantity || v.stock,
                         attributes: v.attributes,
                         isActive: v.isActive !== false,
-                        imageUrls: v.imageUrls || [] // Include variant images
+                        imageUrls: v.imageUrls || []
                     };
                     
-                    // Only include SKU if it's provided and not undefined/null
                     if (v.sku) {
                         variantData.sku = v.sku;
                     }
                     
-                    // Collect price for recalculation
                     prices.push(parseFloat(variantData.price));
+
+                    // Collect attributes from variant
+                    if (v.attributes && Array.isArray(v.attributes)) {
+                        v.attributes.forEach(attr => {
+                            const existing = newAttributes.find(a => a.name === attr.name);
+                            if (existing) {
+                                if (!existing.values.includes(attr.value)) {
+                                    existing.values.push(attr.value);
+                                }
+                            } else {
+                                newAttributes.push({
+                                    name: attr.name,
+                                    values: [attr.value]
+                                });
+                            }
+                        });
+                    }
 
                     if (v._id && !v._id.startsWith('var_')) {
                         // UPDATE variant cũ
@@ -434,10 +465,10 @@ const updateProduct = async (id, updateData, retryCount = 0) => {
                      }
                 }
 
-                // Cập nhật danh sách variants ID vào Product
+                // Update product with collected attributes
+                updatePayload.attributes = newAttributes;
                 updatePayload.variants = incomingVariantIds;
 
-                // Cập nhật Min/Max Price
                 if (prices.length > 0) {
                     updatePayload.minPrice = Math.min(...prices);
                     updatePayload.maxPrice = Math.max(...prices);
@@ -465,13 +496,14 @@ const updateProduct = async (id, updateData, retryCount = 0) => {
             writeConcern: { w: 'majority' }
         });
 
-        // Transaction committed successfully
         return result;
 
     } catch (error) {
+        console.error('\n❌ UPDATE ERROR:', error.message);
+        console.error('Stack:', error.stack);
+        
         // Handle write conflicts with retry
         if (error.hasErrorLabel && error.hasErrorLabel('TransientTransactionError') && retryCount < MAX_RETRIES) {
-            console.log(`⚠️ Transaction conflict, retrying... (${retryCount + 1}/${MAX_RETRIES})`);
             await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, retryCount))); // Exponential backoff
             return updateProduct(id, updateData, retryCount + 1);
         }
