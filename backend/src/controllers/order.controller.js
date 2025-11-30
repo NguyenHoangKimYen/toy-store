@@ -74,7 +74,8 @@ module.exports = {
     },
 
     async adminGetAll(req, res) {
-        const orders = await orderService.getAll(req.query, req.query);
+        // Pass empty filter, all filtering is done via options
+        const orders = await orderService.getAll({}, req.query);
         return res.json({ success: true, orders });
     },
 
