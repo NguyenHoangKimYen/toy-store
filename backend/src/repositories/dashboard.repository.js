@@ -21,7 +21,7 @@ module.exports = {
                 $match: {
                     $or: [
                         // Tất cả đơn đã paid (mọi cổng)
-                        { paymentStatus: "paid" },
+                        { paymentStatus: "paid", paymentMethod: { $nin: COD_METHODS } },
                         // COD chỉ tính khi đã giao xong (đảm bảo đã thu tiền)
                         {
                             paymentMethod: { $in: COD_METHODS },
@@ -86,15 +86,36 @@ module.exports = {
 
     // 4. Revenue last 7 days (Bar chart)
     async getLast7DaysRevenue() {
-        const d = new Date();
-        d.setDate(d.getDate() - 7);
+        // Tính theo giờ Việt Nam (UTC+7)
+        const now = new Date();
+        const utc7Now = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+        const utc7Start = new Date(utc7Now);
+        utc7Start.setDate(utc7Start.getDate() - 7);
 
         return Order.aggregate([
-            { $match: { paymentStatus: "paid", createdAt: { $gte: d } } },
+            {
+                $match: {
+                    createdAt: { $gte: new Date(utc7Start.getTime() - 7 * 60 * 60 * 1000) }, // convert back to UTC
+                    $or: [
+                        // Online đã thanh toán
+                        { paymentStatus: "paid", paymentMethod: { $nin: COD_METHODS } },
+                        // COD chỉ tính khi đã giao/hoàn tất
+                        {
+                            paymentMethod: { $in: COD_METHODS },
+                            status: { $in: ["delivered", "completed"] },
+                            paymentStatus: { $ne: "failed" },
+                        },
+                    ],
+                },
+            },
             {
                 $group: {
                     _id: {
-                        $dateToString: { date: "$createdAt", format: "%d-%m" },
+                        $dateToString: {
+                            date: "$createdAt",
+                            format: "%d-%m",
+                            timezone: "+07:00",
+                        },
                     },
                     total: { $sum: "$totalAmount" },
                     orders: { $sum: 1 },
@@ -109,7 +130,14 @@ module.exports = {
         return Order.aggregate([
             {
                 $match: {
-                    paymentStatus: "paid",
+                    $or: [
+                        { paymentStatus: "paid", paymentMethod: { $nin: COD_METHODS } },
+                        {
+                            paymentMethod: { $in: COD_METHODS },
+                            status: { $in: ["delivered", "completed"] },
+                            paymentStatus: { $ne: "failed" },
+                        },
+                    ],
                     createdAt: {
                         $gte: new Date(`${year}-01-01`),
                         $lte: new Date(`${year}-12-31`),
@@ -148,7 +176,7 @@ module.exports = {
                 $match: {
                     $or: [
                         // Tính cho tất cả cổng đã paid
-                        { paymentStatus: "paid" },
+                        { paymentStatus: "paid", paymentMethod: { $nin: COD_METHODS } },
                         // COD: chỉ tính khi đã giao/hoàn tất (tránh confirmed nhưng chưa thu tiền)
                         {
                             paymentMethod: { $in: COD_METHODS },

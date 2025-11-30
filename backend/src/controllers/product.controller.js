@@ -94,7 +94,8 @@ const updateProduct = async (req, res, next) => {
             });
         }
 
-        // CHỈ TRUYỀN req.body, KHÔNG TRUYỀN req.files nữa
+        // console.log('📝 Update Product Request:', req.body);
+
         const updatedProduct = await productService.updateProduct(id, req.body);
 
         return res.status(200).json({
@@ -102,6 +103,7 @@ const updateProduct = async (req, res, next) => {
             data: updatedProduct,
         });
     } catch (error) {
+        console.error('❌ Update Product Error:', error.message);
         next(error);
     }
 };
@@ -150,6 +152,42 @@ const removeProductImages = async (req, res, next) => {
     }
 };
 
+/** Upload ảnh trực tiếp lên S3 (không cần productId) */
+const uploadImagesToS3 = async (req, res, next) => {
+    try {
+        if (!req.files) {
+            return res.status(400).json({ 
+                success: false,
+                message: 'No files uploaded - req.files is undefined' 
+            });
+        }
+        
+        const files = req.files;
+        if (!files.length) {
+            return res.status(400).json({ 
+                success: false,
+                message: 'No files uploaded - files array is empty' 
+            });
+        }
+
+        const { uploadToS3 } = require('../utils/s3.helper.js');
+        const uploadedUrls = await uploadToS3(files, 'productImages');
+        
+        res.json({ 
+            success: true, 
+            imageUrls: uploadedUrls,
+            message: `Uploaded ${uploadedUrls.length} images successfully`
+        });
+    } catch (err) {
+        if (!res.headersSent) {
+            res.status(500).json({
+                success: false,
+                message: err.message || 'Failed to upload images'
+            });
+        }
+    }
+};
+
 module.exports = {
     getAllProducts,
     getProductById,
@@ -161,4 +199,5 @@ module.exports = {
     deleteProduct,
     addProductImages,
     removeProductImages,
+    uploadImagesToS3,
 };
