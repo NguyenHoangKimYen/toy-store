@@ -1,143 +1,75 @@
-﻿import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { getProducts } from '@/services';
+﻿import React, { lazy, Suspense } from 'react';
+import { useHomeData } from './hooks';
 import './Home.css';
 
-// Lazy load sections below the fold for faster initial render
+// Lazy load sections for better initial load performance
 const HeroSection = lazy(() => import('./components/Hero').then(m => ({ default: m.HeroSection })));
 const ProductShowcaseSection = lazy(() => import('./components/Category').then(m => ({ default: m.ProductShowcaseSection })));
 const CategorizedProductsSection = lazy(() => import('./components/Category').then(m => ({ default: m.CategorizedProductsSection })));
 
+// Loading skeleton component
+const SectionSkeleton = () => (
+  <div className="home-section">
+    <div className="section-container">
+      <div className="skeleton" style={{ width: '200px', height: '32px', marginBottom: '1.5rem' }} />
+      <div style={{ display: 'flex', gap: '1.25rem', overflow: 'hidden' }}>
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="skeleton skeleton-card" />
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const HeroSkeleton = () => (
+  <div className="skeleton" style={{ height: '70vh', minHeight: '500px', maxHeight: '700px' }} />
+);
+
 const Home = () => {
-  const [featuredProducts, setFeaturedProducts] = useState([]);
-  const [newProducts, setNewProducts] = useState([]);
-  const [bestSellers, setBestSellers] = useState([]);
-  const [loadingFeatured, setLoadingFeatured] = useState(true);
-  const [loadingNew, setLoadingNew] = useState(true);
-  const [loadingBestSellers, setLoadingBestSellers] = useState(true);
-
-  // Load featured products immediately (critical)
-  useEffect(() => {
-    const loadFeatured = async () => {
-      try {
-        const response = await getProducts({ isFeatured: true, limit: 6 });
-        const products = response.products || response || [];
-        setFeaturedProducts(products);
-      } catch (error) {
-        console.error('Error loading featured products:', error);
-      } finally {
-        setLoadingFeatured(false);
-      }
-    };
-    
-    loadFeatured();
-  }, []);
-
-  // Load new products (above fold)
-  useEffect(() => {
-    const loadNew = async () => {
-      try {
-        const response = await getProducts({ isNew: true, limit: 8 });
-        const products = response.products || response || [];
-        setNewProducts(products);
-      } catch (error) {
-        console.error('Error loading new products:', error);
-      } finally {
-        setLoadingNew(false);
-      }
-    };
-    
-    loadNew();
-  }, []);
-
-  // Load best sellers after initial render (progressive enhancement)
-  useEffect(() => {
-    const loadBestSellers = async () => {
-      try {
-        const response = await getProducts({ isBestSeller: true, limit: 12 });
-        const products = response.products || response || [];
-        setBestSellers(products);
-      } catch (error) {
-        console.error('Error loading best sellers:', error);
-      } finally {
-        setLoadingBestSellers(false);
-      }
-    };
-    
-    loadBestSellers();
-  }, []);
-
-  const categorizedProducts = {
-    featured: featuredProducts,
-    newProducts,
-    bestSellers,
-  };
+  const { 
+    featuredProducts, 
+    newProducts, 
+    bestSellers, 
+    loading,
+  } = useHomeData();
 
   return (
-    <div className="home-gradient min-h-screen overflow-x-hidden">
-      {/* Hero Section with Featured Products Carousel */}
-      {loadingFeatured ? (
-        <div className="h-[65vh] min-h-[420px] max-h-[520px] md:h-[100vh] md:min-h-[600px] md:max-h-[900px] flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <div className="w-12 h-12 md:w-16 md:h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <p className="text-gray-600 font-medium text-sm md:text-base">Loading featured products...</p>
-          </div>
-        </div>
-      ) : categorizedProducts.featured && categorizedProducts.featured.length > 0 ? (
-        <Suspense fallback={
-          <div className="h-[65vh] min-h-[420px] max-h-[520px] md:h-[100vh] md:min-h-[600px] md:max-h-[900px] bg-gradient-to-br from-violet-50 to-purple-50 animate-pulse" />
-        }>
-          <HeroSection featuredProducts={categorizedProducts.featured} />
+    <div className="home-page">
+      {/* Hero Section */}
+      {loading.featured ? (
+        <HeroSkeleton />
+      ) : featuredProducts.length > 0 ? (
+        <Suspense fallback={<HeroSkeleton />}>
+          <HeroSection featuredProducts={featuredProducts} />
         </Suspense>
       ) : null}
 
-      {/* New Arrivals Section - Above Everything */}
-      <Suspense fallback={
-        <div className="h-[400px] md:h-[500px] animate-pulse px-3 sm:px-4 md:px-[5%] py-8 sm:py-12 md:py-20">
-          <div className="h-8 md:h-10 w-48 md:w-64 bg-gray-200 rounded mb-6 md:mb-10"></div>
-          <div className="flex gap-3 md:gap-4 overflow-hidden">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="w-[140px] sm:w-[180px] md:w-[280px] h-[240px] sm:h-[300px] md:h-[380px] bg-gray-200 rounded-lg flex-shrink-0"></div>
-            ))}
-          </div>
-        </div>
-      }>
+      {/* New Arrivals */}
+      <Suspense fallback={<SectionSkeleton />}>
         <ProductShowcaseSection
           title="New Arrivals"
           subtitle="Fresh drops you can't miss"
-          products={categorizedProducts.newProducts}
+          products={newProducts}
           viewAllLink="/products?sortBy=createdAt&sortOrder=desc"
-          loading={loadingNew}
+          loading={loading.new}
         />
       </Suspense>
 
-      {/* Best Sellers Section */}
-      <Suspense fallback={
-        <div className="h-[400px] md:h-[500px] animate-pulse px-3 sm:px-4 md:px-[5%] py-8 sm:py-12 md:py-20">
-          <div className="h-8 md:h-10 w-48 md:w-64 bg-gray-200 rounded mb-6 md:mb-10"></div>
-          <div className="flex gap-3 md:gap-4 overflow-hidden">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="w-[140px] sm:w-[180px] md:w-[280px] h-[240px] sm:h-[300px] md:h-[380px] bg-gray-200 rounded-lg flex-shrink-0"></div>
-            ))}
-          </div>
-        </div>
-      }>
+      {/* Best Sellers */}
+      <Suspense fallback={<SectionSkeleton />}>
         <ProductShowcaseSection
           title="Best Sellers"
           subtitle="Customer favorites"
-          products={categorizedProducts.bestSellers}
+          products={bestSellers}
           viewAllLink="/products?sortBy=totalUnitsSold&sortOrder=desc"
-          loading={loadingBestSellers}
+          loading={loading.bestSellers}
         />
       </Suspense>
 
-      {/* Categorized Products Section */}
-      <div className="px-3 sm:px-4 md:px-[5%]">
-        <Suspense fallback={
-          <div className="h-[450px] sm:h-[550px] md:h-[700px] bg-gray-50 animate-pulse rounded-lg" />
-        }>
-          <CategorizedProductsSection />
-        </Suspense>
-      </div>
+      {/* Shop by Category */}
+      <Suspense fallback={<SectionSkeleton height="500px" />}>
+        <CategorizedProductsSection />
+      </Suspense>
     </div>
   );
 };

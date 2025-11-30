@@ -110,10 +110,10 @@ const AdminSidebar = ({ onNavigate }) => {
 
   return (
     <div className="custom-scrollbar px-2">
-      <div className="admin-sidebar-shell border border-purple-100/70 rounded-2xl p-5 shadow-[0_10px_30px_-22px_rgba(124,58,237,0.18)] backdrop-blur flex flex-col gap-6 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_36px_-20px_rgba(124,58,237,0.2)]">
+      <div className="admin-sidebar-shell rounded-xl p-5 flex flex-col gap-6">
         {/* Logo */}
         <div className="flex items-center gap-2 pt-1 pb-1">
-          <span className="brand-logo text-2xl leading-none">MilkyBloom</span>
+          <span className="text-xl font-semibold text-slate-800">MilkyBloom</span>
         </div>
 
         {/* Account */}
@@ -121,17 +121,17 @@ const AdminSidebar = ({ onNavigate }) => {
           <button
             type="button"
             onClick={() => setShowAccountMenu((v) => !v)}
-            className="flex items-center gap-2 w-full text-left rounded-xl px-1 py-1 transition hover:bg-purple-50/70"
+            className="flex items-center gap-2 w-full text-left rounded-lg px-2 py-1.5 transition hover:bg-slate-50"
           >
             {user?.avatar || user?.profileImage || user?.photoURL || getDefaultAvatar(user) ? (
               <img
                 src={user.avatar || user.profileImage || user.photoURL || getDefaultAvatar(user)}
                 alt={user?.fullname || 'Admin'}
-                className="size-9 rounded-full object-cover ring-1 ring-purple-100/70"
+                className="size-9 rounded-full object-cover border border-slate-200"
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <div className="size-9 rounded-full bg-gradient-to-br from-purple-500 via-indigo-500 to-sky-400 flex items-center justify-center text-white text-sm font-semibold">
+              <div className="size-9 rounded-full bg-slate-700 flex items-center justify-center text-white text-sm font-semibold">
                 {user?.fullname?.[0]?.toUpperCase() || 'A'}
               </div>
             )}
@@ -143,9 +143,9 @@ const AdminSidebar = ({ onNavigate }) => {
           </button>
 
           {showAccountMenu && (
-            <div className="absolute left-0 mt-2 w-44 rounded-xl border border-purple-100/70 bg-white/95 backdrop-blur shadow-[0_14px_34px_-22px_rgba(124,58,237,0.28)] p-2 z-20">
+            <div className="absolute left-0 mt-2 w-44 rounded-lg border border-slate-200 bg-white shadow-lg p-1.5 z-20">
               <button
-                className="w-full text-left px-3 py-2 rounded-lg hover:bg-purple-50 text-sm text-stone-700"
+                className="w-full text-left px-3 py-2 rounded-md hover:bg-slate-50 text-sm text-slate-700"
                 onClick={() => {
                   navigate(PUBLIC_ROUTES.PROFILE);
                   setShowAccountMenu(false);
@@ -154,7 +154,7 @@ const AdminSidebar = ({ onNavigate }) => {
                 View Profile
               </button>
               <button
-                className="w-full text-left px-3 py-2 rounded-lg hover:bg-purple-50 text-sm text-stone-700"
+                className="w-full text-left px-3 py-2 rounded-md hover:bg-slate-50 text-sm text-slate-700"
                 onClick={() => {
                   navigate(PUBLIC_ROUTES.LOGIN);
                   setShowAccountMenu(false);
@@ -163,7 +163,7 @@ const AdminSidebar = ({ onNavigate }) => {
                 Switch Account
               </button>
               <button
-                className="w-full text-left px-3 py-2 rounded-lg hover:bg-purple-50 text-sm text-stone-700"
+                className="w-full text-left px-3 py-2 rounded-md hover:bg-slate-50 text-sm text-slate-700"
                 onClick={() => {
                   navigate(PUBLIC_ROUTES.HOME);
                   setShowAccountMenu(false);
@@ -177,8 +177,8 @@ const AdminSidebar = ({ onNavigate }) => {
 
         {/* Search */}
         <div className="relative">
-          <label className="w-full bg-white/82 border border-purple-100/80 rounded-xl flex items-center px-3 py-2.5 text-sm text-stone-600 shadow-none backdrop-blur-sm">
-            <Search className="size-4 mr-1.5 text-stone-500" />
+          <label className="w-full bg-slate-50 border border-slate-200 rounded-lg flex items-center px-3 py-2.5 text-sm text-slate-600">
+            <Search className="size-4 mr-1.5 text-slate-400" />
             <input
               type="text"
               placeholder="Search"
@@ -190,24 +190,24 @@ const AdminSidebar = ({ onNavigate }) => {
                   if (firstMatch) handleTabClick(firstMatch.route);
                 }
               }}
-              className="w-full placeholder:text-stone-400 outline-none bg-transparent"
+              className="w-full placeholder:text-slate-400 outline-none bg-transparent"
             />
           </label>
 
           {searchTerm.trim().length >= 2 && (
-            <div className="absolute left-0 right-0 mt-2 rounded-2xl border border-purple-100/80 bg-white/95 backdrop-blur shadow-[0_12px_32px_-22px_rgba(124,58,237,0.26)] z-30 max-h-72 overflow-y-auto">
+            <div className="absolute left-0 right-0 mt-2 rounded-lg border border-slate-200 bg-white shadow-lg z-30 max-h-72 overflow-y-auto">
               {searchLoading ? (
-                <div className="px-3 py-3 text-sm text-stone-500">Searching...</div>
+                <div className="px-3 py-3 text-sm text-slate-500">Searching...</div>
               ) : searchResults.length === 0 ? (
-                <div className="px-3 py-3 text-sm text-stone-500">No results</div>
+                <div className="px-3 py-3 text-sm text-slate-500">No results</div>
               ) : (
                 searchResults.map((item) => (
                   <button
                     key={`${item.type}-${item.id}`}
-                    className="w-full text-left px-3 py-2.5 hover:bg-purple-50/70 transition flex items-start gap-2 rounded-xl"
+                    className="w-full text-left px-3 py-2.5 hover:bg-slate-50 transition flex items-start gap-2"
                     onClick={() => handleResultNavigate(item.route)}
                   >
-                    <span className="text-[11px] font-semibold text-purple-600">{item.type}</span>
+                    <span className="text-[11px] font-semibold text-slate-600">{item.type}</span>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium text-stone-800 truncate">{item.title}</div>
                       {item.subtitle && (
@@ -222,23 +222,22 @@ const AdminSidebar = ({ onNavigate }) => {
         </div>
 
         {/* Navigation */}
-        <div className="flex flex-col gap-2 pt-1">
+        <div className="flex flex-col gap-1 pt-1">
           {filteredTabs.map((tab) => (
             <button
               key={tab.route}
               onClick={() => handleTabClick(tab.route)}
-              className={`flex items-center justify-start gap-2.5 w-full rounded-lg px-3 py-2 text-sm transition-[background-color,color,border,box-shadow] cursor-pointer ${
+              className={`flex items-center justify-start gap-2.5 w-full rounded-md px-3 py-2 text-sm transition cursor-pointer ${
                 isActive(tab.route)
-                  ? 'bg-gradient-to-r from-purple-50 via-white to-sky-50 text-stone-900 border border-purple-100 shadow-[0_12px_32px_-24px_rgba(124,58,237,0.32)]'
-                  : 'bg-transparent text-stone-600 hover:bg-purple-50/70 border border-transparent'
+                  ? 'bg-slate-900 text-white'
+                  : 'text-slate-600 hover:bg-slate-50'
               }`}
             >
               {isActive(tab.route) ? (
-                <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-purple-500 to-sky-400 shadow-[0_0_0_6px_rgba(124,58,237,0.12)]" />
+                <span className="h-2 w-2 rounded-full bg-white" />
               ) : (
-                <span className="h-2 w-2 rounded-full bg-stone-300/70" />
+                <span className="h-2 w-2 rounded-full bg-slate-300" />
               )}
-              <span className="text-stone-500">{tab.icon}</span>
               <span className="font-medium">{tab.title}</span>
             </button>
           ))}

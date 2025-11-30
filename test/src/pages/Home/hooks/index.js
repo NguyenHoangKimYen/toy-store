@@ -1,3 +1,5 @@
-// This file is kept for backwards compatibility but hooks have been moved to @/hooks
-// Please use: import { useCategorizedProducts } from '@/hooks'
+// Home page hooks
+export { useHomeData } from './useHomeData';
+
+// Legacy export for backwards compatibility
 export { useCategorizedProducts } from '@/hooks/useProducts';
