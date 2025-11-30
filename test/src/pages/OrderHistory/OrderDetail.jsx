@@ -1,6 +1,6 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Package, MapPin, CreditCard, Clock, TrendingUp, CloudRain, Sun, Cloud, Wind } from 'lucide-react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, Package, MapPin, CreditCard, Clock, TrendingUp, CloudRain, Sun, Cloud, Wind, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Badge from '@/components/ui/badge';
 import { formatPrice } from '@/utils/formatPrice';
@@ -138,29 +138,55 @@ const OrderDetail = () => {
         <div className="detail-section">
           <h2><Package size={20} /> Items ({order.items?.length || 0})</h2>
           <div className="items-list">
-            {order.items?.map((item, index) => (
-              <div key={index} className="item-card">
-                <img 
-                  src={item.productId?.images?.[0] || '/placeholder-product.png'} 
-                  alt={item.productId?.name || 'Product'}
-                  className="item-image"
-                />
-                <div className="item-info">
-                  <h3>{item.productId?.name || 'Unknown Product'}</h3>
-                  {item.variantId && (
-                    <p className="item-variant">
-                      {item.variantId.color && <span>Color: {item.variantId.color}</span>}
-                      {item.variantId.size && <span>Size: {item.variantId.size}</span>}
-                    </p>
-                  )}
-                  <p className="item-quantity">Quantity: {item.quantity}</p>
+            {order.items?.map((item, index) => {
+              const productId = item.productId?._id || item.productId;
+              const productSlug = item.productId?.slug;
+              const productLink = productSlug ? `/products/${productSlug}` : `/products/${productId}`;
+              const isDelivered = order.status === 'delivered';
+              
+              // Get image: prefer variant image, then product image, then placeholder
+              const imageUrl = item.variantId?.imageUrls?.[0] || item.productId?.imageUrls?.[0] || '/placeholder-product.png';
+              
+              // Get variant attributes for display
+              const variantAttrs = item.variantId?.attributes;
+              const variantDisplay = Array.isArray(variantAttrs) 
+                ? variantAttrs.map(attr => `${attr.name}: ${attr.value}`).join(' • ')
+                : '';
+              
+              return (
+                <div key={index} className="item-card">
+                  <Link to={productLink} className="item-product-link">
+                    <img 
+                      src={imageUrl} 
+                      alt={item.productId?.name || 'Product'}
+                      className="item-image"
+                    />
+                    <div className="item-info">
+                      <h3>{item.productId?.name || 'Unknown Product'}</h3>
+                      {variantDisplay && (
+                        <p className="item-variant">{variantDisplay}</p>
+                      )}
+                      <p className="item-quantity">Quantity: {item.quantity}</p>
+                    </div>
+                  </Link>
+                  <div className="item-actions">
+                    <div className="item-price">
+                      <p className="unit-price">{formatPrice(parseDecimal(item.unitPrice))}</p>
+                      <p className="subtotal-price">{formatPrice(parseDecimal(item.subtotal))}</p>
+                    </div>
+                    {isDelivered && productId && (
+                      <Link 
+                        to={`${productLink}#reviews`}
+                        className="write-review-btn"
+                      >
+                        <Star size={14} />
+                        Write Review
+                      </Link>
+                    )}
+                  </div>
                 </div>
-                <div className="item-price">
-                  <p className="unit-price">{formatPrice(parseDecimal(item.unitPrice))}</p>
-                  <p className="subtotal-price">{formatPrice(parseDecimal(item.subtotal))}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

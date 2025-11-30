@@ -1,17 +1,20 @@
 import React, { useState, useCallback } from 'react';
-import { Star, ThumbsUp, Flag, Wifi } from 'lucide-react';
+import { Star, ThumbsUp, Flag, ShoppingBag, Clock, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useProductReviews } from '../hooks/useProductReviews';
-import { useReviewPolling } from '@/hooks';
+import { useReviewPolling, useAuth } from '@/hooks';
 import ReviewForm from './ReviewForm';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import './ReviewSection.css';
 
 const ReviewSection = ({ productId }) => {
-  const { reviews, stats, loading, submitting, hasMore, submitReview, loadMore, refetch } = useProductReviews(productId);
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
+  const { reviews, stats, loading, submitting, hasMore, eligibility, submitReview, loadMore, refetch } = useProductReviews(productId);
   const [showForm, setShowForm] = useState(false);
+  const [selectedOrderItem, setSelectedOrderItem] = useState(null);
 
   // Enable real-time updates via polling (30 seconds interval)
   const fetchReviews = useCallback(() => {
@@ -23,10 +26,29 @@ const ReviewSection = ({ productId }) => {
   useReviewPolling(fetchReviews, 30000, true);
 
   const handleSubmitReview = async (reviewData) => {
-    const success = await submitReview(reviewData);
+    if (!selectedOrderItem) {
+      return false;
+    }
+    const success = await submitReview({
+      ...reviewData,
+      orderItemId: selectedOrderItem.orderItemId,
+      images: reviewData.images || [], // Pass images to the hook
+    });
     if (success) {
       setShowForm(false);
+      setSelectedOrderItem(null);
     }
+    return success;
+  };
+
+  const handleStartReview = (orderItem) => {
+    setSelectedOrderItem(orderItem);
+    setShowForm(true);
+  };
+
+  const handleCancelReview = () => {
+    setShowForm(false);
+    setSelectedOrderItem(null);
   };
 
   const formatDate = (date) => {
@@ -70,19 +92,61 @@ const ReviewSection = ({ productId }) => {
   }
 
   return (
-    <div className="review-section">
+    <div className="review-section" id="reviews">
       <div className="review-header">
         <div className="review-header-left">
           <h2>Customer Reviews</h2>
         </div>
-        <Button onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Cancel' : 'Write a Review'}
-        </Button>
+        
+        {/* Review eligibility UI */}
+        {!showForm && (
+          <>
+            {!isAuthenticated ? (
+              <p className="review-login-prompt">Please log in to write a review</p>
+            ) : eligibility.loading ? (
+              <span className="text-sm text-gray-500">Checking eligibility...</span>
+            ) : eligibility.canReview ? (
+              <div className="eligible-orders">
+                <p className="text-sm text-gray-600 mb-2">Select a purchase to review:</p>
+                <div className="flex flex-wrap gap-2">
+                  {eligibility.eligibleItems.map((item) => (
+                    <Button
+                      key={item.orderItemId}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleStartReview(item)}
+                      className="flex items-center gap-2"
+                    >
+                      <ShoppingBag size={14} />
+                      {item.variantName} - {new Date(item.orderDate).toLocaleDateString()}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500 flex items-center gap-2">
+                <ShoppingBag size={16} />
+                You must purchase this product to write a review
+              </p>
+            )}
+          </>
+        )}
       </div>
 
-      {showForm && (
+      {showForm && selectedOrderItem && (
         <Card className="review-form-card">
+          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+            <p className="text-sm text-gray-600">
+              Reviewing purchase: <strong>{selectedOrderItem.variantName}</strong>
+              <span className="text-gray-400 ml-2">
+                (Order from {new Date(selectedOrderItem.orderDate).toLocaleDateString()})
+              </span>
+            </p>
+          </div>
           <ReviewForm onSubmit={handleSubmitReview} submitting={submitting} />
+          <Button variant="ghost" onClick={handleCancelReview} className="mt-2">
+            Cancel
+          </Button>
         </Card>
       )}
 
@@ -104,9 +168,11 @@ const ReviewSection = ({ productId }) => {
 
           {stats.averageRating > 0 && (
             <div className="rating-distribution">
-              {[5, 4, 3, 2, 1].map((rating) => 
-                renderRatingBar(rating, stats.distribution[rating] || 0, stats.total)
-              )}
+              {[5, 4, 3, 2, 1].map((rating) => (
+                <div key={rating}>
+                  {renderRatingBar(rating, stats.distribution[rating] || 0, stats.total)}
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -122,12 +188,26 @@ const ReviewSection = ({ productId }) => {
         ) : (
           <>
             {reviews.map((review) => {
-              // Handle backend's populated userId object
-              const userName = review.userName || review.userId?.name || review.userId?.fullName || 'Anonymous';
-              const userAvatar = review.userAvatar || review.userId?.avatar;
+              // Handle backend's populated userId object - use fullName field
+              const userName = review.userId?.fullName || review.userId?.username || review.userName || 'Anonymous';
+              const userAvatar = review.userId?.avatar || review.userAvatar;
+              const isOwnReview = user && (review.userId?._id === user._id || review.userId === user._id);
+              const isPending = review.status === 'pending' || review.status === 'flagged';
               
               return (
-              <Card key={review._id} className="review-card">
+              <Card key={review._id} className={`review-card ${isPending ? 'review-pending' : ''}`}>
+                {/* Pending/Flagged notice for own reviews */}
+                {isOwnReview && isPending && (
+                  <div className="review-pending-notice">
+                    <AlertTriangle size={16} />
+                    <span>
+                      {review.status === 'flagged' 
+                        ? 'Your review may contain inappropriate content and is being reviewed by our team.'
+                        : 'Your review is pending approval and will be visible to others once approved.'}
+                    </span>
+                  </div>
+                )}
+                
                 <div className="review-header-info">
                   <div className="reviewer-info">
                     {userAvatar ? (
@@ -138,7 +218,10 @@ const ReviewSection = ({ productId }) => {
                       </div>
                     )}
                     <div>
-                      <p className="reviewer-name">{userName}</p>
+                      <p className="reviewer-name">
+                        {userName}
+                        {isOwnReview && <span className="own-review-badge">You</span>}
+                      </p>
                       <p className="review-date">{formatDate(review.createdAt)}</p>
                     </div>
                   </div>
@@ -146,18 +229,46 @@ const ReviewSection = ({ productId }) => {
                     <div className="review-rating">{renderStars(review.rating)}</div>
                   )}
                 </div>
+                
+                {/* Variant Info */}
+                {(review.variantId?.attributes?.length > 0 || review.variantName) && (
+                  <div className="review-variant-info">
+                    <span>Purchased: <strong>
+                      {review.variantId?.attributes?.length > 0 
+                        ? review.variantId.attributes.map(attr => attr.value).join(', ')
+                        : review.variantName}
+                    </strong></span>
+                  </div>
+                )}
 
                 <p className="review-content">{review.comment || review.content}</p>
+                
+                {/* Review Images */}
+                {review.imageUrls && review.imageUrls.length > 0 && (
+                  <div className="review-images">
+                    {review.imageUrls.map((img, idx) => (
+                      <img 
+                        key={idx} 
+                        src={img} 
+                        alt={`Review image ${idx + 1}`} 
+                        className="review-image"
+                        onClick={() => window.open(img, '_blank')}
+                      />
+                    ))}
+                  </div>
+                )}
 
                 <div className="review-actions">
                   <Button variant="ghost" size="sm">
                     <ThumbsUp size={16} />
                     Helpful
                   </Button>
-                  <Button variant="ghost" size="sm">
-                    <Flag size={16} />
-                    Report
-                  </Button>
+                  {!isOwnReview && (
+                    <Button variant="ghost" size="sm">
+                      <Flag size={16} />
+                      Report
+                    </Button>
+                  )}
                 </div>
               </Card>
               );

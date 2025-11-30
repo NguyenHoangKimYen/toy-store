@@ -5,7 +5,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://api.milkybloomtoystore.
 // Remove trailing /api to get base URL
 const SOCKET_URL = API_URL.endsWith('/api') ? API_URL.slice(0, -4) : API_URL;
 
-// BroadcastChannel for cross-tab communication (works without backend socket)
+// BroadcastChannel for cross-tab communication (same browser, instant)
 const CART_CHANNEL_NAME = 'cart_updates';
 
 // Generate unique tab ID for conflict resolution
@@ -15,12 +15,16 @@ class SocketService {
   constructor() {
     this.socket = null;
     this.connected = false;
+    this.userId = null;
     this.broadcastChannel = null;
     this.broadcastCallbacks = new Set();
     this.tabId = TAB_ID;
     
     // Track last update timestamp per variant for conflict resolution
     this.lastUpdateTimestamps = {};
+    
+    // Store event callbacks for socket events
+    this.socketCallbacks = new Map(); // event -> Set of callbacks
     
     // Initialize BroadcastChannel for cross-tab sync
     this._initBroadcastChannel();
@@ -37,7 +41,7 @@ class SocketService {
           return;
         }
         
-        console.log('📡 Received cart update from tab:', sourceTabId, 'at', timestamp);
+        console.log('📡 [BroadcastChannel] Received from tab:', sourceTabId);
         
         if (type === 'cart_updated') {
           // Call all registered callbacks with timestamp for conflict resolution
@@ -50,47 +54,79 @@ class SocketService {
           });
         }
       };
-      console.log('📡 BroadcastChannel initialized, Tab ID:', this.tabId);
-    } else {
-      console.warn('⚠️ BroadcastChannel not supported in this browser');
     }
   }
 
   connect(userId) {
+    // Store userId for rejoining on reconnect
+    this.userId = userId;
+    
+    // If already connected, just join the room
     if (this.socket?.connected) {
+      if (userId) {
+        this.socket.emit('join_user_room', userId);
+      }
       return this.socket;
     }
 
-    console.log('🔌 Connecting to socket URL:', SOCKET_URL);
+    // If socket exists but not connected, disconnect first
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+    }
 
     this.socket = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 10,
+      timeout: 20000,
     });
 
     this.socket.on('connect', () => {
-      console.log('🟢 Socket connected:', this.socket.id);
       this.connected = true;
 
-      // Join user room if userId provided
-      if (userId) {
-        this.socket.emit('join_user_room', userId);
-        console.log('👤 Joined user room:', userId);
+      // Join user room
+      if (this.userId) {
+        this.socket.emit('join_user_room', this.userId);
       }
     });
 
     this.socket.on('disconnect', () => {
-      console.log('🔴 Socket disconnected');
       this.connected = false;
     });
 
-    this.socket.on('connect_error', (error) => {
-      console.error('❌ Socket connection error:', error.message);
+    this.socket.on('reconnect', () => {
+      // Rejoin room on reconnect
+      if (this.userId) {
+        this.socket.emit('join_user_room', this.userId);
+      }
+    });
+
+    this.socket.on('connect_error', () => {
+      // Connection error - socket.io will auto-retry
+    });
+
+    // Set up the main cart_updated listener that dispatches to all registered callbacks
+    this.socket.on('cart_updated', (data) => {
+      this._dispatchEvent('cart_updated', data);
     });
 
     return this.socket;
+  }
+
+  // Dispatch event to all registered callbacks
+  _dispatchEvent(event, data) {
+    const callbacks = this.socketCallbacks.get(event);
+    if (callbacks) {
+      callbacks.forEach(callback => {
+        try {
+          callback(data);
+        } catch (err) {
+          console.error(`Error in ${event} callback:`, err);
+        }
+      });
+    }
   }
 
   disconnect() {
@@ -98,36 +134,43 @@ class SocketService {
       this.socket.disconnect();
       this.socket = null;
       this.connected = false;
+      this.userId = null;
     }
   }
 
+  // Register a callback for socket events
   on(event, callback) {
-    if (this.socket) {
-      this.socket.on(event, callback);
+    if (!this.socketCallbacks.has(event)) {
+      this.socketCallbacks.set(event, new Set());
     }
+    this.socketCallbacks.get(event).add(callback);
   }
 
+  // Unregister a callback for socket events
   off(event, callback) {
-    if (this.socket) {
-      this.socket.off(event, callback);
+    const callbacks = this.socketCallbacks.get(event);
+    if (callbacks) {
+      callbacks.delete(callback);
     }
   }
 
   emit(event, data) {
     if (this.socket?.connected) {
       this.socket.emit(event, data);
+    } else {
+      console.warn(`⚠️ [Socket] Cannot emit ${event} - not connected`);
     }
   }
 
   // Subscribe to cart updates from BroadcastChannel (returns unsubscribe function)
   onCartUpdate(callback) {
     this.broadcastCallbacks.add(callback);
-    console.log('📡 Subscribed to cart updates, total listeners:', this.broadcastCallbacks.size);
+    console.log('📡 [BroadcastChannel] Subscribed, total listeners:', this.broadcastCallbacks.size);
     
     // Return unsubscribe function
     return () => {
       this.broadcastCallbacks.delete(callback);
-      console.log('📡 Unsubscribed from cart updates, total listeners:', this.broadcastCallbacks.size);
+      console.log('📡 [BroadcastChannel] Unsubscribed, remaining:', this.broadcastCallbacks.size);
     };
   }
 
@@ -140,15 +183,13 @@ class SocketService {
     const timestamp = Date.now();
     
     if (this.broadcastChannel) {
-      console.log('📡 Broadcasting cart update to other tabs at:', timestamp);
+      console.log('📡 [BroadcastChannel] Broadcasting update at:', timestamp);
       this.broadcastChannel.postMessage({
         type: 'cart_updated',
         payload: { ...data, _variantTimestamps: variantTimestamps },
         timestamp,
         sourceTabId: this.tabId,
       });
-    } else {
-      console.warn('⚠️ BroadcastChannel not available');
     }
   }
 
@@ -183,6 +224,18 @@ class SocketService {
 
   isConnected() {
     return this.connected && this.socket?.connected;
+  }
+  
+  /**
+   * Force refresh - useful for debugging
+   */
+  forceReconnect() {
+    console.log('🔄 [Socket] Force reconnecting...');
+    const userId = this.userId;
+    this.disconnect();
+    if (userId) {
+      this.connect(userId);
+    }
   }
 }
 

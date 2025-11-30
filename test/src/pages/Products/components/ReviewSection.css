@@ -189,6 +189,18 @@
   font-weight: 600;
   color: #1a1a1a;
   margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.own-review-badge {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.15rem 0.4rem;
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-radius: 4px;
 }
 
 .review-date {
@@ -216,6 +228,69 @@
   margin-bottom: 1rem;
 }
 
+/* Variant Info */
+.review-variant-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: #f3f4f6;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #4b5563;
+  margin-bottom: 0.75rem;
+}
+
+.review-variant-info strong {
+  color: #1f2937;
+}
+
+/* Review Images */
+.review-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.review-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid #e5e7eb;
+}
+
+.review-image:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Pending Review Styles */
+.review-pending {
+  border: 1px solid #fbbf24;
+  background: #fffbeb;
+}
+
+.review-pending-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  background: #fef3c7;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #92400e;
+}
+
+.review-pending-notice svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
 .review-actions {
   display: flex;
   gap: 0.5rem;
@@ -241,5 +316,10 @@
   .review-header-info {
     flex-direction: column;
     gap: 1rem;
+  }
+  
+  .review-image {
+    width: 60px;
+    height: 60px;
   }
 }

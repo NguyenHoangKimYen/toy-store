@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { getProductReviews, createReview, getReviewStats } from '@/services/reviews.service';
+import { getProductReviews, createReview, getReviewStats, checkReviewEligibility } from '@/services/reviews.service';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks';
 
 export const useProductReviews = (productId) => {
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
   const [reviews, setReviews] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -11,6 +14,13 @@ export const useProductReviews = (productId) => {
   const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 10;
+  
+  // Review eligibility state
+  const [eligibility, setEligibility] = useState({
+    canReview: false,
+    eligibleItems: [],
+    loading: true,
+  });
 
   const loadReviews = async (resetPage = false) => {
     try {
@@ -54,13 +64,33 @@ export const useProductReviews = (productId) => {
     }
   };
 
+  const loadEligibility = async () => {
+    if (!isAuthenticated || !productId) {
+      setEligibility({ canReview: false, eligibleItems: [], loading: false });
+      return;
+    }
+    
+    try {
+      const result = await checkReviewEligibility(productId);
+      setEligibility({
+        canReview: result.canReview,
+        eligibleItems: result.eligibleItems || [],
+        loading: false,
+      });
+    } catch (err) {
+      console.error('Error checking review eligibility:', err);
+      setEligibility({ canReview: false, eligibleItems: [], loading: false });
+    }
+  };
+
   useEffect(() => {
     if (productId) {
       loadReviews(true);
       loadStats();
+      loadEligibility();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productId]);
+  }, [productId, isAuthenticated]);
 
   const submitReview = async (reviewData) => {
     try {
@@ -69,10 +99,10 @@ export const useProductReviews = (productId) => {
       // Transform frontend field names to backend field names
       const backendData = {
         productId,
-        variantId: reviewData.variantId, // Must be provided
+        orderItemId: reviewData.orderItemId, // Required - links to specific order
         rating: reviewData.rating,
-        comment: reviewData.content || reviewData.comment, // Frontend uses 'content', backend uses 'comment'
-        images: reviewData.images, // Optional images for upload
+        comment: reviewData.content || reviewData.comment,
+        images: reviewData.images || [], // Include images if provided
       };
       
       const result = await createReview(backendData);
@@ -82,8 +112,9 @@ export const useProductReviews = (productId) => {
       // Add new review to the top of the list
       setReviews(prev => [newReview, ...prev]);
       
-      // Reload stats
+      // Reload stats and eligibility (removes the used order item)
       await loadStats();
+      await loadEligibility();
       
       toast.success('Review submitted successfully!');
       return true;
@@ -114,8 +145,12 @@ export const useProductReviews = (productId) => {
     submitting,
     error,
     hasMore,
+    eligibility,
     submitReview,
     loadMore,
-    refetch: () => loadReviews(true),
+    refetch: () => {
+      loadReviews(true);
+      loadEligibility();
+    },
   };
 };
