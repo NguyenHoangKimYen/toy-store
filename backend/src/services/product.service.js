@@ -340,50 +340,145 @@ const deleteProduct = async (id) => {
 
 /**
  * Cập nhật thông tin sản phẩm (chỉ các trường được phép trong whitelist)
+ * NOTE: Images are handled separately via addImagesToProduct/removeImagesFromProduct
  */
-const updateProduct = async (id, updateData) => {
-    const existingProduct = await productRepository.findById(id);
-    if (!existingProduct) throw new Error("Product not found");
+const updateProduct = async (id, updateData, retryCount = 0) => {
+    const MAX_RETRIES = 3;
+    const session = await mongoose.startSession();
+    
+    try {
+        // 1. Delete images from S3 if specified
+        if (updateData.deletedImageUrls && Array.isArray(updateData.deletedImageUrls) && updateData.deletedImageUrls.length > 0) {
+            try {
+                await deleteFromS3(updateData.deletedImageUrls);
+            } catch (err) {
+                // Continue even if S3 deletion fails
+            }
+        }
+        
+        const result = await session.withTransaction(async () => {
+            const product = await productRepository.findById(id);
+            if (!product) throw new Error("Product not found");
 
-    const validStatuses = ['Draft', 'Published', 'Archived', 'Disabled'];
+            const allowedUpdates = [
+                'name',
+                'slug',
+                'description',
+                'status',
+                'isFeatured',
+                'categoryId',
+                'imageUrls', // Allow updating image URLs
+            ];
 
-    const allowedUpdates = [
-        'name',
-        'slug',
-        'description',
-        'status',
-        'isFeatured',
-        'categoryId',
-    ];
+            const updatePayload = {};
 
-    const updatePayload = {};
+            Object.keys(updateData).forEach(key => {
+                if (allowedUpdates.includes(key)) {
+                    updatePayload[key] = updateData[key];
+                }
+            });
 
-    Object.keys(updateData).forEach((key) => {
-        if (allowedUpdates.includes(key)) {
-            const value = updateData[key];
+        // Xử lý Variants (Đồng bộ hóa)
+        if (updateData.variants) {
+            const variantsInput = updateData.variants;
 
-            if (value !== undefined) {
-                if (key === 'status') {
-                    if (!validStatuses.includes(value)) {
-                        throw new Error(
-                            `Invalid status: '${value}'. Must be one of: ${validStatuses.join(', ')}`,
-                        );
+            if (Array.isArray(variantsInput)) {
+                const existingVariantIds = (product.variants || []).map(v => v.toString());
+                const incomingVariantIds = [];
+                const prices = []; // Để tính lại min/max price
+
+                for (const v of variantsInput) {
+                    const variantData = {
+                        price: v.price?.$numberDecimal || v.price,
+                        stockQuantity: v.stockQuantity || v.stock, // Support cả 2 tên field
+                        attributes: v.attributes,
+                        isActive: v.isActive !== false,
+                        imageUrls: v.imageUrls || [] // Include variant images
+                    };
+                    
+                    // Only include SKU if it's provided and not undefined/null
+                    if (v.sku) {
+                        variantData.sku = v.sku;
+                    }
+                    
+                    // Collect price for recalculation
+                    prices.push(parseFloat(variantData.price));
+
+                    if (v._id && !v._id.startsWith('var_')) {
+                        // UPDATE variant cũ
+                        await variantRepository.update(v._id, variantData, { session });
+                        incomingVariantIds.push(v._id);
+                    } else {
+                        // CREATE variant mới
+                        // Lưu ý: Nếu variant có ảnh riêng, logic upload ảnh variant cần xử lý riêng hoặc upload trước
+                        const newVariant = await variantRepository.create({
+                            ...variantData,
+                            productId: id
+                        }, { session });
+                        incomingVariantIds.push(newVariant._id.toString());
                     }
                 }
 
-                updatePayload[key] = value;
+                // DELETE các variant không còn tồn tại trong danh sách gửi lên
+                // (Logic này tùy chọn: Nếu bạn muốn xóa variant khi user xóa dòng trên UI)
+                if (updateData.deletedVariantIds) {
+                     let deletedIds = updateData.deletedVariantIds;
+                     if (typeof deletedIds === 'string') try { deletedIds = JSON.parse(deletedIds); } catch(e){}
+                     
+                     if (Array.isArray(deletedIds)) {
+                         for (const delId of deletedIds) {
+                             await variantRepository.deleteById(delId, { session });
+                         }
+                         // Filter out deleted IDs from incoming list just in case
+                         // ...
+                     }
+                }
+
+                // Cập nhật danh sách variants ID vào Product
+                updatePayload.variants = incomingVariantIds;
+
+                // Cập nhật Min/Max Price
+                if (prices.length > 0) {
+                    updatePayload.minPrice = Math.min(...prices);
+                    updatePayload.maxPrice = Math.max(...prices);
+                }
             }
         }
-    });
 
-    if (updateData.attributes || updateData.variants || updateData.imageUrls) {
-        console.warn(
-            `[WARN] Attempted to update restricted fields (attributes, variants, imageUrls) on product ${id}. These fields must be updated via their dedicated endpoints.`,
-        );
+        // 4. Lưu Product
+        await productRepository.update(id, updatePayload, { session });
+        
+        // Return updated product from within transaction
+        const Product = mongoose.model('Product');
+        const updatedProduct = await Product.findById(id)
+            .populate([
+                { path: 'categoryId', select: 'name slug description' },
+                { path: 'variants' }
+            ])
+            .session(session);
+        
+        return updatedProduct;
+        
+        }, {
+            readPreference: 'primary',
+            readConcern: { level: 'local' },
+            writeConcern: { w: 'majority' }
+        });
+
+        // Transaction committed successfully
+        return result;
+
+    } catch (error) {
+        // Handle write conflicts with retry
+        if (error.hasErrorLabel && error.hasErrorLabel('TransientTransactionError') && retryCount < MAX_RETRIES) {
+            console.log(`⚠️ Transaction conflict, retrying... (${retryCount + 1}/${MAX_RETRIES})`);
+            await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, retryCount))); // Exponential backoff
+            return updateProduct(id, updateData, retryCount + 1);
+        }
+        throw error;
+    } finally {
+        session.endSession();
     }
-
-    const updatedProduct = await productRepository.update(id, updatePayload);
-    return updatedProduct;
 };
 
 /**
