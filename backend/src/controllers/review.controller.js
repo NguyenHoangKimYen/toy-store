@@ -178,6 +178,48 @@ const getPendingReviews = async (req, res, next) => {
     }
 };
 
+/**
+ * @route   POST /api/reviews/:reviewId/helpful
+ * @desc    Toggle helpful status for a review
+ * @access  Private
+ */
+const toggleHelpful = async (req, res, next) => {
+    try {
+        const { reviewId } = req.params;
+        const userId = req.user._id;
+
+        const review = await Review.findById(reviewId);
+        if (!review) {
+            return res.status(404).json({ message: 'Review not found' });
+        }
+
+        // Check if user already marked as helpful
+        const hasLiked = review.helpfulUsers.includes(userId);
+
+        if (hasLiked) {
+            // Unlike: remove user from helpfulUsers array
+            review.helpfulUsers = review.helpfulUsers.filter(
+                id => id.toString() !== userId.toString()
+            );
+            review.helpfulCount = Math.max(0, review.helpfulCount - 1);
+        } else {
+            // Like: add user to helpfulUsers array
+            review.helpfulUsers.push(userId);
+            review.helpfulCount += 1;
+        }
+
+        await review.save();
+
+        res.status(200).json({
+            message: hasLiked ? 'Removed helpful mark' : 'Marked as helpful',
+            helpfulCount: review.helpfulCount,
+            isHelpful: !hasLiked,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createReview,
     getReviewsByProductId,
@@ -185,5 +227,6 @@ module.exports = {
     deleteReview,
     moderateReview,
     getPendingReviews,
-    checkEligibility
+    checkEligibility,
+    toggleHelpful
 };

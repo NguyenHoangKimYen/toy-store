@@ -78,6 +78,19 @@ const ReviewSchema = new mongoose.Schema(
 
         moderatedAt: Date,
         rejectionReason: String,
+
+        // Helpful/Likes tracking
+        helpfulUsers: {
+            type: [mongoose.Schema.Types.ObjectId],
+            ref: 'User',
+            default: [],
+        },
+
+        helpfulCount: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
     },
     {
         timestamps: true,
