@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
-import { Package, Truck, CheckCircle, XCircle, Clock, Eye } from 'lucide-react'
+import { Package, Truck, CheckCircle, XCircle, Clock, Eye, Search, Filter } from 'lucide-react'
 import { getAllOrders, updateOrderStatus } from '@/services/orders.service'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,6 @@ import { formatPrice } from '@/utils/formatPrice'
 import OrderDetailModal from './components/OrderDetailModal'
 import OrderFilters from './components/OrderFilters'
 import { AdminContent } from '../components'
-import { PageHeader, SearchBar } from '@/components/common'
 import { useDebounce } from '@/hooks'
 
 const Orders = () => {
@@ -138,6 +137,9 @@ const Orders = () => {
               setDeliveryTypeFilter={setDeliveryTypeFilter}
               paymentMethodFilter={paymentMethodFilter}
               setPaymentMethodFilter={setPaymentMethodFilter}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              showFilters={showFilters}
             />
           </div>
         )}

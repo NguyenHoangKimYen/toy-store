@@ -4,7 +4,7 @@ import { formatPrice } from '@/utils/formatPrice';
 const BarChart = ({ data, colors }) => {
   const max = Math.max(0, ...data.map((d) => d.value));
   return (
-    <div className='space-y-3'>
+    <div className='space-y-3 max-h-72 overflow-y-auto pr-1 custom-scrollbar'>
       {data.map((d, idx) => {
         const width = max ? Math.round((d.value / max) * 100) : 0;
         return (

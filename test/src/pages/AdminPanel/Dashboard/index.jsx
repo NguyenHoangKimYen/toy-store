@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   getSalesOverview,
   getRevenueUpdates,
@@ -16,8 +16,6 @@ import StatCard from './components/StatCard';
 import PieChart from './components/PieChart';
 import BarChart from './components/BarChart';
 import TinyLegend from './components/TinyLegend';
-
-const DASHBOARD_CACHE_KEY = 'milkybloom_admin_dashboard_cache_v1';
 
 const toNumber = (v) => {
   if (v == null) return 0;
@@ -38,28 +36,10 @@ const Dashboard = () => {
   const [branches, setBranches] = useState([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
-    const cached = localStorage.getItem(DASHBOARD_CACHE_KEY);
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached);
-        setOverview(parsed.overview || null);
-        setRevenueUpdates(parsed.revenueUpdates || []);
-        setYearlySales(parsed.yearlySales || { thisYear: [], lastYear: [] });
-        setPaymentSummary(parsed.paymentSummary || null);
-        setTopSelling(parsed.topSelling || []);
-        setLowStock(parsed.lowStock || []);
-        setCategoryStats(parsed.categoryStats || []);
-        setBranches(parsed.branches || []);
-        setLoading(false);
-      } catch (err) {
-        console.warn('Failed to parse dashboard cache', err);
-      }
-    }
-
-    const load = async () => {
+  const loadDashboard = useCallback(async () => {
       try {
         setIsRefreshing(true);
+        setLoading(true);
         setError(null);
 
         const [
@@ -90,20 +70,6 @@ const Dashboard = () => {
         setLowStock(lowStockRes.data || []);
         setBranches(branchesRes.data || []);
         setCategoryStats(categoryRes.data || []);
-
-        localStorage.setItem(
-          DASHBOARD_CACHE_KEY,
-          JSON.stringify({
-            overview: overviewRes.data,
-            revenueUpdates: Array.isArray(revenueRes.data) ? revenueRes.data : [],
-            yearlySales: yearlyRes.data || { thisYear: [], lastYear: [] },
-            paymentSummary: paymentRes.data,
-            topSelling: topSellingRes.data || [],
-            lowStock: lowStockRes.data || [],
-            branches: branchesRes.data || [],
-            categoryStats: categoryRes.data || [],
-          }),
-        );
       } catch (err) {
         console.error('Load dashboard error:', err);
         setError(err.message || 'Failed to load dashboard');
@@ -111,10 +77,19 @@ const Dashboard = () => {
         setLoading(false);
         setIsRefreshing(false);
       }
-    };
+    }, []);
 
-    load();
-  }, []);
+  useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard]);
+
+  // Auto refresh every 60s
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadDashboard();
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [loadDashboard]);
 
   const revenueMonthData = useMemo(() => {
     const months = Array.from({ length: 12 }, (_, i) => ({
@@ -240,7 +215,7 @@ const Dashboard = () => {
             <div className='grid gap-4 lg:grid-cols-3'>
               <div className='admin-card'>
                 <h3 className='text-sm font-semibold text-stone-700 mb-3'>
-                  User Segmentation (Pie)
+                  User Segmentation Pie Chart
                 </h3>
                 <div className='flex items-center gap-4'>
                   <PieChart data={segmentationData} colors={segmentationData.map((s) => s.color)} />

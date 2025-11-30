@@ -202,7 +202,7 @@ const Products = () => {
               </button>
               <button 
                 onClick={handleAddProduct}
-                className='px-3 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-sky-400 text-white shadow-[0_10px_26px_-14px_rgba(124,58,237,0.35)] hover:brightness-105 transition flex items-center gap-2'
+                className='px-3 py-2 rounded-xl border border-purple-100/80 bg-white/80 text-slate-700 hover:bg-purple-50 transition flex items-center gap-2'
               >
                 <Plus className='w-4 h-4' />
                 <span>Add Product</span>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Search, ShoppingCart, User, UserCircle, Package, LogOut, Settings, X, Menu, Home, Box, Layers, Info, Phone, ChevronDown } from 'lucide-react'
+import { Search, ShoppingCart, User, UserCircle, Package, LogOut, X, Menu, Home, Box, Layers, Info, Phone, ChevronDown } from 'lucide-react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { getCategories } from '@/services/categories.service'
@@ -19,7 +19,7 @@ const NAV_LINKS = [
 const USER_MENU_LINKS = [
     { to: '/profile', label: 'My Profile', icon: UserCircle },
     { to: '/order-history', label: 'Orders', icon: Package },
-    { to: '/settings', label: 'Settings', icon: Settings }
+  // Settings removed
 ]
 
 const Navbar = () => {
@@ -405,9 +405,13 @@ const Navbar = () => {
                                         <p className='text-sm font-semibold text-gray-900'>{user.fullname || user.username || 'User'}</p>
                                         <p className='text-xs text-gray-500 mt-1'>{user.email || ''}</p>
                                         {user.role === 'admin' && (
-                                            <span className='inline-block mt-1 px-2 py-0.5 text-xs font-semibold text-white bg-orange-500 rounded'>
-                                                Admin
-                                            </span>
+                                            <Link
+                                                to="/admin"
+                                                onClick={() => setShowUserMenu(false)}
+                                                className='inline-flex items-center gap-2 mt-1 px-2 py-0.5 text-[11px] font-semibold text-white bg-indigo-500 rounded hover:bg-indigo-600 transition'
+                                            >
+                                                <span>Admin</span>
+                                            </Link>
                                         )}
                                     </div>
                                     <div className='py-1'>
