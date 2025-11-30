@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { getProducts } from '@/services';
+import './Home.css';
 
 // Lazy load sections below the fold for faster initial render
 const HeroSection = lazy(() => import('./components/Hero').then(m => ({ default: m.HeroSection })));
@@ -72,10 +73,10 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white overflow-x-hidden">
+    <div className="home-gradient min-h-screen overflow-x-hidden">
       {/* Hero Section with Featured Products Carousel */}
       {loadingFeatured ? (
-        <div className="h-[100vh] min-h-[600px] max-h-[900px] bg-gradient-to-br from-violet-50 to-purple-50 flex items-center justify-center">
+        <div className="h-[100vh] min-h-[600px] max-h-[900px] flex items-center justify-center">
           <div className="text-center space-y-4">
             <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
             <p className="text-gray-600 font-medium">Loading featured products...</p>
@@ -91,7 +92,7 @@ const Home = () => {
 
       {/* New Arrivals Section - Above Everything */}
       <Suspense fallback={
-        <div className="h-[500px] bg-white animate-pulse px-4 sm:px-6 md:px-[5%] py-12 sm:py-16 md:py-20">
+        <div className="h-[500px] animate-pulse px-4 sm:px-6 md:px-[5%] py-12 sm:py-16 md:py-20">
           <div className="h-10 w-64 bg-gray-200 rounded mb-8 sm:mb-10"></div>
           <div className="flex gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -105,16 +106,13 @@ const Home = () => {
           subtitle="Fresh drops you can't miss"
           products={categorizedProducts.newProducts}
           viewAllLink="/products?sortBy=createdAt&sortOrder=desc"
-          bgGradient="from-violet-50 via-purple-50 to-indigo-50"
-          decorativeGradient1="from-violet-300/20 to-purple-300/20"
-          decorativeGradient2="from-indigo-300/20 to-blue-300/20"
           loading={loadingNew}
         />
       </Suspense>
 
       {/* Best Sellers Section */}
       <Suspense fallback={
-        <div className="h-[500px] bg-white animate-pulse px-4 sm:px-6 md:px-[5%] py-12 sm:py-16 md:py-20">
+        <div className="h-[500px] animate-pulse px-4 sm:px-6 md:px-[5%] py-12 sm:py-16 md:py-20">
           <div className="h-10 w-64 bg-gray-200 rounded mb-8 sm:mb-10"></div>
           <div className="flex gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -128,9 +126,6 @@ const Home = () => {
           subtitle="Customer favorites"
           products={categorizedProducts.bestSellers}
           viewAllLink="/products?sortBy=totalUnitsSold&sortOrder=desc"
-          bgGradient="from-amber-50 via-orange-50 to-rose-50"
-          decorativeGradient1="from-amber-300/20 to-orange-300/20"
-          decorativeGradient2="from-rose-300/20 to-pink-300/20"
           loading={loadingBestSellers}
         />
       </Suspense>

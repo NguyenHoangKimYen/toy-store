@@ -4,6 +4,11 @@ import { formatPrice } from '@/utils/formatPrice'
 import { parsePrice } from '@/utils/priceUtils'
 
 const ProductInfo = ({ product }) => {
+  const variantStock = Array.isArray(product.variants)
+    ? product.variants.reduce((sum, v) => sum + (Number(v.stockQuantity) || 0), 0)
+    : 0;
+  const totalStock = variantStock || product.totalStock || product.stockQuantity || 0;
+
   // Extract category names safely
   const getCategoryNames = () => {
     if (!product.categoryId) return 'Uncategorized';
@@ -87,11 +92,9 @@ const ProductInfo = ({ product }) => {
         <div className='p-3 bg-gray-50 dark:bg-gray-700 rounded-lg'>
           <p className='text-sm text-gray-600 dark:text-gray-400'>Stock Quantity</p>
           <p className={`text-2xl font-bold ${
-            (product.variants?.reduce((sum, v) => sum + (v.stockQuantity || 0), 0) || 0) === 0 
-              ? 'text-red-600' 
-              : 'text-green-600'
+            totalStock === 0 ? 'text-red-600' : 'text-green-600'
           }`}>
-            {product.variants?.reduce((sum, v) => sum + (v.stockQuantity || 0), 0) || 0}
+            {totalStock}
           </p>
         </div>
         <div className='p-3 bg-gray-50 dark:bg-gray-700 rounded-lg'>

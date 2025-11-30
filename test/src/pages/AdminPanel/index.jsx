@@ -33,7 +33,9 @@ const AdminPanel = () => {
         </button>
 
         <div className='admin-panel-content'>
-          <Outlet />
+          <div className="admin-dashboard-shell">
+            <Outlet />
+          </div>
         </div>
       </div>
     </div>

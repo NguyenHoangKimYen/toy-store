@@ -11,7 +11,7 @@ import { formatPrice } from '@/utils/formatPrice'
 import OrderDetailModal from './components/OrderDetailModal'
 import OrderFilters from './components/OrderFilters'
 import { AdminContent } from '../components'
-import { PageHeader, SearchBar } from '@/components/common'
+import { PageHeader } from '@/components/common'
 
 const Orders = () => {
   const [orders, setOrders] = useState([])
@@ -88,46 +88,59 @@ const Orders = () => {
   // Filtering is now done on backend
   const filteredOrders = orders
 
+  const headerCard = (
+    <div className="admin-card bg-white/85 backdrop-blur-md border border-purple-100/70 rounded-2xl shadow-[0_18px_42px_-28px_rgba(124,58,237,0.22)] p-5 md:p-6">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div className="space-y-1">
+            <h2 className="text-2xl font-semibold text-slate-900">Orders Management</h2>
+            <p className="text-sm text-slate-500">Manage and track all customer orders</p>
+          </div>
+          <div className="w-full md:w-auto grid grid-cols-12 gap-3 items-center">
+            <label className="col-span-12 md:col-span-7 lg:col-span-8 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/85 border border-purple-100/80 shadow-inner backdrop-blur-sm">
+              <Search className="w-4 h-4 text-slate-400" />
+              <input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search by order ID, customer, or email..."
+                className="w-full bg-transparent outline-none text-sm text-slate-700 placeholder:text-slate-400"
+              />
+            </label>
+            <div className="col-span-12 md:col-span-5 lg:col-span-4 flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowFilters((v) => !v)}
+                className="px-3 py-2 rounded-xl border border-purple-100/80 bg-white/80 text-slate-700 hover:bg-purple-50 transition flex items-center gap-2"
+              >
+                <Filter className="w-4 h-4" />
+                <span>Filter</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {showFilters && (
+          <div className="pt-3 border-t border-purple-100/60">
+            <OrderFilters
+              statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
+              deliveryTypeFilter={deliveryTypeFilter}
+              setDeliveryTypeFilter={setDeliveryTypeFilter}
+              paymentMethodFilter={paymentMethodFilter}
+              setPaymentMethodFilter={setPaymentMethodFilter}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <>
       <AdminContent
         loading={loading}
-        header={
-          <PageHeader
-            icon={Package}
-            title="Orders Management"
-            description="Manage and track all customer orders"
-          />
-        }
-        filters={
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between">
-              <SearchBar
-                value={searchTerm}
-                onChange={setSearchTerm}
-                placeholder="Search by order ID, customer, or email..."
-              />
-              <Button
-                variant="outline"
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center justify-center gap-2 text-sm"
-              >
-                <Filter size={16} />
-                <span className="hidden sm:inline">Filters</span>
-              </Button>
-            </div>
-            {showFilters && (
-              <OrderFilters
-                statusFilter={statusFilter}
-                setStatusFilter={setStatusFilter}
-                deliveryTypeFilter={deliveryTypeFilter}
-                setDeliveryTypeFilter={setDeliveryTypeFilter}
-                paymentMethodFilter={paymentMethodFilter}
-                setPaymentMethodFilter={setPaymentMethodFilter}
-              />
-            )}
-          </div>
-        }
+        header={headerCard}
+        filters={null}
       >
         {filteredOrders.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">

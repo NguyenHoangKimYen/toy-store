@@ -1,0 +1,75 @@
+.home-gradient {
+  --accent: #8b5cf6;
+  --accent-strong: #7c3aed;
+  --accent-soft: #ede9fe;
+  --accent-soft-2: #fdf4ff;
+  --text-strong: #312e81;
+  --text-muted: #475569;
+}
+
+.home-gradient {
+  position: relative;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f7edff 0%, #faf5ff 35%, #ffffff 75%);
+  overflow: hidden;
+}
+
+.home-gradient::before {
+  content: "";
+  position: absolute;
+  inset: -10% -8%;
+  background: radial-gradient(120% 120% at 15% 10%, rgba(226, 215, 255, 0.36), transparent 46%),
+              radial-gradient(120% 120% at 85% 18%, rgba(255, 214, 240, 0.32), transparent 46%),
+              radial-gradient(120% 150% at 30% 80%, rgba(210, 232, 255, 0.28), transparent 52%);
+  background-size: 180% 180%;
+  filter: blur(12px);
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: 0;
+  animation: gradientFlow 30s ease-in-out infinite alternate;
+}
+
+.home-gradient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(12px 8px at 15% -20%, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0)),
+    radial-gradient(14px 9px at 35% -30%, rgba(255, 248, 240, 0.4), rgba(255, 248, 240, 0)),
+    radial-gradient(10px 7px at 55% -18%, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0)),
+    radial-gradient(13px 8px at 78% -24%, rgba(248, 244, 255, 0.4), rgba(248, 244, 255, 0)),
+    radial-gradient(11px 7px at 28% -26%, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0)),
+    radial-gradient(12px 8px at 68% -32%, rgba(255, 252, 247, 0.38), rgba(255, 252, 247, 0)),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 40 40'%3E%3Cpath fill='%23d6d3e210' d='M0 0h1v1H0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
+  background-size: 110px 110px, 90px 90px, 120px 120px, 100px 100px, 90px 90px, 100px 100px, auto;
+  background-position: 12% -20%, 34% -30%, 56% -18%, 78% -24%, 28% -26%, 68% -32%, 0 0;
+  opacity: 0.75;
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+  z-index: 0;
+  animation: leafFall 32s linear infinite;
+}
+
+.home-gradient > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes gradientFlow {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 35% 20%; }
+  100% { background-position: 70% 40%; }
+}
+
+@keyframes leafFall {
+  0% {
+    background-position: 12% -20%, 34% -30%, 56% -18%, 78% -24%, 28% -26%, 68% -32%, 0 0;
+  }
+  50% {
+    background-position: 14% 40%, 32% 46%, 54% 42%, 76% 38%, 26% 44%, 66% 40%, 0 0;
+  }
+  100% {
+    background-position: 16% 110%, 30% 120%, 52% 112%, 74% 118%, 24% 114%, 64% 122%, 0 0;
+  }
+}

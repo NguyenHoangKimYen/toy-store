@@ -3,10 +3,11 @@
   min-height: calc(100vh - 160px);
   position: relative;
   overflow: hidden;
-  background: radial-gradient(circle at 12% 18%, rgba(99, 102, 241, 0.18), transparent 32%),
-              radial-gradient(circle at 82% 12%, rgba(14, 165, 233, 0.16), transparent 34%),
-              radial-gradient(circle at 60% 82%, rgba(236, 72, 153, 0.14), transparent 38%),
-              linear-gradient(135deg, #f8fafc, #eef2ff, #f8fafc);
+  background: radial-gradient(circle at 12% 18%, rgba(226, 215, 255, 0.28), transparent 38%),
+              radial-gradient(circle at 82% 12%, rgba(210, 232, 255, 0.26), transparent 38%),
+              radial-gradient(circle at 60% 82%, rgba(255, 214, 240, 0.22), transparent 44%),
+              linear-gradient(135deg, #f7edff, #faf5ff 55%, #ffffff);
+  scroll-behavior: auto; /* tắt smooth scroll để kéo nhanh hơn */
 }
 
 .products-page::before,
@@ -181,6 +182,10 @@
 .products-content.filters-hidden {
   grid-template-columns: 0 1fr;
   gap: 0;
+}
+
+.products-content.no-filters {
+  display: block;
 }
 
 /* Filters Sidebar */

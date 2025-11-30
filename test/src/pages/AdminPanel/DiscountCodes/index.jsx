@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
-import { Tag, Plus, Edit, Trash2, Eye } from 'lucide-react'
+import { Tag, Plus, Edit, Trash2, Eye, Search, Filter } from 'lucide-react'
 import { getAllDiscountCodes, createDiscountCode, updateDiscountCode, deleteDiscountCode } from '@/services/discountCodes.service'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,7 +9,6 @@ import DiscountCodeModal from './components/DiscountCodeModal'
 import DeleteConfirmDialog from './components/DeleteConfirmDialog'
 import DiscountOrdersModal from './components/DiscountOrdersModal'
 import { AdminContent } from '../components'
-import { PageHeader, SearchBar } from '@/components/common'
 
 const DiscountCodes = () => {
   const [codes, setCodes] = useState([])
@@ -106,30 +105,45 @@ const DiscountCodes = () => {
     return ((code.usedCount || 0) / (code.usageLimit || 1)) * 100
   }
 
+  const headerCard = (
+    <div className="admin-card bg-white/85 backdrop-blur-md border border-purple-100/70 rounded-2xl shadow-[0_18px_42px_-28px_rgba(124,58,237,0.22)] p-5 md:p-6">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div className="space-y-1">
+            <h2 className="text-2xl font-semibold text-slate-900">Discount Codes</h2>
+            <p className="text-sm text-slate-500">Create and manage discount codes for customers</p>
+          </div>
+          <div className="w-full md:w-auto grid grid-cols-12 gap-3 items-center">
+            <label className="col-span-12 md:col-span-7 lg:col-span-8 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/85 border border-purple-100/80 shadow-inner backdrop-blur-sm">
+              <Search className="w-4 h-4 text-slate-400" />
+              <input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search discount codes..."
+                className="w-full bg-transparent outline-none text-sm text-slate-700 placeholder:text-slate-400"
+              />
+            </label>
+            <div className="col-span-12 md:col-span-5 lg:col-span-4 flex justify-end gap-2">
+              <button
+                onClick={handleCreate}
+                className="px-3 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-sky-400 text-white shadow-[0_10px_26px_-14px_rgba(124,58,237,0.35)] hover:brightness-105 transition flex items-center gap-2"
+              >
+                <Plus size={16} />
+                <span>New Code</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
   return (
     <>
       <AdminContent
         loading={loading}
-        header={
-          <PageHeader
-            icon={Tag}
-            title="Discount Codes Management"
-            description="Create and manage discount codes for customers"
-            action={
-              <Button onClick={handleCreate} className="flex items-center gap-2">
-                <Plus size={16} />
-                New Code
-              </Button>
-            }
-          />
-        }
-        filters={
-          <SearchBar
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder="Search discount codes..."
-          />
-        }
+        header={headerCard}
+        filters={null}
       >
         {filteredCodes.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
