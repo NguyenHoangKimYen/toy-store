@@ -17,6 +17,7 @@ const {
     getUserById,
     checkUsername,
     checkEmail,
+    updateProfile,
 } = require("../controllers/user.controller.js");
 
 const router = express.Router();
@@ -46,6 +47,9 @@ router.put("/", auth, adminOnly, updateUser);
 router.delete("/", adminOnly, deleteUser);
 
 // ============ USER ROUTES ============
+
+// User tự cập nhật hồ sơ của mình
+router.put("/me", auth, updateProfile);
 
 // Verify user
 router.patch("/verify", verifyUser);
