@@ -1,4 +1,5 @@
 const ReviewService = require('../services/review.service');
+const Review = require('../models/review.model');
 
 const createReview = async (req, res, next) => {
     try {
@@ -117,11 +118,11 @@ const getReviewsByProductId = async (req, res, next) => {
 
 const deleteReview = async (req, res, next) => {
     try {
-        const userId = req.user._id;
+        const userId = req.user._id || req.user.id;
         const { reviewId } = req.params;
-        const isAdmin = req.user.roles
-            ? req.user.roles.includes('admin')
-            : false;
+        // Check for admin - user model uses 'role' (singular) not 'roles'
+        const isAdmin = req.user.role === 'admin' || 
+            (req.user.roles && req.user.roles.includes('admin'));
 
         await ReviewService.deleteReview({ userId, reviewId, isAdmin });
 
@@ -186,26 +187,37 @@ const getPendingReviews = async (req, res, next) => {
 const toggleHelpful = async (req, res, next) => {
     try {
         const { reviewId } = req.params;
-        const userId = req.user._id;
+        const userId = (req.user?._id || req.user?.id)?.toString();
+        
+        if (!userId) {
+            return res.status(401).json({ message: 'User not authenticated' });
+        }
 
         const review = await Review.findById(reviewId);
         if (!review) {
             return res.status(404).json({ message: 'Review not found' });
         }
 
-        // Check if user already marked as helpful
-        const hasLiked = review.helpfulUsers.includes(userId);
+        // Initialize helpfulUsers if it doesn't exist
+        if (!review.helpfulUsers) {
+            review.helpfulUsers = [];
+        }
+
+        // Check if user already marked as helpful (compare as strings, handle nulls)
+        const hasLiked = review.helpfulUsers.some(
+            id => id && id.toString() === userId
+        );
 
         if (hasLiked) {
             // Unlike: remove user from helpfulUsers array
             review.helpfulUsers = review.helpfulUsers.filter(
-                id => id.toString() !== userId.toString()
+                id => id && id.toString() !== userId
             );
-            review.helpfulCount = Math.max(0, review.helpfulCount - 1);
+            review.helpfulCount = Math.max(0, (review.helpfulCount || 0) - 1);
         } else {
             // Like: add user to helpfulUsers array
             review.helpfulUsers.push(userId);
-            review.helpfulCount += 1;
+            review.helpfulCount = (review.helpfulCount || 0) + 1;
         }
 
         await review.save();

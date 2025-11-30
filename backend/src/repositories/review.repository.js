@@ -58,7 +58,7 @@ const getReviewsByProductId = async ({
     const reviewsWithHelpful = reviews.map(review => ({
         ...review,
         isHelpful: currentUserId && review.helpfulUsers?.length
-            ? review.helpfulUsers.some(id => id.toString() === currentUserId.toString())
+            ? review.helpfulUsers.some(id => id && id.toString() === currentUserId.toString())
             : false
     }));
 
