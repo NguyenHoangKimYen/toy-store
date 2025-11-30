@@ -163,6 +163,21 @@ export const useUsers = (options = {}) => {
     }
   };
 
+  const updateProfile = async (userData) => {
+    try {
+      const updatedUser = await usersService.updateProfile(userData);
+      if (userId) {
+        setUser(updatedUser);
+      }
+      toast.success('Profile updated successfully');
+      return updatedUser;
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile');
+      throw error;
+    }
+  };
+
   // Delete user
   const deleteUser = async (id) => {
     try {
@@ -204,6 +219,7 @@ export const useUsers = (options = {}) => {
     // Operations
     createUser,
     updateUser,
+    updateProfile,
     deleteUser,
     bulkDeleteUsers,
     
