@@ -20,6 +20,19 @@ if (window.location.hash === '#_=_') {
   window.history.replaceState({}, document.title, cleanUrl);
 }
 
+// Nếu có tham số verified/token sau xác thực email, xóa khỏi URL để người dùng không thấy
+(() => {
+  const url = new URL(window.location.href);
+  const hasSensitiveParams =
+    url.searchParams.has('verified') || url.searchParams.has('token');
+  if (hasSensitiveParams) {
+    url.searchParams.delete('verified');
+    url.searchParams.delete('token');
+    const cleaned = url.origin + url.pathname + url.hash;
+    window.history.replaceState({}, document.title, cleaned);
+  }
+})();
+
 // Start MSW when in development with mock data enabled
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
 

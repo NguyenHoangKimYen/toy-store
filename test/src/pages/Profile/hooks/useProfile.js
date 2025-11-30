@@ -18,7 +18,7 @@ export const useProfile = () => {
     user, 
     loading, 
     error: fetchError,
-    updateUser: updateUserFromHook,
+    updateProfile: updateProfileFromHook,
     refreshUser 
   } = useUser(currentUserId);
 
@@ -51,11 +51,7 @@ export const useProfile = () => {
         throw new Error('No user ID found');
       }
 
-      // Use the hook's update function
-      await updateUserFromHook(user._id, {
-        ...user,
-        ...updates,
-      });
+      await updateProfileFromHook(updates);
 
       return true;
     } catch (err) {
