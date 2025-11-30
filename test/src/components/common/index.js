@@ -15,4 +15,5 @@ export { default as AddressAutocomplete } from './AddressAutocomplete'
 export { default as ConfirmDialog } from './ConfirmDialog'
 export { default as LazyImage } from './LazyImage'
 export { default as ScrollArrows } from './ScrollArrows'
+export { default as LoginPromptDialog } from './LoginPromptDialog'
 

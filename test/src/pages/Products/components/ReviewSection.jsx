@@ -7,6 +7,7 @@ import { useProductReviews } from '../hooks/useProductReviews';
 import { useReviewPolling, useAuth } from '@/hooks';
 import ReviewForm from './ReviewForm';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import LoginPromptDialog from '@/components/common/LoginPromptDialog';
 import './ReviewSection.css';
 
 const ReviewSection = ({ productId }) => {
@@ -14,6 +15,8 @@ const ReviewSection = ({ productId }) => {
   const isAuthenticated = !!user;
   const { reviews, stats, loading, submitting, hasMore, eligibility, submitReview, removeReview, toggleHelpful, loadMore, refetch } = useProductReviews(productId);
   const [selectedOrderItem, setSelectedOrderItem] = useState(null);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [loginPromptAction, setLoginPromptAction] = useState('');
 
   // Enable real-time updates via polling (30 seconds interval)
   const fetchReviews = useCallback(() => {
@@ -44,6 +47,11 @@ const ReviewSection = ({ productId }) => {
   };
 
   const handleToggleHelpful = async (reviewId) => {
+    if (!isAuthenticated) {
+      setLoginPromptAction('like this review');
+      setShowLoginPrompt(true);
+      return;
+    }
     await toggleHelpful(reviewId);
   };
 
@@ -59,11 +67,11 @@ const ReviewSection = ({ productId }) => {
     });
   };
 
-  const renderStars = (rating) => {
+  const renderStars = (rating, size = 16) => {
     return [...Array(5)].map((_, index) => (
       <Star
         key={index}
-        size={16}
+        size={size}
         className={index < rating ? 'star-filled' : 'star-empty'}
         fill={index < rating ? 'currentColor' : 'none'}
       />
@@ -158,7 +166,7 @@ const ReviewSection = ({ productId }) => {
               {stats.averageRating > 0 ? (
                 <>
                   <span className="rating-number">{stats.averageRating}</span>
-                  <div className="stars-display">{renderStars(Math.round(stats.averageRating))}</div>
+                  <div className="stars-display">{renderStars(Math.round(stats.averageRating), 24)}</div>
                 </>
               ) : (
                 <span className="rating-number">No ratings yet</span>
@@ -224,14 +232,12 @@ const ReviewSection = ({ productId }) => {
                         {isOwnReview && <span className="own-review-badge">You</span>}
                       </p>
                       <p className="review-date">{formatDate(review.createdAt)}</p>
-                    </div>
                   </div>
-                  {review.rating && (
-                    <div className="review-rating">{renderStars(review.rating)}</div>
-                  )}
                 </div>
-                
-                {/* Variant Info */}
+                {review.rating && (
+                  <div className="review-rating">{renderStars(review.rating, 20)}</div>
+                )}
+              </div>                {/* Variant Info */}
                 {(review.variantId?.attributes?.length > 0 || review.variantName) && (
                   <div className="review-variant-info">
                     <span>Purchased: <strong>
@@ -300,6 +306,14 @@ const ReviewSection = ({ productId }) => {
           </>
         )}
       </div>
+
+      {/* Login Prompt Dialog */}
+      <LoginPromptDialog
+        open={showLoginPrompt}
+        onOpenChange={setShowLoginPrompt}
+        action={loginPromptAction}
+        returnPath={`/products/${productId}`}
+      />
     </div>
   );
 };

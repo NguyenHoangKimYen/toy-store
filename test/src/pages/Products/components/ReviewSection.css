@@ -304,12 +304,14 @@
 
 .review-rating {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.125rem;
   color: #fbbf24;
+  margin-top: 0.25rem;
 }
 
 .star-filled {
   color: #fbbf24;
+  filter: drop-shadow(0 1px 1px rgba(251, 191, 36, 0.3));
 }
 
 .star-empty {
