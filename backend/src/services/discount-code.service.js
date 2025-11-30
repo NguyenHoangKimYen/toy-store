@@ -32,7 +32,7 @@ module.exports = {
     },
 
     async getAll(params = {}) {
-        const { search } = params;
+        const { search, sortBy } = params;
         const query = {};
         
         // Add search filter if provided
@@ -41,7 +41,28 @@ module.exports = {
             query.code = { $regex: searchRegex };
         }
         
-        return DiscountCode.find(query).sort({ createdAt: -1 });
+        // Build sort object based on sortBy parameter
+        let sortOptions = { createdAt: -1 }; // Default: newest first
+        if (sortBy) {
+            switch (sortBy) {
+                case 'newest':
+                    sortOptions = { createdAt: -1 };
+                    break;
+                case 'oldest':
+                    sortOptions = { createdAt: 1 };
+                    break;
+                case 'usage-high':
+                    sortOptions = { usedCount: -1 };
+                    break;
+                case 'usage-low':
+                    sortOptions = { usedCount: 1 };
+                    break;
+                default:
+                    sortOptions = { createdAt: -1 };
+            }
+        }
+        
+        return DiscountCode.find(query).sort(sortOptions);
     },
 
     async validateAndApply({ userId, discountCodeId, orderAmount }) {
