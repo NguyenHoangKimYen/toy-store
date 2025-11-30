@@ -199,7 +199,7 @@ const UserFilters = ({ filters, onFilterChange, onClearFilters, showFilters }) =
             <div className='space-y-2'>
               <Label className='flex items-center gap-2 text-sm font-medium'>
                 <ArrowUpDown className='w-4 h-4' />
-                Sort by Points
+                Sort By
               </Label>
               <Select 
                 value={filters.sortBy || 'none'} 
@@ -210,6 +210,8 @@ const UserFilters = ({ filters, onFilterChange, onClearFilters, showFilters }) =
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value='none'>No Sorting</SelectItem>
+                  <SelectItem value='newest'>Newest First</SelectItem>
+                  <SelectItem value='oldest'>Oldest First</SelectItem>
                   <SelectItem value='points-high'>Highest Points First</SelectItem>
                   <SelectItem value='points-low'>Lowest Points First</SelectItem>
                 </SelectContent>
@@ -239,8 +241,8 @@ const UserFilters = ({ filters, onFilterChange, onClearFilters, showFilters }) =
                   </span>
                 )}
                 {filters.sortBy && filters.sortBy !== 'none' && (
-                  <span className='px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs'>
-                    Sort: {filters.sortBy === 'points-high' ? 'Highest Points' : 'Lowest Points'}
+                  <span className='px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-xs'>
+                    Sort: {filters.sortBy === 'newest' ? 'Newest First' : filters.sortBy === 'oldest' ? 'Oldest First' : filters.sortBy === 'points-high' ? 'Highest Points' : 'Lowest Points'}
                   </span>
                 )}
               </div>

@@ -1,4 +1,4 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.milkybloomtoystore.id.vn';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.milkybloomtoystore.id.vn/api';
 
 // API Endpoints
 export const ENDPOINTS = {
@@ -76,9 +76,7 @@ const apiClient = {
 
       const response = await fetch(fullUrl, config);
       clearTimeout(timeoutId);
-      
-      console.log('API Response Status:', response.status, 'URL:', fullUrl);
-      
+
       if (!response.ok) {
         const error = await response.json().catch(() => ({
           message: `HTTP error! status: ${response.status}`,
@@ -96,7 +94,6 @@ const apiClient = {
       }
 
       const result = await response.json();
-      console.log('API Success Response:', result);
       return result;
     } catch (error) {
       // Don't log 404 errors (expected for non-existent carts)

@@ -19,11 +19,6 @@ export function useCart(userId = null) {
   const [error, setError] = useState(null);
   const [itemLoading, setItemLoading] = useState({});
 
-  // Debounce timers for quantity updates
-  const updateTimersRef = useRef({});
-  const pendingQuantitiesRef = useRef({}); // variantId -> target quantity
-  const serverQuantitiesRef = useRef({}); // variantId -> last confirmed server quantity
-
   const getSessionId = useCallback(() => {
     let sessionId = localStorage.getItem("sessionId");
     if (!sessionId) {
@@ -47,22 +42,10 @@ export function useCart(userId = null) {
 
       if (cartData) {
         setCart(cartData);
-        const cartItems = cartData.items || [];
-        setItems(cartItems);
-        
-        // Update server quantities ref
-        const serverQtys = {};
-        cartItems.forEach((item) => {
-          const variantId = item.variant?._id || item.variant?.id || item.variantId;
-          if (variantId) {
-            serverQtys[variantId] = item.quantity;
-          }
-        });
-        serverQuantitiesRef.current = serverQtys;
+        setItems(cartData.items || []);
       } else {
         setCart(null);
         setItems([]);
-        serverQuantitiesRef.current = {};
       }
     } catch (err) {
       if (err.response?.status !== 404) {
@@ -95,60 +78,39 @@ export function useCart(userId = null) {
       const cartId = cart?._id || cart?.id;
       if (!cartId) return;
 
-      // Store the target quantity
-      pendingQuantitiesRef.current[variantId] = newQuantity;
+      setItemLoading((prev) => ({ ...prev, [variantId]: true }));
 
-      // Optimistic update - instant UI feedback
-      setItems((prevItems) =>
-        prevItems.map((item) => {
+      try {
+        // Find current quantity
+        const currentItem = items.find((item) => {
           const itemVariantId = item.variant?._id || item.variant?.id || item.variantId;
-          return itemVariantId === variantId ? { ...item, quantity: newQuantity } : item;
-        })
-      );
+          return itemVariantId === variantId;
+        });
 
-      // Clear existing timer
-      if (updateTimersRef.current[variantId]) {
-        clearTimeout(updateTimersRef.current[variantId]);
-      }
-
-      // Debounce the API call
-      updateTimersRef.current[variantId] = setTimeout(async () => {
-        const targetQty = pendingQuantitiesRef.current[variantId];
-        if (targetQty === undefined) return;
-
-        // Use server quantity (not stale closure quantity)
-        const serverQty = serverQuantitiesRef.current[variantId] || 0;
-        const diff = targetQty - serverQty;
-        
-        if (diff === 0) {
-          delete pendingQuantitiesRef.current[variantId];
+        if (!currentItem) {
+          console.error("Item not found");
           return;
         }
 
-        setItemLoading((prev) => ({ ...prev, [variantId]: true }));
+        const diff = newQuantity - currentItem.quantity;
 
-        try {
-          if (diff > 0) {
-            await addItemToCart({ cartId, variantId, quantity: diff });
-          } else {
-            await removeItemFromCart(cartId, { variantId, quantity: Math.abs(diff) });
-          }
-          
-          // Update server quantity ref
-          serverQuantitiesRef.current[variantId] = targetQty;
-          delete pendingQuantitiesRef.current[variantId];
-          // Socket will trigger refetch for all devices
-        } catch (err) {
-          console.error("Failed to update quantity:", err);
-          setError(err.message || "Failed to update quantity");
-          delete pendingQuantitiesRef.current[variantId];
-          await fetchCart(true);
-        } finally {
-          setItemLoading((prev) => ({ ...prev, [variantId]: false }));
+        if (diff > 0) {
+          await addItemToCart({ cartId, variantId, quantity: diff });
+        } else if (diff < 0) {
+          await removeItemFromCart(cartId, { variantId, quantity: Math.abs(diff) });
         }
-      }, 300); // Wait 300ms after last change
+
+        // Refetch to get clean server state
+        await fetchCart(true);
+      } catch (err) {
+        console.error("Failed to update quantity:", err);
+        setError(err.message || "Failed to update quantity");
+        await fetchCart(true);
+      } finally {
+        setItemLoading((prev) => ({ ...prev, [variantId]: false }));
+      }
     },
-    [cart, fetchCart]
+    [cart, items, fetchCart]
   );
 
   const addItem = useCallback(
@@ -235,38 +197,12 @@ export function useCart(userId = null) {
   useEffect(() => {
     if (!userId) return;
 
+    console.log('🔌 Connecting socket for user:', userId);
     socketService.connect(userId);
 
     const handleCartUpdate = (data) => {
-      // Use the cart data directly from socket (no extra API call)
-      if (data?.cart) {
-        const cartItems = data.cart.items || [];
-        
-        // Check if items are populated (objects with product) or just ObjectId strings
-        const isPopulated = cartItems.length === 0 || 
-          (typeof cartItems[0] === 'object' && cartItems[0] !== null);
-        
-        if (!isPopulated) {
-          fetchCart(true);
-          return;
-        }
-        
-        setCart(data.cart);
-        setItems(cartItems);
-        
-        // Update server quantities ref
-        const serverQtys = {};
-        cartItems.forEach((item) => {
-          const variantId = item.variant?._id || item.variant?.id || item.variantId;
-          if (variantId) {
-            serverQtys[variantId] = item.quantity;
-          }
-        });
-        serverQuantitiesRef.current = serverQtys;
-      } else {
-        // Fallback: refetch if no cart data in socket
-        fetchCart(true);
-      }
+      console.log('🔔 [Socket] Cart updated, refetching...');
+      fetchCart(true); // Just refetch, don't merge
     };
 
     socketService.on('cart_updated', handleCartUpdate);
@@ -309,14 +245,6 @@ export function useCart(userId = null) {
 
   const getItemVariantId = useCallback((item) => {
     return item?.variant?._id || item?.variant?.id || item?.variantId || null;
-  }, []);
-
-  // Cleanup timers on unmount
-  useEffect(() => {
-    const timers = updateTimersRef.current;
-    return () => {
-      Object.values(timers).forEach(clearTimeout);
-    };
   }, []);
 
   return {

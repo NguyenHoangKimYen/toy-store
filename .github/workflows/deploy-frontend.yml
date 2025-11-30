@@ -27,6 +27,8 @@ jobs:
           npm install
 
       - name: Build FE
+        env:
+          VITE_API_URL: https://api.milkybloomtoystore.id.vn/api
         run: |
           cd test
           npm run build

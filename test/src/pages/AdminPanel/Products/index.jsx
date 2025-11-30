@@ -6,7 +6,7 @@ import ProductDetailModal from './components/ProductDetailModal'
 import ProductFormModal from './components/ProductFormModal'
 import ProductFilters from './components/ProductFilters'
 import { AdminContent } from '../components'
-import { useProducts } from '@/hooks' // Using global hook
+import { useProducts, useDebounce } from '@/hooks' // Using global hook
 import { PageHeader, SearchBar } from '@/components/common'
 import { getCategories } from '@/services/categories.service'
 import {
@@ -22,6 +22,7 @@ import {
 
 const Products = () => {
   const [searchQuery, setSearchQuery] = useState('')
+  const debouncedSearch = useDebounce(searchQuery, 400) // Debounce search input
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isFormModalOpen, setIsFormModalOpen] = useState(false)
@@ -60,7 +61,7 @@ const Products = () => {
   const apiParams = useMemo(() => {
     const params = {
       limit: 50,
-      keyword: searchQuery.trim() || undefined,
+      keyword: debouncedSearch.trim() || undefined,
     }
 
     // Add filters if not 'all'
@@ -76,7 +77,8 @@ const Products = () => {
     if (filters.sort) params.sort = filters.sort
 
     return params
-  }, [searchQuery, filters])
+  }, [debouncedSearch, filters])
+
 
   // Use global products hook with dynamic params
   const { 
@@ -91,24 +93,23 @@ const Products = () => {
     dependencies: [apiParams]
   })
 
-  // Filter products based on search (client-side for instant feedback)
-  const products = useMemo(() => {
-    if (!searchQuery.trim()) return allProducts;
-    
-    const searchLower = searchQuery.toLowerCase();
-    return allProducts.filter(p =>
-      p.name.toLowerCase().includes(searchLower) ||
-      p.description?.toLowerCase().includes(searchLower) ||
-      p.brand?.toLowerCase().includes(searchLower)
-    );
-  }, [allProducts, searchQuery])
+  // Search and filtering is now done on backend
+  const products = allProducts
+  
+  // Helper function to calculate stock from variants or fallback to totalStock
+  const getProductStock = (p) => {
+    if (p.variants && p.variants.length > 0) {
+      return p.variants.reduce((sum, v) => sum + (v.stockQuantity || 0), 0);
+    }
+    return p.totalStock ?? 0;
+  };
   
   // Calculate stats from ALL products (not filtered)
   const stats = useMemo(() => ({
     totalProducts: allProducts.length,
-    totalStock: allProducts.reduce((sum, p) => sum + (p.totalStock ?? 0), 0),
+    totalStock: allProducts.reduce((sum, p) => sum + getProductStock(p), 0),
     totalSold: allProducts.reduce((sum, p) => sum + (p.totalUnitsSold || 0), 0),
-    outOfStock: allProducts.filter(p => (p.totalStock ?? 0) === 0).length,
+    outOfStock: allProducts.filter(p => getProductStock(p) === 0).length,
   }), [allProducts])
 
   const handleFilterChange = (newFilters) => {

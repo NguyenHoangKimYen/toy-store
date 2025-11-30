@@ -166,18 +166,26 @@
   background: #fee2e2;
 }
 
-/* Badges */
-.badge {
+/* Badge Container */
+.badge-container {
   position: absolute;
   top: 12px;
   right: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+  z-index: 1;
+}
+
+/* Badges */
+.badge {
   padding: 4px 12px;
   border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  z-index: 1;
 }
 
 .badge-new {

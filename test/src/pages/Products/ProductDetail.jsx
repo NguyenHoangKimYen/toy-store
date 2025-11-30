@@ -1,5 +1,5 @@
-import React, { lazy, Suspense } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { lazy, Suspense, useEffect } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
@@ -20,6 +20,7 @@ const ReviewSection = lazy(() => import('./components/ReviewSection'));
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { addItem } = useCartContext();
   
   const {
@@ -39,6 +40,19 @@ const ProductDetail = () => {
   } = useProductDetail(id);
 
   const [addingToCart, setAddingToCart] = React.useState(false);
+
+  // Scroll to reviews section if hash is #reviews
+  useEffect(() => {
+    if (location.hash === '#reviews' && !loading) {
+      // Wait for component to render
+      setTimeout(() => {
+        const reviewsSection = document.getElementById('reviews');
+        if (reviewsSection) {
+          reviewsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 500);
+    }
+  }, [location.hash, loading]);
 
   // Collect all images: product images + all variant images
   const allImages = React.useMemo(() => {
@@ -246,8 +260,8 @@ const ProductDetail = () => {
         {/* Product Details Tabs */}
         <ProductTabs product={product} />
 
-        {/* Reviews Section */}
-        <ReviewSection productId={id} />
+        {/* Reviews Section - use product._id to ensure we pass MongoDB ObjectId, not slug */}
+        <ReviewSection productId={product._id} />
       </div>
 
       {/* Mobile Bottom Action Bar */}

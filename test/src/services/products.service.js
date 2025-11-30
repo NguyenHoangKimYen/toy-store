@@ -24,12 +24,27 @@ export const getProducts = async (params = {}) => {
 };
 
 /**
- * Get a single product by ID
- * @param {string} id - Product ID
+ * Check if a string is a valid MongoDB ObjectId
+ * @param {string} str - String to check
+ * @returns {boolean}
+ */
+const isValidObjectId = (str) => {
+  if (!str || typeof str !== 'string') return false;
+  return /^[a-fA-F0-9]{24}$/.test(str);
+};
+
+/**
+ * Get a single product by ID or slug
+ * @param {string} idOrSlug - Product ID or slug
  * @returns {Promise<Object>}
  */
-export const getProductById = async (id) => {
-  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.PRODUCTS}/${id}`, {
+export const getProductById = async (idOrSlug) => {
+  // Determine if we should use the ID or slug endpoint
+  const endpoint = isValidObjectId(idOrSlug)
+    ? `${API_BASE_URL}${ENDPOINTS.PRODUCTS}/${idOrSlug}`
+    : `${API_BASE_URL}${ENDPOINTS.PRODUCTS}/slug/${idOrSlug}`;
+    
+  const response = await fetch(endpoint, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

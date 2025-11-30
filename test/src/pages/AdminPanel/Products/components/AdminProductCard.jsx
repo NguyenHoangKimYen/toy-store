@@ -26,7 +26,11 @@ const AdminProductCard = ({
 
   const imageUrl = product.imageUrls?.[0] || '/placeholder.png';
   const categoryName = product.categoryId?.[0]?.name || product.categoryId?.name || 'Uncategorized';
-  const totalStock = product.totalStock ?? 0;
+  
+  // Calculate total stock: use variants sum if available, fallback to totalStock field
+  const totalStock = hasVariants 
+    ? product.variants.reduce((sum, v) => sum + (v.stockQuantity || 0), 0)
+    : (product.totalStock ?? 0);
 
   const handleCardClick = () => {
     onClick?.(product);
@@ -50,7 +54,7 @@ const AdminProductCard = ({
       <div className="admin-product-image">
         <img src={imageUrl} alt={product.name} loading="lazy" />
         {showBadges && (
-          <>
+          <div className="badge-container">
             {product.isNew && <span className="badge badge-new">New</span>}
             {product.isFeatured && <span className="badge badge-featured">Featured</span>}
             {product.status && product.status !== 'Published' && (
@@ -58,7 +62,7 @@ const AdminProductCard = ({
                 {product.status}
               </span>
             )}
-          </>
+          </div>
         )}
         {totalStock === 0 && (
           <div className="out-of-stock-overlay">
