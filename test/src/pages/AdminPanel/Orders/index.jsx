@@ -1,36 +1,32 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
-import { Package, Search, Filter, Truck, CheckCircle, XCircle, Clock, Eye } from 'lucide-react'
+import { Package, Truck, CheckCircle, XCircle, Clock, Eye } from 'lucide-react'
 import { getAllOrders, updateOrderStatus } from '@/services/orders.service'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import Badge from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { formatPrice } from '@/utils/formatPrice'
 import OrderDetailModal from './components/OrderDetailModal'
 import OrderFilters from './components/OrderFilters'
 import { AdminContent } from '../components'
-import { PageHeader, SearchBar } from '@/components/common'
+import { PageHeader } from '@/components/common'
 
 const Orders = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [deliveryTypeFilter, setDeliveryTypeFilter] = useState('all')
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('all')
   const [sortBy, setSortBy] = useState('newest')
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
-  const [showFilters, setShowFilters] = useState(false)
 
   const fetchOrders = useCallback(async () => {
     try {
       setLoading(true)
-      // Send search and filter params to backend
+      // Send filter params to backend
       const params = {
-        search: searchTerm.trim() || undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,
         deliveryType: deliveryTypeFilter !== 'all' ? deliveryTypeFilter : undefined,
         paymentMethod: paymentMethodFilter !== 'all' ? paymentMethodFilter : undefined,
@@ -49,7 +45,7 @@ const Orders = () => {
     } finally {
       setLoading(false)
     }
-  }, [searchTerm, statusFilter, deliveryTypeFilter, paymentMethodFilter])
+  }, [statusFilter, deliveryTypeFilter, paymentMethodFilter])
 
   useEffect(() => {
     fetchOrders()
@@ -120,35 +116,16 @@ const Orders = () => {
           />
         }
         filters={
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between">
-              <SearchBar
-                value={searchTerm}
-                onChange={setSearchTerm}
-                placeholder="Search by order ID, customer, or email..."
-              />
-              <Button
-                variant="outline"
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center justify-center gap-2 text-sm"
-              >
-                <Filter size={16} />
-                <span className="hidden sm:inline">Filters</span>
-              </Button>
-            </div>
-            {showFilters && (
-              <OrderFilters
-                statusFilter={statusFilter}
-                setStatusFilter={setStatusFilter}
-                deliveryTypeFilter={deliveryTypeFilter}
-                setDeliveryTypeFilter={setDeliveryTypeFilter}
-                paymentMethodFilter={paymentMethodFilter}
-                setPaymentMethodFilter={setPaymentMethodFilter}
-                sortBy={sortBy}
-                setSortBy={setSortBy}
-              />
-            )}
-          </div>
+          <OrderFilters
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            deliveryTypeFilter={deliveryTypeFilter}
+            setDeliveryTypeFilter={setDeliveryTypeFilter}
+            paymentMethodFilter={paymentMethodFilter}
+            setPaymentMethodFilter={setPaymentMethodFilter}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+          />
         }
       >
         {filteredOrders.length === 0 ? (

@@ -20,7 +20,7 @@ const OrderFilters = ({
   setSortBy
 }) => {
   return (
-    <div className="border-t pt-3 sm:pt-4">
+    <div className="space-y-3 sm:space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Status Filter */}
         <div>
