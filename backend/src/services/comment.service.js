@@ -175,10 +175,68 @@ const toggleCommentLike = async ({ commentId, userId }) => {
     };
 };
 
+/**
+ * Get all comments for admin management
+ */
+const getAllCommentsAdmin = async ({ status, page = 1, limit = 50, sort = 'createdAt:desc' }) => {
+    const query = { parentId: null }; // Only top-level comments
+    
+    if (status) {
+        query.status = status;
+    }
+    
+    const [sortField, sortOrder] = sort.split(':');
+    const sortObj = { [sortField]: sortOrder === 'asc' ? 1 : -1 };
+    
+    const skip = (page - 1) * limit;
+    
+    const comments = await Comment.find(query)
+        .populate('userId', 'fullName username email avatar')
+        .populate('productId', 'name images slug')
+        .sort(sortObj)
+        .skip(skip)
+        .limit(limit)
+        .lean();
+    
+    const total = await Comment.countDocuments(query);
+    
+    return {
+        comments,
+        pagination: {
+            total,
+            page,
+            limit,
+            pages: Math.ceil(total / limit),
+        },
+    };
+};
+
+/**
+ * Moderate a comment (change status)
+ */
+const moderateComment = async ({ commentId, status, reason }) => {
+    const comment = await Comment.findById(commentId);
+    if (!comment) {
+        throw new Error('Comment not found');
+    }
+    
+    comment.status = status;
+    if (reason) {
+        comment.moderationReason = reason;
+    }
+    comment.moderatedAt = new Date();
+    
+    await comment.save();
+    
+    return comment;
+};
+
 module.exports = {
     createComment,
     getCommentsByProductId,
     getReplies,
     deleteComment,
     toggleCommentLike,
+    getAllCommentsAdmin,
+    moderateComment,
 };
