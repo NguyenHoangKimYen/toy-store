@@ -57,7 +57,7 @@ const getReviewsByProductId = async ({
     // Add isHelpful flag if user is authenticated
     const reviewsWithHelpful = reviews.map(review => ({
         ...review,
-        isHelpful: currentUserId 
+        isHelpful: currentUserId && review.helpfulUsers?.length
             ? review.helpfulUsers.some(id => id.toString() === currentUserId.toString())
             : false
     }));
