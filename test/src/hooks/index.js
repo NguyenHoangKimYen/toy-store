@@ -27,5 +27,8 @@ export { useCategories } from './useCategories';
 // Auth hooks - Authentication and user context
 export { useAuth } from './useAuth';
 
+// WebSocket hooks - Real-time updates
+export { useProductSocket } from './useProductSocket';
+
 // User hooks - Use EVERYWHERE for user data (admin, profile, etc.)
 export { useUsers, useUser, useUsersList } from './useUsers';

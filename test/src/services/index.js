@@ -3,6 +3,7 @@ export * from './users.service';
 export * from './orders.service';
 export * from './cart.service';
 export * from './reviews.service';
+export * from './comments.service';
 export * from './discountCodes.service';
 export * from './categories.service';
 export * from './dashboard.service';
@@ -20,6 +21,7 @@ import * as usersService from './users.service';
 import * as ordersService from './orders.service';
 import * as cartService from './cart.service';
 import * as reviewsService from './reviews.service';
+import * as commentsService from './comments.service';
 import * as discountCodesService from './discountCodes.service';
 import * as categoriesService from './categories.service';
 import * as dashboardService from './dashboard.service';
@@ -33,6 +35,7 @@ export default {
   orders: ordersService,
   cart: cartService,
   reviews: reviewsService,
+  comments: commentsService,
   discountCodes: discountCodesService,
   categories: categoriesService,
   dashboard: dashboardService,

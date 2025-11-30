@@ -112,6 +112,27 @@ class SocketService {
       this._dispatchEvent('cart_updated', data);
     });
 
+    // Set up product review/comment listeners
+    this.socket.on('new_review', (data) => {
+      this._dispatchEvent('new_review', data);
+    });
+
+    this.socket.on('review_deleted', (data) => {
+      this._dispatchEvent('review_deleted', data);
+    });
+
+    this.socket.on('new_comment', (data) => {
+      this._dispatchEvent('new_comment', data);
+    });
+
+    this.socket.on('comment_deleted', (data) => {
+      this._dispatchEvent('comment_deleted', data);
+    });
+
+    this.socket.on('stats_updated', (data) => {
+      this._dispatchEvent('stats_updated', data);
+    });
+
     return this.socket;
   }
 
@@ -159,6 +180,22 @@ class SocketService {
       this.socket.emit(event, data);
     } else {
       console.warn(`⚠️ [Socket] Cannot emit ${event} - not connected`);
+    }
+  }
+
+  // Join a product room for real-time review/comment updates
+  joinProductRoom(productId) {
+    if (productId && this.socket?.connected) {
+      this.socket.emit('join_product_room', productId);
+      console.log(`📡 [Socket] Joined product room: ${productId}`);
+    }
+  }
+
+  // Leave a product room
+  leaveProductRoom(productId) {
+    if (productId && this.socket?.connected) {
+      this.socket.emit('leave_product_room', productId);
+      console.log(`📡 [Socket] Left product room: ${productId}`);
     }
   }
 

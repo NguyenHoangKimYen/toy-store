@@ -15,10 +15,10 @@ export const useProductReviews = (productId) => {
   const [page, setPage] = useState(1);
   const pageSize = 10;
   
-  // Review eligibility state
+  // Review eligibility state - simplified, just check if user can review
   const [eligibility, setEligibility] = useState({
     canReview: false,
-    eligibleItems: [],
+    hasReviewed: false,
     loading: true,
   });
 
@@ -66,7 +66,7 @@ export const useProductReviews = (productId) => {
 
   const loadEligibility = async () => {
     if (!isAuthenticated || !productId) {
-      setEligibility({ canReview: false, eligibleItems: [], loading: false });
+      setEligibility({ canReview: false, hasReviewed: false, loading: false });
       return;
     }
     
@@ -74,12 +74,12 @@ export const useProductReviews = (productId) => {
       const result = await checkReviewEligibility(productId);
       setEligibility({
         canReview: result.canReview,
-        eligibleItems: result.eligibleItems || [],
+        hasReviewed: result.hasReviewed || false,
         loading: false,
       });
     } catch (err) {
       console.error('Error checking review eligibility:', err);
-      setEligibility({ canReview: false, eligibleItems: [], loading: false });
+      setEligibility({ canReview: false, hasReviewed: false, loading: false });
     }
   };
 
@@ -96,13 +96,10 @@ export const useProductReviews = (productId) => {
     try {
       setSubmitting(true);
       
-      // Transform frontend field names to backend field names
+      // Simplified - only rating, no text or images for reviews
       const backendData = {
         productId,
-        orderItemId: reviewData.orderItemId, // Required - links to specific order
         rating: reviewData.rating,
-        comment: reviewData.content || reviewData.comment,
-        images: reviewData.images || [], // Include images if provided
       };
       
       const result = await createReview(backendData);
@@ -112,7 +109,7 @@ export const useProductReviews = (productId) => {
       // Add new review to the top of the list
       setReviews(prev => [newReview, ...prev]);
       
-      // Reload stats and eligibility (removes the used order item)
+      // Reload stats and eligibility
       await loadStats();
       await loadEligibility();
       
@@ -196,7 +193,11 @@ export const useProductReviews = (productId) => {
     loadMore,
     refetch: () => {
       loadReviews(true);
+      loadStats();
       loadEligibility();
     },
+    // Expose setters for real-time WebSocket updates
+    setReviews,
+    setStats,
   };
 };

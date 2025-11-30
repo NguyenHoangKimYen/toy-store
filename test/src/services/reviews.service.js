@@ -12,8 +12,9 @@ export const getProductReviews = async (productId, params = {}) => {
 };
 
 /**
- * Create a new review for a product
- * @param {Object} reviewData - Review data { productId, orderItemId, rating, comment, images }
+ * Create a new star rating for a product
+ * Reviews are now just star ratings - no text or images
+ * @param {Object} reviewData - Review data { productId, rating }
  * @returns {Promise<Object>} - Created review with populated user data
  */
 export const createReview = async (reviewData) => {
@@ -21,51 +22,23 @@ export const createReview = async (reviewData) => {
   if (!reviewData.productId) {
     throw new Error('Product ID is required');
   }
-  if (!reviewData.orderItemId) {
-    throw new Error('Order item ID is required');
-  }
   if (!reviewData.rating || reviewData.rating < 1 || reviewData.rating > 5) {
     throw new Error('Rating must be between 1 and 5');
   }
 
-  // Use FormData if images are provided
-  if (reviewData.images && reviewData.images.length > 0) {
-    // Validate max 5 images
-    if (reviewData.images.length > 5) {
-      throw new Error('Maximum 5 images allowed per review');
-    }
-
-    const formData = new FormData();
-    formData.append('productId', reviewData.productId);
-    formData.append('orderItemId', reviewData.orderItemId);
-    formData.append('rating', reviewData.rating);
-    formData.append('comment', reviewData.comment?.trim() || '');
-    
-    // Append each image file - backend expects 'reviewImages' field name
-    reviewData.images.forEach((image) => {
-      formData.append('reviewImages', image);
-    });
-
-    // Don't set Content-Type header - let browser set it with boundary
-    const response = await apiClient.post('/reviews', formData);
-    return response;
-  }
-
-  // No images - use regular JSON
+  // Reviews are now just star ratings - send simple JSON
   const response = await apiClient.post('/reviews', {
     productId: reviewData.productId,
-    orderItemId: reviewData.orderItemId,
     rating: reviewData.rating,
-    comment: reviewData.comment?.trim() || '',
   });
   return response;
 };
 
 /**
  * Check if user can review a product
- * Returns eligible order items that haven't been reviewed yet
+ * Any authenticated user can review once per product (no purchase required)
  * @param {string} productId - Product ID
- * @returns {Promise<Object>} - { canReview: boolean, eligibleItems: array }
+ * @returns {Promise<Object>} - { canReview: boolean, hasReviewed: boolean }
  */
 export const checkReviewEligibility = async (productId) => {
   const response = await apiClient.get(`/reviews/eligibility/${productId}`);
@@ -75,7 +48,7 @@ export const checkReviewEligibility = async (productId) => {
 /**
  * Update a review
  * @param {string} reviewId - Review ID
- * @param {Object} reviewData - Updated review data { rating, comment }
+ * @param {Object} reviewData - Updated review data { rating }
  * @returns {Promise<Object>} - Updated review with populated user data
  */
 export const updateReview = async (reviewId, reviewData) => {

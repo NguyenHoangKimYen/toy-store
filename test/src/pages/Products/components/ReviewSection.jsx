@@ -1,11 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import { Star, ThumbsUp, Flag, Trash2, Clock, AlertTriangle } from 'lucide-react';
+import { Star, Trash2, AlertTriangle, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProductReviews } from '../hooks/useProductReviews';
-import { useReviewPolling, useAuth } from '@/hooks';
+import { useProductSocket, useAuth } from '@/hooks';
 import ReviewForm from './ReviewForm';
+import CommentSection from './CommentSection';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import LoginPromptDialog from '@/components/common/LoginPromptDialog';
 import './ReviewSection.css';
@@ -13,50 +14,52 @@ import './ReviewSection.css';
 const ReviewSection = ({ productId }) => {
   const { user } = useAuth();
   const isAuthenticated = !!user;
-  const { reviews, stats, loading, submitting, hasMore, eligibility, submitReview, removeReview, toggleHelpful, loadMore, refetch } = useProductReviews(productId);
-  const [selectedOrderItem, setSelectedOrderItem] = useState(null);
+  const { reviews, stats, loading, submitting, hasMore, eligibility, submitReview, removeReview, loadMore, refetch, setReviews } = useProductReviews(productId);
+  const [showReviewForm, setShowReviewForm] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [loginPromptAction, setLoginPromptAction] = useState('');
+  const [activeTab, setActiveTab] = useState('reviews');
 
-  // Enable real-time updates via polling (30 seconds interval)
-  const fetchReviews = useCallback(() => {
+  // Real-time update handlers for WebSocket
+  const handleNewReview = useCallback((review) => {
+    // Add new review to the top if not already present
+    setReviews(prev => {
+      if (prev.some(r => r._id === review._id)) return prev;
+      return [review, ...prev];
+    });
+    // Refresh stats when new review arrives
     refetch();
-  }, [refetch]);
+  }, [setReviews, refetch]);
 
-  useReviewPolling(fetchReviews, 30000, true);
+  const handleReviewDeleted = useCallback((reviewId) => {
+    setReviews(prev => prev.filter(r => r._id !== reviewId));
+    refetch(); // Refresh stats
+  }, [setReviews, refetch]);
+
+  // Use WebSocket for real-time updates instead of polling
+  useProductSocket(productId, {
+    onNewReview: handleNewReview,
+    onReviewDeleted: handleReviewDeleted,
+  });
 
   const handleSubmitReview = async (reviewData) => {
-    if (!selectedOrderItem) {
-      return false;
-    }
     const success = await submitReview({
-      ...reviewData,
-      orderItemId: selectedOrderItem.orderItemId,
-      images: reviewData.images || [], // Pass images to the hook
+      rating: reviewData.rating,
     });
     if (success) {
-      setSelectedOrderItem(null);
+      setShowReviewForm(false);
     }
     return success;
   };
 
   const handleDeleteReview = async (reviewId) => {
-    if (window.confirm('Are you sure you want to delete this review? This action cannot be undone.')) {
+    if (window.confirm('Are you sure you want to delete this rating? This action cannot be undone.')) {
       await removeReview(reviewId);
     }
   };
 
-  const handleToggleHelpful = async (reviewId) => {
-    if (!isAuthenticated) {
-      setLoginPromptAction('like this review');
-      setShowLoginPrompt(true);
-      return;
-    }
-    await toggleHelpful(reviewId);
-  };
-
   const handleCancelReview = () => {
-    setSelectedOrderItem(null);
+    setShowReviewForm(false);
   };
 
   const formatDate = (date) => {
@@ -107,37 +110,20 @@ const ReviewSection = ({ productId }) => {
         </div>
       </div>
 
-      {/* Write Review Section - Show prominently if eligible */}
+      {/* Write Review Section - Show for authenticated users who haven't reviewed yet */}
       {isAuthenticated && eligibility.canReview && (
         <Card className="write-review-card">
           <h3 className="write-review-title">Write a Review</h3>
           
-          {!selectedOrderItem ? (
-            <div className="select-purchase-section">
-              <p className="select-purchase-label">Select the product you purchased:</p>
-              <div className="purchase-options">
-                {eligibility.eligibleItems.map((item) => (
-                  <button
-                    key={item.orderItemId}
-                    onClick={() => setSelectedOrderItem(item)}
-                    className="purchase-option-button"
-                  >
-                    <span className="purchase-variant">{item.variantName}</span>
-                    <span className="purchase-date">{new Date(item.orderDate).toLocaleDateString()}</span>
-                  </button>
-                ))}
-              </div>
+          {!showReviewForm ? (
+            <div className="start-review-section">
+              <p>Share your thoughts about this product</p>
+              <Button onClick={() => setShowReviewForm(true)}>
+                Write a Review
+              </Button>
             </div>
           ) : (
             <>
-              <div className="selected-purchase-info">
-                <p>
-                  Reviewing: <strong>{selectedOrderItem.variantName}</strong>
-                  <span className="text-gray-400 ml-2">
-                    (Purchased {new Date(selectedOrderItem.orderDate).toLocaleDateString()})
-                  </span>
-                </p>
-              </div>
               <ReviewForm onSubmit={handleSubmitReview} submitting={submitting} />
               <Button variant="ghost" onClick={handleCancelReview} className="mt-2">
                 Cancel
@@ -150,12 +136,18 @@ const ReviewSection = ({ productId }) => {
       {!isAuthenticated && (
         <Card className="login-prompt-card">
           <p>Please log in to write a review</p>
+          <Button variant="outline" onClick={() => {
+            setLoginPromptAction('write a review');
+            setShowLoginPrompt(true);
+          }}>
+            Log In
+          </Button>
         </Card>
       )}
 
-      {isAuthenticated && !eligibility.loading && !eligibility.canReview && (
-        <Card className="purchase-required-card">
-          <p>Purchase this product to write a review</p>
+      {isAuthenticated && !eligibility.loading && eligibility.hasReviewed && (
+        <Card className="already-reviewed-card">
+          <p>You have already reviewed this product</p>
         </Card>
       )}
 
@@ -187,125 +179,114 @@ const ReviewSection = ({ productId }) => {
         </div>
       )}
 
-      <Separator className="my-6" />
+      {/* Tabs for Reviews and Comments */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="reviews-comments-tabs">
+        <TabsList className="tabs-list">
+          <TabsTrigger value="reviews" className="tab-trigger">
+            <Star size={16} />
+            Reviews {stats?.total > 0 && `(${stats.total})`}
+          </TabsTrigger>
+          <TabsTrigger value="comments" className="tab-trigger">
+            <MessageCircle size={16} />
+            Comments
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="reviews-list">
-        {reviews.length === 0 ? (
-          <div className="no-reviews">
-            <p>No reviews yet. Be the first to review this product!</p>
-          </div>
-        ) : (
-          <>
-            {reviews.map((review) => {
-              // Handle backend's populated userId object - use fullName field
-              const userName = review.userId?.fullName || review.userId?.username || review.userName || 'Anonymous';
-              const userAvatar = review.userId?.avatar || review.userAvatar;
-              const isOwnReview = user && (review.userId?._id === user._id || review.userId === user._id);
-              const isPending = review.status === 'pending' || review.status === 'flagged';
-              
-              return (
-              <Card key={review._id} className={`review-card ${isPending ? 'review-pending' : ''}`}>
-                {/* Pending/Flagged notice for own reviews */}
-                {isOwnReview && isPending && (
-                  <div className="review-pending-notice">
-                    <AlertTriangle size={16} />
-                    <span>
-                      {review.status === 'flagged' 
-                        ? 'Your review may contain inappropriate content and is being reviewed by our team.'
-                        : 'Your review is pending approval and will be visible to others once approved.'}
-                    </span>
-                  </div>
-                )}
-                
-                <div className="review-header-info">
-                  <div className="reviewer-info">
-                    {userAvatar ? (
-                      <img src={userAvatar} alt={userName} className="reviewer-avatar" />
-                    ) : (
-                      <div className="reviewer-avatar-placeholder">
-                        {userName?.charAt(0).toUpperCase() || 'A'}
+        <TabsContent value="reviews" className="tab-content">
+          <div className="reviews-list">
+            {reviews.length === 0 ? (
+              <div className="no-reviews">
+                <p>No reviews yet. Be the first to review this product!</p>
+              </div>
+            ) : (
+              <>
+                {reviews.map((review) => {
+                  // Handle backend's populated userId object - use fullName field
+                  const userName = review.userId?.fullName || review.userId?.username || review.userName || 'Anonymous';
+                  const userAvatar = review.userId?.avatar || review.userAvatar;
+                  const isOwnReview = user && (review.userId?._id === user._id || review.userId === user._id);
+                  const isPending = review.status === 'pending' || review.status === 'flagged';
+                  
+                  return (
+                  <Card key={review._id} className={`review-card ${isPending ? 'review-pending' : ''}`}>
+                    {/* Pending/Flagged notice for own reviews */}
+                    {isOwnReview && isPending && (
+                      <div className="review-pending-notice">
+                        <AlertTriangle size={16} />
+                        <span>
+                          {review.status === 'flagged' 
+                            ? 'Your rating is being reviewed by our team.'
+                            : 'Your rating is pending approval.'}
+                        </span>
                       </div>
                     )}
-                    <div>
-                      <p className="reviewer-name">
-                        {userName}
-                        {isOwnReview && <span className="own-review-badge">You</span>}
-                      </p>
-                      <p className="review-date">{formatDate(review.createdAt)}</p>
-                  </div>
-                </div>
-                {review.rating && (
-                  <div className="review-rating">{renderStars(review.rating, 20)}</div>
-                )}
-              </div>                {/* Variant Info */}
-                {(review.variantId?.attributes?.length > 0 || review.variantName) && (
-                  <div className="review-variant-info">
-                    <span>Purchased: <strong>
-                      {review.variantId?.attributes?.length > 0 
-                        ? review.variantId.attributes.map(attr => attr.value).join(', ')
-                        : review.variantName}
-                    </strong></span>
-                  </div>
-                )}
+                    
+                    <div className="review-header-info">
+                      <div className="reviewer-info">
+                        {userAvatar ? (
+                          <img src={userAvatar} alt={userName} className="reviewer-avatar" />
+                        ) : (
+                          <div className="reviewer-avatar-placeholder">
+                            {userName?.charAt(0).toUpperCase() || 'A'}
+                          </div>
+                        )}
+                        <div>
+                          <p className="reviewer-name">
+                            {userName}
+                            {isOwnReview && <span className="own-review-badge">You</span>}
+                          </p>
+                          <p className="review-date">{formatDate(review.createdAt)}</p>
+                        </div>
+                      </div>
+                      {review.rating && (
+                        <div className="review-rating">{renderStars(review.rating, 20)}</div>
+                      )}
+                    </div>
 
-                <p className="review-content">{review.comment || review.content}</p>
-                
-                {/* Review Images */}
-                {review.imageUrls && review.imageUrls.length > 0 && (
-                  <div className="review-images">
-                    {review.imageUrls.map((img, idx) => (
-                      <img 
-                        key={idx} 
-                        src={img} 
-                        alt={`Review image ${idx + 1}`} 
-                        className="review-image"
-                        onClick={() => window.open(img, '_blank')}
-                      />
-                    ))}
-                  </div>
-                )}
+                    <div className="review-actions">
+                      {isOwnReview && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleDeleteReview(review._id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 size={16} />
+                          Delete
+                        </Button>
+                      )}
+                      {!isOwnReview && user?.role === 'admin' && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleDeleteReview(review._id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 size={16} />
+                          Remove
+                        </Button>
+                      )}
+                    </div>
+                  </Card>
+                  );
+                })}
 
-                <div className="review-actions">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => handleToggleHelpful(review._id)}
-                    className={review.isHelpful ? 'helpful-active' : ''}
-                  >
-                    <ThumbsUp size={16} fill={review.isHelpful ? 'currentColor' : 'none'} />
-                    Helpful {review.helpfulCount > 0 && `(${review.helpfulCount})`}
-                  </Button>
-                  {isOwnReview ? (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleDeleteReview(review._id)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 size={16} />
-                      Delete
+                {hasMore && (
+                  <div className="load-more">
+                    <Button onClick={loadMore} variant="outline" disabled={loading}>
+                      {loading ? 'Loading...' : 'Load More Reviews'}
                     </Button>
-                  ) : (
-                    <Button variant="ghost" size="sm">
-                      <Flag size={16} />
-                      Report
-                    </Button>
-                  )}
-                </div>
-              </Card>
-              );
-            })}
-
-            {hasMore && (
-              <div className="load-more">
-                <Button onClick={loadMore} variant="outline" disabled={loading}>
-                  {loading ? 'Loading...' : 'Load More Reviews'}
-                </Button>
-              </div>
+                  </div>
+                )}
+              </>
             )}
-          </>
-        )}
-      </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="comments" className="tab-content">
+          <CommentSection productId={productId} />
+        </TabsContent>
+      </Tabs>
 
       {/* Login Prompt Dialog */}
       <LoginPromptDialog
