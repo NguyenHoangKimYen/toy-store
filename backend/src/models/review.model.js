@@ -16,24 +16,23 @@ const ReviewSchema = new mongoose.Schema(
             index: true,
         },
 
-        // Link to the specific order item being reviewed (one review per order item)
+        // Link to the specific order item being reviewed (optional - not required for simple ratings)
         orderItemId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'OrderItem',
-            required: true,
-            unique: true, // Ensures one review per order item
+            default: null,
         },
 
         variantId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Variant',
-            required: true,
+            default: null,
         },
 
         variantName: {
             type: String,
-            required: true,
             trim: true,
+            default: null,
         },
 
         imageUrls: {
@@ -99,7 +98,8 @@ const ReviewSchema = new mongoose.Schema(
 );
 
 // --- INDEX ---
-// orderItemId already has unique: true in schema
+// Unique constraint: one review per user per product
+ReviewSchema.index({ userId: 1, productId: 1 }, { unique: true });
 ReviewSchema.index({ productId: 1, status: 1 }); // For fetching approved reviews by product
 
 // --- STATICS: TÍNH TOÁN RATING TRUNG BÌNH ---
