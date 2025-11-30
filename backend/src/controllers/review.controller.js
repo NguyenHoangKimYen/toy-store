@@ -174,6 +174,60 @@ const getPendingReviews = async (req, res, next) => {
 };
 
 /**
+ * @route   GET /api/reviews/admin/all
+ * @desc    Get all reviews for admin management
+ * @access  Admin only
+ */
+const getAllReviewsAdmin = async (req, res, next) => {
+    try {
+        const { status, rating, sort = 'createdAt:desc', page = 1, limit = 50 } = req.query;
+        
+        const query = {};
+        
+        // Filter by status if provided
+        if (status && status !== 'all') {
+            query.status = status;
+        }
+        
+        // Filter by rating if provided
+        if (rating && rating !== 'all') {
+            query.rating = parseInt(rating);
+        }
+        
+        // Parse sort
+        const [sortField, sortOrder] = sort.split(':');
+        const sortObj = { [sortField]: sortOrder === 'asc' ? 1 : -1 };
+        
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const reviews = await Review.find(query)
+            .populate('userId', 'fullName username email avatar')
+            .populate('productId', 'name images slug')
+            .sort(sortObj)
+            .skip(skip)
+            .limit(parseInt(limit))
+            .lean();
+        
+        const total = await Review.countDocuments(query);
+        
+        return res.status(200).json({
+            message: 'Reviews fetched successfully',
+            metadata: {
+                reviews,
+                pagination: {
+                    total,
+                    page: parseInt(page),
+                    limit: parseInt(limit),
+                    pages: Math.ceil(total / parseInt(limit))
+                }
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
  * @route   POST /api/reviews/:reviewId/helpful
  * @desc    Toggle helpful status for a review
  * @access  Private
@@ -234,5 +288,6 @@ module.exports = {
     moderateReview,
     getPendingReviews,
     checkEligibility,
-    toggleHelpful
+    toggleHelpful,
+    getAllReviewsAdmin
 };
