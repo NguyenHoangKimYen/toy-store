@@ -60,8 +60,15 @@ const Orders = () => {
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       await updateOrderStatus(orderId, newStatus)
+      // Update order status locally instead of refetching all orders
+      setOrders(prevOrders => 
+        prevOrders.map(order => 
+          order._id === orderId 
+            ? { ...order, status: newStatus }
+            : order
+        )
+      )
       toast.success('Order status updated successfully')
-      fetchOrders()
     } catch (error) {
       toast.error('Failed to update order status: ' + error.message)
     }
