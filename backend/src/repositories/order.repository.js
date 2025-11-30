@@ -37,9 +37,7 @@ module.exports = {
   },
 
     async findAll(filter = {}, options = {}) {
-        const { page = 1, limit = 20, search, status, deliveryType, paymentMethod } = options;
-        
-        console.log('findAll called with options:', { search, status, deliveryType, paymentMethod });
+        const { page = 1, limit = 20, search, status, deliveryType, paymentMethod, sortBy } = options;
         
         // Build MongoDB query
         const query = { ...filter };
@@ -47,7 +45,6 @@ module.exports = {
         // Add search filter if provided
         if (search && search.trim()) {
             const searchTerm = search.trim();
-            console.log('Search term:', searchTerm);
             
             // Escape special regex characters to prevent errors
             const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -66,8 +63,6 @@ module.exports = {
                     ]
                 }).select('_id').lean();
                 
-                console.log('Matching users found:', matchingUsers.length);
-                
                 // Add user IDs to search conditions
                 if (matchingUsers.length > 0) {
                     const userIds = matchingUsers.map(u => u._id);
@@ -82,8 +77,6 @@ module.exports = {
                 orConditions.push({ _id: searchTerm });
             }
             
-            console.log('orConditions count:', orConditions.length);
-            
             // Only add $or if we have conditions, otherwise return empty result
             if (orConditions.length > 0) {
                 query.$or = orConditions;
@@ -93,8 +86,6 @@ module.exports = {
                 query._id = null;
             }
         }
-        
-        console.log('Final query:', JSON.stringify(query));
         
         // Add status filter
         if (status && status !== 'all') {
@@ -111,12 +102,33 @@ module.exports = {
             query.paymentMethod = paymentMethod;
         }
         
+        // Build sort object based on sortBy parameter
+        let sortOptions = { createdAt: -1 }; // Default: newest first
+        if (sortBy) {
+            switch (sortBy) {
+                case 'newest':
+                    sortOptions = { createdAt: -1 };
+                    break;
+                case 'oldest':
+                    sortOptions = { createdAt: 1 };
+                    break;
+                case 'total-high':
+                    sortOptions = { totalAmount: -1 };
+                    break;
+                case 'total-low':
+                    sortOptions = { totalAmount: 1 };
+                    break;
+                default:
+                    sortOptions = { createdAt: -1 };
+            }
+        }
+        
         return Order.find(query)
             .populate('userId', 'fullName email username phone')
             .populate('addressId', 'fullNameOfReceiver phone addressLine city postalCode lat lng')
             .populate('discountCodeId', 'code value')
             .populate('voucherId', 'code value type')
-            .sort({ createdAt: -1 })
+            .sort(sortOptions)
             .skip((page - 1) * limit)
             .limit(limit)
             .lean();
