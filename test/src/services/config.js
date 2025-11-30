@@ -1,4 +1,4 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.milkybloomtoystore.id.vn';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.milkybloomtoystore.id.vn/api';
 
 // API Endpoints
 export const ENDPOINTS = {
