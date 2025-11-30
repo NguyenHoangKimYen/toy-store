@@ -12,11 +12,13 @@ import DeleteConfirmDialog from './components/DeleteConfirmDialog'
 import DiscountOrdersModal from './components/DiscountOrdersModal'
 import { AdminContent } from '../components'
 import { PageHeader, SearchBar } from '@/components/common'
+import { useDebounce } from '@/hooks'
 
 const DiscountCodes = () => {
   const [codes, setCodes] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearch = useDebounce(searchTerm, 400) // Debounce search input
   const [sortBy, setSortBy] = useState('newest')
   const [selectedCode, setSelectedCode] = useState(null)
   const [showModal, setShowModal] = useState(false)
@@ -28,9 +30,10 @@ const DiscountCodes = () => {
   const fetchCodes = useCallback(async () => {
     try {
       setLoading(true)
-      // Send search param to backend
+      // Send search and sort params to backend
       const params = {
-        search: searchTerm.trim() || undefined,
+        search: debouncedSearch.trim() || undefined,
+        sortBy: sortBy || 'newest', // Send sort to backend
       }
       const response = await getAllDiscountCodes(params)
       setCodes(response.discountCodes || response.data || [])
@@ -47,7 +50,7 @@ const DiscountCodes = () => {
     } finally {
       setLoading(false)
     }
-  }, [searchTerm])
+  }, [debouncedSearch, sortBy])
 
   useEffect(() => {
     fetchCodes()
@@ -102,27 +105,8 @@ const DiscountCodes = () => {
     }
   }
 
-  // Apply sorting to codes
-  const sortedCodes = React.useMemo(() => {
-    if (!codes) return codes
-    
-    const sorted = [...codes]
-    
-    if (sortBy === 'newest') {
-      sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    } else if (sortBy === 'oldest') {
-      sorted.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-    } else if (sortBy === 'usage-high') {
-      sorted.sort((a, b) => (b.usedCount || 0) - (a.usedCount || 0))
-    } else if (sortBy === 'usage-low') {
-      sorted.sort((a, b) => (a.usedCount || 0) - (b.usedCount || 0))
-    }
-    
-    return sorted
-  }, [codes, sortBy])
-
-  // Filtering is now done on backend
-  const filteredCodes = sortedCodes
+  // Sorting and filtering is now done on backend
+  const filteredCodes = codes
 
   const getUsagePercentage = (code) => {
     return ((code.usedCount || 0) / (code.usageLimit || 1)) * 100

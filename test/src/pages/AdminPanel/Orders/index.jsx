@@ -11,11 +11,13 @@ import OrderDetailModal from './components/OrderDetailModal'
 import OrderFilters from './components/OrderFilters'
 import { AdminContent } from '../components'
 import { PageHeader, SearchBar } from '@/components/common'
+import { useDebounce } from '@/hooks'
 
 const Orders = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearch = useDebounce(searchTerm, 400) // Debounce search input
   const [statusFilter, setStatusFilter] = useState('all')
   const [deliveryTypeFilter, setDeliveryTypeFilter] = useState('all')
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('all')
@@ -27,12 +29,13 @@ const Orders = () => {
   const fetchOrders = useCallback(async () => {
     try {
       setLoading(true)
-      // Send filter params to backend
+      // Send all filter params to backend (including sort)
       const params = {
-        search: searchTerm || undefined,
+        search: debouncedSearch || undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,
         deliveryType: deliveryTypeFilter !== 'all' ? deliveryTypeFilter : undefined,
         paymentMethod: paymentMethodFilter !== 'all' ? paymentMethodFilter : undefined,
+        sortBy: sortBy || 'newest', // Send sort to backend
       }
       const response = await getAllOrders(params)
       // Backend returns { success: true, orders: [...] }
@@ -48,7 +51,7 @@ const Orders = () => {
     } finally {
       setLoading(false)
     }
-  }, [searchTerm, statusFilter, deliveryTypeFilter, paymentMethodFilter])
+  }, [debouncedSearch, statusFilter, deliveryTypeFilter, paymentMethodFilter, sortBy])
 
   useEffect(() => {
     fetchOrders()
@@ -85,27 +88,8 @@ const Orders = () => {
     )
   }
 
-  // Apply sorting to orders
-  const sortedOrders = React.useMemo(() => {
-    if (!orders) return orders
-    
-    const sorted = [...orders]
-    
-    if (sortBy === 'newest') {
-      sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    } else if (sortBy === 'oldest') {
-      sorted.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-    } else if (sortBy === 'total-high') {
-      sorted.sort((a, b) => (b.totalAmount || 0) - (a.totalAmount || 0))
-    } else if (sortBy === 'total-low') {
-      sorted.sort((a, b) => (a.totalAmount || 0) - (b.totalAmount || 0))
-    }
-    
-    return sorted
-  }, [orders, sortBy])
-
-  // Filtering is now done on backend
-  const filteredOrders = sortedOrders
+  // Sorting and filtering is now done on backend
+  const filteredOrders = orders
 
   return (
     <>

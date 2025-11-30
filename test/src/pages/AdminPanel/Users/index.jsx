@@ -6,11 +6,12 @@ import UserDetailModal from './components/UserDetailModal'
 import UserFormModal from './components/UserFormModal'
 import UserFilters from './components/UserFilters'
 import { AdminContent } from '../components'
-import { useUsers } from '@/hooks' // Using global hook
+import { useUsers, useDebounce } from '@/hooks' // Using global hook
 import { PageHeader, SearchBar, ConfirmDialog } from '@/components/common'
 
 const Users = () => {
   const [searchQuery, setSearchQuery] = useState('')
+  const debouncedSearch = useDebounce(searchQuery, 400) // Debounce search input
   const [selectedUser, setSelectedUser] = useState(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isFormModalOpen, setIsFormModalOpen] = useState(false)
@@ -24,13 +25,14 @@ const Users = () => {
     role: 'all',
     isVerified: 'all',
     socialProvider: 'all',
-    sortBy: 'none'
+    sortBy: 'newest' // Default to newest
   })
 
-  // Build params for API call
+  // Build params for API call - send all filters including sortBy to backend
   const apiParams = useMemo(() => {
     const params = {
-      keyword: searchQuery.trim() || undefined, // Backend expects 'keyword' not 'search'
+      keyword: debouncedSearch.trim() || undefined, // Backend expects 'keyword' not 'search'
+      sortBy: filters.sortBy || 'newest', // Send sort to backend
     }
 
     // Add filters if not 'all'
@@ -39,7 +41,7 @@ const Users = () => {
     if (filters.socialProvider !== 'all') params.socialProvider = filters.socialProvider
 
     return params
-  }, [searchQuery, filters])
+  }, [debouncedSearch, filters])
 
   // Custom hook handles data fetching and CRUD operations
   const { 
@@ -55,24 +57,8 @@ const Users = () => {
     dependencies: [apiParams]
   })
 
-  // Apply sorting to users
-  const users = useMemo(() => {
-    if (!fetchedUsers || filters.sortBy === 'none') return fetchedUsers
-    
-    const sorted = [...fetchedUsers]
-    
-    if (filters.sortBy === 'newest') {
-      sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    } else if (filters.sortBy === 'oldest') {
-      sorted.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-    } else if (filters.sortBy === 'points-high') {
-      sorted.sort((a, b) => (b.loyaltyPoints || 0) - (a.loyaltyPoints || 0))
-    } else if (filters.sortBy === 'points-low') {
-      sorted.sort((a, b) => (a.loyaltyPoints || 0) - (b.loyaltyPoints || 0))
-    }
-    
-    return sorted
-  }, [fetchedUsers, filters.sortBy])
+  // Sorting is now done on backend
+  const users = fetchedUsers
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters)
@@ -83,7 +69,7 @@ const Users = () => {
       role: 'all',
       isVerified: 'all',
       socialProvider: 'all',
-      sortBy: 'none'
+      sortBy: 'newest' // Default to newest instead of 'none'
     })
     setSearchQuery('')
   }
