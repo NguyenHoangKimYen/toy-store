@@ -142,6 +142,24 @@ const updateUser = async (req, res, next) => {
     }
 };
 
+// UPDATE PROFILE (SELF)
+const updateProfile = async (req, res, next) => {
+    try {
+        const userId = req.user?._id;
+        if (!userId) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        // Không cho tự đổi role/loyalty/password ở đây
+        const { role, loyaltyPoints, password, ...safeData } = req.body;
+
+        const updated = await userService.updateUser(userId, safeData);
+        res.json({ success: true, data: updated });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // DELETE USER
 const deleteUser = async (req, res, next) => {
     try {
@@ -281,6 +299,7 @@ module.exports = {
     verifyUser,
     setUserPassword,
     updateUser,
+    updateProfile,
     deleteUser,
     uploadAvatar,
     updateAvatar,
