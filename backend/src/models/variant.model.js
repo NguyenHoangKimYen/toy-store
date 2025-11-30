@@ -68,17 +68,6 @@ const VariantSchema = new mongoose.Schema(
     },
 );
 
-// Auto-generate SKU if not provided
-VariantSchema.pre('save', function (next) {
-    if (!this.sku) {
-        // Generate SKU: VAR-{timestamp}-{random}
-        const timestamp = Date.now().toString(36).toUpperCase();
-        const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-        this.sku = `VAR-${timestamp}-${random}`;
-    }
-    next();
-});
-
 // Hàm tìm và cập nhật giá MIN/MAX và totalStock cho sản phẩm cha
 async function updateProductPrices(productId) {
     if (!productId) return;
@@ -114,9 +103,6 @@ async function updateProductPrices(productId) {
             },
         },
     );
-    console.log(
-        `Updated min/max price and totalStock for Product ${productId}: ${minPrice} - ${maxPrice}, Stock: ${totalStock}`,
-    );
 }
 
 // Static method to manually recalculate product data (for bulk operations)
@@ -124,10 +110,18 @@ VariantSchema.statics.recalculateProductData = async function (productId) {
     await updateProductPrices(productId);
 };
 
-// 3. Đăng ký Middleware (Sau khi Variant được lưu, cập nhật, hoặc xóa)
-// IMPORTANT: Skip trong transaction context - service tự handle
+// Auto-generate SKU if not provided
+VariantSchema.pre('save', function (next) {
+    if (!this.sku) {
+        const timestamp = Date.now().toString(36).toUpperCase();
+        const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+        this.sku = `VAR-${timestamp}-${random}`;
+    }
+    next();
+});
+
+// Đăng ký Middleware (Sau khi Variant được lưu, cập nhật, hoặc xóa)
 VariantSchema.post('save', function () {
-    // Skip if within a transaction (service handles price update)
     if (this.$session()) return;
     updateProductPrices(this.productId);
 });

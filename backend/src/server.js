@@ -112,7 +112,7 @@ app.use('/api/variants', variantRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/addresses', addressRoutes);
-app.use('/api/shipping', shippingRoutes); // có thể rút ngắn lại
+app.use('/api/shipping', shippingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/carts', cartRoutes);
 app.use('/api/categories', categoryRoutes);
@@ -137,7 +137,6 @@ app.get('/', (req, res) => {
 });
 
 app.use((err, req, res, _next) => {
-    // xử lý lỗi tổng quát
     const status = err.status || 500;
     res.status(status).json({
         success: false,

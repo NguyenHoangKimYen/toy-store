@@ -94,10 +94,8 @@ const updateProduct = async (req, res, next) => {
             });
         }
 
-        // Expect JSON body with product data
-        // Images are handled separately via POST/DELETE /products/:id/images
-        console.log('📝 Update Product Request:', req.body);
-        
+        // console.log('📝 Update Product Request:', req.body);
+
         const updatedProduct = await productService.updateProduct(id, req.body);
 
         return res.status(200).json({
