@@ -29,7 +29,8 @@ const ProductDetailModal = ({ product, onClose, onEdit, onDelete }) => {
   // Use global hook to fetch product with variants
   const { 
     product: fullProduct, 
-    loading: loadingVariants 
+    loading: loadingVariants,
+    refetch
   } = useProductDetail(product._id);
 
   // Use the full product data if available, otherwise fallback to prop
@@ -41,8 +42,17 @@ const ProductDetailModal = ({ product, onClose, onEdit, onDelete }) => {
   };
 
   const handleSaveEdit = async (updatedData) => {
-    await onEdit(product._id, updatedData);
-    setShowEditModal(false);
+    try {
+      await onEdit(product._id, updatedData);
+      setShowEditModal(false);
+      // Refetch product detail to show updated data
+      if (refetch) {
+        await refetch();
+      }
+    } catch (error) {
+      console.error('Edit failed:', error);
+      // Keep modal open on error so user can retry
+    }
   };
 
   const handleDelete = async () => {
@@ -97,7 +107,7 @@ const ProductDetailModal = ({ product, onClose, onEdit, onDelete }) => {
           <div className='p-6'>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-6'>
               {/* Image Gallery */}
-              <ProductImageGallery images={productWithVariants.imageUrls} productName={productWithVariants.name} />
+              <ProductImageGallery images={productWithVariants.imageUrls} productName={productWithVariants.name} isFeatured={productWithVariants.isFeatured} />
               
               {/* Product Info */}
               <ProductInfo product={productWithVariants} />

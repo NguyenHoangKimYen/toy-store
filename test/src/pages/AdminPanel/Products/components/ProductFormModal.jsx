@@ -445,7 +445,7 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
           {/* Basic Info */}
           <div className='grid grid-cols-2 gap-4'>
             <div>
-              <label className='text-sm font-medium text-gray-700 dark:text-gray-300'>Product Name *</label>
+              <label className='text-sm font-medium text-gray-700 dark:text-gray-300'>Product Name <span className='text-red-500'>*</span></label>
               <Input
                 name='name'
                 value={formData.name}
@@ -455,18 +455,17 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
               {errors.name && <p className='text-red-500 text-sm mt-1'>{errors.name}</p>}
             </div>
             <div>
-              <label className='text-sm font-medium text-gray-700 dark:text-gray-300'>Brand</label>
-              <Input
-                name='brand'
-                value={formData.brand}
-                onChange={handleInputChange}
-                placeholder='Enter brand name'
+              <CategoryManager
+                categories={formData.categoryId}
+                onAdd={addCategory}
+                onRemove={removeCategory}
               />
+              {errors.categoryId && <p className='text-red-500 text-sm mt-1'>{errors.categoryId}</p>}
             </div>
           </div>
 
           <div>
-            <label className='text-sm font-medium text-gray-700 dark:text-gray-300'>Description *</label>
+            <label className='text-sm font-medium text-gray-700 dark:text-gray-300'>Description <span className='text-red-500'>*</span></label>
             <textarea
               name='description'
               value={formData.description}
@@ -491,7 +490,7 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
 
           {/* Product Status */}
           <div>
-            <label className='text-sm font-medium text-gray-700 dark:text-gray-300'>Product Status *</label>
+            <label className='text-sm font-medium text-gray-700 dark:text-gray-300'>Product Status <span className='text-red-500'>*</span></label>
             <select
               name='status'
               value={formData.status}
@@ -506,16 +505,6 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
             <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
               Only "Published" products are visible in the customer catalogue
             </p>
-          </div>
-
-          {/* Categories */}
-          <div>
-            <CategoryManager
-              categories={formData.categoryId}
-              onAdd={addCategory}
-              onRemove={removeCategory}
-            />
-            {errors.categoryId && <p className='text-red-500 text-sm mt-1'>{errors.categoryId}</p>}
           </div>
 
           {/* Images */}

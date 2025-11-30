@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-const ProductImageGallery = ({ images, productName }) => {
+const ProductImageGallery = ({ images, productName, isFeatured }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
   const nextImage = () => {
@@ -25,6 +25,12 @@ const ProductImageGallery = ({ images, productName }) => {
           alt={productName}
           className='w-full h-full object-cover'
         />
+        {/* FEATURED Badge */}
+        {isFeatured && (
+          <div className='absolute top-2 right-2 px-3 py-1 rounded-full text-sm font-semibold shadow-lg' style={{ background: 'linear-gradient(135deg, #fef3c7, #fde68a)', color: '#92400e' }}>
+            FEATURED
+          </div>
+        )}
         {images.length > 1 && (
           <>
             <button

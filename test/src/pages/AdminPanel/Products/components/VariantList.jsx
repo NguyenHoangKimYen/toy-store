@@ -106,11 +106,11 @@ const VariantList = ({ variants, onUpdatePrice, onUpdateStock, onRemove, onUpdat
                   ))}
                 </div>
                 
-                {/* Price, Stock, and Image URL Inputs */}
+                {/* Price, Stock, and Weight Inputs */}
                 <div className='grid grid-cols-3 gap-3'>
                   <div>
                     <label className='text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block'>
-                      Price ($) *
+                      Price (VNĐ) <span className='text-red-500'>*</span>
                     </label>
                     <Input
                       type='number'
@@ -138,29 +138,16 @@ const VariantList = ({ variants, onUpdatePrice, onUpdateStock, onRemove, onUpdat
                   </div>
                   <div>
                     <label className='text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block'>
-                      Image URL (optional)
+                      Weight (gram)
                     </label>
-                    <div className='flex gap-1'>
-                      <Input
-                        type='text'
-                        placeholder='https://...'
-                        value={variant.pendingImageUrl || ''}
-                        onChange={(e) => handleUrlInput(index, e.target.value)}
-                        className='h-9 flex-1'
-                        disabled={!!variant.pendingImageFile}
-                      />
-                      <label className='cursor-pointer'>
-                        <input
-                          type='file'
-                          accept='image/jpeg,image/png,image/webp'
-                          onChange={(e) => handleFileSelect(index, e.target.files?.[0])}
-                          className='hidden'
-                        />
-                        <span className='inline-flex items-center justify-center h-9 w-9 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors'>
-                          <Upload className='w-4 h-4 text-gray-500' />
-                        </span>
-                      </label>
-                    </div>
+                    <Input
+                      type='number'
+                      min='0'
+                      placeholder='100'
+                      value={variant.weight || 100}
+                      onChange={(e) => onUpdateStock(index, e.target.value)}
+                      className='h-9'
+                    />
                   </div>
                 </div>
               </div>

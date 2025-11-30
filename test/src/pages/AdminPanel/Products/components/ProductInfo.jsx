@@ -30,11 +30,6 @@ const ProductInfo = ({ product }) => {
             NEW
           </span>
         )}
-        {product.isFeatured && (
-          <span className='px-3 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200 rounded-full text-sm font-semibold'>
-            FEATURED
-          </span>
-        )}
       </div>
 
       {/* Product Name */}
@@ -100,7 +95,7 @@ const ProductInfo = ({ product }) => {
         <div className='p-3 bg-gray-50 dark:bg-gray-700 rounded-lg'>
           <p className='text-sm text-gray-600 dark:text-gray-400'>Sold Count</p>
           <p className='text-2xl font-bold text-purple-600'>
-            {product.soldCount}
+            {product.soldCount || 0}
           </p>
         </div>
       </div>
