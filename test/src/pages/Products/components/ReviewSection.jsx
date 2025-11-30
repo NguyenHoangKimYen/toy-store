@@ -1,8 +1,7 @@
 import React, { useState, useCallback } from 'react';
-import { Star, Trash2, AlertTriangle, MessageCircle } from 'lucide-react';
+import { Star, Trash2, AlertTriangle, ChevronDown, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProductReviews } from '../hooks/useProductReviews';
 import { useProductSocket, useAuth } from '@/hooks';
 import ReviewForm from './ReviewForm';
@@ -18,7 +17,7 @@ const ReviewSection = ({ productId }) => {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [loginPromptAction, setLoginPromptAction] = useState('');
-  const [activeTab, setActiveTab] = useState('reviews');
+  const [showRatingsPopup, setShowRatingsPopup] = useState(false);
 
   // Real-time update handlers for WebSocket
   const handleNewReview = useCallback((review) => {
@@ -60,14 +59,6 @@ const ReviewSection = ({ productId }) => {
 
   const handleCancelReview = () => {
     setShowReviewForm(false);
-  };
-
-  const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
   };
 
   const renderStars = (rating, size = 16) => {
@@ -152,141 +143,109 @@ const ReviewSection = ({ productId }) => {
       )}
 
       {stats && (
-        <div className="review-stats">
-          <div className="stats-summary">
-            <div className="average-rating">
-              {stats.averageRating > 0 ? (
-                <>
-                  <span className="rating-number">{stats.averageRating}</span>
-                  <div className="stars-display">{renderStars(Math.round(stats.averageRating), 24)}</div>
-                </>
-              ) : (
-                <span className="rating-number">No ratings yet</span>
-              )}
-              <span className="total-reviews">{stats.total} reviews</span>
-            </div>
+        <div className="review-stats-compact">
+          <div className="stats-summary-compact">
+            {stats.averageRating > 0 ? (
+              <>
+                <span className="rating-number-compact">{stats.averageRating}</span>
+                <div className="stars-display-compact">{renderStars(Math.round(stats.averageRating), 20)}</div>
+                <span className="total-reviews-compact">({stats.total} ratings)</span>
+              </>
+            ) : (
+              <span className="no-ratings-text">No ratings yet</span>
+            )}
+            
+            {/* Show Ratings Button */}
+            {stats.total > 0 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="view-ratings-btn"
+                onClick={() => setShowRatingsPopup(!showRatingsPopup)}
+              >
+                <ChevronDown size={16} className={showRatingsPopup ? 'rotate-180' : ''} />
+                View Ratings
+              </Button>
+            )}
           </div>
 
-          {stats.averageRating > 0 && (
-            <div className="rating-distribution">
-              {[5, 4, 3, 2, 1].map((rating) => (
-                <div key={rating}>
-                  {renderRatingBar(rating, stats.distribution[rating] || 0, stats.total)}
-                </div>
-              ))}
-            </div>
+          {/* Ratings Popup/Dropdown */}
+          {showRatingsPopup && stats.total > 0 && (
+            <Card className="ratings-popup">
+              <div className="ratings-popup-header">
+                <h4>Rating Distribution</h4>
+                <Button variant="ghost" size="sm" onClick={() => setShowRatingsPopup(false)}>
+                  <X size={16} />
+                </Button>
+              </div>
+              
+              <div className="rating-distribution-popup">
+                {[5, 4, 3, 2, 1].map((rating) => (
+                  <div key={rating}>
+                    {renderRatingBar(rating, stats.distribution[rating] || 0, stats.total)}
+                  </div>
+                ))}
+              </div>
+
+              {/* Rating History List */}
+              <div className="ratings-list">
+                <h5>Recent Ratings</h5>
+                {reviews.length === 0 ? (
+                  <p className="no-ratings-list">No ratings to display</p>
+                ) : (
+                  <>
+                    {reviews.slice(0, 5).map((review) => {
+                      const userName = review.userId?.fullName || review.userId?.username || 'Anonymous';
+                      const userAvatar = review.userId?.avatar;
+                      const isOwnReview = user && (review.userId?._id === user._id || review.userId === user._id);
+                      
+                      return (
+                        <div key={review._id} className="rating-item">
+                          <div className="rating-item-user">
+                            {userAvatar ? (
+                              <img src={userAvatar} alt={userName} className="rating-item-avatar" />
+                            ) : (
+                              <div className="rating-item-avatar-placeholder">
+                                <User size={12} />
+                              </div>
+                            )}
+                            <span className="rating-item-name">
+                              {userName}
+                              {isOwnReview && <span className="own-badge">(You)</span>}
+                            </span>
+                          </div>
+                          <div className="rating-item-stars">{renderStars(review.rating, 14)}</div>
+                          {isOwnReview && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className="rating-item-delete"
+                              onClick={() => handleDeleteReview(review._id)}
+                            >
+                              <Trash2 size={14} />
+                            </Button>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {reviews.length > 5 && (
+                      <p className="more-ratings">+{reviews.length - 5} more ratings</p>
+                    )}
+                    {hasMore && (
+                      <Button variant="ghost" size="sm" onClick={loadMore} disabled={loading}>
+                        Load More
+                      </Button>
+                    )}
+                  </>
+                )}
+              </div>
+            </Card>
           )}
         </div>
       )}
 
-      {/* Tabs for Reviews and Comments */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="reviews-comments-tabs">
-        <TabsList className="tabs-list">
-          <TabsTrigger value="reviews" className="tab-trigger">
-            <Star size={16} />
-            Reviews {stats?.total > 0 && `(${stats.total})`}
-          </TabsTrigger>
-          <TabsTrigger value="comments" className="tab-trigger">
-            <MessageCircle size={16} />
-            Comments
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="reviews" className="tab-content">
-          <div className="reviews-list">
-            {reviews.length === 0 ? (
-              <div className="no-reviews">
-                <p>No reviews yet. Be the first to review this product!</p>
-              </div>
-            ) : (
-              <>
-                {reviews.map((review) => {
-                  // Handle backend's populated userId object - use fullName field
-                  const userName = review.userId?.fullName || review.userId?.username || review.userName || 'Anonymous';
-                  const userAvatar = review.userId?.avatar || review.userAvatar;
-                  const isOwnReview = user && (review.userId?._id === user._id || review.userId === user._id);
-                  const isPending = review.status === 'pending' || review.status === 'flagged';
-                  
-                  return (
-                  <Card key={review._id} className={`review-card ${isPending ? 'review-pending' : ''}`}>
-                    {/* Pending/Flagged notice for own reviews */}
-                    {isOwnReview && isPending && (
-                      <div className="review-pending-notice">
-                        <AlertTriangle size={16} />
-                        <span>
-                          {review.status === 'flagged' 
-                            ? 'Your rating is being reviewed by our team.'
-                            : 'Your rating is pending approval.'}
-                        </span>
-                      </div>
-                    )}
-                    
-                    <div className="review-header-info">
-                      <div className="reviewer-info">
-                        {userAvatar ? (
-                          <img src={userAvatar} alt={userName} className="reviewer-avatar" />
-                        ) : (
-                          <div className="reviewer-avatar-placeholder">
-                            {userName?.charAt(0).toUpperCase() || 'A'}
-                          </div>
-                        )}
-                        <div>
-                          <p className="reviewer-name">
-                            {userName}
-                            {isOwnReview && <span className="own-review-badge">You</span>}
-                          </p>
-                          <p className="review-date">{formatDate(review.createdAt)}</p>
-                        </div>
-                      </div>
-                      {review.rating && (
-                        <div className="review-rating">{renderStars(review.rating, 20)}</div>
-                      )}
-                    </div>
-
-                    <div className="review-actions">
-                      {isOwnReview && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => handleDeleteReview(review._id)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 size={16} />
-                          Delete
-                        </Button>
-                      )}
-                      {!isOwnReview && user?.role === 'admin' && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => handleDeleteReview(review._id)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 size={16} />
-                          Remove
-                        </Button>
-                      )}
-                    </div>
-                  </Card>
-                  );
-                })}
-
-                {hasMore && (
-                  <div className="load-more">
-                    <Button onClick={loadMore} variant="outline" disabled={loading}>
-                      {loading ? 'Loading...' : 'Load More Reviews'}
-                    </Button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="comments" className="tab-content">
-          <CommentSection productId={productId} />
-        </TabsContent>
-      </Tabs>
+      {/* Comments Section - Now the main content */}
+      <CommentSection productId={productId} />
 
       {/* Login Prompt Dialog */}
       <LoginPromptDialog

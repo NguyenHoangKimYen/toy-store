@@ -128,8 +128,15 @@ export const useProductComments = (productId) => {
       
       const newComment = result.metadata || result;
       
-      // Don't add locally - let WebSocket handle it to prevent duplicates
-      // The WebSocket event will add the comment to the list
+      // Add comment locally immediately for instant feedback
+      // WebSocket handler has deduplication, so no duplicates will occur
+      setComments(prev => {
+        // Prevent duplicates (in case WebSocket arrives before this)
+        if (prev.some(c => c._id === newComment._id)) {
+          return prev;
+        }
+        return [newComment, ...prev];
+      });
       
       // Show appropriate message based on comment status
       if (newComment.status === 'flagged') {
