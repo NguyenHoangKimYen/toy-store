@@ -17,74 +17,140 @@ const _generateVariantName = (attributes) => {
 
 // --- Main Service Functions ---
 
+/**
+ * Check if user can review a product
+ * Returns eligible order items that haven't been reviewed yet
+ */
+const checkReviewEligibility = async (userId, productId) => {
+    if (!userId || !productId) {
+        throw new Error("Missing required fields");
+    }
+    if (!Types.ObjectId.isValid(userId) || !Types.ObjectId.isValid(productId)) {
+        throw new Error("Invalid ID format");
+    }
+
+    // 1. Find all delivered orders for this user
+    const deliveredOrders = await Order.find({
+        userId: new Types.ObjectId(userId),
+        status: "delivered",
+    }).select("_id createdAt");
+
+    if (!deliveredOrders || deliveredOrders.length === 0) {
+        return { canReview: false, eligibleItems: [], message: "No delivered orders found" };
+    }
+
+    const deliveredOrderIds = deliveredOrders.map((order) => order._id);
+
+    // 2. Find order items for this product in delivered orders
+    const orderItems = await OrderItem.find({
+        orderId: { $in: deliveredOrderIds },
+        productId: new Types.ObjectId(productId),
+    })
+    .populate({
+        path: "variantId",
+        select: "attributes imageUrls"
+    })
+    .populate({
+        path: "orderId",
+        select: "createdAt"
+    })
+    .lean();
+
+    if (!orderItems || orderItems.length === 0) {
+        return { canReview: false, eligibleItems: [], message: "You have not purchased this product" };
+    }
+
+    // 3. Find which order items already have reviews
+    const orderItemIds = orderItems.map(item => item._id);
+    const existingReviews = await Review.find({
+        orderItemId: { $in: orderItemIds }
+    }).select("orderItemId");
+    
+    const reviewedOrderItemIds = new Set(existingReviews.map(r => r.orderItemId.toString()));
+
+    // 4. Filter to get only eligible (not yet reviewed) order items
+    const eligibleItems = orderItems
+        .filter(item => !reviewedOrderItemIds.has(item._id.toString()))
+        .map(item => ({
+            orderItemId: item._id,
+            orderId: item.orderId._id,
+            orderDate: item.orderId.createdAt,
+            variantId: item.variantId?._id,
+            variantName: _generateVariantName(item.variantId?.attributes),
+            variantImage: item.variantId?.imageUrls?.[0] || null,
+            quantity: item.quantity,
+        }));
+
+    return {
+        canReview: eligibleItems.length > 0,
+        eligibleItems,
+        message: eligibleItems.length > 0 
+            ? `You can write ${eligibleItems.length} review(s) for this product`
+            : "You have already reviewed all your purchases of this product"
+    };
+};
+
 const createReview = async ({
     userId,
     productId,
-    variantId,
+    orderItemId,
     rating,
     comment,
     imgFiles,
 }) => {
     // validate input basic
-    if (!userId || !productId || !variantId)
-       
+    if (!userId || !productId || !orderItemId) {
         throw new Error("Missing required fields");
+    }
     if (
-        
         !Types.ObjectId.isValid(userId) ||
-       
         !Types.ObjectId.isValid(productId) ||
-       
-        !Types.ObjectId.isValid(variantId)
-    
+        !Types.ObjectId.isValid(orderItemId)
     ) {
         throw new Error("Invalid ID format");
     }
 
-    // 1. Check Verified Purchase
-    const deliveredOrders = await Order.find({
-        userId: new Types.ObjectId(userId),
-        status: "delivered",
-    }).select("_id");
+    // 1. Verify the order item exists and belongs to a delivered order for this user
+    const orderItem = await OrderItem.findById(orderItemId)
+        .populate({
+            path: "orderId",
+            select: "userId status"
+        });
 
-    if (!deliveredOrders || deliveredOrders.length === 0) {
-        throw new Error(
-            'You have not purchased or received any products to review.',
-        );
-    }
-    const deliveredOrderIds = deliveredOrders.map((order) => order._id);
-
-    const hasPurchasedItem = await OrderItem.findOne({
-        orderId: { $in: deliveredOrderIds },
-        productId: new Types.ObjectId(productId),
-        variantId: new Types.ObjectId(variantId),
-        variantId: new Types.ObjectId(variantId),
-    });
-
-    if (!hasPurchasedItem) {
-        throw new Error('You have not purchased this product variant.');
+    if (!orderItem) {
+        throw new Error("Order item not found");
     }
 
-    // 2. Generate Variant Name
-    const variant = await Variant.findById(variantId);
-    if (!variant) throw new Error('Product variant does not exist.');
+    if (orderItem.orderId.userId.toString() !== userId.toString()) {
+        throw new Error("This order does not belong to you");
+    }
+
+    if (orderItem.orderId.status !== "delivered") {
+        throw new Error("You can only review products from delivered orders");
+    }
+
+    if (orderItem.productId.toString() !== productId.toString()) {
+        throw new Error("Product ID does not match the order item");
+    }
+
+    // 2. Check if this order item already has a review
+    const existingReview = await Review.findOne({ orderItemId: new Types.ObjectId(orderItemId) });
+    if (existingReview) {
+        throw new Error("You have already reviewed this purchase");
+    }
+
+    // 3. Get variant info for the review
+    const variant = await Variant.findById(orderItem.variantId);
+    if (!variant) throw new Error("Product variant does not exist");
     const generatedVariantName = _generateVariantName(variant.attributes);
-
-    // 3. Check Spam (Already Reviewed?)
-    const existingReview = await reviewRepo.findReviewByUserAndProduct(
-        userId,
-        productId,
-    );
-    if (existingReview)
-        throw new Error('You have already reviewed this product.');
 
     // 4. Upload Images to S3 (If any)
     let imageUrls = [];
     if (imgFiles && imgFiles.length > 0) {
-        // Folder trên S3 sẽ là "reviewImages"
         imageUrls = await uploadToS3(imgFiles, 'reviewImages');
     }
 
+    // 5. AI moderation
     const aiResult = await AIService.analyzeReviewContent(comment);
 
     let initialStatus = "pending";
@@ -94,17 +160,16 @@ const createReview = async ({
         initialStatus = "flagged";
     }
 
-    // 5. Create Review
+    // 6. Create Review
     const newReview = await reviewRepo.createReview({
         userId,
         productId,
-        variantId,
-        variantName: generatedVariantName, // biến này lấy từ logic cũ
+        orderItemId,
+        variantId: orderItem.variantId,
+        variantName: generatedVariantName,
         rating,
         comment,
         imageUrls,
-
-        // Field mới
         status: initialStatus,
         aiAnalysis: {
             isSafe: aiResult.isSafe,
@@ -114,7 +179,7 @@ const createReview = async ({
         },
     });
 
-    // 6. Recalculate Average Rating
+    // 7. Recalculate Average Rating
     if (initialStatus === "approved") {
         await Review.calcAverageRatings(productId);
     }
@@ -128,6 +193,7 @@ const getReviewsByProductId = async ({
     limit,
     sort,
     filterRating,
+    currentUserId = null,
 }) => {
     return await reviewRepo.getReviewsByProductId({
         productId,
@@ -135,6 +201,7 @@ const getReviewsByProductId = async ({
         limit,
         sort,
         filterRating,
+        currentUserId,
     });
 };
 
@@ -340,6 +407,7 @@ module.exports = {
     updateReview,
     deleteReview,
     moderateReview,
-    getProductsToReview
+    getProductsToReview,
+    checkReviewEligibility
 };
 

@@ -20,6 +20,7 @@ const getAllUsers = async (query) => {
         username,
         role,
         keyword,
+        sortBy,
     } = query;
 
     const filter = {};
@@ -33,17 +34,46 @@ const getAllUsers = async (query) => {
     // === 2. Lọc theo role ===
     if (role) filter.role = role;
 
-    // === 3. Keyword search (full-text) ===
-    if (keyword) {
-        filter.$text = { $search: keyword };
+    // === 3. Keyword search using regex (works without text index) ===
+    if (keyword && keyword.trim()) {
+        const escapedKeyword = keyword.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const searchRegex = new RegExp(escapedKeyword, 'i');
+        filter.$or = [
+            { fullName: { $regex: searchRegex } },
+            { email: { $regex: searchRegex } },
+            { username: { $regex: searchRegex } },
+            { phone: { $regex: searchRegex } }
+        ];
     }
 
     // Nếu tìm 1 kết quả -> không cần phân trang
     const isSingleSearch = id || email || phone || username;
 
+    // Build sort object based on sortBy parameter
+    let sortOptions = { createdAt: -1 }; // Default: newest first
+    if (sortBy) {
+        switch (sortBy) {
+            case 'newest':
+                sortOptions = { createdAt: -1 };
+                break;
+            case 'oldest':
+                sortOptions = { createdAt: 1 };
+                break;
+            case 'points-high':
+                sortOptions = { loyaltyPoints: -1 };
+                break;
+            case 'points-low':
+                sortOptions = { loyaltyPoints: 1 };
+                break;
+            default:
+                sortOptions = { createdAt: -1 };
+        }
+    }
+
     const options = {
         skip: isSingleSearch ? 0 : (page - 1) * limit,
         limit: isSingleSearch ? 1 : parseInt(limit),
+        sort: sortOptions,
     };
 
     return userRepository.findAll(filter, options);

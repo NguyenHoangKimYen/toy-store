@@ -3,10 +3,10 @@ const ReviewService = require('../services/review.service');
 const createReview = async (req, res, next) => {
     try {
         const userId = req.user._id || req.user.id;
-        // Lấy text data từ body
-        const { productId, variantId, rating, comment } = req.body;
+        // Get data from body - now uses orderItemId instead of variantId
+        const { productId, orderItemId, rating, comment } = req.body;
 
-        // Lấy files ảnh từ request (do middleware upload xử lý)
+        // Get image files from request (handled by upload middleware)
         const imgFiles = req.files;
 
         if (!rating || rating < 1 || rating > 5) {
@@ -15,18 +15,44 @@ const createReview = async (req, res, next) => {
                 .json({ message: 'Rating must be between 1 and 5 stars' });
         }
 
+        if (!orderItemId) {
+            return res
+                .status(400)
+                .json({ message: 'Order item ID is required' });
+        }
+
         const newReview = await ReviewService.createReview({
             userId,
             productId,
-            variantId,
+            orderItemId,
             rating,
             comment,
-            imgFiles, // Truyền file sang service
+            imgFiles,
         });
 
         return res.status(201).json({
             message: 'Product review created successfully!',
             metadata: newReview,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const checkEligibility = async (req, res, next) => {
+    try {
+        const userId = req.user._id || req.user.id;
+        const { productId } = req.params;
+
+        const result = await ReviewService.checkReviewEligibility(userId, productId);
+
+        return res.status(200).json({
+            success: true,
+            message: result.message,
+            metadata: {
+                canReview: result.canReview,
+                eligibleItems: result.eligibleItems,
+            },
         });
     } catch (error) {
         next(error);
@@ -72,12 +98,16 @@ const getReviewsByProductId = async (req, res, next) => {
     try {
         const { productId } = req.params;
         const { page, limit, sort, rating } = req.query;
+        // Get user ID if authenticated (optional)
+        const currentUserId = req.user?._id || req.user?.id || null;
+        
         const result = await ReviewService.getReviewsByProductId({
             productId,
             page: parseInt(page) || 1,
             limit: parseInt(limit) || 5,
             sort,
             filterRating: rating ? parseInt(rating) : null,
+            currentUserId,
         });
         return res.status(200).json({ message: 'Success', metadata: result });
     } catch (error) {
@@ -148,11 +178,55 @@ const getPendingReviews = async (req, res, next) => {
     }
 };
 
+/**
+ * @route   POST /api/reviews/:reviewId/helpful
+ * @desc    Toggle helpful status for a review
+ * @access  Private
+ */
+const toggleHelpful = async (req, res, next) => {
+    try {
+        const { reviewId } = req.params;
+        const userId = req.user._id;
+
+        const review = await Review.findById(reviewId);
+        if (!review) {
+            return res.status(404).json({ message: 'Review not found' });
+        }
+
+        // Check if user already marked as helpful
+        const hasLiked = review.helpfulUsers.includes(userId);
+
+        if (hasLiked) {
+            // Unlike: remove user from helpfulUsers array
+            review.helpfulUsers = review.helpfulUsers.filter(
+                id => id.toString() !== userId.toString()
+            );
+            review.helpfulCount = Math.max(0, review.helpfulCount - 1);
+        } else {
+            // Like: add user to helpfulUsers array
+            review.helpfulUsers.push(userId);
+            review.helpfulCount += 1;
+        }
+
+        await review.save();
+
+        res.status(200).json({
+            message: hasLiked ? 'Removed helpful mark' : 'Marked as helpful',
+            helpfulCount: review.helpfulCount,
+            isHelpful: !hasLiked,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createReview,
     getReviewsByProductId,
     updateReview,
     deleteReview,
     moderateReview,
-    getPendingReviews
+    getPendingReviews,
+    checkEligibility,
+    toggleHelpful
 };
