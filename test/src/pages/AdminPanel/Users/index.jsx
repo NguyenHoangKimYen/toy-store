@@ -61,7 +61,11 @@ const Users = () => {
     
     const sorted = [...fetchedUsers]
     
-    if (filters.sortBy === 'points-high') {
+    if (filters.sortBy === 'newest') {
+      sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    } else if (filters.sortBy === 'oldest') {
+      sorted.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+    } else if (filters.sortBy === 'points-high') {
       sorted.sort((a, b) => (b.loyaltyPoints || 0) - (a.loyaltyPoints || 0))
     } else if (filters.sortBy === 'points-low') {
       sorted.sort((a, b) => (a.loyaltyPoints || 0) - (b.loyaltyPoints || 0))

@@ -4,6 +4,8 @@ import { Tag, Plus, Edit, Trash2, Eye } from 'lucide-react'
 import { getAllDiscountCodes, createDiscountCode, updateDiscountCode, deleteDiscountCode } from '@/services/discountCodes.service'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
 import Badge from '@/components/ui/badge'
 import DiscountCodeModal from './components/DiscountCodeModal'
 import DeleteConfirmDialog from './components/DeleteConfirmDialog'
@@ -15,6 +17,7 @@ const DiscountCodes = () => {
   const [codes, setCodes] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [sortBy, setSortBy] = useState('newest')
   const [selectedCode, setSelectedCode] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -99,8 +102,27 @@ const DiscountCodes = () => {
     }
   }
 
+  // Apply sorting to codes
+  const sortedCodes = React.useMemo(() => {
+    if (!codes) return codes
+    
+    const sorted = [...codes]
+    
+    if (sortBy === 'newest') {
+      sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    } else if (sortBy === 'oldest') {
+      sorted.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+    } else if (sortBy === 'usage-high') {
+      sorted.sort((a, b) => (b.usedCount || 0) - (a.usedCount || 0))
+    } else if (sortBy === 'usage-low') {
+      sorted.sort((a, b) => (a.usedCount || 0) - (b.usedCount || 0))
+    }
+    
+    return sorted
+  }, [codes, sortBy])
+
   // Filtering is now done on backend
-  const filteredCodes = codes
+  const filteredCodes = sortedCodes
 
   const getUsagePercentage = (code) => {
     return ((code.usedCount || 0) / (code.usageLimit || 1)) * 100
@@ -124,11 +146,29 @@ const DiscountCodes = () => {
           />
         }
         filters={
-          <SearchBar
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder="Search discount codes..."
-          />
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <div className="flex-1">
+              <SearchBar
+                value={searchTerm}
+                onChange={setSearchTerm}
+                placeholder="Search discount codes..."
+              />
+            </div>
+            <div className="w-full sm:w-48">
+              <Label className="text-xs sm:text-sm mb-1.5 block">Sort By</Label>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Newest First</SelectItem>
+                  <SelectItem value="oldest">Oldest First</SelectItem>
+                  <SelectItem value="usage-high">Most Used</SelectItem>
+                  <SelectItem value="usage-low">Least Used</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         }
       >
         {filteredCodes.length === 0 ? (

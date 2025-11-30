@@ -1,7 +1,6 @@
 import React from 'react'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -17,14 +16,12 @@ const OrderFilters = ({
   setDeliveryTypeFilter,
   paymentMethodFilter,
   setPaymentMethodFilter,
-  startDate,
-  setStartDate,
-  endDate,
-  setEndDate
+  sortBy,
+  setSortBy
 }) => {
   return (
     <div className="border-t pt-3 sm:pt-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Status Filter */}
         <div>
           <Label className="text-xs sm:text-sm">Order Status</Label>
@@ -76,30 +73,26 @@ const OrderFilters = ({
           </Select>
         </div>
 
-        {/* Start Date Filter */}
+        {/* Sort By */}
         <div>
-          <Label className="text-xs sm:text-sm">From Date</Label>
-          <Input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="text-sm"
-          />
-        </div>
-
-        {/* End Date Filter */}
-        <div>
-          <Label className="text-xs sm:text-sm">To Date</Label>
-          <Input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="text-sm"
-          />
+          <Label className="text-xs sm:text-sm">Sort By</Label>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="text-sm">
+              <SelectValue placeholder="Sort by..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="oldest">Oldest First</SelectItem>
+              <SelectItem value="total-high">Highest Total</SelectItem>
+              <SelectItem value="total-low">Lowest Total</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      {/* Clear Filters Button - Full Width on New Row */}
+      </div>
+      
+      {/* Clear Filters Button */}
       <div className="mt-3 sm:mt-4">
         <Button
           variant="outline"
@@ -107,8 +100,7 @@ const OrderFilters = ({
             setStatusFilter('all')
             setDeliveryTypeFilter('all')
             setPaymentMethodFilter('all')
-            setStartDate('')
-            setEndDate('')
+            setSortBy('newest')
           }}
           className="w-full text-xs sm:text-sm text-red-600 hover:text-red-700 hover:bg-red-50 border-red-300"
         >
