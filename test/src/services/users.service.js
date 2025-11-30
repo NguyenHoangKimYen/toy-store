@@ -135,20 +135,6 @@ export const updateUser = async (id, userData) => {
   return handleResponse(response);
 };
 
-// Update current user's profile
-export const updateProfile = async (userData) => {
-  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.USERS}/me`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-    },
-    body: JSON.stringify(userData),
-  });
-  
-  return handleResponse(response);
-};
-
 /**
  * Patch
  * @param {string} id
