@@ -76,15 +76,15 @@ const Home = () => {
     <div className="home-gradient min-h-screen overflow-x-hidden">
       {/* Hero Section with Featured Products Carousel */}
       {loadingFeatured ? (
-        <div className="h-[100vh] min-h-[600px] max-h-[900px] flex items-center justify-center">
+        <div className="h-[65vh] min-h-[420px] max-h-[520px] md:h-[100vh] md:min-h-[600px] md:max-h-[900px] flex items-center justify-center">
           <div className="text-center space-y-4">
-            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <p className="text-gray-600 font-medium">Loading featured products...</p>
+            <div className="w-12 h-12 md:w-16 md:h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <p className="text-gray-600 font-medium text-sm md:text-base">Loading featured products...</p>
           </div>
         </div>
       ) : categorizedProducts.featured && categorizedProducts.featured.length > 0 ? (
         <Suspense fallback={
-          <div className="h-[100vh] min-h-[600px] max-h-[900px] bg-gradient-to-br from-violet-50 to-purple-50 animate-pulse" />
+          <div className="h-[65vh] min-h-[420px] max-h-[520px] md:h-[100vh] md:min-h-[600px] md:max-h-[900px] bg-gradient-to-br from-violet-50 to-purple-50 animate-pulse" />
         }>
           <HeroSection featuredProducts={categorizedProducts.featured} />
         </Suspense>
@@ -92,11 +92,11 @@ const Home = () => {
 
       {/* New Arrivals Section - Above Everything */}
       <Suspense fallback={
-        <div className="h-[500px] animate-pulse px-4 sm:px-6 md:px-[5%] py-12 sm:py-16 md:py-20">
-          <div className="h-10 w-64 bg-gray-200 rounded mb-8 sm:mb-10"></div>
-          <div className="flex gap-4">
+        <div className="h-[400px] md:h-[500px] animate-pulse px-3 sm:px-4 md:px-[5%] py-8 sm:py-12 md:py-20">
+          <div className="h-8 md:h-10 w-48 md:w-64 bg-gray-200 rounded mb-6 md:mb-10"></div>
+          <div className="flex gap-3 md:gap-4 overflow-hidden">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="w-[200px] sm:w-[220px] md:w-[280px] h-[340px] sm:h-[360px] md:h-[380px] bg-gray-200 rounded-lg"></div>
+              <div key={i} className="w-[140px] sm:w-[180px] md:w-[280px] h-[240px] sm:h-[300px] md:h-[380px] bg-gray-200 rounded-lg flex-shrink-0"></div>
             ))}
           </div>
         </div>
@@ -112,11 +112,11 @@ const Home = () => {
 
       {/* Best Sellers Section */}
       <Suspense fallback={
-        <div className="h-[500px] animate-pulse px-4 sm:px-6 md:px-[5%] py-12 sm:py-16 md:py-20">
-          <div className="h-10 w-64 bg-gray-200 rounded mb-8 sm:mb-10"></div>
-          <div className="flex gap-4">
+        <div className="h-[400px] md:h-[500px] animate-pulse px-3 sm:px-4 md:px-[5%] py-8 sm:py-12 md:py-20">
+          <div className="h-8 md:h-10 w-48 md:w-64 bg-gray-200 rounded mb-6 md:mb-10"></div>
+          <div className="flex gap-3 md:gap-4 overflow-hidden">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="w-[200px] sm:w-[220px] md:w-[280px] h-[340px] sm:h-[360px] md:h-[380px] bg-gray-200 rounded-lg"></div>
+              <div key={i} className="w-[140px] sm:w-[180px] md:w-[280px] h-[240px] sm:h-[300px] md:h-[380px] bg-gray-200 rounded-lg flex-shrink-0"></div>
             ))}
           </div>
         </div>
@@ -131,9 +131,9 @@ const Home = () => {
       </Suspense>
 
       {/* Categorized Products Section */}
-      <div className="px-4 sm:px-6 md:px-[5%]">
+      <div className="px-3 sm:px-4 md:px-[5%]">
         <Suspense fallback={
-          <div className="h-[600px] sm:h-[700px] md:h-[800px] bg-gray-50 animate-pulse rounded-lg" />
+          <div className="h-[450px] sm:h-[550px] md:h-[700px] bg-gray-50 animate-pulse rounded-lg" />
         }>
           <CategorizedProductsSection />
         </Suspense>

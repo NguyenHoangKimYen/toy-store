@@ -13,13 +13,18 @@ const HeroSlide = ({ product }) => {
     ? product.imageUrls[0] 
     : '/placeholder.png';
 
+  // Truncate description for mobile
+  const truncatedDescription = product.description && product.description.length > 100
+    ? product.description.substring(0, 100) + '...'
+    : product.description;
+
   return (
     <div className="item">
-      <img src={productImage} alt={product.name} />
+      <img src={productImage} alt={product.name} loading="lazy" />
       <div className="introduce">
         <div className="tag">Top Picks</div>
-        <div className="name">Pucky Hat Series</div>
-        <div className="des">{product.description}</div>
+        <div className="name">{product.name || 'Featured Product'}</div>
+        <div className="des">{truncatedDescription}</div>
         <button className="cta-button" onClick={handleShopNow}>
           Shop Now <span className="arrow">→</span>
         </button>

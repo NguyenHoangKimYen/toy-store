@@ -1,4 +1,5 @@
-﻿import React, { useEffect, useRef } from 'react';
+﻿import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import HeroSlide from './HeroSlide';
 import HeroNavigation from './HeroNavigation';
 import { useCarouselAutoplay, useCarouselNavigation, useResponsive } from '@/hooks';
@@ -7,6 +8,8 @@ import './HeroSection.css';
 const HeroSection = ({ featuredProducts }) => {
   const carouselRef = useRef(null);
   const listRef = useRef(null);
+  const navigate = useNavigate();
+  const [activeIndex, setActiveIndex] = useState(0);
   
   const { direction, triggerSlide, goToNext, goToPrev } = useCarouselNavigation();
   const { reset: resetAutoPlay } = useCarouselAutoplay(5000);
@@ -29,11 +32,13 @@ const HeroSection = ({ featuredProducts }) => {
     if (direction === 'next') {
       list.appendChild(items[0]);
       carousel.classList.add('next');
+      setActiveIndex(prev => (prev + 1) % featuredProducts.length);
     } else if (direction === 'prev') {
       list.prepend(items[items.length - 1]);
       carousel.classList.add('prev');
+      setActiveIndex(prev => (prev - 1 + featuredProducts.length) % featuredProducts.length);
     }
-  }, [triggerSlide, direction]);
+  }, [triggerSlide, direction, featuredProducts.length]);
 
   // Auto-play
   useEffect(() => {
@@ -49,6 +54,14 @@ const HeroSection = ({ featuredProducts }) => {
     goToPrev();
     resetAutoPlay(goToNext);
   };
+
+  // Mobile Shop Now handler - navigate to current active product
+  const handleMobileShopNow = useCallback(() => {
+    const currentProduct = featuredProducts[activeIndex];
+    if (currentProduct) {
+      navigate(`/products/${currentProduct._id}`);
+    }
+  }, [activeIndex, featuredProducts, navigate]);
 
   if (!featuredProducts || featuredProducts.length === 0) {
     return null;
@@ -70,6 +83,7 @@ const HeroSection = ({ featuredProducts }) => {
         onNext={handleNext}
         isMobile={isMobile}
         showShopNow={true}
+        onShopNow={handleMobileShopNow}
       />
     </div>
   );

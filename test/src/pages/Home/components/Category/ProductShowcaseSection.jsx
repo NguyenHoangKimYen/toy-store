@@ -54,7 +54,7 @@ const ProductShowcaseSection = ({
   if (!loading && (!products || products.length === 0)) return null;
 
   return (
-    <section className="px-4 sm:px-6 md:px-[5%] py-12 sm:py-16 md:py-20 milkybloom-section relative overflow-hidden">
+    <section className="px-3 sm:px-4 md:px-[5%] py-8 sm:py-12 md:py-20 milkybloom-section relative overflow-hidden">
       
       <div className="relative z-10">
         <div className="showcase-shell max-w-[1600px] mx-auto">

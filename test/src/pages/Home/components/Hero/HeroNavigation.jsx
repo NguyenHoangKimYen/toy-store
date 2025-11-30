@@ -1,6 +1,6 @@
 import React from 'react';
 
-const HeroNavigation = ({ onPrev, onNext, isMobile, showShopNow }) => {
+const HeroNavigation = ({ onPrev, onNext, isMobile, showShopNow, onShopNow }) => {
   return (
     <div className="arrows">
       <button 
@@ -12,7 +12,7 @@ const HeroNavigation = ({ onPrev, onNext, isMobile, showShopNow }) => {
       </button>
       
       {isMobile && showShopNow && (
-        <button className="cta-button mobile-shop-now">
+        <button className="cta-button mobile-shop-now" onClick={onShopNow}>
           Shop Now <span className="arrow">→</span>
         </button>
       )}
