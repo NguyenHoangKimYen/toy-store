@@ -103,12 +103,6 @@ async function updateProductPrices(productId) {
             },
         },
     );
-    console.log(
-        `Updated min/max price and totalStock for Product ${productId}: ${minPrice} - ${maxPrice}, Stock: ${totalStock}`,
-    );
-    console.log(
-        `Updated min/max price and totalStock for Product ${productId}: ${minPrice} - ${maxPrice}, Stock: ${totalStock}`,
-    );
 }
 
 // Static method to manually recalculate product data (for bulk operations)
@@ -116,23 +110,35 @@ VariantSchema.statics.recalculateProductData = async function (productId) {
     await updateProductPrices(productId);
 };
 
-// 3. Đăng ký Middleware (Sau khi Variant được lưu, cập nhật, hoặc xóa)
+// Auto-generate SKU if not provided
+VariantSchema.pre('save', function (next) {
+    if (!this.sku) {
+        const timestamp = Date.now().toString(36).toUpperCase();
+        const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+        this.sku = `VAR-${timestamp}-${random}`;
+    }
+    next();
+});
+
+// Đăng ký Middleware (Sau khi Variant được lưu, cập nhật, hoặc xóa)
 VariantSchema.post('save', function () {
+    if (this.$session()) return;
     updateProductPrices(this.productId);
 });
 
 VariantSchema.post('remove', function () {
+    if (this.$session()) return;
     updateProductPrices(this.productId);
 });
 
 VariantSchema.post('findOneAndDelete', function (doc) {
-    if (doc) {
+    if (doc && !this.getOptions().session) {
         updateProductPrices(doc.productId);
     }
 });
 
 VariantSchema.post('findOneAndUpdate', function (doc) {
-    if (doc) {
+    if (doc && !this.getOptions().session) {
         updateProductPrices(doc.productId);
     }
 });

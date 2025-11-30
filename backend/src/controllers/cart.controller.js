@@ -92,6 +92,13 @@ const addItem = async (req, res, next) => {
             data: updatedCart,
         });
     } catch (error) {
+        // Trả lỗi rõ ràng thay vì 500
+        if (error.message === 'Variant not found') {
+            return res.status(404).json({ success: false, message: 'Variant not found' });
+        }
+        if (error.message?.toLowerCase().includes('stock')) {
+            return res.status(400).json({ success: false, message: error.message });
+        }
         next(error);
     }
 };
