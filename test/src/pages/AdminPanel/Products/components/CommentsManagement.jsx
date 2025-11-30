@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Star, Trash2, Search, Filter, User, Package, Calendar, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { MessageSquare, Trash2, Search, User, Package, Calendar, AlertTriangle, CheckCircle, XCircle, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -19,112 +19,107 @@ import { toast } from 'sonner';
 import apiClient from '@/services/config';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
-const ReviewsManagement = () => {
-  const [reviews, setReviews] = useState([]);
+const CommentsManagement = () => {
+  const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [ratingFilter, setRatingFilter] = useState('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [reviewToDelete, setReviewToDelete] = useState(null);
+  const [commentToDelete, setCommentToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
-  // Fetch all reviews (admin)
-  const fetchReviews = async () => {
+  // Fetch all comments (admin)
+  const fetchComments = async () => {
     try {
       setLoading(true);
       setError(null);
-      // Get reviews for all products - we'll need to aggregate from products
-      const response = await apiClient.get('/reviews/admin/all');
-      setReviews(response.metadata?.reviews || response.reviews || []);
+      const response = await apiClient.get('/comments/admin/all');
+      setComments(response.metadata?.comments || []);
     } catch (err) {
-      console.error('Failed to fetch reviews:', err);
-      // Fallback: Try fetching from a different endpoint or show error
-      setError('Failed to load reviews. Admin endpoint may not exist.');
-      setReviews([]);
+      console.error('Failed to fetch comments:', err);
+      setError('Failed to load comments.');
+      setComments([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchReviews();
+    fetchComments();
   }, []);
 
-  // Filter reviews
-  const filteredReviews = useMemo(() => {
-    return reviews.filter(review => {
+  // Filter comments
+  const filteredComments = useMemo(() => {
+    return comments.filter(comment => {
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        const userName = review.userId?.fullName || review.userId?.username || '';
-        const productName = review.productId?.name || '';
-        if (!userName.toLowerCase().includes(query) && !productName.toLowerCase().includes(query)) {
+        const userName = comment.userId?.fullName || comment.userId?.username || comment.guestName || '';
+        const productName = comment.productId?.name || '';
+        const content = comment.content || '';
+        if (!userName.toLowerCase().includes(query) && 
+            !productName.toLowerCase().includes(query) &&
+            !content.toLowerCase().includes(query)) {
           return false;
         }
       }
 
       // Status filter
-      if (statusFilter !== 'all' && review.status !== statusFilter) {
-        return false;
-      }
-
-      // Rating filter
-      if (ratingFilter !== 'all' && review.rating !== parseInt(ratingFilter)) {
+      if (statusFilter !== 'all' && comment.status !== statusFilter) {
         return false;
       }
 
       return true;
     });
-  }, [reviews, searchQuery, statusFilter, ratingFilter]);
+  }, [comments, searchQuery, statusFilter]);
 
   // Stats
   const stats = useMemo(() => {
-    const total = reviews.length;
-    const approved = reviews.filter(r => r.status === 'approved').length;
-    const pending = reviews.filter(r => r.status === 'pending').length;
-    const flagged = reviews.filter(r => r.status === 'flagged').length;
-    const avgRating = total > 0 
-      ? (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / total).toFixed(1) 
-      : 0;
+    const total = comments.length;
+    const approved = comments.filter(c => c.status === 'approved').length;
+    const pending = comments.filter(c => c.status === 'pending').length;
+    const flagged = comments.filter(c => c.status === 'flagged').length;
+    const withImages = comments.filter(c => c.imageUrls && c.imageUrls.length > 0).length;
 
-    return { total, approved, pending, flagged, avgRating };
-  }, [reviews]);
+    return { total, approved, pending, flagged, withImages };
+  }, [comments]);
 
-  const handleDeleteReview = (review) => {
-    setReviewToDelete(review);
+  const handleDeleteComment = (comment) => {
+    setCommentToDelete(comment);
     setDeleteDialogOpen(true);
   };
 
   const confirmDelete = async () => {
-    if (!reviewToDelete) return;
+    if (!commentToDelete) return;
 
     try {
       setDeleting(true);
-      await apiClient.delete(`/reviews/admin/${reviewToDelete._id}`);
-      setReviews(prev => prev.filter(r => r._id !== reviewToDelete._id));
-      toast.success('Review deleted successfully');
+      await apiClient.delete(`/comments/admin/${commentToDelete._id}`);
+      setComments(prev => prev.filter(c => c._id !== commentToDelete._id));
+      toast.success('Comment deleted successfully');
     } catch (err) {
-      console.error('Failed to delete review:', err);
-      toast.error('Failed to delete review');
+      console.error('Failed to delete comment:', err);
+      toast.error('Failed to delete comment');
     } finally {
       setDeleting(false);
       setDeleteDialogOpen(false);
-      setReviewToDelete(null);
+      setCommentToDelete(null);
     }
   };
 
-  const handleModerateReview = async (reviewId, status) => {
+  const handleModerateComment = async (commentId, status) => {
     try {
-      await apiClient.patch(`/reviews/${reviewId}/moderate`, { status });
-      setReviews(prev => prev.map(r => 
-        r._id === reviewId ? { ...r, status } : r
+      await apiClient.patch(`/comments/${commentId}/moderate`, { status });
+      setComments(prev => prev.map(c => 
+        c._id === commentId ? { ...c, status } : c
       ));
-      toast.success(`Review ${status}`);
+      toast.success(`Comment ${status}`);
     } catch (err) {
-      console.error('Failed to moderate review:', err);
-      toast.error('Failed to update review status');
+      console.error('Failed to moderate comment:', err);
+      toast.error('Failed to update comment status');
     }
   };
 
@@ -136,16 +131,6 @@ const ReviewsManagement = () => {
       hour: '2-digit',
       minute: '2-digit',
     });
-  };
-
-  const renderStars = (rating) => {
-    return [...Array(5)].map((_, index) => (
-      <Star
-        key={index}
-        size={14}
-        className={index < rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}
-      />
-    ));
   };
 
   const getStatusBadge = (status) => {
@@ -161,6 +146,11 @@ const ReviewsManagement = () => {
     }
   };
 
+  const openImageModal = (imageUrl) => {
+    setSelectedImage(imageUrl);
+    setImageModalOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -174,7 +164,7 @@ const ReviewsManagement = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card className="p-4 bg-white/80 backdrop-blur-sm">
-          <div className="text-sm text-slate-500">Total Reviews</div>
+          <div className="text-sm text-slate-500">Total Comments</div>
           <div className="text-2xl font-semibold text-slate-900">{stats.total}</div>
         </Card>
         <Card className="p-4 bg-white/80 backdrop-blur-sm">
@@ -190,9 +180,9 @@ const ReviewsManagement = () => {
           <div className="text-2xl font-semibold text-red-600">{stats.flagged}</div>
         </Card>
         <Card className="p-4 bg-white/80 backdrop-blur-sm">
-          <div className="text-sm text-slate-500">Avg Rating</div>
+          <div className="text-sm text-slate-500">With Images</div>
           <div className="text-2xl font-semibold text-slate-900 flex items-center gap-1">
-            {stats.avgRating} <Star size={18} className="text-yellow-400 fill-yellow-400" />
+            {stats.withImages} <Image size={18} className="text-blue-400" />
           </div>
         </Card>
       </div>
@@ -206,7 +196,7 @@ const ReviewsManagement = () => {
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by user or product name..."
+                placeholder="Search by user, product, or content..."
                 className="pl-10"
               />
             </div>
@@ -222,19 +212,6 @@ const ReviewsManagement = () => {
               <SelectItem value="flagged">Flagged</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={ratingFilter} onValueChange={setRatingFilter}>
-            <SelectTrigger className="w-full md:w-40">
-              <SelectValue placeholder="Rating" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Ratings</SelectItem>
-              <SelectItem value="5">5 Stars</SelectItem>
-              <SelectItem value="4">4 Stars</SelectItem>
-              <SelectItem value="3">3 Stars</SelectItem>
-              <SelectItem value="2">2 Stars</SelectItem>
-              <SelectItem value="1">1 Star</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </Card>
 
@@ -245,96 +222,111 @@ const ReviewsManagement = () => {
             <AlertTriangle size={20} />
             <span>{error}</span>
           </div>
-          <p className="mt-2 text-sm text-red-500">
-            The admin reviews endpoint needs to be created on the backend. 
-            Add GET /api/reviews/admin/all to fetch all reviews.
-          </p>
         </Card>
       )}
 
-      {/* Reviews List */}
+      {/* Comments List */}
       <div className="space-y-3">
-        {filteredReviews.length === 0 ? (
+        {filteredComments.length === 0 ? (
           <Card className="p-8 text-center text-slate-500">
-            <Star size={48} className="mx-auto mb-4 text-slate-300" />
-            <p>No reviews found</p>
+            <MessageSquare size={48} className="mx-auto mb-4 text-slate-300" />
+            <p>No comments found</p>
           </Card>
         ) : (
-          filteredReviews.map((review) => (
-            <Card key={review._id} className="p-4 bg-white/80 backdrop-blur-sm">
+          filteredComments.map((comment) => (
+            <Card key={comment._id} className="p-4 bg-white/80 backdrop-blur-sm">
               <div className="flex flex-col md:flex-row md:items-start gap-4">
                 {/* User Info */}
-                <div className="flex items-center gap-3 min-w-[200px]">
+                <div className="flex items-center gap-3 min-w-[180px]">
                   <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden">
-                    {review.userId?.avatar ? (
-                      <img src={review.userId.avatar} alt="" className="w-full h-full object-cover" />
+                    {comment.userId?.avatar ? (
+                      <img src={comment.userId.avatar} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <User size={20} className="text-slate-400" />
                     )}
                   </div>
                   <div>
                     <div className="font-medium text-slate-900">
-                      {review.userId?.fullName || review.userId?.username || 'Anonymous'}
+                      {comment.userId?.fullName || comment.userId?.username || comment.guestName || 'Anonymous'}
                     </div>
-                    <div className="text-xs text-slate-500">{review.userId?.email}</div>
+                    <div className="text-xs text-slate-500">
+                      {comment.userId?.email || comment.guestEmail || 'Guest'}
+                    </div>
                   </div>
                 </div>
 
-                {/* Review Content */}
+                {/* Comment Content */}
                 <div className="flex-1 space-y-2">
                   {/* Product Info */}
                   <div className="flex items-center gap-2 text-sm text-slate-600">
                     <Package size={14} />
-                    <span className="font-medium">{review.productId?.name || 'Unknown Product'}</span>
+                    <span className="font-medium">{comment.productId?.name || 'Unknown Product'}</span>
                   </div>
 
-                  {/* Rating */}
+                  {/* Status Badge */}
                   <div className="flex items-center gap-2">
-                    <div className="flex">{renderStars(review.rating)}</div>
-                    {getStatusBadge(review.status)}
+                    {getStatusBadge(comment.status)}
+                    {comment.imageUrls && comment.imageUrls.length > 0 && (
+                      <Badge variant="outline" className="text-blue-600">
+                        <Image size={12} className="mr-1" /> {comment.imageUrls.length} image{comment.imageUrls.length > 1 ? 's' : ''}
+                      </Badge>
+                    )}
                   </div>
 
-                  {/* Comment if exists */}
-                  {review.comment && (
-                    <p className="text-sm text-slate-700">{review.comment}</p>
+                  {/* Comment Text */}
+                  <p className="text-sm text-slate-700 whitespace-pre-wrap">{comment.content}</p>
+
+                  {/* Comment Images */}
+                  {comment.imageUrls && comment.imageUrls.length > 0 && (
+                    <div className="flex gap-2 mt-2">
+                      {comment.imageUrls.map((url, idx) => (
+                        <img
+                          key={idx}
+                          src={url}
+                          alt={`Comment image ${idx + 1}`}
+                          className="w-16 h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition border border-slate-200"
+                          onClick={() => openImageModal(url)}
+                        />
+                      ))}
+                    </div>
                   )}
 
                   {/* Date */}
                   <div className="flex items-center gap-1 text-xs text-slate-500">
                     <Calendar size={12} />
-                    {formatDate(review.createdAt)}
+                    {formatDate(comment.createdAt)}
                   </div>
                 </div>
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 md:ml-auto">
-                  {review.status === 'pending' || review.status === 'flagged' ? (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                        onClick={() => handleModerateReview(review._id, 'approved')}
-                      >
-                        <CheckCircle size={14} className="mr-1" />
-                        Approve
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => handleModerateReview(review._id, 'rejected')}
-                      >
-                        <XCircle size={14} className="mr-1" />
-                        Reject
-                      </Button>
-                    </>
+                  {comment.status === 'pending' || comment.status === 'flagged' ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                      onClick={() => handleModerateComment(comment._id, 'approved')}
+                    >
+                      <CheckCircle size={14} className="mr-1" />
+                      Approve
+                    </Button>
                   ) : null}
+                  {comment.status === 'approved' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                      onClick={() => handleModerateComment(comment._id, 'flagged')}
+                    >
+                      <AlertTriangle size={14} className="mr-1" />
+                      Flag
+                    </Button>
+                  )}
                   <Button
                     size="sm"
                     variant="ghost"
                     className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    onClick={() => handleDeleteReview(review)}
+                    onClick={() => handleDeleteComment(comment)}
                   >
                     <Trash2 size={14} />
                   </Button>
@@ -349,9 +341,9 @@ const ReviewsManagement = () => {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Review</AlertDialogTitle>
+            <AlertDialogTitle>Delete Comment</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this review? This action cannot be undone.
+              Are you sure you want to delete this comment? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -366,8 +358,29 @@ const ReviewsManagement = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Image Modal */}
+      {imageModalOpen && selectedImage && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setImageModalOpen(false)}
+        >
+          <img 
+            src={selectedImage} 
+            alt="Comment image" 
+            className="max-w-full max-h-[90vh] object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            className="absolute top-4 right-4 text-white hover:text-gray-300 transition"
+            onClick={() => setImageModalOpen(false)}
+          >
+            <XCircle size={32} />
+          </button>
+        </div>
+      )}
     </div>
   );
 };
 
-export default ReviewsManagement;
+export default CommentsManagement;

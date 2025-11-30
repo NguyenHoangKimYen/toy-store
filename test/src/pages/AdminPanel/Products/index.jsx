@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { Plus, Search, Filter, Package, Star } from 'lucide-react'
+import { Plus, Search, Filter, Package, MessageSquare } from 'lucide-react'
 import ProductGrid from './components/ProductGrid'
 import ProductStats from './components/ProductStats'
 import ProductDetailModal from './components/ProductDetailModal'
 import ProductFormModal from './components/ProductFormModal'
 import ProductFilters from './components/ProductFilters'
-import ReviewsManagement from './components/ReviewsManagement'
+import CommentsManagement from './components/CommentsManagement'
 import { AdminContent } from '../components'
 import { useProducts, useDebounce } from '@/hooks' // Using global hook
 import { PageHeader, SearchBar } from '@/components/common'
@@ -230,11 +230,11 @@ const Products = () => {
     </div>
   )
 
-  const reviewsHeader = (
+  const commentsHeader = (
     <div className='admin-card bg-white/85 backdrop-blur-md border border-purple-100/70 rounded-2xl shadow-[0_18px_42px_-28px_rgba(124,58,237,0.22)] p-5 md:p-6'>
       <div className='space-y-1'>
-        <h2 className='text-2xl font-semibold text-slate-900'>Reviews Management</h2>
-        <p className='text-sm text-slate-500'>Moderate and manage customer reviews</p>
+        <h2 className='text-2xl font-semibold text-slate-900'>Comments Management</h2>
+        <p className='text-sm text-slate-500'>Moderate and manage customer comments</p>
       </div>
     </div>
   )
@@ -253,11 +253,11 @@ const Products = () => {
               Products
             </TabsTrigger>
             <TabsTrigger 
-              value='reviews'
+              value='comments'
               className='flex items-center gap-2 data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 px-4 py-2 rounded-lg transition-all'
             >
-              <Star size={16} />
-              Reviews
+              <MessageSquare size={16} />
+              Comments
             </TabsTrigger>
           </TabsList>
 
@@ -284,10 +284,10 @@ const Products = () => {
             </AdminContent>
           </TabsContent>
 
-          {/* Reviews Tab Content */}
-          <TabsContent value='reviews' className='mt-4'>
-            <AdminContent header={reviewsHeader}>
-              <ReviewsManagement />
+          {/* Comments Tab Content */}
+          <TabsContent value='comments' className='mt-4'>
+            <AdminContent header={commentsHeader}>
+              <CommentsManagement />
             </AdminContent>
           </TabsContent>
         </Tabs>
