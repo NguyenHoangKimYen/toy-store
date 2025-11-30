@@ -390,7 +390,7 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
       const dataToSave = {
         ...formData,
         variants: variantsWithImageInfo,
-        pendingImageFiles, // Pass pending files to parent for upload after creation
+        // Don't pass pendingImageFiles - images are already uploaded and in formData.imageUrls
         ...(mode === 'edit' && deletedVariantIds.length > 0 && { deletedVariantIds }),
         ...(mode === 'edit' && deletedImageUrls.length > 0 && { deletedImageUrls })
       };
