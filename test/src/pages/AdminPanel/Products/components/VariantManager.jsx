@@ -224,20 +224,28 @@ const VariantManager = ({ productId, variants: initialVariants = [], onUpdate })
     
     setUploadingImage(true);
     try {
+      // Upload to S3 immediately
       const formData = new FormData();
       formData.append('variantImages', file);
       
-      const result = await productsService.uploadVariantImages(variantId, formData);
+      const result = await productsService.uploadVariantImagesToS3(formData);
       
-      // Update the variant in local state with new images
+      if (!result.imageUrls || result.imageUrls.length === 0) {
+        throw new Error('No image URLs returned from upload');
+      }
+      
+      const uploadedUrl = result.imageUrls[0];
+      
+      // Update local state with new image URL
       setVariants(prev => prev.map(v => 
         v._id === variantId 
-          ? { ...v, imageUrls: result.imageUrls || [...(v.imageUrls || []), ...result.addedImages] }
+          ? { ...v, imageUrls: [...(v.imageUrls || []), uploadedUrl] }
           : v
       ));
       
-      toast.success('Image uploaded successfully');
+      toast.success('Image uploaded to S3 - save the product to persist changes');
       
+      // Trigger parent update if needed
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error('Failed to upload variant image:', error);
@@ -627,23 +635,41 @@ const VariantManager = ({ productId, variants: initialVariants = [], onUpdate })
                               <input
                                 type='file'
                                 accept='image/jpeg,image/png,image/webp,image/gif'
-                                onChange={(e) => {
+                                onChange={async (e) => {
                                   const file = e.target.files?.[0];
                                   if (file) {
-                                    // Store file for later upload
-                                    updateGeneratedVariant(index, 'pendingImageFile', file);
-                                    updateGeneratedVariant(index, 'imagePreview', URL.createObjectURL(file));
+                                    // Upload to S3 immediately
+                                    setUploadingImage(true);
+                                    try {
+                                      const formData = new FormData();
+                                      formData.append('variantImages', file);
+                                      
+                                      const result = await productsService.uploadVariantImagesToS3(formData);
+                                      
+                                      if (result.imageUrls && result.imageUrls.length > 0) {
+                                        const uploadedUrl = result.imageUrls[0];
+                                        updateGeneratedVariant(index, 'imageUrls', [uploadedUrl]);
+                                        updateGeneratedVariant(index, 'imagePreview', uploadedUrl);
+                                        toast.success('Image uploaded to S3');
+                                      }
+                                    } catch (error) {
+                                      console.error('Failed to upload:', error);
+                                      toast.error(error.message || 'Failed to upload image');
+                                    } finally {
+                                      setUploadingImage(false);
+                                    }
                                   }
                                 }}
                                 className='hidden'
                                 id={`variant-image-${index}`}
+                                disabled={uploadingImage}
                               />
                               <label
                                 htmlFor={`variant-image-${index}`}
-                                className='flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 text-sm text-gray-600 dark:text-gray-400'
+                                className={`flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 text-sm text-gray-600 dark:text-gray-400 ${uploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`}
                               >
                                 <Upload className='w-4 h-4' />
-                                {variant.pendingImageFile ? variant.pendingImageFile.name : 'Choose file...'}
+                                {uploadingImage ? 'Uploading...' : (variant.imageUrls?.[0] ? 'Change file...' : 'Choose file...')}
                               </label>
                             </div>
                             {/* URL fallback */}

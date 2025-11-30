@@ -1,25 +1,27 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
-import { Package, Search, Filter, Truck, CheckCircle, XCircle, Clock, Eye } from 'lucide-react'
+import { Package, Truck, CheckCircle, XCircle, Clock, Eye } from 'lucide-react'
 import { getAllOrders, updateOrderStatus } from '@/services/orders.service'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import Badge from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { formatPrice } from '@/utils/formatPrice'
 import OrderDetailModal from './components/OrderDetailModal'
 import OrderFilters from './components/OrderFilters'
 import { AdminContent } from '../components'
-import { PageHeader } from '@/components/common'
+import { PageHeader, SearchBar } from '@/components/common'
+import { useDebounce } from '@/hooks'
 
 const Orders = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearch = useDebounce(searchTerm, 400) // Debounce search input
   const [statusFilter, setStatusFilter] = useState('all')
   const [deliveryTypeFilter, setDeliveryTypeFilter] = useState('all')
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('all')
+  const [sortBy, setSortBy] = useState('newest')
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
@@ -27,12 +29,13 @@ const Orders = () => {
   const fetchOrders = useCallback(async () => {
     try {
       setLoading(true)
-      // Send search and filter params to backend
+      // Send all filter params to backend (including sort)
       const params = {
-        search: searchTerm.trim() || undefined,
+        search: debouncedSearch || undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,
         deliveryType: deliveryTypeFilter !== 'all' ? deliveryTypeFilter : undefined,
         paymentMethod: paymentMethodFilter !== 'all' ? paymentMethodFilter : undefined,
+        sortBy: sortBy || 'newest', // Send sort to backend
       }
       const response = await getAllOrders(params)
       // Backend returns { success: true, orders: [...] }
@@ -48,7 +51,7 @@ const Orders = () => {
     } finally {
       setLoading(false)
     }
-  }, [searchTerm, statusFilter, deliveryTypeFilter, paymentMethodFilter])
+  }, [debouncedSearch, statusFilter, deliveryTypeFilter, paymentMethodFilter, sortBy])
 
   useEffect(() => {
     fetchOrders()
@@ -57,8 +60,15 @@ const Orders = () => {
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       await updateOrderStatus(orderId, newStatus)
+      // Update order status locally instead of refetching all orders
+      setOrders(prevOrders => 
+        prevOrders.map(order => 
+          order._id === orderId 
+            ? { ...order, status: newStatus }
+            : order
+        )
+      )
       toast.success('Order status updated successfully')
-      fetchOrders()
     } catch (error) {
       toast.error('Failed to update order status: ' + error.message)
     }
@@ -85,7 +95,7 @@ const Orders = () => {
     )
   }
 
-  // Filtering is now done on backend
+  // Sorting and filtering is now done on backend
   const filteredOrders = orders
 
   const headerCard = (

@@ -26,10 +26,11 @@ const AdminProductCard = ({
 
   const imageUrl = product.imageUrls?.[0] || '/placeholder.png';
   const categoryName = product.categoryId?.[0]?.name || product.categoryId?.name || 'Uncategorized';
-  const variantStock = Array.isArray(product.variants)
-    ? product.variants.reduce((sum, v) => sum + (Number(v.stockQuantity) || 0), 0)
-    : 0;
-  const totalStock = variantStock || product.totalStock || product.stockQuantity || 0;
+  
+  // Calculate total stock: use variants sum if available, fallback to totalStock field
+  const totalStock = hasVariants 
+    ? product.variants.reduce((sum, v) => sum + (v.stockQuantity || 0), 0)
+    : (product.totalStock ?? 0);
 
   const handleCardClick = () => {
     onClick?.(product);

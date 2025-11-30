@@ -15,10 +15,15 @@ const OrderFilters = ({
   deliveryTypeFilter,
   setDeliveryTypeFilter,
   paymentMethodFilter,
-  setPaymentMethodFilter
+  setPaymentMethodFilter,
+  sortBy,
+  setSortBy,
+  showFilters
 }) => {
+  if (!showFilters) return null
+
   return (
-    <div className="border-t pt-3 sm:pt-4">
+    <div className="border-t pt-3 sm:pt-4 space-y-3 sm:space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Status Filter */}
         <div>
@@ -71,20 +76,37 @@ const OrderFilters = ({
           </Select>
         </div>
 
-        {/* Clear Filters Button */}
-        <div className="flex items-end">
-          <Button
-            variant="outline"
-            onClick={() => {
-              setStatusFilter('all')
-              setDeliveryTypeFilter('all')
-              setPaymentMethodFilter('all')
-            }}
-            className="w-full text-xs sm:text-sm text-red-600 hover:text-red-700 hover:bg-red-50 border-red-300"
-          >
-            Clear Filters
-          </Button>
+        {/* Sort By */}
+        <div>
+          <Label className="text-xs sm:text-sm">Sort By</Label>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="text-sm">
+              <SelectValue placeholder="Sort by..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="oldest">Oldest First</SelectItem>
+              <SelectItem value="total-high">Highest Total</SelectItem>
+              <SelectItem value="total-low">Lowest Total</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+      </div>
+      
+      {/* Clear Filters Button */}
+      <div>
+        <Button
+          variant="outline"
+          onClick={() => {
+            setStatusFilter('all')
+            setDeliveryTypeFilter('all')
+            setPaymentMethodFilter('all')
+            setSortBy('newest')
+          }}
+          className="w-full text-xs sm:text-sm text-red-600 hover:text-red-700 hover:bg-red-50 border-red-300"
+        >
+          Clear All Filters
+        </Button>
       </div>
     </div>
   )

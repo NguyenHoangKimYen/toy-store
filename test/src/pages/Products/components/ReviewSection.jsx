@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Star, ThumbsUp, Flag, ShoppingBag, Clock, AlertTriangle } from 'lucide-react';
+import { Star, ThumbsUp, Flag, Trash2, Clock, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -12,16 +12,13 @@ import './ReviewSection.css';
 const ReviewSection = ({ productId }) => {
   const { user } = useAuth();
   const isAuthenticated = !!user;
-  const { reviews, stats, loading, submitting, hasMore, eligibility, submitReview, loadMore, refetch } = useProductReviews(productId);
-  const [showForm, setShowForm] = useState(false);
+  const { reviews, stats, loading, submitting, hasMore, eligibility, submitReview, removeReview, toggleHelpful, loadMore, refetch } = useProductReviews(productId);
   const [selectedOrderItem, setSelectedOrderItem] = useState(null);
 
   // Enable real-time updates via polling (30 seconds interval)
   const fetchReviews = useCallback(() => {
-    if (!showForm) {  // Only poll when not writing a review
-      refetch();
-    }
-  }, [refetch, showForm]);
+    refetch();
+  }, [refetch]);
 
   useReviewPolling(fetchReviews, 30000, true);
 
@@ -35,19 +32,22 @@ const ReviewSection = ({ productId }) => {
       images: reviewData.images || [], // Pass images to the hook
     });
     if (success) {
-      setShowForm(false);
       setSelectedOrderItem(null);
     }
     return success;
   };
 
-  const handleStartReview = (orderItem) => {
-    setSelectedOrderItem(orderItem);
-    setShowForm(true);
+  const handleDeleteReview = async (reviewId) => {
+    if (window.confirm('Are you sure you want to delete this review? This action cannot be undone.')) {
+      await removeReview(reviewId);
+    }
+  };
+
+  const handleToggleHelpful = async (reviewId) => {
+    await toggleHelpful(reviewId);
   };
 
   const handleCancelReview = () => {
-    setShowForm(false);
     setSelectedOrderItem(null);
   };
 
@@ -97,56 +97,57 @@ const ReviewSection = ({ productId }) => {
         <div className="review-header-left">
           <h2>Customer Reviews</h2>
         </div>
-        
-        {/* Review eligibility UI */}
-        {!showForm && (
-          <>
-            {!isAuthenticated ? (
-              <p className="review-login-prompt">Please log in to write a review</p>
-            ) : eligibility.loading ? (
-              <span className="text-sm text-gray-500">Checking eligibility...</span>
-            ) : eligibility.canReview ? (
-              <div className="eligible-orders">
-                <p className="text-sm text-gray-600 mb-2">Select a purchase to review:</p>
-                <div className="flex flex-wrap gap-2">
-                  {eligibility.eligibleItems.map((item) => (
-                    <Button
-                      key={item.orderItemId}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleStartReview(item)}
-                      className="flex items-center gap-2"
-                    >
-                      <ShoppingBag size={14} />
-                      {item.variantName} - {new Date(item.orderDate).toLocaleDateString()}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500 flex items-center gap-2">
-                <ShoppingBag size={16} />
-                You must purchase this product to write a review
-              </p>
-            )}
-          </>
-        )}
       </div>
 
-      {showForm && selectedOrderItem && (
-        <Card className="review-form-card">
-          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600">
-              Reviewing purchase: <strong>{selectedOrderItem.variantName}</strong>
-              <span className="text-gray-400 ml-2">
-                (Order from {new Date(selectedOrderItem.orderDate).toLocaleDateString()})
-              </span>
-            </p>
-          </div>
-          <ReviewForm onSubmit={handleSubmitReview} submitting={submitting} />
-          <Button variant="ghost" onClick={handleCancelReview} className="mt-2">
-            Cancel
-          </Button>
+      {/* Write Review Section - Show prominently if eligible */}
+      {isAuthenticated && eligibility.canReview && (
+        <Card className="write-review-card">
+          <h3 className="write-review-title">Write a Review</h3>
+          
+          {!selectedOrderItem ? (
+            <div className="select-purchase-section">
+              <p className="select-purchase-label">Select the product you purchased:</p>
+              <div className="purchase-options">
+                {eligibility.eligibleItems.map((item) => (
+                  <button
+                    key={item.orderItemId}
+                    onClick={() => setSelectedOrderItem(item)}
+                    className="purchase-option-button"
+                  >
+                    <span className="purchase-variant">{item.variantName}</span>
+                    <span className="purchase-date">{new Date(item.orderDate).toLocaleDateString()}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="selected-purchase-info">
+                <p>
+                  Reviewing: <strong>{selectedOrderItem.variantName}</strong>
+                  <span className="text-gray-400 ml-2">
+                    (Purchased {new Date(selectedOrderItem.orderDate).toLocaleDateString()})
+                  </span>
+                </p>
+              </div>
+              <ReviewForm onSubmit={handleSubmitReview} submitting={submitting} />
+              <Button variant="ghost" onClick={handleCancelReview} className="mt-2">
+                Cancel
+              </Button>
+            </>
+          )}
+        </Card>
+      )}
+
+      {!isAuthenticated && (
+        <Card className="login-prompt-card">
+          <p>Please log in to write a review</p>
+        </Card>
+      )}
+
+      {isAuthenticated && !eligibility.loading && !eligibility.canReview && (
+        <Card className="purchase-required-card">
+          <p>Purchase this product to write a review</p>
         </Card>
       )}
 
@@ -259,11 +260,26 @@ const ReviewSection = ({ productId }) => {
                 )}
 
                 <div className="review-actions">
-                  <Button variant="ghost" size="sm">
-                    <ThumbsUp size={16} />
-                    Helpful
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => handleToggleHelpful(review._id)}
+                    className={review.isHelpful ? 'helpful-active' : ''}
+                  >
+                    <ThumbsUp size={16} fill={review.isHelpful ? 'currentColor' : 'none'} />
+                    Helpful {review.helpfulCount > 0 && `(${review.helpfulCount})`}
                   </Button>
-                  {!isOwnReview && (
+                  {isOwnReview ? (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handleDeleteReview(review._id)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 size={16} />
+                      Delete
+                    </Button>
+                  ) : (
                     <Button variant="ghost" size="sm">
                       <Flag size={16} />
                       Report

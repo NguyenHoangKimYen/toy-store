@@ -4,16 +4,22 @@ import { Tag, Plus, Edit, Trash2, Eye, Search, Filter } from 'lucide-react'
 import { getAllDiscountCodes, createDiscountCode, updateDiscountCode, deleteDiscountCode } from '@/services/discountCodes.service'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
 import Badge from '@/components/ui/badge'
 import DiscountCodeModal from './components/DiscountCodeModal'
 import DeleteConfirmDialog from './components/DeleteConfirmDialog'
 import DiscountOrdersModal from './components/DiscountOrdersModal'
 import { AdminContent } from '../components'
+import { PageHeader, SearchBar } from '@/components/common'
+import { useDebounce } from '@/hooks'
 
 const DiscountCodes = () => {
   const [codes, setCodes] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearch = useDebounce(searchTerm, 400) // Debounce search input
+  const [sortBy, setSortBy] = useState('newest')
   const [selectedCode, setSelectedCode] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -24,9 +30,10 @@ const DiscountCodes = () => {
   const fetchCodes = useCallback(async () => {
     try {
       setLoading(true)
-      // Send search param to backend
+      // Send search and sort params to backend
       const params = {
-        search: searchTerm.trim() || undefined,
+        search: debouncedSearch.trim() || undefined,
+        sortBy: sortBy || 'newest', // Send sort to backend
       }
       const response = await getAllDiscountCodes(params)
       setCodes(response.discountCodes || response.data || [])
@@ -43,7 +50,7 @@ const DiscountCodes = () => {
     } finally {
       setLoading(false)
     }
-  }, [searchTerm])
+  }, [debouncedSearch, sortBy])
 
   useEffect(() => {
     fetchCodes()
@@ -98,7 +105,7 @@ const DiscountCodes = () => {
     }
   }
 
-  // Filtering is now done on backend
+  // Sorting and filtering is now done on backend
   const filteredCodes = codes
 
   const getUsagePercentage = (code) => {

@@ -95,19 +95,21 @@ export const updateProduct = async (id, productData) => {
 };
 
 /**
- * Partially update a product
+ * Partially update a product (JSON only - images handled separately)
  * @param {string} id - Product ID
  * @param {Object} productData - Partial product data
  * @returns {Promise<Object>}
  */
 export const patchProduct = async (id, productData) => {
+  const isFormData = productData instanceof FormData;
+  
   const response = await fetch(`${API_BASE_URL}${ENDPOINTS.PRODUCTS}/${id}`, {
     method: 'PATCH',
     headers: {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...getAuthHeaders(),
     },
-    body: JSON.stringify(productData),
+    body: isFormData ? productData : JSON.stringify(productData),
   });
   
   return handleResponse(response);
@@ -160,6 +162,49 @@ export const uploadProductImages = async (productId, formData) => {
     headers: {
       ...getAuthHeaders(),
     },
+    body: formData,
+  });
+  
+  return handleResponse(response);
+};
+
+/**
+ * Upload images directly to S3 (no productId needed)
+ * @param {FormData} formData - Form data containing images
+ * @returns {Promise<Object>} Object with imageUrls array
+ */
+export const uploadImagesToS3 = async (formData) => {
+  // Get auth token without Content-Type (let browser set multipart boundary)
+  const token = localStorage.getItem('authToken');
+  const headers = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.PRODUCTS}/images/upload`, {
+    method: 'POST',
+    headers: headers,
+    body: formData,
+  });
+  
+  return handleResponse(response);
+};
+
+/**
+ * Upload variant images directly to S3 (no variantId needed)
+ * @param {FormData} formData - Form data containing variant images
+ * @returns {Promise<Object>} Object with imageUrls array
+ */
+export const uploadVariantImagesToS3 = async (formData) => {
+  const token = localStorage.getItem('authToken');
+  const headers = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  const response = await fetch(`${API_BASE_URL}/variants/images/upload`, {
+    method: 'POST',
+    headers: headers,
     body: formData,
   });
   
@@ -309,11 +354,16 @@ export const deleteVariant = async (variantId) => {
  * @returns {Promise<Object>}
  */
 export const uploadVariantImages = async (variantId, formData) => {
+  // Get auth token without Content-Type (let browser set multipart boundary)
+  const token = localStorage.getItem('authToken');
+  const headers = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
   const response = await fetch(`${API_BASE_URL}/variants/${variantId}/images`, {
     method: 'POST',
-    headers: {
-      ...getAuthHeaders(),
-    },
+    headers: headers,
     body: formData,
   });
   

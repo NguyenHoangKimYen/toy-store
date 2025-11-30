@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getProductReviews, createReview, getReviewStats, checkReviewEligibility } from '@/services/reviews.service';
+import { getProductReviews, createReview, getReviewStats, checkReviewEligibility, deleteReview, toggleReviewHelpful } from '@/services/reviews.service';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks';
 
@@ -131,6 +131,50 @@ export const useProductReviews = (productId) => {
     setPage(prev => prev + 1);
   };
 
+  const removeReview = async (reviewId) => {
+    try {
+      await deleteReview(reviewId);
+      
+      // Remove review from the list
+      setReviews(prev => prev.filter(r => r._id !== reviewId));
+      
+      // Reload stats and eligibility
+      await loadStats();
+      await loadEligibility();
+      
+      toast.success('Review deleted successfully');
+      return true;
+    } catch (err) {
+      console.error('Error deleting review:', err);
+      toast.error(err.message || 'Failed to delete review');
+      return false;
+    }
+  };
+
+  const toggleHelpful = async (reviewId) => {
+    try {
+      const response = await toggleReviewHelpful(reviewId);
+      const { helpfulCount, isHelpful } = response;
+      
+      // Update the review in the list
+      setReviews(prev => prev.map(review => 
+        review._id === reviewId 
+          ? { ...review, helpfulCount, isHelpful }
+          : review
+      ));
+      
+      return true;
+    } catch (err) {
+      console.error('Error toggling helpful:', err);
+      if (err.response?.status === 401) {
+        toast.error('Please log in to mark reviews as helpful');
+      } else {
+        toast.error('Failed to update helpful status');
+      }
+      return false;
+    }
+  };
+
   useEffect(() => {
     if (page > 1) {
       loadReviews();
@@ -147,6 +191,8 @@ export const useProductReviews = (productId) => {
     hasMore,
     eligibility,
     submitReview,
+    removeReview,
+    toggleHelpful,
     loadMore,
     refetch: () => {
       loadReviews(true);

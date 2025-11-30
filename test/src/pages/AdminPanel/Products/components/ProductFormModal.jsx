@@ -29,6 +29,7 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [deletedVariantIds, setDeletedVariantIds] = useState([]); // Track deleted variants
+  const [deletedImageUrls, setDeletedImageUrls] = useState([]); // Track deleted images
 
   useEffect(() => {
     if (product && mode === 'edit') {
@@ -126,6 +127,13 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
   };
 
   const removeImage = (index) => {
+    const imageUrl = formData.imageUrls[index];
+    
+    // Track deleted image URL for S3 cleanup
+    if (imageUrl && mode === 'edit') {
+      setDeletedImageUrls(prev => [...prev, imageUrl]);
+    }
+    
     setFormData(prev => ({
       ...prev,
       imageUrls: prev.imageUrls.filter((_, i) => i !== index),
@@ -133,8 +141,31 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
   };
 
   // File upload handlers
-  const addPendingFiles = (files) => {
-    setPendingImageFiles(prev => [...prev, ...files]);
+  const addPendingFiles = async (files) => {
+    // Upload ngay lập tức lên S3
+    setUploading(true);
+    try {
+      const formDataUpload = new FormData();
+      files.forEach(file => {
+        formDataUpload.append('productImages', file);
+      });
+      
+      const result = await productsService.uploadImagesToS3(formDataUpload);
+      
+      // Thêm URLs vào imageUrls
+      if (result.imageUrls && result.imageUrls.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          imageUrls: [...prev.imageUrls, ...result.imageUrls]
+        }));
+        toast.success(`Uploaded ${result.imageUrls.length} images successfully`);
+      }
+    } catch (error) {
+      console.error('Failed to upload images:', error);
+      toast.error('Failed to upload images: ' + error.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const removePendingFile = (index) => {
@@ -242,14 +273,13 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
   };
 
   // Update variant image (file or URL)
-  const updateVariantImage = (index, imageData) => {
-    setFormData(prev => ({
-      ...prev,
-      variants: prev.variants.map((v, i) => {
-        if (i !== index) return v;
-        
-        if (imageData === null) {
-          // Remove image
+  const updateVariantImage = async (index, imageData) => {
+    if (imageData === null) {
+      // Remove image
+      setFormData(prev => ({
+        ...prev,
+        variants: prev.variants.map((v, i) => {
+          if (i !== index) return v;
           return {
             ...v,
             pendingImageFile: null,
@@ -257,31 +287,62 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
             pendingImageUrl: '',
             imageUrls: [],
           };
-        }
+        }),
+      }));
+      return;
+    }
+    
+    if (imageData.file) {
+      // Upload file to S3 immediately
+      setUploading(true);
+      try {
+        const formDataUpload = new FormData();
+        formDataUpload.append('variantImages', imageData.file);
         
-        if (imageData.file) {
-          // File upload
-          return {
-            ...v,
-            pendingImageFile: imageData.file,
-            pendingImagePreview: imageData.previewUrl,
-            pendingImageUrl: '',
-          };
-        }
+        const result = await productsService.uploadVariantImagesToS3(formDataUpload);
         
-        if (imageData.url !== undefined) {
-          // URL input
+        if (result.imageUrls && result.imageUrls.length > 0) {
+          const uploadedUrl = result.imageUrls[0];
+          setFormData(prev => ({
+            ...prev,
+            variants: prev.variants.map((v, i) => {
+              if (i !== index) return v;
+              return {
+                ...v,
+                imageUrls: [uploadedUrl],
+                pendingImagePreview: uploadedUrl,
+                pendingImageFile: null,
+                pendingImageUrl: '',
+              };
+            }),
+          }));
+          toast.success('Variant image uploaded to S3');
+        }
+      } catch (error) {
+        console.error('Failed to upload variant image:', error);
+        toast.error(error.message || 'Failed to upload variant image');
+      } finally {
+        setUploading(false);
+      }
+      return;
+    }
+    
+    if (imageData.url !== undefined) {
+      // URL input
+      setFormData(prev => ({
+        ...prev,
+        variants: prev.variants.map((v, i) => {
+          if (i !== index) return v;
           return {
             ...v,
             pendingImageFile: null,
             pendingImagePreview: null,
             pendingImageUrl: imageData.url,
+            imageUrls: imageData.url ? [imageData.url] : [],
           };
-        }
-        
-        return v;
-      }),
-    }));
+        }),
+      }));
+    }
   };
 
   const validateForm = () => {
@@ -330,7 +391,8 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
         ...formData,
         variants: variantsWithImageInfo,
         pendingImageFiles, // Pass pending files to parent for upload after creation
-        ...(mode === 'edit' && deletedVariantIds.length > 0 && { deletedVariantIds })
+        ...(mode === 'edit' && deletedVariantIds.length > 0 && { deletedVariantIds }),
+        ...(mode === 'edit' && deletedImageUrls.length > 0 && { deletedImageUrls })
       };
       
       // For edit mode, upload pending images immediately if product exists

@@ -49,6 +49,100 @@
   margin-bottom: 2rem;
 }
 
+/* Write Review Card - Prominent styling */
+.write-review-card {
+  padding: 2rem;
+  margin-bottom: 2.5rem;
+  background: linear-gradient(135deg, #f8f9ff 0%, #fef5f8 100%);
+  border: 2px solid #667eea;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.write-review-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.write-review-title::before {
+  content: '✍️';
+  font-size: 1.75rem;
+}
+
+.select-purchase-section {
+  margin-bottom: 1.5rem;
+}
+
+.select-purchase-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 1rem;
+}
+
+.purchase-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.purchase-option-button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0.75rem 1rem;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.purchase-option-button:hover {
+  border-color: #667eea;
+  background: #f0f4ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.15);
+}
+
+.purchase-variant {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.25rem;
+}
+
+.purchase-date {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.selected-purchase-info {
+  padding: 0.75rem 1rem;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+
+.login-prompt-card,
+.purchase-required-card {
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  background: #fef3c7;
+  border: 1px solid #fbbf24;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 0.95rem;
+  color: #92400e;
+  font-weight: 500;
+}
+
 .review-loading {
   display: flex;
   justify-content: center;
@@ -294,6 +388,15 @@
 .review-actions {
   display: flex;
   gap: 0.5rem;
+}
+
+.helpful-active {
+  color: #667eea !important;
+  background-color: #f0f4ff !important;
+}
+
+.helpful-active:hover {
+  background-color: #e0e8ff !important;
 }
 
 .load-more {

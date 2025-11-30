@@ -99,6 +99,16 @@ export const deleteReview = async (reviewId) => {
 };
 
 /**
+ * Toggle helpful/like status for a review
+ * @param {string} reviewId - Review ID
+ * @returns {Promise<Object>} - { helpfulCount, isHelpful }
+ */
+export const toggleReviewHelpful = async (reviewId) => {
+  const response = await apiClient.post(`/reviews/${reviewId}/helpful`);
+  return response;
+};
+
+/**
  * Get review count for a product
  * @param {string} productId - Product ID
  * @returns {Promise<number>} - Number of reviews
