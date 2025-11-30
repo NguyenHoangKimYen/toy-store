@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { MessageSquare, Trash2, Search, User, Package, Calendar, AlertTriangle, CheckCircle, XCircle, Image } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { MessageSquare, Trash2, Search, User, Package, Calendar, AlertTriangle, CheckCircle, XCircle, ExternalLink, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,6 +21,7 @@ import apiClient from '@/services/config';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 const CommentsManagement = () => {
+  const navigate = useNavigate();
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -257,21 +259,28 @@ const CommentsManagement = () => {
 
                 {/* Comment Content */}
                 <div className="flex-1 space-y-2">
-                  {/* Product Info */}
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                  {/* Product Info - Clickable to go to product page */}
+                  <button
+                    onClick={() => {
+                      const productSlug = comment.productId?.slug || comment.productId?._id;
+                      if (productSlug) {
+                        // Navigate to product page with comment anchor
+                        navigate(`/products/${productSlug}#comment-${comment._id}`);
+                      }
+                    }}
+                    className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline transition group"
+                  >
                     <Package size={14} />
                     <span className="font-medium">{comment.productId?.name || 'Unknown Product'}</span>
-                  </div>
+                    <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition" />
+                  </button>
 
-                  {/* Status Badge */}
-                  <div className="flex items-center gap-2">
-                    {getStatusBadge(comment.status)}
-                    {comment.imageUrls && comment.imageUrls.length > 0 && (
-                      <Badge variant="outline" className="text-blue-600">
-                        <Image size={12} className="mr-1" /> {comment.imageUrls.length} image{comment.imageUrls.length > 1 ? 's' : ''}
-                      </Badge>
-                    )}
-                  </div>
+                  {/* Status Badge - Only show for pending/flagged */}
+                  {(comment.status === 'pending' || comment.status === 'flagged') && (
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(comment.status)}
+                    </div>
+                  )}
 
                   {/* Comment Text */}
                   <p className="text-sm text-slate-700 whitespace-pre-wrap">{comment.content}</p>

@@ -509,3 +509,24 @@
     padding: 0.375rem 0.625rem;
   }
 }
+
+/* Comment highlight animation - when navigating from admin */
+.comment-highlight {
+  animation: highlightPulse 3s ease-out;
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.4) !important;
+  border-color: rgba(147, 51, 234, 0.6) !important;
+}
+
+@keyframes highlightPulse {
+  0% {
+    box-shadow: 0 0 0 4px rgba(147, 51, 234, 0.6);
+    transform: scale(1.01);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(147, 51, 234, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(147, 51, 234, 0);
+    transform: scale(1);
+  }
+}

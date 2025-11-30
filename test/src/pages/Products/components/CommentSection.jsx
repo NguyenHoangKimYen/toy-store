@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useLocation } from 'react-router-dom';
 import { MessageCircle, ThumbsUp, Trash2, Reply, User, Send, ImagePlus, X, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -86,6 +87,29 @@ const CommentSection = ({ productId }) => {
     window.addEventListener('keydown', handleKeyboard);
     return () => window.removeEventListener('keydown', handleKeyboard);
   }, [isImageModalOpen, modalImages.length]);
+
+  // Scroll to comment if URL has hash (e.g., #comment-123)
+  const location = useLocation();
+  useEffect(() => {
+    if (loading || !comments.length) return;
+    
+    const hash = location.hash;
+    if (hash && hash.startsWith('#comment-')) {
+      const commentId = hash.replace('#comment-', '');
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        const commentElement = document.getElementById(`comment-${commentId}`);
+        if (commentElement) {
+          commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Highlight the comment temporarily
+          commentElement.classList.add('comment-highlight');
+          setTimeout(() => {
+            commentElement.classList.remove('comment-highlight');
+          }, 3000);
+        }
+      }, 100);
+    }
+  }, [loading, comments.length, location.hash]);
 
   const handleImageSelect = (e) => {
     const files = Array.from(e.target.files);
@@ -314,7 +338,11 @@ const CommentSection = ({ productId }) => {
       ) : (
         <div className="comments-list">
           {comments.map((comment) => (
-            <Card key={comment._id} className={`comment-card ${comment.status === 'flagged' ? 'flagged-comment' : ''}`}>
+            <Card 
+              key={comment._id} 
+              id={`comment-${comment._id}`}
+              className={`comment-card ${comment.status === 'flagged' ? 'flagged-comment' : ''}`}
+            >
               <div className="comment-content">
                 {/* Flagged Comment Warning - Only shown to the author */}
                 {comment.status === 'flagged' && isOwnComment(comment) && (
