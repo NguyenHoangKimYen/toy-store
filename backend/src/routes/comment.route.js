@@ -6,8 +6,11 @@ const {
     getReplies,
     deleteComment,
     toggleCommentLike,
+    getAllCommentsAdmin,
+    moderateComment,
 } = require('../controllers/comment.controller');
 const authMiddleware = require('../middlewares/auth.middleware');
+const adminOnly = require('../middlewares/admin.middleware');
 const { uploadCommentImages } = require('../middlewares/upload.middleware');
 
 // Optional auth middleware - sets req.user if token exists, but doesn't require it
@@ -42,5 +45,10 @@ router.post('/:commentId/like', authMiddleware, toggleCommentLike);
 
 // Delete comment (requires auth)
 router.delete('/:commentId', authMiddleware, deleteComment);
+
+// --- ADMIN ROUTES ---
+router.get('/admin/all', authMiddleware, adminOnly, getAllCommentsAdmin);
+router.patch('/:commentId/moderate', authMiddleware, adminOnly, moderateComment);
+router.delete('/admin/:commentId', authMiddleware, adminOnly, deleteComment);
 
 module.exports = router;
