@@ -165,13 +165,14 @@ const ProductDetail = () => {
 
     try {
       setAddingToCart(true);
-      await addItem(product._id, quantity, selectedVariant._id);
+      await addItem(selectedVariant._id, quantity);
       navigate(ROUTES.CHECKOUT);
     } catch (err) {
       console.error('Error adding to cart:', err);
       toast.error('Failed to add to cart', {
         description: 'Please try again.',
       });
+    } finally {
       setAddingToCart(false);
     }
   };
