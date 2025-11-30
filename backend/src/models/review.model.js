@@ -16,6 +16,14 @@ const ReviewSchema = new mongoose.Schema(
             index: true,
         },
 
+        // Link to the specific order item being reviewed (one review per order item)
+        orderItemId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'OrderItem',
+            required: true,
+            unique: true, // Ensures one review per order item
+        },
+
         variantId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Variant',
@@ -70,6 +78,19 @@ const ReviewSchema = new mongoose.Schema(
 
         moderatedAt: Date,
         rejectionReason: String,
+
+        // Helpful/Likes tracking
+        helpfulUsers: {
+            type: [mongoose.Schema.Types.ObjectId],
+            ref: 'User',
+            default: [],
+        },
+
+        helpfulCount: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
     },
     {
         timestamps: true,
@@ -78,7 +99,8 @@ const ReviewSchema = new mongoose.Schema(
 );
 
 // --- INDEX ---
-ReviewSchema.index({ productId: 1, userId: 1 }, { unique: true });
+// orderItemId already has unique: true in schema
+ReviewSchema.index({ productId: 1, status: 1 }); // For fetching approved reviews by product
 
 // --- STATICS: TÍNH TOÁN RATING TRUNG BÌNH ---
 ReviewSchema.statics.calcAverageRatings = async function (productId) {

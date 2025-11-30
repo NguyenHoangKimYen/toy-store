@@ -18,13 +18,26 @@ const getReviewsByProductId = async ({
     limit = 10,
     sort = 'newest',
     filterRating = null,
+    currentUserId = null, // Optional: include this user's reviews regardless of status
 }) => {
     const skip = (page - 1) * limit;
 
-    const query = {
-        productId: new Types.ObjectId(productId),
-        status: 'approved',
-    };
+    // Build query: approved reviews OR current user's own reviews (any status)
+    let query;
+    if (currentUserId) {
+        query = {
+            productId: new Types.ObjectId(productId),
+            $or: [
+                { status: 'approved' },
+                { userId: new Types.ObjectId(currentUserId) }
+            ]
+        };
+    } else {
+        query = {
+            productId: new Types.ObjectId(productId),
+            status: 'approved',
+        };
+    }
 
     if (filterRating) {
         query.rating = filterRating;
@@ -34,16 +47,25 @@ const getReviewsByProductId = async ({
         sort === 'oldest' ? { createdAt: 1 } : { createdAt: -1 };
 
     const reviews = await Review.find(query)
-        .populate('userId', 'name avatar email')
+        .populate('userId', 'fullName avatar email username')
+        .populate('variantId', 'attributes imageUrls price')
         .sort(sortCondition)
         .skip(skip)
         .limit(limit)
         .lean();
 
+    // Add isHelpful flag if user is authenticated
+    const reviewsWithHelpful = reviews.map(review => ({
+        ...review,
+        isHelpful: currentUserId 
+            ? review.helpfulUsers.some(id => id.toString() === currentUserId.toString())
+            : false
+    }));
+
     const totalCount = await Review.countDocuments(query);
 
     return {
-        reviews,
+        reviews: reviewsWithHelpful,
         totalCount,
         totalPages: Math.ceil(totalCount / limit),
         currentPage: parseInt(page),

@@ -482,8 +482,8 @@ module.exports = {
     },
 
     // Admin: lấy tất cả
-    getAll(filter, options) {
-        return orderRepository.findAll(filter, options);
+    async getAll(filter, options) {
+        return await orderRepository.findAll(filter, options);
     },
 
     async updateStatus(orderId, newStatus) {
