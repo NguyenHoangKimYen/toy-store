@@ -54,10 +54,18 @@ const getReviewsByProductId = async ({
         .limit(limit)
         .lean();
 
+    // Add isHelpful flag if user is authenticated
+    const reviewsWithHelpful = reviews.map(review => ({
+        ...review,
+        isHelpful: currentUserId 
+            ? review.helpfulUsers.some(id => id.toString() === currentUserId.toString())
+            : false
+    }));
+
     const totalCount = await Review.countDocuments(query);
 
     return {
-        reviews,
+        reviews: reviewsWithHelpful,
         totalCount,
         totalPages: Math.ceil(totalCount / limit),
         currentPage: parseInt(page),

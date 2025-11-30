@@ -7,7 +7,8 @@ const {
     deleteReview,
     moderateReview,
     getPendingReviews,
-    checkEligibility
+    checkEligibility,
+    toggleHelpful
 } = require("../controllers/review.controller");
 
 const { uploadReviewImages } = require("../middlewares/upload.middleware.js");
@@ -38,6 +39,7 @@ router.use(authMiddleware);
 router.get("/pending", getPendingReviews);
 router.get("/eligibility/:productId", checkEligibility); // Check if user can review a product
 router.post("/", uploadReviewImages, createReview);
+router.post("/:reviewId/helpful", toggleHelpful); // Toggle helpful/like
 router.patch("/:reviewId", uploadReviewImages, updateReview);
 router.delete("/:reviewId", deleteReview);
 
