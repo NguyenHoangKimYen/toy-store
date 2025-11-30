@@ -10,6 +10,7 @@ const {
     deleteProduct,
     addProductImages,
     removeProductImages,
+    uploadImagesToS3,
 } = require('../controllers/product.controller.js');
 
 const {
@@ -29,11 +30,12 @@ router.get("/:id", getProductById);
 
 router.use(authMiddleware);
 router.use(adminOnly);
+router.post("/images/upload", uploadProductImages, uploadImagesToS3); // Upload độc lập (đặt trước /:id)
 router.post("/", uploadProductImages, createProduct);
 router.delete("/:id", deleteProduct);
 router.patch("/:id", updateProduct);
-router.post("/:id/images", uploadProductImages, addProductImages);
-router.delete("/:id/images", removeProductImages);
+// router.post("/:id/images", uploadProductImages, addProductImages);
+// router.delete("/:id/images", removeProductImages);
 
 
 module.exports = router;

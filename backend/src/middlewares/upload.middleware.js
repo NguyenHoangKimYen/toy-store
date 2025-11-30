@@ -26,8 +26,8 @@ const upload = multer({
 // Upload avatar: field "avatar"
 const uploadAvatar = upload.single('avatar');
 
-// Upload images cho product
-const uploadProductImages = upload.array('images', 10);
+// Upload images cho product (field name: 'productImages')
+const uploadProductImages = upload.array('productImages', 10);
 
 // Upload images cho variant
 const uploadVariantImages = upload.array('variantImages', 10);
