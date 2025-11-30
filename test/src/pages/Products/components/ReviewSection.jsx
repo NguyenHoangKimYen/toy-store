@@ -12,7 +12,7 @@ import './ReviewSection.css';
 const ReviewSection = ({ productId }) => {
   const { user } = useAuth();
   const isAuthenticated = !!user;
-  const { reviews, stats, loading, submitting, hasMore, eligibility, submitReview, removeReview, loadMore, refetch } = useProductReviews(productId);
+  const { reviews, stats, loading, submitting, hasMore, eligibility, submitReview, removeReview, toggleHelpful, loadMore, refetch } = useProductReviews(productId);
   const [selectedOrderItem, setSelectedOrderItem] = useState(null);
 
   // Enable real-time updates via polling (30 seconds interval)
@@ -41,6 +41,10 @@ const ReviewSection = ({ productId }) => {
     if (window.confirm('Are you sure you want to delete this review? This action cannot be undone.')) {
       await removeReview(reviewId);
     }
+  };
+
+  const handleToggleHelpful = async (reviewId) => {
+    await toggleHelpful(reviewId);
   };
 
   const handleCancelReview = () => {
@@ -256,9 +260,14 @@ const ReviewSection = ({ productId }) => {
                 )}
 
                 <div className="review-actions">
-                  <Button variant="ghost" size="sm">
-                    <ThumbsUp size={16} />
-                    Helpful
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => handleToggleHelpful(review._id)}
+                    className={review.isHelpful ? 'helpful-active' : ''}
+                  >
+                    <ThumbsUp size={16} fill={review.isHelpful ? 'currentColor' : 'none'} />
+                    Helpful {review.helpfulCount > 0 && `(${review.helpfulCount})`}
                   </Button>
                   {isOwnReview ? (
                     <Button 

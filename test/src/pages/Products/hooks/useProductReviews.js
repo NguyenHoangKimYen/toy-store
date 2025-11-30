@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getProductReviews, createReview, getReviewStats, checkReviewEligibility, deleteReview } from '@/services/reviews.service';
+import { getProductReviews, createReview, getReviewStats, checkReviewEligibility, deleteReview, toggleReviewHelpful } from '@/services/reviews.service';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks';
 
@@ -151,6 +151,30 @@ export const useProductReviews = (productId) => {
     }
   };
 
+  const toggleHelpful = async (reviewId) => {
+    try {
+      const response = await toggleReviewHelpful(reviewId);
+      const { helpfulCount, isHelpful } = response;
+      
+      // Update the review in the list
+      setReviews(prev => prev.map(review => 
+        review._id === reviewId 
+          ? { ...review, helpfulCount, isHelpful }
+          : review
+      ));
+      
+      return true;
+    } catch (err) {
+      console.error('Error toggling helpful:', err);
+      if (err.response?.status === 401) {
+        toast.error('Please log in to mark reviews as helpful');
+      } else {
+        toast.error('Failed to update helpful status');
+      }
+      return false;
+    }
+  };
+
   useEffect(() => {
     if (page > 1) {
       loadReviews();
@@ -168,6 +192,7 @@ export const useProductReviews = (productId) => {
     eligibility,
     submitReview,
     removeReview,
+    toggleHelpful,
     loadMore,
     refetch: () => {
       loadReviews(true);

@@ -390,6 +390,15 @@
   gap: 0.5rem;
 }
 
+.helpful-active {
+  color: #667eea !important;
+  background-color: #f0f4ff !important;
+}
+
+.helpful-active:hover {
+  background-color: #e0e8ff !important;
+}
+
 .load-more {
   display: flex;
   justify-content: center;
