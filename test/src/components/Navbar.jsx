@@ -18,6 +18,7 @@ const NAV_LINKS = [
 const USER_MENU_LINKS = [
     { to: '/profile', label: 'My Profile', icon: UserCircle },
     { to: '/order-history', label: 'Orders', icon: Package },
+    { to: '/settings', label: 'Settings', icon: Settings }
 ]
 
 const Navbar = () => {
