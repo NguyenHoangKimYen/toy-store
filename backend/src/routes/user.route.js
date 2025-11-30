@@ -40,7 +40,7 @@ router.get("/:userId", auth, getUserById);
 router.post("/", adminOnly, createUser);
 
 // Admin update user
-router.put("/", adminOnly, updateUser);
+router.put("/", auth, adminOnly, updateUser);
 
 // Admin delete user
 router.delete("/", adminOnly, deleteUser);
