@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Star, ThumbsUp, Flag, ShoppingBag, Clock, AlertTriangle } from 'lucide-react';
+import { Star, ThumbsUp, Flag, Trash2, Clock, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -12,7 +12,7 @@ import './ReviewSection.css';
 const ReviewSection = ({ productId }) => {
   const { user } = useAuth();
   const isAuthenticated = !!user;
-  const { reviews, stats, loading, submitting, hasMore, eligibility, submitReview, loadMore, refetch } = useProductReviews(productId);
+  const { reviews, stats, loading, submitting, hasMore, eligibility, submitReview, removeReview, loadMore, refetch } = useProductReviews(productId);
   const [selectedOrderItem, setSelectedOrderItem] = useState(null);
 
   // Enable real-time updates via polling (30 seconds interval)
@@ -35,6 +35,12 @@ const ReviewSection = ({ productId }) => {
       setSelectedOrderItem(null);
     }
     return success;
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    if (window.confirm('Are you sure you want to delete this review? This action cannot be undone.')) {
+      await removeReview(reviewId);
+    }
   };
 
   const handleCancelReview = () => {
@@ -254,7 +260,17 @@ const ReviewSection = ({ productId }) => {
                     <ThumbsUp size={16} />
                     Helpful
                   </Button>
-                  {!isOwnReview && (
+                  {isOwnReview ? (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handleDeleteReview(review._id)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 size={16} />
+                      Delete
+                    </Button>
+                  ) : (
                     <Button variant="ghost" size="sm">
                       <Flag size={16} />
                       Report

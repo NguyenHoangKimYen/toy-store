@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getProductReviews, createReview, getReviewStats, checkReviewEligibility } from '@/services/reviews.service';
+import { getProductReviews, createReview, getReviewStats, checkReviewEligibility, deleteReview } from '@/services/reviews.service';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks';
 
@@ -131,6 +131,26 @@ export const useProductReviews = (productId) => {
     setPage(prev => prev + 1);
   };
 
+  const removeReview = async (reviewId) => {
+    try {
+      await deleteReview(reviewId);
+      
+      // Remove review from the list
+      setReviews(prev => prev.filter(r => r._id !== reviewId));
+      
+      // Reload stats and eligibility
+      await loadStats();
+      await loadEligibility();
+      
+      toast.success('Review deleted successfully');
+      return true;
+    } catch (err) {
+      console.error('Error deleting review:', err);
+      toast.error(err.message || 'Failed to delete review');
+      return false;
+    }
+  };
+
   useEffect(() => {
     if (page > 1) {
       loadReviews();
@@ -147,6 +167,7 @@ export const useProductReviews = (productId) => {
     hasMore,
     eligibility,
     submitReview,
+    removeReview,
     loadMore,
     refetch: () => {
       loadReviews(true);
