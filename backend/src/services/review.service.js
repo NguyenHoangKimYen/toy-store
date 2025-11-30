@@ -144,14 +144,15 @@ const createReview = async ({
     if (!variant) throw new Error("Product variant does not exist");
     const generatedVariantName = _generateVariantName(variant.attributes);
 
-    // 4. Upload Images to S3 (If any)
-    let imageUrls = [];
-    if (imgFiles && imgFiles.length > 0) {
-        imageUrls = await uploadToS3(imgFiles, 'reviewImages');
-    }
-
-    // 5. AI moderation
-    const aiResult = await AIService.analyzeReviewContent(comment);
+    // 4. Run S3 upload and AI moderation in PARALLEL for better performance
+    const [imageUrls, aiResult] = await Promise.all([
+        // Upload images to S3 (if any)
+        imgFiles && imgFiles.length > 0 
+            ? uploadToS3(imgFiles, 'reviewImages') 
+            : Promise.resolve([]),
+        // AI content moderation
+        AIService.analyzeReviewContent(comment)
+    ]);
 
     let initialStatus = "pending";
     if (aiResult.autoApprove) {
@@ -160,7 +161,7 @@ const createReview = async ({
         initialStatus = "flagged";
     }
 
-    // 6. Create Review
+    // 5. Create Review
     const newReview = await reviewRepo.createReview({
         userId,
         productId,

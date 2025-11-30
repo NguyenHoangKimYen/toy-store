@@ -2,9 +2,8 @@ const s3 = require('../config/s3');
 const { v4: uuidv4 } = require('uuid');
 
 const uploadToS3 = async (files, folder = 'Uncategorized') => {
-    const uploadedUrls = [];
-
-    for (const file of files) {
+    // Upload all files in parallel for better performance
+    const uploadPromises = files.map(async (file) => {
         const params = {
             Bucket: process.env.AWS_BUCKET_NAME,
             Key: `${folder}/${uuidv4()}-${file.originalname}`,
@@ -13,9 +12,10 @@ const uploadToS3 = async (files, folder = 'Uncategorized') => {
         };
 
         const result = await s3.upload(params).promise();
-        uploadedUrls.push(result.Location);
-    }
+        return result.Location;
+    });
 
+    const uploadedUrls = await Promise.all(uploadPromises);
     return uploadedUrls;
 };
 
