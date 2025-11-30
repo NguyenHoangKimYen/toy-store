@@ -50,6 +50,9 @@ export const useProfile = () => {
       if (!user?._id) {
         throw new Error('No user ID found');
       }
+      if (typeof updateProfileFromHook !== 'function') {
+        throw new Error('Profile update is not available (not logged in)');
+      }
 
       await updateProfileFromHook(updates);
 
