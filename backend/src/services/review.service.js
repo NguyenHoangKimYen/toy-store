@@ -3,10 +3,12 @@ const OrderItem = require('../models/order-item.model.js');
 const Variant = require('../models/variant.model.js');
 const Review = require('../models/review.model.js');
 const Order = require('../models/order.model.js');
+const Product = require('../models/product.model.js');
 const AIService = require('./ai-moderation.service.js');
 const { Types } = require('mongoose');
+const { getIO } = require('../socket');
 
-// Import helper upload S3 (Đảm bảo đường dẫn file này đúng trong project của bạn)
+// Import helper upload S3
 const { uploadToS3, deleteFromS3 } = require('../utils/s3.helper.js');
 
 // --- Internal Utility Function ---
@@ -19,7 +21,7 @@ const _generateVariantName = (attributes) => {
 
 /**
  * Check if user can review a product
- * Returns eligible order items that haven't been reviewed yet
+ * Any authenticated user can review a product once (no purchase required)
  */
 const checkReviewEligibility = async (userId, productId) => {
     if (!userId || !productId) {
@@ -29,160 +31,84 @@ const checkReviewEligibility = async (userId, productId) => {
         throw new Error("Invalid ID format");
     }
 
-    // 1. Find all delivered orders for this user
-    const deliveredOrders = await Order.find({
+    // Check if user has already reviewed this product
+    const existingReview = await Review.findOne({
         userId: new Types.ObjectId(userId),
-        status: "delivered",
-    }).select("_id createdAt");
-
-    if (!deliveredOrders || deliveredOrders.length === 0) {
-        return { canReview: false, eligibleItems: [], message: "No delivered orders found" };
-    }
-
-    const deliveredOrderIds = deliveredOrders.map((order) => order._id);
-
-    // 2. Find order items for this product in delivered orders
-    const orderItems = await OrderItem.find({
-        orderId: { $in: deliveredOrderIds },
         productId: new Types.ObjectId(productId),
-    })
-    .populate({
-        path: "variantId",
-        select: "attributes imageUrls"
-    })
-    .populate({
-        path: "orderId",
-        select: "createdAt"
-    })
-    .lean();
+    });
 
-    if (!orderItems || orderItems.length === 0) {
-        return { canReview: false, eligibleItems: [], message: "You have not purchased this product" };
+    if (existingReview) {
+        return { 
+            canReview: false, 
+            hasReviewed: true,
+            message: "You have already reviewed this product" 
+        };
     }
-
-    // 3. Find which order items already have reviews
-    const orderItemIds = orderItems.map(item => item._id);
-    const existingReviews = await Review.find({
-        orderItemId: { $in: orderItemIds }
-    }).select("orderItemId");
-    
-    const reviewedOrderItemIds = new Set(existingReviews.map(r => r.orderItemId.toString()));
-
-    // 4. Filter to get only eligible (not yet reviewed) order items
-    const eligibleItems = orderItems
-        .filter(item => !reviewedOrderItemIds.has(item._id.toString()))
-        .map(item => ({
-            orderItemId: item._id,
-            orderId: item.orderId._id,
-            orderDate: item.orderId.createdAt,
-            variantId: item.variantId?._id,
-            variantName: _generateVariantName(item.variantId?.attributes),
-            variantImage: item.variantId?.imageUrls?.[0] || null,
-            quantity: item.quantity,
-        }));
 
     return {
-        canReview: eligibleItems.length > 0,
-        eligibleItems,
-        message: eligibleItems.length > 0 
-            ? `You can write ${eligibleItems.length} review(s) for this product`
-            : "You have already reviewed all your purchases of this product"
+        canReview: true,
+        hasReviewed: false,
+        message: "You can write a review for this product"
     };
 };
 
 const createReview = async ({
     userId,
     productId,
-    orderItemId,
     rating,
-    comment,
-    imgFiles,
 }) => {
     // validate input basic
-    if (!userId || !productId || !orderItemId) {
+    if (!userId || !productId) {
         throw new Error("Missing required fields");
+    }
+    if (!rating || rating < 1 || rating > 5) {
+        throw new Error("Rating must be between 1 and 5");
     }
     if (
         !Types.ObjectId.isValid(userId) ||
-        !Types.ObjectId.isValid(productId) ||
-        !Types.ObjectId.isValid(orderItemId)
+        !Types.ObjectId.isValid(productId)
     ) {
         throw new Error("Invalid ID format");
     }
 
-    // 1. Verify the order item exists and belongs to a delivered order for this user
-    const orderItem = await OrderItem.findById(orderItemId)
-        .populate({
-            path: "orderId",
-            select: "userId status"
-        });
-
-    if (!orderItem) {
-        throw new Error("Order item not found");
+    // 1. Check if product exists
+    const product = await Product.findById(productId);
+    if (!product) {
+        throw new Error("Product not found");
     }
 
-    if (orderItem.orderId.userId.toString() !== userId.toString()) {
-        throw new Error("This order does not belong to you");
-    }
-
-    if (orderItem.orderId.status !== "delivered") {
-        throw new Error("You can only review products from delivered orders");
-    }
-
-    if (orderItem.productId.toString() !== productId.toString()) {
-        throw new Error("Product ID does not match the order item");
-    }
-
-    // 2. Check if this order item already has a review
-    const existingReview = await Review.findOne({ orderItemId: new Types.ObjectId(orderItemId) });
+    // 2. Check if user has already reviewed this product
+    const existingReview = await Review.findOne({ 
+        userId: new Types.ObjectId(userId),
+        productId: new Types.ObjectId(productId)
+    });
     if (existingReview) {
-        throw new Error("You have already reviewed this purchase");
+        throw new Error("You have already reviewed this product");
     }
 
-    // 3. Get variant info for the review
-    const variant = await Variant.findById(orderItem.variantId);
-    if (!variant) throw new Error("Product variant does not exist");
-    const generatedVariantName = _generateVariantName(variant.attributes);
+    // 3. Reviews are now just star ratings - auto approve
+    let initialStatus = "approved";
 
-    // 4. Run S3 upload and AI moderation in PARALLEL for better performance
-    const [imageUrls, aiResult] = await Promise.all([
-        // Upload images to S3 (if any)
-        imgFiles && imgFiles.length > 0 
-            ? uploadToS3(imgFiles, 'reviewImages') 
-            : Promise.resolve([]),
-        // AI content moderation
-        AIService.analyzeReviewContent(comment)
-    ]);
-
-    let initialStatus = "pending";
-    if (aiResult.autoApprove) {
-        initialStatus = "approved";
-    } else {
-        initialStatus = "flagged";
-    }
-
-    // 5. Create Review
+    // 4. Create Review (simple star rating only)
     const newReview = await reviewRepo.createReview({
         userId,
         productId,
-        orderItemId,
-        variantId: orderItem.variantId,
-        variantName: generatedVariantName,
         rating,
-        comment,
-        imageUrls,
         status: initialStatus,
-        aiAnalysis: {
-            isSafe: aiResult.isSafe,
-            toxicScore: aiResult.toxicScore,
-            flaggedCategories: aiResult.flaggedCategories,
-            processedAt: new Date(),
-        },
     });
 
-    // 7. Recalculate Average Rating
-    if (initialStatus === "approved") {
-        await Review.calcAverageRatings(productId);
+    // 5. Recalculate Average Rating
+    await Review.calcAverageRatings(productId);
+
+    // 6. Emit WebSocket event for real-time updates
+    try {
+        const io = getIO();
+        io.to(`product_${productId}`).emit('new_review', {
+            review: newReview,
+            productId,
+        });
+    } catch (err) {
+        console.error('WebSocket emit failed:', err.message);
     }
 
     return newReview;
@@ -300,6 +226,8 @@ const deleteReview = async ({ userId, reviewId, isAdmin }) => {
     if (!isAdmin && review.userId.toString() !== userId.toString())
         throw new Error('Permission denied to delete this review');
 
+    const productId = review.productId;
+
     // 1. Xóa ảnh trên S3 trước (nếu có)
     if (review.imageUrls && review.imageUrls.length > 0) {
         await deleteFromS3(review.imageUrls);
@@ -309,7 +237,19 @@ const deleteReview = async ({ userId, reviewId, isAdmin }) => {
     await reviewRepo.deleteReviewById(reviewId);
 
     // 3. Tính lại rating
-    await Review.calcAverageRatings(review.productId);
+    await Review.calcAverageRatings(productId);
+
+    // 4. Emit WebSocket event
+    try {
+        const io = getIO();
+        io.to(`product_${productId}`).emit('review_deleted', {
+            reviewId,
+            productId,
+        });
+    } catch (err) {
+        console.error('WebSocket emit failed:', err.message);
+    }
+
     return true;
 };
 

@@ -36,10 +36,14 @@ const uploadVariantImages = upload.array('variantImages', 10);
 const uploadReviewImages = upload.array('reviewImages', 5);
 const uploadCategoryImages = upload.array('categoryImages', 1);
 
+// Upload images cho comments
+const uploadCommentImages = upload.array('commentImages', 3);
+
 module.exports = {
     uploadAvatar,
     uploadProductImages,
     uploadVariantImages,
     uploadReviewImages,
     uploadCategoryImages,
+    uploadCommentImages,
 };

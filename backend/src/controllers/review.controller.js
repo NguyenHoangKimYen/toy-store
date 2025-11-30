@@ -4,11 +4,8 @@ const Review = require('../models/review.model');
 const createReview = async (req, res, next) => {
     try {
         const userId = req.user._id || req.user.id;
-        // Get data from body - now uses orderItemId instead of variantId
-        const { productId, orderItemId, rating, comment } = req.body;
-
-        // Get image files from request (handled by upload middleware)
-        const imgFiles = req.files;
+        // Reviews are now just star ratings - no purchase required
+        const { productId, rating } = req.body;
 
         if (!rating || rating < 1 || rating > 5) {
             return res
@@ -16,19 +13,16 @@ const createReview = async (req, res, next) => {
                 .json({ message: 'Rating must be between 1 and 5 stars' });
         }
 
-        if (!orderItemId) {
+        if (!productId) {
             return res
                 .status(400)
-                .json({ message: 'Order item ID is required' });
+                .json({ message: 'Product ID is required' });
         }
 
         const newReview = await ReviewService.createReview({
             userId,
             productId,
-            orderItemId,
             rating,
-            comment,
-            imgFiles,
         });
 
         return res.status(201).json({
@@ -52,7 +46,7 @@ const checkEligibility = async (req, res, next) => {
             message: result.message,
             metadata: {
                 canReview: result.canReview,
-                eligibleItems: result.eligibleItems,
+                hasReviewed: result.hasReviewed,
             },
         });
     } catch (error) {

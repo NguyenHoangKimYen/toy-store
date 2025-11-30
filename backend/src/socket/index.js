@@ -23,6 +23,22 @@ module.exports = {
                 }
             });
 
+            // Join product room for real-time reviews/comments
+            socket.on('join_product_room', (productId) => {
+                if (productId) {
+                    const roomName = `product_${productId}`;
+                    socket.join(roomName);
+                }
+            });
+
+            // Leave product room
+            socket.on('leave_product_room', (productId) => {
+                if (productId) {
+                    const roomName = `product_${productId}`;
+                    socket.leave(roomName);
+                }
+            });
+
             socket.on('disconnect', () => {
             });
         });
