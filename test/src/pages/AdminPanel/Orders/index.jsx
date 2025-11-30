@@ -20,6 +20,8 @@ const Orders = () => {
   const [statusFilter, setStatusFilter] = useState('all')
   const [deliveryTypeFilter, setDeliveryTypeFilter] = useState('all')
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('all')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
@@ -33,6 +35,8 @@ const Orders = () => {
         status: statusFilter !== 'all' ? statusFilter : undefined,
         deliveryType: deliveryTypeFilter !== 'all' ? deliveryTypeFilter : undefined,
         paymentMethod: paymentMethodFilter !== 'all' ? paymentMethodFilter : undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
       }
       const response = await getAllOrders(params)
       // Backend returns { success: true, orders: [...] }
@@ -48,7 +52,7 @@ const Orders = () => {
     } finally {
       setLoading(false)
     }
-  }, [searchTerm, statusFilter, deliveryTypeFilter, paymentMethodFilter])
+  }, [searchTerm, statusFilter, deliveryTypeFilter, paymentMethodFilter, startDate, endDate])
 
   useEffect(() => {
     fetchOrders()
@@ -124,6 +128,10 @@ const Orders = () => {
                 setDeliveryTypeFilter={setDeliveryTypeFilter}
                 paymentMethodFilter={paymentMethodFilter}
                 setPaymentMethodFilter={setPaymentMethodFilter}
+                startDate={startDate}
+                setStartDate={setStartDate}
+                endDate={endDate}
+                setEndDate={setEndDate}
               />
             )}
           </div>

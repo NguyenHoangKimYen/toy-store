@@ -1,6 +1,7 @@
 import React from 'react'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -15,11 +16,15 @@ const OrderFilters = ({
   deliveryTypeFilter,
   setDeliveryTypeFilter,
   paymentMethodFilter,
-  setPaymentMethodFilter
+  setPaymentMethodFilter,
+  startDate,
+  setStartDate,
+  endDate,
+  setEndDate
 }) => {
   return (
     <div className="border-t pt-3 sm:pt-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
         {/* Status Filter */}
         <div>
           <Label className="text-xs sm:text-sm">Order Status</Label>
@@ -71,20 +76,44 @@ const OrderFilters = ({
           </Select>
         </div>
 
-        {/* Clear Filters Button */}
-        <div className="flex items-end">
-          <Button
-            variant="outline"
-            onClick={() => {
-              setStatusFilter('all')
-              setDeliveryTypeFilter('all')
-              setPaymentMethodFilter('all')
-            }}
-            className="w-full text-xs sm:text-sm text-red-600 hover:text-red-700 hover:bg-red-50 border-red-300"
-          >
-            Clear Filters
-          </Button>
+        {/* Start Date Filter */}
+        <div>
+          <Label className="text-xs sm:text-sm">From Date</Label>
+          <Input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="text-sm"
+          />
         </div>
+
+        {/* End Date Filter */}
+        <div>
+          <Label className="text-xs sm:text-sm">To Date</Label>
+          <Input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="text-sm"
+          />
+        </div>
+      </div>
+
+      {/* Clear Filters Button - Full Width on New Row */}
+      <div className="mt-3 sm:mt-4">
+        <Button
+          variant="outline"
+          onClick={() => {
+            setStatusFilter('all')
+            setDeliveryTypeFilter('all')
+            setPaymentMethodFilter('all')
+            setStartDate('')
+            setEndDate('')
+          }}
+          className="w-full text-xs sm:text-sm text-red-600 hover:text-red-700 hover:bg-red-50 border-red-300"
+        >
+          Clear All Filters
+        </Button>
       </div>
     </div>
   )
