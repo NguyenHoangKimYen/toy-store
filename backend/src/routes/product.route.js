@@ -30,7 +30,7 @@ router.get("/:id", getProductById);
 
 router.use(authMiddleware);
 router.use(adminOnly);
-router.post("/images/upload", uploadProductImages, uploadImagesToS3); // Upload độc lập (đặt trước /:id)
+router.post("/images/upload", uploadProductImages, uploadImagesToS3);
 router.post("/", uploadProductImages, createProduct);
 router.delete("/:id", deleteProduct);
 router.patch("/:id", updateProduct);

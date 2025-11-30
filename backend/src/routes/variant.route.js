@@ -9,9 +9,9 @@ const {
     removeVariantImages,
     uploadVariantImagesToS3,
 } = require('../controllers/variant.controller');
-const { uploadVariantImages } = require('../middlewares/upload.middleware'); // nếu bạn có multer
+const { uploadVariantImages } = require('../middlewares/upload.middleware');
 
-// Upload variant images to S3 (no variantId needed)
+// Upload variant images lên S3 mà không cần truyền variant ID 
 router.post('/images/upload', uploadVariantImages, uploadVariantImagesToS3);
 
 // CRUD cơ bản
