@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
-import { MessageCircle, ThumbsUp, Trash2, Reply, User, Send, ImagePlus, X, AlertTriangle } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { MessageCircle, ThumbsUp, Trash2, Reply, User, Send, ImagePlus, X, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -39,6 +40,52 @@ const CommentSection = ({ productId }) => {
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyContent, setReplyContent] = useState('');
   const fileInputRef = useRef(null);
+
+  // Image modal state
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [modalImages, setModalImages] = useState([]);
+  const [modalImageIndex, setModalImageIndex] = useState(0);
+
+  // Open image modal
+  const openImageModal = (images, index) => {
+    setModalImages(images);
+    setModalImageIndex(index);
+    setIsImageModalOpen(true);
+    document.body.style.overflow = 'hidden';
+  };
+
+  // Close image modal
+  const closeImageModal = () => {
+    setIsImageModalOpen(false);
+    document.body.style.overflow = '';
+  };
+
+  // Navigate in image modal
+  const navigateImageModal = (direction) => {
+    if (direction === 'next') {
+      setModalImageIndex((prev) => (prev + 1) % modalImages.length);
+    } else {
+      setModalImageIndex((prev) => (prev - 1 + modalImages.length) % modalImages.length);
+    }
+  };
+
+  // Keyboard navigation for image modal
+  useEffect(() => {
+    const handleKeyboard = (e) => {
+      if (!isImageModalOpen) return;
+      
+      if (e.key === 'Escape') {
+        closeImageModal();
+      } else if (e.key === 'ArrowLeft') {
+        setModalImageIndex((prev) => (prev - 1 + modalImages.length) % modalImages.length);
+      } else if (e.key === 'ArrowRight') {
+        setModalImageIndex((prev) => (prev + 1) % modalImages.length);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyboard);
+    return () => window.removeEventListener('keydown', handleKeyboard);
+  }, [isImageModalOpen, modalImages.length]);
 
   const handleImageSelect = (e) => {
     const files = Array.from(e.target.files);
@@ -301,15 +348,13 @@ const CommentSection = ({ productId }) => {
                 {comment.imageUrls && comment.imageUrls.length > 0 && (
                   <div className="comment-images">
                     {comment.imageUrls.map((url, index) => (
-                      <a
+                      <div
                         key={index}
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
                         className="comment-image-link"
+                        onClick={() => openImageModal(comment.imageUrls, index)}
                       >
                         <img src={url} alt={`Comment image ${index + 1}`} />
-                      </a>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -422,6 +467,62 @@ const CommentSection = ({ productId }) => {
         action={loginPromptAction}
         returnPath={`/products/${productId}`}
       />
+
+      {/* Image Modal */}
+      {isImageModalOpen && createPortal(
+        <div className="comment-image-modal" onClick={closeImageModal}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="modal-close-btn"
+            onClick={closeImageModal}
+          >
+            <X size={24} />
+          </Button>
+
+          {modalImages.length > 1 && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="modal-nav-btn prev"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigateImageModal('prev');
+                }}
+              >
+                <ChevronLeft size={32} />
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="modal-nav-btn next"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigateImageModal('next');
+                }}
+              >
+                <ChevronRight size={32} />
+              </Button>
+            </>
+          )}
+
+          <div className="modal-image-wrapper" onClick={(e) => e.stopPropagation()}>
+            {modalImages.length > 1 && (
+              <div className="modal-counter">
+                {modalImageIndex + 1} / {modalImages.length}
+              </div>
+            )}
+            <img
+              src={modalImages[modalImageIndex]}
+              alt={`Image ${modalImageIndex + 1}`}
+              className="modal-image"
+            />
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

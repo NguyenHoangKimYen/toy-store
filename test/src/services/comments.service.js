@@ -47,11 +47,8 @@ export const createComment = async (commentData) => {
       formData.append('commentImages', file);
     });
 
-    const response = await apiClient.post('/comments', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    // Don't set Content-Type header - axios will set it automatically with the correct boundary
+    const response = await apiClient.post('/comments', formData);
     return response;
   }
 
