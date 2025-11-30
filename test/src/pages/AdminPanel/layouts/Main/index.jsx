@@ -349,7 +349,7 @@ const Main = () => {
             <div className="grid gap-4 lg:grid-cols-3">
               <div className="p-4 rounded-xl bg-white shadow-sm border border-stone-200">
                 <h3 className="text-sm font-semibold text-stone-700 mb-3">
-                  User Segmentation (Pie)
+                  User Segmentation Pie Chart
                 </h3>
                 <div className="flex items-center gap-4">
                   <PieChart data={segmentationData} colors={segmentationData.map((s) => s.color)} />

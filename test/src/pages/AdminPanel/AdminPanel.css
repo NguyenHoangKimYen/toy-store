@@ -1,41 +1,107 @@
 .admin-panel-container {
   display: grid;
-  grid-template-columns: 250px 1fr;
-  gap: 1rem;
-  background: #fef2f2;
-  padding: 1rem;
-  height: 100vh;
-  width: 100vw;
-  position: fixed;
-  top: 0;
-  left: 0;
-  overflow: hidden;
+  grid-template-columns: minmax(270px, 280px) 1fr;
+  gap: 1.25rem;
+  background: linear-gradient(145deg, #f7edff 0%, #faf5ff 45%, #fef6f9 70%, #e0f7ff 100%);
+  padding: 1.25rem;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: visible;
+  align-items: flex-start;
+  padding-bottom: 0.75rem;
+}
+
+.admin-panel-container::before,
+.admin-panel-container::after {
+  display: none;
 }
 
 .admin-panel-sidebar {
-  position: relative;
+  position: static;
+  top: auto;
   z-index: 10;
-  overflow-y: auto;
-  height: 100%;
+  overflow-y: visible;
+  height: auto;
+  background: transparent;
+  border: none;
+  border-radius: 14px;
+  box-shadow: none;
+  padding: 0;
+  width: 270px;
+  min-width: 270px;
+  max-width: 280px;
+  align-self: flex-start;
+}
+
+.admin-sidebar-shell {
+  background: radial-gradient(circle at 12% 20%, rgba(226, 215, 255, 0.45), transparent 38%),
+    radial-gradient(circle at 82% 12%, rgba(224, 242, 255, 0.38), transparent 38%),
+    linear-gradient(145deg, #cd90ff74 0%, #eff1ff 40%, #deddff90 68%, #c4f0ff 100%);
+  background-size: 180% 180%;
+  animation: sidebarGradientDrift 26s ease-in-out infinite alternate;
 }
 
 .admin-panel-main {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  height: 100%;
-  min-height: 0;
+  overflow: visible;
+  height: auto;
+  min-height: auto;
 }
 
 .admin-panel-content {
-  background: white;
-  border-radius: 12px;
+  background: radial-gradient(circle at 12% 20%, rgba(226, 215, 255, 0.45), transparent 38%),
+    radial-gradient(circle at 82% 12%, rgba(224, 242, 255, 0.38), transparent 38%),
+    linear-gradient(145deg, #cd90ff74 0%, #eff1ff 40%, #deddff90 68%, #c4f0ff 100%);
+  background-size: 180% 180%;
+  border-radius: 18px;
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
-  height: 100%;
+  min-height: auto;
+  height: auto;
+  overflow: visible;
+  box-shadow: 0 20px 48px -32px rgba(124, 58, 237, 0.22);
+  animation: adminContentDrift 28s ease-in-out infinite alternate;
+}
+
+.admin-dashboard-shell {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(247, 237, 255, 0.92));
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 18px 46px -32px rgba(124, 58, 237, 0.18);
+}
+
+.admin-card {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 16px 40px -28px rgba(124, 58, 237, 0.18), 0 10px 24px -22px rgba(15, 23, 42, 0.14);
+  backdrop-filter: blur(8px);
+}
+
+.admin-card h3 {
+  color: #334155;
+}
+
+.admin-stat {
+  min-height: 140px;
+}
+
+.admin-header {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(247, 237, 255, 0.9));
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 16px;
+  box-shadow: 0 14px 32px -22px rgba(124, 58, 237, 0.16);
+}
+
+.admin-page-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .admin-panel-overlay {
@@ -65,7 +131,7 @@
 /* Tablet responsiveness */
 @media (max-width: 1024px) {
   .admin-panel-container {
-    grid-template-columns: 220px 1fr;
+    grid-template-columns: 240px 1fr;
     gap: 0.75rem;
     padding: 0.75rem;
   }
@@ -99,6 +165,7 @@
     from {
       opacity: 0;
     }
+
     to {
       opacity: 1;
     }
@@ -142,5 +209,64 @@
     width: 44px;
     height: 44px;
     margin-bottom: 0.5rem;
+  }
+}
+
+@keyframes adminGradientDrift {
+  0% {
+    background-position: 0% 0%;
+  }
+
+  50% {
+    background-position: 40% 20%;
+  }
+
+  100% {
+    background-position: 80% 40%;
+  }
+}
+
+@keyframes adminGlow {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.82;
+  }
+
+  50% {
+    transform: translate3d(2%, 2%, 0) scale(1.04);
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: translate3d(-2%, 1%, 0) scale(1.02);
+    opacity: 0.85;
+  }
+}
+
+@keyframes sidebarGradientDrift {
+  0% {
+    background-position: 0% 0%;
+  }
+
+  50% {
+    background-position: 60% 20%;
+  }
+
+  100% {
+    background-position: 100% 40%;
+  }
+}
+
+@keyframes adminContentDrift {
+  0% {
+    background-position: 0% 0%;
+  }
+
+  50% {
+    background-position: 50% 22%;
+  }
+
+  100% {
+    background-position: 95% 40%;
   }
 }

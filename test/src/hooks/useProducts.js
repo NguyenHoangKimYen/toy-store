@@ -170,98 +170,51 @@ export const useProducts = (options = {}) => {
       setLoading(true);
       setError(null);
 
-      // Separate variants and deletedVariantIds from product data
-      const { variants, deletedVariantIds, ...productWithoutVariants } = productData;
+      // 1. Handle image operations FIRST (if needed)
+      // Note: Images should be uploaded/deleted separately before calling this
+      // Use addProductImages() and deleteProductImages() methods
 
-      // Delete removed variants first
-      if (deletedVariantIds && deletedVariantIds.length > 0) {
-        for (const variantId of deletedVariantIds) {
-          try {
-            await productsService.deleteVariant(variantId);
-          } catch (deleteErr) {
-            console.error('Error deleting variant:', deleteErr);
-          }
-        }
+      // 2. Prepare clean JSON payload
+      const payload = {
+        name: productData.name,
+        slug: productData.slug,
+        description: productData.description,
+        status: productData.status,
+        isFeatured: productData.isFeatured,
+        categoryId: productData.categoryId,
+        imageUrls: productData.imageUrls || [], // Include image URLs
+      };
+
+      // 3. Add variants data
+      if (productData.variants && productData.variants.length > 0) {
+        payload.variants = productData.variants.map(v => ({
+          _id: v._id,
+          sku: v.sku,
+          price: v.price?.$numberDecimal || v.price,
+          stockQuantity: v.stockQuantity ?? v.stock ?? 0,
+          attributes: Array.isArray(v.attributes)
+            ? v.attributes
+            : Object.entries(v.attributes || {}).map(([name, value]) => ({
+                name,
+                value: String(value),
+              })),
+          isActive: v.isActive !== false,
+          imageUrls: v.imageUrls || [], // Include variant image URLs
+        }));
       }
 
-      // Update product basic fields
-      const allowedFields = ['name', 'slug', 'description', 'status', 'isFeatured', 'categoryId', 'brand', 'imageUrls'];
-      const updatePayload = {};
-      
-      allowedFields.forEach(field => {
-        if (productWithoutVariants[field] !== undefined) {
-          updatePayload[field] = productWithoutVariants[field];
-        }
-      });
-
-      const updated = await productsService.patchProduct(id, updatePayload);
-      
-      // Update variants if provided
-      if (variants && variants.length > 0) {
-        for (const variant of variants) {
-          try {
-            // Check if variant has an ID (existing variant) or needs to be created
-            if (variant._id && !variant._id.startsWith('var_')) {
-              // Update existing variant
-              const variantPayload = {
-                attributes: Array.isArray(variant.attributes)
-                  ? variant.attributes
-                  : Object.entries(variant.attributes || {}).map(([name, value]) => ({
-                      name,
-                      value: String(value),
-                    })),
-                price: variant.price,
-                stockQuantity: variant.stockQuantity ?? 0,
-                isActive: variant.isActive !== false,
-                // Include image URLs if provided via URL input
-                ...(variant.imageUrls && variant.imageUrls.length > 0 && { imageUrls: variant.imageUrls }),
-              };
-              
-              await productsService.updateVariant(variant._id, variantPayload);
-              
-              // Upload variant image file if provided
-              if (variant.pendingImageFile) {
-                try {
-                  const formData = new FormData();
-                  formData.append('variantImages', variant.pendingImageFile);
-                  await productsService.uploadVariantImages(variant._id, formData);
-                } catch (imgErr) {
-                  console.error('Error uploading variant image:', imgErr);
-                }
-              }
-            } else {
-              // Create new variant
-              const variantPayload = {
-                attributes: Object.entries(variant.attributes || {}).map(([name, value]) => ({
-                  name,
-                  value: String(value),
-                })),
-                price: variant.price,
-                stockQuantity: variant.stockQuantity ?? 0,
-                sku: variant.sku || '',
-                isActive: variant.isActive !== false,
-                // Include image URLs if provided
-                imageUrls: variant.imageUrls || [],
-              };
-              
-              const createdVariant = await productsService.createVariant(id, variantPayload);
-              
-              // Upload variant image file if provided
-              if (variant.pendingImageFile && createdVariant._id) {
-                try {
-                  const formData = new FormData();
-                  formData.append('variantImages', variant.pendingImageFile);
-                  await productsService.uploadVariantImages(createdVariant._id, formData);
-                } catch (imgErr) {
-                  console.error('Error uploading variant image:', imgErr);
-                }
-              }
-            }
-          } catch (variantErr) {
-            console.error('Error updating variant:', variantErr);
-          }
-        }
+      // 4. Add deleted variant IDs
+      if (productData.deletedVariantIds && productData.deletedVariantIds.length > 0) {
+        payload.deletedVariantIds = productData.deletedVariantIds;
       }
+
+      // 5. Add deleted image URLs
+      if (productData.deletedImageUrls && productData.deletedImageUrls.length > 0) {
+        payload.deletedImageUrls = productData.deletedImageUrls;
+      }
+
+      // Use patchProduct which now sends JSON
+      const updated = await productsService.patchProduct(id, payload);
       
       await fetchData(); // Refresh list
       toast.success('Product updated successfully');

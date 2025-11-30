@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Search, ShoppingCart, User, UserCircle, Package, LogOut, Settings, X, Menu, Home, Box, Layers, Info, Phone, ChevronDown } from 'lucide-react'
+import { Search, ShoppingCart, User, UserCircle, Package, LogOut, X, Menu, Home, Box, Layers, Info, Phone, ChevronDown } from 'lucide-react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { getCategories } from '@/services/categories.service'
@@ -9,6 +9,7 @@ import './Navbar.css'
 
 // Navigation links configuration
 const NAV_LINKS = [
+    { to: '/', label: 'HOME', icon: Home },
     { to: '/products', label: 'SHOP', icon: Box },
     { to: '/categories', label: 'CATEGORIES', icon: Layers }, // Different path for unique key
     { to: '/about', label: 'ABOUT', icon: Info },
@@ -18,7 +19,7 @@ const NAV_LINKS = [
 const USER_MENU_LINKS = [
     { to: '/profile', label: 'My Profile', icon: UserCircle },
     { to: '/order-history', label: 'Orders', icon: Package },
-    { to: '/settings', label: 'Settings', icon: Settings }
+  // Settings removed
 ]
 
 const Navbar = () => {
@@ -196,8 +197,7 @@ const Navbar = () => {
 
                 {/* Navigation Links */}
                 <ul className="mobile-nav-links">
-                    {/* eslint-disable-next-line no-unused-vars */}
-                    {NAV_LINKS.filter(link => link.label !== 'CATEGORIES').map(({ to, label, icon: Icon }) => (
+                    {NAV_LINKS.map(({ to, label, icon: Icon }) => (
                         <li key={to}>
                             <NavLink to={to} onClick={closeMobileMenu}>
                                 <Icon size={20} />
@@ -205,18 +205,6 @@ const Navbar = () => {
                             </NavLink>
                         </li>
                     ))}
-                    <li>
-                        <button
-                            onClick={() => {
-                                closeMobileMenu();
-                                setShowMobileCategoryMenu(true);
-                            }}
-                            className="mobile-nav-button"
-                        >
-                            <Layers size={20} />
-                            Categories
-                        </button>
-                    </li>
                 </ul>
 
                 {user && (
@@ -356,8 +344,8 @@ const Navbar = () => {
                 
                 // Regular nav links
                 return (
-                    <NavLink key={to} to={to} className='flex flex-col items-center gap-1'>
-                        <p>{label}</p>
+                    <NavLink key={to} to={to} className='flex flex-col items-center gap-1 text-sm md:text-base font-semibold tracking-tight'>
+                        <p className="leading-none">{label}</p>
                         <hr className='w-2/4 border-none h-[1.5px] bg-gray-700 hidden' />
                     </NavLink>
                 );
@@ -417,9 +405,13 @@ const Navbar = () => {
                                         <p className='text-sm font-semibold text-gray-900'>{user.fullname || user.username || 'User'}</p>
                                         <p className='text-xs text-gray-500 mt-1'>{user.email || ''}</p>
                                         {user.role === 'admin' && (
-                                            <span className='inline-block mt-1 px-2 py-0.5 text-xs font-semibold text-white bg-orange-500 rounded'>
-                                                Admin
-                                            </span>
+                                            <Link
+                                                to="/admin"
+                                                onClick={() => setShowUserMenu(false)}
+                                                className='inline-flex items-center gap-2 mt-1 px-2 py-0.5 text-[11px] font-semibold text-white bg-indigo-500 rounded hover:bg-indigo-600 transition'
+                                            >
+                                                <span>Admin</span>
+                                            </Link>
                                         )}
                                     </div>
                                     <div className='py-1'>

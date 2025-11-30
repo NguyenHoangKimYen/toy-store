@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { UserPlus } from 'lucide-react'
+import { UserPlus, Search, Filter } from 'lucide-react'
 import UserTable from './components/UserTable'
 import UserStats from './components/UserStats'
 import UserDetailModal from './components/UserDetailModal'
@@ -145,40 +145,62 @@ const Users = () => {
     setSelectedUser(null)
   }
 
-  return (
-    <>
-      <AdminContent
-        header={
-          <PageHeader
-            title='User Management'
-            description='Manage user accounts and permissions'
-            actionButton={
+  const headerCard = (
+    <div className='admin-card bg-white/85 backdrop-blur-md border border-purple-100/70 rounded-2xl shadow-[0_18px_42px_-28px_rgba(124,58,237,0.22)] p-5 md:p-6'>
+      <div className='flex flex-col gap-4'>
+        <div className='flex flex-col gap-3 md:flex-row md:items-start md:justify-between'>
+          <div className='space-y-1'>
+            <h2 className='text-2xl font-semibold text-slate-900'>User Management</h2>
+            <p className='text-sm text-slate-500'>Manage user accounts and permissions</p>
+          </div>
+          <div className='w-full md:w-auto grid grid-cols-12 gap-3 items-center'>
+            <label className='col-span-12 md:col-span-7 lg:col-span-8 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/85 border border-purple-100/80 shadow-inner backdrop-blur-sm'>
+              <Search className='w-4 h-4 text-slate-400' />
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder='Search by name, email, phone...'
+                className='w-full bg-transparent outline-none text-sm text-slate-700 placeholder:text-slate-400'
+              />
+            </label>
+            <div className='col-span-12 md:col-span-5 lg:col-span-4 flex justify-end gap-2'>
+              <button
+                onClick={() => setShowFilters((v) => !v)}
+                className='px-3 py-2 rounded-xl border border-purple-100/80 bg-white/80 text-slate-700 hover:bg-purple-50 transition flex items-center gap-2'
+              >
+                <Filter className='w-4 h-4' />
+                <span>Filter</span>
+              </button>
               <button 
                 onClick={handleAddUser}
-                className='w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
+                className='px-3 py-2 rounded-xl border border-purple-100/80 bg-white/80 text-slate-700 hover:bg-purple-50 transition flex items-center gap-2'
               >
                 <UserPlus className='w-4 h-4' />
-                Add User
+                <span>Add User</span>
               </button>
-            }
-          />
-        }
-        filters={
-          <>
-            <SearchBar
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              placeholder='Search by name, username, email, or phone...'
-              onFilterClick={() => setShowFilters(!showFilters)}
-            />
+            </div>
+          </div>
+        </div>
+
+        {showFilters && (
+          <div className='pt-3 border-t border-purple-100/60'>
             <UserFilters
               filters={filters}
               onFilterChange={handleFilterChange}
               onClearFilters={handleClearFilters}
               showFilters={showFilters}
             />
-          </>
-        }
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
+  return (
+    <>
+      <AdminContent
+        header={headerCard}
+        filters={null}
         stats={<UserStats stats={stats} />}
         loading={loading}
         error={error}

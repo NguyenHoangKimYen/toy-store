@@ -1,20 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { House, User, Panda, Package, Tag, Search } from 'lucide-react';
+import { House, User, Panda, Package, Tag, Search, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { ADMIN_ROUTES } from '@/config/routes';
+import { ADMIN_ROUTES, PUBLIC_ROUTES } from '@/config/routes';
+import { getUsers } from '@/services/users.service';
+import { getProducts } from '@/services/products.service';
+import { getAllOrders } from '@/services/orders.service';
+import { getDefaultAvatar } from '@/utils/defaultAvatar';
 
 const AdminSidebar = ({ onNavigate }) => {
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
 
   const navigationTabs = [
-    { icon: <House />, title: 'Dashboard', route: ADMIN_ROUTES.DASHBOARD },
-    { icon: <User />, title: 'Users', route: ADMIN_ROUTES.USERS },
-    { icon: <Panda />, title: 'Products', route: ADMIN_ROUTES.PRODUCTS },
-    { icon: <Package />, title: 'Orders', route: ADMIN_ROUTES.ORDERS },
-    { icon: <Tag />, title: 'Discount Codes', route: ADMIN_ROUTES.DISCOUNT_CODES },
+    {title: 'Dashboard', route: ADMIN_ROUTES.DASHBOARD },
+    { title: 'Users', route: ADMIN_ROUTES.USERS },
+    { title: 'Products', route: ADMIN_ROUTES.PRODUCTS },
+    { title: 'Orders', route: ADMIN_ROUTES.ORDERS },
+    { title: 'Discount Codes', route: ADMIN_ROUTES.DISCOUNT_CODES },
   ];
 
   const handleTabClick = (route) => {
@@ -23,52 +31,218 @@ const AdminSidebar = ({ onNavigate }) => {
   };
 
   const isActive = (route) => location.pathname === route;
+  const filteredTabs = navigationTabs.filter((tab) =>
+    tab.title.toLowerCase().includes(searchTerm.trim().toLowerCase())
+  );
+
+  useEffect(() => {
+    const term = searchTerm.trim();
+    if (term.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      try {
+        setSearchLoading(true);
+        const [userRes, productRes, orderRes] = await Promise.allSettled([
+          getUsers({ keyword: term, limit: 5 }),
+          getProducts({ keyword: term, limit: 5, status: 'all' }),
+          getAllOrders({ search: term, limit: 5 }),
+        ]);
+
+        const results = [];
+
+        if (userRes.status === 'fulfilled') {
+          (userRes.value?.users || userRes.value || []).slice(0, 5).forEach((u) => {
+            results.push({
+              id: u._id,
+              type: 'User',
+              title: u.fullname || u.fullName || u.username || 'User',
+              subtitle: u.email || u.username,
+              route: ADMIN_ROUTES.USERS,
+            });
+          });
+        }
+
+        if (productRes.status === 'fulfilled') {
+          (productRes.value?.products || productRes.value || []).slice(0, 5).forEach((p) => {
+            results.push({
+              id: p._id,
+              type: 'Product',
+              title: p.name,
+              subtitle: p.categoryId?.[0]?.name || p.categoryId?.name || 'Product',
+              route: ADMIN_ROUTES.PRODUCTS,
+            });
+          });
+        }
+
+        if (orderRes.status === 'fulfilled') {
+          (orderRes.value?.orders || orderRes.value || []).slice(0, 5).forEach((o) => {
+            results.push({
+              id: o._id,
+              type: 'Order',
+              title: `Order #${o._id?.slice(-8)}`,
+              subtitle: o.userId?.email || o.userId?.fullName || 'Guest',
+              route: ADMIN_ROUTES.ORDERS,
+            });
+          });
+        }
+
+        setSearchResults(results);
+      } catch (err) {
+        console.error('Sidebar search failed', err);
+        setSearchResults([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
+
+  const handleResultNavigate = (route) => {
+    navigate(route);
+    setShowAccountMenu(false);
+    setSearchResults([]);
+    setSearchTerm('');
+  };
 
   return (
-    <div className='overflow-y-auto sticky top-4 h-full custom-scrollbar'>
-      {/* Account Section */}
-      <div className='border-b mb-4 mt-2 pb-4 border-stone-300'>
-        <button className='flex p-3 cursor-pointer hover:bg-stone-400 rounded-md transition-colors relative gap-2 w-full items-center'>
-          <div className='size-9 rounded shrink-0 shadow bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold'>
-            {user?.fullname?.[0]?.toUpperCase() || 'A'}
-          </div>
-          <div className='text-start'>
-            <span className='text-sm font-bold block'>{user?.fullname || 'Admin'}</span>
-            <span className='text-xs block text-stone-500'>{user?.email || 'admin@example.com'}</span>
-          </div>
-          <svg className='size-3 ml-auto mr-2' viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M5.70711 16.1359C5.31659 16.5264 5.31659 17.1596 5.70711 17.5501L10.5993 22.4375C11.3805 23.2179 12.6463 23.2176 13.4271 22.4369L18.3174 17.5465C18.708 17.156 18.708 16.5228 18.3174 16.1323C17.9269 15.7418 17.2937 15.7418 16.9032 16.1323L12.7176 20.3179C12.3271 20.7085 11.6939 20.7085 11.3034 20.3179L7.12132 16.1359C6.7308 15.7454 6.09763 15.7454 5.70711 16.1359Z" fill="#0F0F0F"/>
-            <path d="M18.3174 7.88675C18.708 7.49623 18.708 6.86307 18.3174 6.47254L13.4252 1.58509C12.644 0.804698 11.3783 0.805008 10.5975 1.58579L5.70711 6.47615C5.31658 6.86667 5.31658 7.49984 5.70711 7.89036C6.09763 8.28089 6.7308 8.28089 7.12132 7.89036L11.307 3.70472C11.6975 3.31419 12.3307 3.31419 12.7212 3.70472L16.9032 7.88675C17.2937 8.27728 17.9269 8.27728 18.3174 7.88675Z" fill="#0F0F0F"/>
-          </svg>
-        </button>
-      </div>
+    <div className="custom-scrollbar px-2">
+      <div className="admin-sidebar-shell border border-purple-100/70 rounded-2xl p-5 shadow-[0_10px_30px_-22px_rgba(124,58,237,0.18)] backdrop-blur flex flex-col gap-6 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_36px_-20px_rgba(124,58,237,0.2)]">
+        {/* Logo */}
+        <div className="flex items-center gap-2 pt-1 pb-1">
+          <span className="brand-logo text-2xl leading-none">MilkyBloom</span>
+        </div>
 
-      {/* Search Field */}
-      <label className='bg-stone-100 mb-4 relative rounded flex items-center px-2 py-1.5 text-sm'>
-        <Search className='size-4 mr-1.5' />
-        <input
-          type='text'
-          placeholder='Search'
-          className='w-full placeholder:text-stone-400 outline-none bg-transparent'
-        />
-      </label>
-
-      {/* Navigation Tabs */}
-      <div className='mt-4'>
-        {navigationTabs.map((tab) => (
+        {/* Account */}
+        <div className="relative">
           <button
-            key={tab.route}
-            onClick={() => handleTabClick(tab.route)}
-            className={`flex items-center justify-start gap-2 w-full rounded px-2 py-1.5 text-sm transition-[box-shadow, background-color, color] cursor-pointer ${
-              isActive(tab.route)
-                ? 'bg-white text-stone-950 shadow'
-                : 'hover:bg-gray-200 dark:hover:bg-stone-200 bg-transparent text-stone-500 shadow-none'
-            }`}
+            type="button"
+            onClick={() => setShowAccountMenu((v) => !v)}
+            className="flex items-center gap-2 w-full text-left rounded-xl px-1 py-1 transition hover:bg-purple-50/70"
           >
-            {tab.icon}
-            <span>{tab.title}</span>
+            {user?.avatar || user?.profileImage || user?.photoURL || getDefaultAvatar(user) ? (
+              <img
+                src={user.avatar || user.profileImage || user.photoURL || getDefaultAvatar(user)}
+                alt={user?.fullname || 'Admin'}
+                className="size-9 rounded-full object-cover ring-1 ring-purple-100/70"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="size-9 rounded-full bg-gradient-to-br from-purple-500 via-indigo-500 to-sky-400 flex items-center justify-center text-white text-sm font-semibold">
+                {user?.fullname?.[0]?.toUpperCase() || 'A'}
+              </div>
+            )}
+            <div className="leading-tight overflow-hidden">
+              <span className="text-sm font-semibold text-stone-800 block truncate">{user?.fullname || 'Admin'}</span>
+              <span className="text-[11px] text-stone-500 block truncate">{user?.email || 'admin@example.com'}</span>
+            </div>
+            <ChevronDown className={`size-4 text-stone-500 transition ${showAccountMenu ? 'rotate-180' : ''}`} />
           </button>
-        ))}
+
+          {showAccountMenu && (
+            <div className="absolute left-0 mt-2 w-44 rounded-xl border border-purple-100/70 bg-white/95 backdrop-blur shadow-[0_14px_34px_-22px_rgba(124,58,237,0.28)] p-2 z-20">
+              <button
+                className="w-full text-left px-3 py-2 rounded-lg hover:bg-purple-50 text-sm text-stone-700"
+                onClick={() => {
+                  navigate(PUBLIC_ROUTES.PROFILE);
+                  setShowAccountMenu(false);
+                }}
+              >
+                View Profile
+              </button>
+              <button
+                className="w-full text-left px-3 py-2 rounded-lg hover:bg-purple-50 text-sm text-stone-700"
+                onClick={() => {
+                  navigate(PUBLIC_ROUTES.LOGIN);
+                  setShowAccountMenu(false);
+                }}
+              >
+                Switch Account
+              </button>
+              <button
+                className="w-full text-left px-3 py-2 rounded-lg hover:bg-purple-50 text-sm text-stone-700"
+                onClick={() => {
+                  navigate(PUBLIC_ROUTES.HOME);
+                  setShowAccountMenu(false);
+                }}
+              >
+                Go to Homepage
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Search */}
+        <div className="relative">
+          <label className="w-full bg-white/82 border border-purple-100/80 rounded-xl flex items-center px-3 py-2.5 text-sm text-stone-600 shadow-none backdrop-blur-sm">
+            <Search className="size-4 mr-1.5 text-stone-500" />
+            <input
+              type="text"
+              placeholder="Search"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  const firstMatch = filteredTabs[0];
+                  if (firstMatch) handleTabClick(firstMatch.route);
+                }
+              }}
+              className="w-full placeholder:text-stone-400 outline-none bg-transparent"
+            />
+          </label>
+
+          {searchTerm.trim().length >= 2 && (
+            <div className="absolute left-0 right-0 mt-2 rounded-2xl border border-purple-100/80 bg-white/95 backdrop-blur shadow-[0_12px_32px_-22px_rgba(124,58,237,0.26)] z-30 max-h-72 overflow-y-auto">
+              {searchLoading ? (
+                <div className="px-3 py-3 text-sm text-stone-500">Searching...</div>
+              ) : searchResults.length === 0 ? (
+                <div className="px-3 py-3 text-sm text-stone-500">No results</div>
+              ) : (
+                searchResults.map((item) => (
+                  <button
+                    key={`${item.type}-${item.id}`}
+                    className="w-full text-left px-3 py-2.5 hover:bg-purple-50/70 transition flex items-start gap-2 rounded-xl"
+                    onClick={() => handleResultNavigate(item.route)}
+                  >
+                    <span className="text-[11px] font-semibold text-purple-600">{item.type}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-stone-800 truncate">{item.title}</div>
+                      {item.subtitle && (
+                        <div className="text-xs text-stone-500 truncate">{item.subtitle}</div>
+                      )}
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Navigation */}
+        <div className="flex flex-col gap-2 pt-1">
+          {filteredTabs.map((tab) => (
+            <button
+              key={tab.route}
+              onClick={() => handleTabClick(tab.route)}
+              className={`flex items-center justify-start gap-2.5 w-full rounded-lg px-3 py-2 text-sm transition-[background-color,color,border,box-shadow] cursor-pointer ${
+                isActive(tab.route)
+                  ? 'bg-gradient-to-r from-purple-50 via-white to-sky-50 text-stone-900 border border-purple-100 shadow-[0_12px_32px_-24px_rgba(124,58,237,0.32)]'
+                  : 'bg-transparent text-stone-600 hover:bg-purple-50/70 border border-transparent'
+              }`}
+            >
+              {isActive(tab.route) ? (
+                <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-purple-500 to-sky-400 shadow-[0_0_0_6px_rgba(124,58,237,0.12)]" />
+              ) : (
+                <span className="h-2 w-2 rounded-full bg-stone-300/70" />
+              )}
+              <span className="text-stone-500">{tab.icon}</span>
+              <span className="font-medium">{tab.title}</span>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

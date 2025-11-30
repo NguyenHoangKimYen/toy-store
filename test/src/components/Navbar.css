@@ -32,6 +32,11 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+.navbar,
+.navbar * {
+  font-family: -apple-system, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
 .navbar-wrapper.navbar-visible {
   transform: translateY(0);
 }
@@ -47,6 +52,27 @@
 /* Navbar Content Layout */
 .navbar-content {
   min-height: 56px;
+}
+
+.navbar-content > ul {
+  font-family: -apple-system, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  align-items: center;
+  gap: 1.75rem;
+}
+
+.navbar-content > ul a,
+.navbar-content > ul button {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  line-height: 1.15;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 /* Navbar Logo */
@@ -212,8 +238,8 @@
   padding: 1rem 1.5rem;
   color: #475569;
   text-decoration: none;
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: 1.05rem;
+  font-weight: 600;
   transition: all 0.2s ease;
 }
 
@@ -376,6 +402,7 @@
   font-size: 1.25rem;
   font-weight: 600;
   color: #1e293b;
+  font-family: -apple-system, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .mobile-category-close {
@@ -414,6 +441,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: center;
+  font-family: -apple-system, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .category-item:hover {
@@ -441,6 +469,7 @@
   font-weight: 600;
   color: #1e293b;
   margin: 0;
+  font-family: -apple-system, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 /* Responsive Breakpoints */

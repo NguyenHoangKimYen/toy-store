@@ -5,7 +5,7 @@ const TinyLegend = ({ items }) => (
     {items.map((i) => (
       <div key={i.label} className='flex items-center gap-1'>
         <span
-          className='inline-block w-3 h-3 rounded-sm'
+          className='inline-block w-3 h-3 rounded-sm shadow-sm shadow-purple-100/50 border border-white/70'
           style={{ background: i.color }}
         />
         <span>{i.label}</span>

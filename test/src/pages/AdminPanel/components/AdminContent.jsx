@@ -14,58 +14,34 @@ const AdminContent = ({
   error,
   onRetry,
 }) => {
-  const [stickyScrolled, setStickyScrolled] = useState(false);
-
-  useEffect(() => {
-    const scrollContainer = document.querySelector('.admin-scroll-container');
-    if (!scrollContainer) return;
-
-    const handleScroll = () => {
-      setStickyScrolled(scrollContainer.scrollTop > 20);
-    };
-
-    scrollContainer.addEventListener('scroll', handleScroll);
-    return () => scrollContainer.removeEventListener('scroll', handleScroll);
-  }, []);
-
   return (
-    <div className='w-full h-full flex flex-col min-h-0'>
-      <div className='flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 admin-scroll-container min-h-0'>
-        <div className='py-4 sm:py-6'>
-          {header}
+    <div className='admin-page-content px-4 sm:px-6 py-4 sm:py-6'>
+      {header && <div className='admin-card'>{header}</div>}
 
-          <div
-            className={`sticky top-0 z-40 bg-white transition-shadow duration-300 ${
-              stickyScrolled ? 'shadow-md' : ''
-            }`}
-          >
-            {filters}
-          </div>
+      {filters && <div className='admin-card'>{filters}</div>}
 
-          {stats && <div className='mb-6'>{stats}</div>}
+      {stats && <div className='admin-card'>{stats}</div>}
 
-          {error ? (
-            <div className='text-center py-12'>
-              <h3 className='text-lg font-semibold text-red-600 mb-2'>Error Loading Data</h3>
-              <p className='text-gray-600 mb-4'>{error}</p>
-              {onRetry && (
-                <button
-                  onClick={onRetry}
-                  className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700'
-                >
-                  Retry
-                </button>
-              )}
-            </div>
-          ) : loading ? (
-            <div className='text-center py-12'>
-              <LoadingSpinner size='lg' />
-            </div>
-          ) : (
-            children
+      {error ? (
+        <div className='admin-card text-center'>
+          <h3 className='text-lg font-semibold text-red-600 mb-2'>Error Loading Data</h3>
+          <p className='text-gray-600 mb-4'>{error}</p>
+          {onRetry && (
+            <button
+              onClick={onRetry}
+              className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700'
+            >
+              Retry
+            </button>
           )}
         </div>
-      </div>
+      ) : loading ? (
+        <div className='admin-card flex items-center justify-center py-12'>
+          <LoadingSpinner size='lg' />
+        </div>
+      ) : (
+        children
+      )}
     </div>
   );
 };

@@ -3,14 +3,20 @@
 
 .product-card {
   position: relative;
-  background: transparent;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
   overflow: hidden;
-  transition: all 0.3s ease;
+  padding: 10px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  box-shadow: 0 12px 30px -20px rgba(15, 23, 42, 0.4);
   cursor: pointer;
 }
 
 .product-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
+  border-color: #cbd5e1;
+  box-shadow: 0 18px 40px -22px rgba(15, 23, 42, 0.55);
 }
 
 .product-image-wrapper {
@@ -19,7 +25,7 @@
   aspect-ratio: 1;
   overflow: hidden;
   background: #f7f7f7;
-
+  border-radius: 12px;
 }
 
 .product-image {

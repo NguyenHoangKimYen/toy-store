@@ -1,86 +1,312 @@
-/* Horizontal scrolling products - Essential styles that can't be done with Tailwind */
+/* MilkyBloom styling for New Arrivals / Best Sellers */
+
+.milkybloom-section {
+  background: transparent;
+  position: relative;
+}
+
+.showcase-shell {
+  position: relative;
+  padding: 22px 22px 24px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(252, 252, 255, 0.92));
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 22px;
+  box-shadow: 0 24px 60px -32px rgba(124, 58, 237, 0.22), 0 18px 36px -28px rgba(15, 23, 42, 0.28);
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+
+.showcase-shell::before {
+  content: "";
+  position: absolute;
+  inset: -14% -8%;
+  background: linear-gradient(120deg, rgba(226, 215, 255, 0.3), rgba(255, 224, 244, 0.2), rgba(210, 232, 255, 0.24));
+  filter: blur(36px);
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dark .showcase-shell {
+  background: rgba(15, 23, 42, 0.88);
+  border-color: rgba(148, 163, 184, 0.18);
+  box-shadow: 0 22px 50px -30px rgba(0, 0, 0, 0.82);
+}
+
+.dark .showcase-shell::before {
+  background: linear-gradient(120deg, rgba(99, 102, 241, 0.32), rgba(14, 165, 233, 0.22), rgba(236, 72, 153, 0.2));
+}
+
+.showcase-headline {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.head-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.head-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.showcase-title {
+  font-size: clamp(28px, 4vw, 36px);
+  font-weight: 800;
+  color: #334155;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.showcase-subtitle {
+  font-size: 14px;
+  color: #475569;
+  margin: 0;
+  opacity: 0.8;
+}
+
+.showcase-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #6b21a8;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.dark .showcase-kicker {
+  background: rgba(99, 102, 241, 0.2);
+  color: #c7d2fe;
+}
+
+.viewall-btn {
+  height: 44px;
+  padding: 0 18px;
+  font-weight: 700;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: white;
+  color: #4338ca;
+  transition: all 0.22s ease;
+}
+
+.viewall-btn:hover {
+  background: linear-gradient(135deg, #ede9fe, #fdf4ff);
+  color: #4c1d95;
+  border-color: rgba(124, 58, 237, 0.35);
+  transform: translateY(-1px);
+}
+
+.dark .viewall-btn {
+  background: #0f172a;
+  color: #c7d2fe;
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.showcase-rail-wrapper {
+  position: relative;
+  z-index: 1;
+}
+
+.showcase-rail {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 20px;
+  padding: 16px 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), 0 18px 38px -30px rgba(124, 58, 237, 0.22);
+}
+
+.dark .showcase-rail {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: rgba(148, 163, 184, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 14px 30px -26px rgba(0, 0, 0, 0.7);
+}
+
 .products-horizontal-scroll {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 260px);
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, 240px);
+  gap: 18px;
   overflow-x: auto;
   overflow-y: hidden;
-  padding-bottom: 12px;
+  padding-bottom: 10px;
   scroll-behavior: smooth;
   grid-auto-flow: column;
-  grid-auto-columns: 260px;
+  grid-auto-columns: 240px;
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x mandatory;
   scroll-padding: 0 16px;
+  scrollbar-width: none;
 }
 
 .products-horizontal-scroll > * {
   scroll-snap-align: start;
 }
 
-/* Custom scrollbar styling */
 .products-horizontal-scroll::-webkit-scrollbar {
-  height: 4px;
-}
-
-.products-horizontal-scroll::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 2px;
-}
-
-.products-horizontal-scroll::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 2px;
-  max-width: 50px;
-}
-
-.products-horizontal-scroll::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* Scroll indicator */
-.scroll-indicator {
   display: none;
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 10px;
-  width: 40px;
-  background: linear-gradient(to left, rgba(255, 255, 255, 0.95), transparent);
-  pointer-events: none;
 }
 
-/* Responsive adjustments */
+.showcase-rail .product-card {
+  border-radius: 20px;
+  padding: 12px;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 20px 46px -32px rgba(124, 58, 237, 0.16), 0 18px 40px -34px rgba(15, 23, 42, 0.24);
+  transform: translateZ(0);
+}
+
+.showcase-rail .product-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 26px 60px -34px rgba(124, 58, 237, 0.22), 0 24px 56px -36px rgba(14, 165, 233, 0.2);
+}
+
+.showcase-rail .product-image-wrapper {
+  box-shadow: 0 16px 32px -28px rgba(15, 23, 42, 0.28);
+  background: linear-gradient(180deg, #f8f6ff, #fff7fb);
+  border-radius: 18px;
+}
+
+.showcase-rail .product-image {
+  object-fit: contain;
+  padding: 6px;
+}
+
+.showcase-rail .product-info {
+  padding: 10px 0 0;
+}
+
+.showcase-rail .product-name {
+  -webkit-line-clamp: 2;
+  line-height: 1.35;
+  font-size: 15px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.showcase-rail .product-category {
+  display: none;
+}
+
+.showcase-rail .product-footer {
+  background: transparent;
+  border: none;
+  padding: 10px 0 0;
+  box-shadow: none;
+}
+
+.showcase-rail .current-price {
+  color: #334155;
+  font-weight: 700;
+}
+
+.showcase-rail .badge {
+  top: 10px;
+  right: 10px;
+  padding: 4px 10px;
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #5b21b6;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 8px 20px -14px rgba(124, 58, 237, 0.28);
+}
+
+.showcase-rail .out-of-stock-overlay {
+  background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.5), rgba(236, 233, 255, 0.58));
+}
+
+.showcase-rail .out-of-stock-text {
+  background: rgba(255, 255, 255, 0.82);
+  color: #475569;
+  box-shadow: 0 10px 22px -16px rgba(15, 23, 42, 0.35);
+}
+
+.milkybloom-section .scroll-arrow {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 8px 24px -16px rgba(15, 23, 42, 0.25);
+  color: #475569;
+  opacity: 0.8;
+}
+
+.milkybloom-section .scroll-arrow:hover {
+  background: rgba(237, 233, 254, 0.95);
+  border-color: rgba(124, 58, 237, 0.4);
+  color: #4c1d95;
+  opacity: 1;
+}
+
+.milkybloom-section .scroll-arrow-left {
+  left: -16px;
+}
+
+.milkybloom-section .scroll-arrow-right {
+  right: -16px;
+}
+
 @media (max-width: 1400px) {
   .products-horizontal-scroll {
-    grid-auto-columns: 240px;
+    grid-auto-columns: 220px;
   }
 }
 
 @media (max-width: 1200px) {
   .products-horizontal-scroll {
-    grid-auto-columns: 220px;
+    grid-auto-columns: 210px;
     gap: 14px;
   }
 }
 
 @media (max-width: 1024px) {
   .products-horizontal-scroll {
-    grid-auto-columns: 200px;
+    grid-auto-columns: 190px;
     gap: 12px;
   }
 }
 
 @media (max-width: 768px) {
-  .products-horizontal-scroll {
-    grid-auto-columns: 170px;
-    gap: 10px;
-    scroll-padding: 0 12px;
+  .showcase-shell {
+    padding: 14px 12px 16px;
+    border-radius: 16px;
   }
 
-  .scroll-indicator {
-    display: block;
-    width: 30px;
+  .showcase-headline {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .showcase-title {
+    font-size: 24px;
+  }
+
+  .showcase-subtitle {
+    font-size: 13px;
+  }
+
+  .products-horizontal-scroll {
+    grid-auto-columns: 170px;
+    gap: 12px;
+    scroll-padding: 0 12px;
   }
 
   .products-horizontal-scroll::-webkit-scrollbar {
@@ -90,12 +316,7 @@
 
 @media (max-width: 480px) {
   .products-horizontal-scroll {
-    grid-auto-columns: 145px;
-    gap: 8px;
-    scroll-padding: 0 8px;
-  }
-
-  .scroll-indicator {
-    width: 24px;
+    grid-auto-columns: 155px;
+    gap: 10px;
   }
 }

@@ -7,6 +7,20 @@ import { Label } from '@/components/ui/label';
 import AddressAutocomplete from '@/components/common/AddressAutocomplete';
 import { toast } from 'sonner';
 
+const VN_PROVINCES = [
+  'An Giang','Bà Rịa - Vũng Tàu','Bắc Giang','Bắc Kạn','Bạc Liêu','Bắc Ninh',
+  'Bến Tre','Bình Dương','Bình Phước','Bình Thuận','Bình Định','Cà Mau',
+  'Cần Thơ','Cao Bằng','Đà Nẵng','Đắk Lắk','Đắk Nông','Điện Biên','Đồng Nai',
+  'Đồng Tháp','Gia Lai','Hà Giang','Hà Nam','Hà Nội','Hà Tĩnh','Hải Dương',
+  'Hải Phòng','Hậu Giang','Hòa Bình','Hưng Yên','Khánh Hòa','Kiên Giang',
+  'Kon Tum','Lai Châu','Lạng Sơn','Lào Cai','Lâm Đồng','Long An','Nam Định',
+  'Nghệ An','Ninh Bình','Ninh Thuận','Phú Thọ','Phú Yên','Quảng Bình',
+  'Quảng Nam','Quảng Ngãi','Quảng Ninh','Quảng Trị','Sóc Trăng','Sơn La',
+  'Tây Ninh','Thái Bình','Thái Nguyên','Thanh Hóa','Thừa Thiên Huế','Tiền Giang',
+  'TP. Hồ Chí Minh','Trà Vinh','Tuyên Quang','Vĩnh Long','Vĩnh Phúc','Yên Bái'
+];
+const VN_PROVINCE_SET = new Set(VN_PROVINCES.map((p) => p.toLowerCase()));
+
 const AddressFormModal = ({ address, isOpen, onClose, onSave, mode = 'create' }) => {
   const [formData, setFormData] = useState({
     fullNameOfReceiver: '',
@@ -94,6 +108,12 @@ const AddressFormModal = ({ address, isOpen, onClose, onSave, mode = 'create' })
       newErrors.addressLine = 'Address is required';
     } else if (formData.addressLine.trim().length < 10) {
       newErrors.addressLine = 'Address must be at least 10 characters';
+    }
+    const cityTrim = formData.city.trim();
+    if (!cityTrim) {
+      newErrors.city = 'Please select a province/city';
+    } else if (!VN_PROVINCE_SET.has(cityTrim.toLowerCase())) {
+      newErrors.city = 'City must be selected from the dropdown list';
     }
     
     setErrors(newErrors);
@@ -240,15 +260,24 @@ const AddressFormModal = ({ address, isOpen, onClose, onSave, mode = 'create' })
 
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
               <div>
-                <Label htmlFor='city' className='text-sm sm:text-base'>City</Label>
-                <Input
+                <Label htmlFor='city' className='text-sm sm:text-base'>Province/City *</Label>
+                <input
                   id='city'
                   name='city'
                   value={formData.city}
                   onChange={handleInputChange}
-                  placeholder='e.g., Ho Chi Minh'
-                  className='mt-1.5 min-h-[44px]'
+                  list='vn-provinces'
+                  placeholder='Select province/city'
+                  className='mt-1.5 min-h-[44px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                 />
+                <datalist id='vn-provinces'>
+                  {VN_PROVINCES.map((p) => (
+                    <option key={p} value={p} />
+                  ))}
+                </datalist>
+                {errors.city && (
+                  <p className='text-red-500 text-xs sm:text-sm mt-1.5'>{errors.city}</p>
+                )}
               </div>
               
               <div>

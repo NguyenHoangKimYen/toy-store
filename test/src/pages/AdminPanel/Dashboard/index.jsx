@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   getSalesOverview,
   getRevenueUpdates,
@@ -34,10 +34,11 @@ const Dashboard = () => {
   const [lowStock, setLowStock] = useState([]);
   const [categoryStats, setCategoryStats] = useState([]);
   const [branches, setBranches] = useState([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
-    const load = async () => {
+  const loadDashboard = useCallback(async () => {
       try {
+        setIsRefreshing(true);
         setLoading(true);
         setError(null);
 
@@ -74,11 +75,21 @@ const Dashboard = () => {
         setError(err.message || 'Failed to load dashboard');
       } finally {
         setLoading(false);
+        setIsRefreshing(false);
       }
-    };
+    }, []);
 
-    load();
-  }, []);
+  useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard]);
+
+  // Auto refresh every 60s
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadDashboard();
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [loadDashboard]);
 
   const revenueMonthData = useMemo(() => {
     const months = Array.from({ length: 12 }, (_, i) => ({
@@ -103,6 +114,11 @@ const Dashboard = () => {
 
   const revenueMonthMax = useMemo(
     () => Math.max(1, ...revenueMonthData.map((m) => toNumber(m.value))),
+    [revenueMonthData],
+  );
+
+  const hasMonthlyRevenue = useMemo(
+    () => revenueMonthData.some((m) => toNumber(m.value) > 0),
     [revenueMonthData],
   );
 
@@ -150,19 +166,22 @@ const Dashboard = () => {
   );
 
   return (
-    <div className='bg-white rounded-lg pb-6 shadow h-full overflow-y-auto'>
+    <div className='admin-dashboard-shell page-fade'>
       <DashboardHeader />
 
       <div className='px-4'>
-        {loading && <div className='text-sm text-stone-500'>Đang tải dashboard...</div>}
-        {error && (
+        {error ? (
           <div className='text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2'>
             {error}
           </div>
-        )}
-
-        {!loading && !error && (
+        ) : (
           <div className='space-y-6'>
+            {isRefreshing && (
+              <div className='text-xs text-stone-500 bg-white/70 border border-purple-100 rounded-full inline-flex px-3 py-1 shadow-sm'>
+                Đang làm mới dữ liệu...
+              </div>
+            )}
+
             <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
               <StatCard
                 title='Tổng người dùng'
@@ -194,9 +213,9 @@ const Dashboard = () => {
             </div>
 
             <div className='grid gap-4 lg:grid-cols-3'>
-              <div className='p-4 rounded-xl bg-white shadow-sm border border-stone-200'>
+              <div className='admin-card'>
                 <h3 className='text-sm font-semibold text-stone-700 mb-3'>
-                  User Segmentation (Pie)
+                  User Segmentation Pie Chart
                 </h3>
                 <div className='flex items-center gap-4'>
                   <PieChart data={segmentationData} colors={segmentationData.map((s) => s.color)} />
@@ -204,7 +223,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className='lg:col-span-2 p-4 rounded-xl bg-white shadow-sm border border-stone-200'>
+              <div className='lg:col-span-2 admin-card'>
                 <h3 className='text-sm font-semibold text-stone-700 mb-3'>
                   Doanh thu theo cổng thanh toán
                 </h3>
@@ -216,45 +235,59 @@ const Dashboard = () => {
             </div>
 
             <div className='grid gap-4 lg:grid-cols-2'>
-              <div className='p-4 rounded-xl bg-white shadow-sm border border-stone-200'>
+              <div className='admin-card'>
                 <h3 className='text-sm font-semibold text-stone-700 mb-3'>
                   Doanh thu 7 ngày (Bar)
                 </h3>
                 <BarChart data={revenue7Data} colors={revenue7Data.map(() => '#6366f1')} />
               </div>
 
-              <div className='p-4 rounded-xl bg-white shadow-sm border border-stone-200'>
+              <div className='admin-card'>
                 <h3 className='text-sm font-semibold text-stone-700 mb-3'>
                   Doanh thu theo tháng (Heatmap)
                 </h3>
-                <div className='grid grid-cols-6 md:grid-cols-12 gap-2'>
-                  {revenueMonthData.map((m) => (
-                    <div key={m.label} className='flex flex-col items-center gap-1'>
-                      <div
-                        className='w-7 h-7 rounded border border-stone-200'
-                        style={{ background: monthColor(m.value) }}
-                        title={`${m.label}: ${formatPrice(m.value)}`}
-                      />
-                      <span className='text-[11px] text-stone-600'>{m.label}</span>
+                {hasMonthlyRevenue ? (
+                  <>
+                    <div className='grid grid-cols-6 md:grid-cols-12 gap-2'>
+                      {revenueMonthData.map((m) => {
+                        const bg = monthColor(m.value);
+                        return (
+                          <div key={m.label} className='flex flex-col items-center gap-1'>
+                            <div
+                              className='w-9 h-9 rounded border border-purple-100 shadow-[0_6px_18px_-12px_rgba(124,58,237,0.35)]'
+                              style={{
+                                background: `linear-gradient(145deg, ${bg}, ${bg} 70%, rgba(255,255,255,0.75))`,
+                              }}
+                              title={`${m.label}: ${formatPrice(m.value)}`}
+                            />
+                            <span className='text-[11px] text-stone-600 font-semibold'>{m.label}</span>
+                          </div>
+                        );
+                      })}
                     </div>
-                  ))}
-                </div>
-                <div className='flex items-center gap-2 text-[11px] text-stone-500 mt-2'>
-                  <span>Less</span>
-                  {['#e5e7eb', '#d1fae5', '#86efac', '#22c55e', '#15803d'].map((c) => (
-                    <span
-                      key={c}
-                      className='w-4 h-3 rounded-[3px] border border-stone-200'
-                      style={{ background: c }}
-                    />
-                  ))}
-                  <span>More</span>
-                </div>
+                    <div className='flex items-center gap-2 text-[11px] text-stone-500 mt-2'>
+                      <span>Less</span>
+                      {['#e5e7eb', '#d1fae5', '#86efac', '#22c55e', '#15803d'].map((c) => (
+                        <span
+                          key={c}
+                          className='w-4 h-3 rounded-[3px] border border-stone-200'
+                          style={{ background: c }}
+                        />
+                      ))}
+                      <span>More</span>
+                    </div>
+                    <div className='mt-2 text-[11px] text-stone-600'>
+                      Tổng năm: {formatPrice(totalRevenueThisYear)} • Đơn vị: VND
+                    </div>
+                  </>
+                ) : (
+                  <div className='text-sm text-stone-500'>Chưa có dữ liệu doanh thu theo tháng</div>
+                )}
               </div>
             </div>
 
             <div className='grid gap-4 lg:grid-cols-2'>
-              <div className='p-4 rounded-xl bg-white shadow-sm border border-stone-200'>
+              <div className='admin-card'>
                 <h3 className='text-sm font-semibold text-stone-700 mb-3'>Sản phẩm bán chạy</h3>
                 <div className='space-y-3'>
                   {topSelling.length === 0 && <div className='text-sm text-stone-500'>No data</div>}
@@ -282,11 +315,11 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className='p-4 rounded-xl bg-white shadow-sm border border-stone-200'>
+              <div className='admin-card'>
                 <h3 className='text-sm font-semibold text-stone-700 mb-3'>Sắp hết hàng</h3>
-                <div className='space-y-3'>
+                <div className='space-y-3 max-h-80 overflow-y-auto pr-1'>
                   {lowStock.length === 0 && <div className='text-sm text-stone-500'>No data</div>}
-                  {lowStock.slice(0, 5).map((item) => (
+                  {lowStock.map((item) => (
                     <div key={item._id} className='flex items-center justify-between'>
                       <div className='text-sm font-medium text-stone-800'>{item.name}</div>
                       <span className='text-xs px-2 py-1 rounded-full bg-red-50 text-red-600 border border-red-100'>

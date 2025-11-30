@@ -54,7 +54,7 @@ const AdminProductCard = ({
       <div className="admin-product-image">
         <img src={imageUrl} alt={product.name} loading="lazy" />
         {showBadges && (
-          <div className="badge-container">
+          <div className="badge-stack">
             {product.isNew && <span className="badge badge-new">New</span>}
             {product.isFeatured && <span className="badge badge-featured">Featured</span>}
             {product.status && product.status !== 'Published' && (

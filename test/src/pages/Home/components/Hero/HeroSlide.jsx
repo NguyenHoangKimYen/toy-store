@@ -17,8 +17,8 @@ const HeroSlide = ({ product }) => {
     <div className="item">
       <img src={productImage} alt={product.name} />
       <div className="introduce">
-        <div className="tag">FEATURED</div>
-        <div className="name">{product.name}</div>
+        <div className="tag">Top Picks</div>
+        <div className="name">Pucky Hat Series</div>
         <div className="des">{product.description}</div>
         <button className="cta-button" onClick={handleShopNow}>
           Shop Now <span className="arrow">→</span>

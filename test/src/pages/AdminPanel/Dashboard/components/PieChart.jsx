@@ -34,8 +34,8 @@ const PieChart = ({ data, colors, size = 160 }) => {
             <path
               d={`M${radius},${radius} L${x1},${y1} A${radius},${radius} 0 ${largeArc} 1 ${x2},${y2} Z`}
               fill={colors[i] || '#cbd5e1'}
-              stroke='#fff'
-              strokeWidth='1'
+              stroke='rgba(255,255,255,0.9)'
+              strokeWidth='1.2'
             />
             {pct > 0 && (
               <text

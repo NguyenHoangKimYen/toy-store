@@ -1,6 +1,14 @@
 import React from 'react'
 import { Users, UserCheck, Award, Shield } from 'lucide-react'
 
+const formatCompact = (value) => {
+  if (value === null || value === undefined) return '0';
+  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1).replace(/\.0$/, '')}B`;
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1).replace(/\.0$/, '')}K`;
+  return value.toString();
+};
+
 const UserStats = ({ stats }) => {
   return (
     <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6'>
@@ -31,7 +39,9 @@ const UserStats = ({ stats }) => {
         <div className='flex items-center justify-between'>
           <div>
             <p className='text-xs sm:text-sm text-gray-600 dark:text-gray-400'>Total Points</p>
-            <p className='text-xl sm:text-2xl font-bold text-yellow-600'>{stats.totalLoyaltyPoints.toLocaleString()}</p>
+            <p className='text-xl sm:text-2xl font-bold text-yellow-600'>
+              {formatCompact(stats.totalLoyaltyPoints)}
+            </p>
           </div>
           <Award className='w-7 h-7 sm:w-8 sm:h-8 text-yellow-500' />
         </div>
