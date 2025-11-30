@@ -20,7 +20,7 @@ export const useProductComments = (productId) => {
     if (data.productId === productId && data.comment) {
       const newComment = data.comment;
       
-      // Only add if not already in the list (avoid duplicates from own submission)
+      // Only add if not already in the list
       setComments(prev => {
         if (prev.some(c => c._id === newComment._id)) {
           return prev;
@@ -128,8 +128,8 @@ export const useProductComments = (productId) => {
       
       const newComment = result.metadata || result;
       
-      // Add new comment to the top of the list
-      setComments(prev => [newComment, ...prev]);
+      // Don't add locally - let WebSocket handle it to prevent duplicates
+      // The WebSocket event will add the comment to the list
       
       // Show appropriate message based on comment status
       if (newComment.status === 'flagged') {
