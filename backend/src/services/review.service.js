@@ -296,8 +296,8 @@ const deleteReview = async ({ userId, reviewId, isAdmin }) => {
     const review = await reviewRepo.findReviewById(reviewId);
     if (!review) throw new Error('Review not found');
 
-    // Check perms
-    if (!isAdmin && review.userId.toString() !== userId)
+    // Check perms - admin can delete any review, users can only delete their own
+    if (!isAdmin && review.userId.toString() !== userId.toString())
         throw new Error('Permission denied to delete this review');
 
     // 1. Xóa ảnh trên S3 trước (nếu có)
