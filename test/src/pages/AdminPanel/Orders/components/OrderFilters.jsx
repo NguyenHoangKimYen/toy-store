@@ -17,10 +17,13 @@ const OrderFilters = ({
   paymentMethodFilter,
   setPaymentMethodFilter,
   sortBy,
-  setSortBy
+  setSortBy,
+  showFilters
 }) => {
+  if (!showFilters) return null
+
   return (
-    <div className="space-y-3 sm:space-y-4">
+    <div className="border-t pt-3 sm:pt-4 space-y-3 sm:space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Status Filter */}
         <div>
@@ -89,11 +92,9 @@ const OrderFilters = ({
           </Select>
         </div>
       </div>
-
-      </div>
       
       {/* Clear Filters Button */}
-      <div className="mt-3 sm:mt-4">
+      <div>
         <Button
           variant="outline"
           onClick={() => {

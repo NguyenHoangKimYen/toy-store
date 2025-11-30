@@ -10,23 +10,26 @@ import { formatPrice } from '@/utils/formatPrice'
 import OrderDetailModal from './components/OrderDetailModal'
 import OrderFilters from './components/OrderFilters'
 import { AdminContent } from '../components'
-import { PageHeader } from '@/components/common'
+import { PageHeader, SearchBar } from '@/components/common'
 
 const Orders = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [deliveryTypeFilter, setDeliveryTypeFilter] = useState('all')
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('all')
   const [sortBy, setSortBy] = useState('newest')
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
 
   const fetchOrders = useCallback(async () => {
     try {
       setLoading(true)
-      // Send filter params to backend
+      // Send search and filter params to backend
       const params = {
+        search: searchTerm.trim() || undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,
         deliveryType: deliveryTypeFilter !== 'all' ? deliveryTypeFilter : undefined,
         paymentMethod: paymentMethodFilter !== 'all' ? paymentMethodFilter : undefined,
@@ -45,7 +48,7 @@ const Orders = () => {
     } finally {
       setLoading(false)
     }
-  }, [statusFilter, deliveryTypeFilter, paymentMethodFilter])
+  }, [searchTerm, statusFilter, deliveryTypeFilter, paymentMethodFilter])
 
   useEffect(() => {
     fetchOrders()
@@ -116,16 +119,25 @@ const Orders = () => {
           />
         }
         filters={
-          <OrderFilters
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            deliveryTypeFilter={deliveryTypeFilter}
-            setDeliveryTypeFilter={setDeliveryTypeFilter}
-            paymentMethodFilter={paymentMethodFilter}
-            setPaymentMethodFilter={setPaymentMethodFilter}
-            sortBy={sortBy}
-            setSortBy={setSortBy}
-          />
+          <>
+            <SearchBar
+              searchQuery={searchTerm}
+              onSearchChange={setSearchTerm}
+              placeholder="Search by order ID, customer, or email..."
+              onFilterClick={() => setShowFilters(!showFilters)}
+            />
+            <OrderFilters
+              statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
+              deliveryTypeFilter={deliveryTypeFilter}
+              setDeliveryTypeFilter={setDeliveryTypeFilter}
+              paymentMethodFilter={paymentMethodFilter}
+              setPaymentMethodFilter={setPaymentMethodFilter}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              showFilters={showFilters}
+            />
+          </>
         }
       >
         {filteredOrders.length === 0 ? (
