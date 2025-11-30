@@ -23,15 +23,11 @@ app.use((req, res, next) => {
     next();
 });
 
-// Middlewares
-app.use(express.json()); // Cho phép phân tích cú pháp JSON trong body của request
-app.use(express.urlencoded({ extended: true })); // Cho phép phân tích cú pháp URL-encoded trong body của request
 
 app.use(cors({
   origin: [
     'http://localhost:5173',
-    'http://localhost:5174',
-    process.env.FRONTEND_URL,
+     process.env.FRONTEND_URL,
     'https://www.milkybloomtoystore.id.vn',
     'https://milkybloomtoystore.id.vn',
     'https://d1qc4bz6yrxl8k.cloudfront.net',
@@ -51,9 +47,24 @@ app.use(
 );
 
 //thêm passportFacebook
-
 app.use(passportGoogle.initialize());
 app.use(passportGoogle.session());
+
+// Body parsers - skip for multipart/form-data (let multer handle it)
+app.use((req, res, next) => {
+    if (req.is('multipart')) {
+        return next();
+    }
+    express.json({ limit: '50mb' })(req, res, next);
+});
+
+app.use((req, res, next) => {
+    if (req.is('multipart')) {
+        return next();
+    }
+    express.urlencoded({ extended: true, limit: '50mb' })(req, res, next);
+});
+
 app.use((req, res, next) => {
     //trình duyệt luôn dùng https
     res.setHeader(

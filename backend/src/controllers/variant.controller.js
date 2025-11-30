@@ -106,6 +106,42 @@ const removeVariantImages = async (req, res, next) => {
     }
 };
 
+/** Upload variant images directly to S3 (no variantId needed) */
+const uploadVariantImagesToS3 = async (req, res, next) => {
+    try {
+        if (!req.files) {
+            return res.status(400).json({ 
+                success: false,
+                message: 'No files uploaded - req.files is undefined' 
+            });
+        }
+        
+        const files = req.files;
+        if (!files.length) {
+            return res.status(400).json({ 
+                success: false,
+                message: 'No files uploaded - files array is empty' 
+            });
+        }
+
+        const { uploadToS3 } = require('../utils/s3.helper.js');
+        const uploadedUrls = await uploadToS3(files, 'variantImages');
+        
+        res.json({ 
+            success: true, 
+            imageUrls: uploadedUrls,
+            message: `Uploaded ${uploadedUrls.length} images successfully`
+        });
+    } catch (err) {
+        if (!res.headersSent) {
+            res.status(500).json({
+                success: false,
+                message: err.message || 'Failed to upload images'
+            });
+        }
+    }
+};
+
 module.exports = {
     getVariantsByProduct,
     getVariantById,
@@ -114,4 +150,5 @@ module.exports = {
     deleteVariant,
     addVariantImages,
     removeVariantImages,
+    uploadVariantImagesToS3,
 };

@@ -340,62 +340,47 @@ const deleteProduct = async (id) => {
 
 /**
  * Cập nhật thông tin sản phẩm (chỉ các trường được phép trong whitelist)
+ * NOTE: Images are handled separately via addImagesToProduct/removeImagesFromProduct
  */
-const updateProduct = async (id, updateData) => {
-    const existingProduct = await productRepository.findById(id);
-    if (!existingProduct) throw new Error("Product not found");
+const updateProduct = async (id, updateData, retryCount = 0) => {
+    const MAX_RETRIES = 3;
+    const session = await mongoose.startSession();
+    
+    try {
+        // 1. Delete images from S3 if specified
+        if (updateData.deletedImageUrls && Array.isArray(updateData.deletedImageUrls) && updateData.deletedImageUrls.length > 0) {
+            try {
+                await deleteFromS3(updateData.deletedImageUrls);
+            } catch (err) {
+                // Continue even if S3 deletion fails
+            }
+        }
+        
+        const result = await session.withTransaction(async () => {
+            const product = await productRepository.findById(id);
+            if (!product) throw new Error("Product not found");
 
-    const validStatuses = ['Draft', 'Published', 'Archived', 'Disabled'];
+            const allowedUpdates = [
+                'name',
+                'slug',
+                'description',
+                'status',
+                'isFeatured',
+                'categoryId',
+                'imageUrls', // Allow updating image URLs
+            ];
 
-    const allowedUpdates = [
-        'name',
-        'slug',
-        'description',
-        'status',
-        'isFeatured',
-        'categoryId',
-    ];
+            const updatePayload = {};
 
-    const updatePayload = {};
-
-        Object.keys(updateData).forEach(key => {
-            if (allowedUpdates.includes(key)) {
-                // Parse JSON nếu cần (vì FormData gửi mọi thứ là string)
-                if (key === 'categoryId' && typeof updateData[key] === 'string') {
-                    try { updatePayload[key] = JSON.parse(updateData[key]); } catch (e) { updatePayload[key] = updateData[key]; }
-                } else {
+            Object.keys(updateData).forEach(key => {
+                if (allowedUpdates.includes(key)) {
                     updatePayload[key] = updateData[key];
                 }
-            }
-        });
+            });
 
-        // 2. Xử lý Ảnh Product
-        // A. Thêm ảnh mới
-        let currentImages = product.imageUrls || [];
-        if (imgFiles && imgFiles.length > 0) {
-            const newImageUrls = await uploadToS3(imgFiles, 'productImages');
-            currentImages = [...currentImages, ...newImageUrls];
-        }
-
-        // B. Xóa ảnh cũ (nếu frontend gửi danh sách removeImages)
-        if (updateData.removeImages) {
-            let removeList = updateData.removeImages;
-            if (typeof removeList === 'string') {
-                try { removeList = JSON.parse(removeList); } catch (e) { removeList = [removeList]; }
-            }
-            if (Array.isArray(removeList) && removeList.length > 0) {
-                await deleteFromS3(removeList);
-                currentImages = currentImages.filter(url => !removeList.includes(url));
-            }
-        }
-        updatePayload.imageUrls = currentImages;
-
-        // 3. Xử lý Variants (Đồng bộ hóa)
+        // Xử lý Variants (Đồng bộ hóa)
         if (updateData.variants) {
-            let variantsInput = updateData.variants;
-            if (typeof variantsInput === 'string') {
-                try { variantsInput = JSON.parse(variantsInput); } catch (e) { console.error("Parse variants failed"); }
-            }
+            const variantsInput = updateData.variants;
 
             if (Array.isArray(variantsInput)) {
                 const existingVariantIds = (product.variants || []).map(v => v.toString());
@@ -406,10 +391,15 @@ const updateProduct = async (id, updateData) => {
                     const variantData = {
                         price: v.price?.$numberDecimal || v.price,
                         stockQuantity: v.stockQuantity || v.stock, // Support cả 2 tên field
-                        sku: v.sku,
                         attributes: v.attributes,
-                        isActive: v.isActive !== false
+                        isActive: v.isActive !== false,
+                        imageUrls: v.imageUrls || [] // Include variant images
                     };
+                    
+                    // Only include SKU if it's provided and not undefined/null
+                    if (v.sku) {
+                        variantData.sku = v.sku;
+                    }
                     
                     // Collect price for recalculation
                     prices.push(parseFloat(variantData.price));
@@ -445,7 +435,7 @@ const updateProduct = async (id, updateData) => {
                 }
 
                 // Cập nhật danh sách variants ID vào Product
-                // updatePayload.variants = incomingVariantIds; // Cẩn thận chỗ này nếu logic delete phức tạp
+                updatePayload.variants = incomingVariantIds;
 
                 // Cập nhật Min/Max Price
                 if (prices.length > 0) {
@@ -457,14 +447,34 @@ const updateProduct = async (id, updateData) => {
 
         // 4. Lưu Product
         await productRepository.update(id, updatePayload, { session });
-
-        await session.commitTransaction();
         
-        // Trả về data mới nhất
-        return await productRepository.findById(id);
+        // Return updated product from within transaction
+        const Product = mongoose.model('Product');
+        const updatedProduct = await Product.findById(id)
+            .populate([
+                { path: 'categoryId', select: 'name slug description' },
+                { path: 'variants' }
+            ])
+            .session(session);
+        
+        return updatedProduct;
+        
+        }, {
+            readPreference: 'primary',
+            readConcern: { level: 'local' },
+            writeConcern: { w: 'majority' }
+        });
+
+        // Transaction committed successfully
+        return result;
 
     } catch (error) {
-        await session.abortTransaction();
+        // Handle write conflicts with retry
+        if (error.hasErrorLabel && error.hasErrorLabel('TransientTransactionError') && retryCount < MAX_RETRIES) {
+            console.log(`⚠️ Transaction conflict, retrying... (${retryCount + 1}/${MAX_RETRIES})`);
+            await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, retryCount))); // Exponential backoff
+            return updateProduct(id, updateData, retryCount + 1);
+        }
         throw error;
     } finally {
         session.endSession();
