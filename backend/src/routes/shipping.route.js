@@ -3,7 +3,11 @@ const router = express.Router();
 const {
     getShippingFee, // dành cho KH chưa đăng nhập
     calculateShippingFeeByUser, // dành cho KH đã đăng nhập
+    getDeliveryTypes, // lấy danh sách loại giao hàng
 } = require("../controllers/shipping.controller");
+
+// Get available delivery types
+router.get("/delivery-types", getDeliveryTypes);
 
 // FE gửi thông tin địa chỉ tạm → BE tính phí tạm thời
 router.post("/fee", getShippingFee);

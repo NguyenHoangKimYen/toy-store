@@ -60,7 +60,7 @@ const OrderSchema = new mongoose.Schema(
 
         deliveryType: {
             type: String,
-            enum: ["standard", "express"],
+            enum: ["standard", "economy", "express", "expedited"],
             default: "standard",
         },
 
