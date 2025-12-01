@@ -57,9 +57,20 @@ exports.calculateShippingFeeByUser = async (req, res) => {
                 .status(404)
                 .json({ success: false, message: "Không tìm thấy user" });
 
-        // Lấy địa chỉ mặc định
+        // Check if specific addressId is provided, otherwise use default
         let address = null;
-        if (user.defaultAddressId) {
+        const { addressId } = req.query;
+        
+        if (addressId) {
+            // Use the specific address provided
+            address = await Address.findById(addressId).lean();
+            if (!address) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Địa chỉ không tồn tại",
+                });
+            }
+        } else if (user.defaultAddressId) {
             address = await Address.findById(user.defaultAddressId).lean();
         } else {
             address = await Address.findOne({ userId, isDefault: true }).lean();
