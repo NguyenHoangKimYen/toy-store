@@ -123,6 +123,7 @@ export const useProducts = (options = {}) => {
               ? parseFloat(variant.price.$numberDecimal) 
               : (variant.price != null ? parseFloat(variant.price) : 0),
             stock: parseInt(variant.stockQuantity || variant.stock || 0),
+            weight: parseInt(variant.weight) || 100,
             sku: variant.sku || '',
             isActive: variant.isActive !== false,
             imageUrls: variantImageUrls,
@@ -210,6 +211,7 @@ export const useProducts = (options = {}) => {
             ? parseFloat(v.price.$numberDecimal)
             : (v.price != null ? parseFloat(v.price) : 0),
           stockQuantity: v.stockQuantity ?? v.stock ?? 0,
+          weight: parseInt(v.weight) || 100,
           attributes: Array.isArray(v.attributes)
             ? v.attributes
             : Object.entries(v.attributes || {}).map(([name, value]) => ({

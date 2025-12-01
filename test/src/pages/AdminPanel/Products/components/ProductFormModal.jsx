@@ -43,14 +43,16 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
             ...v, 
             attributes: attributesObj,
             stockQuantity: v.stockQuantity ?? v.stock ?? 0,
-            stock: v.stockQuantity ?? v.stock ?? 0
+            stock: v.stockQuantity ?? v.stock ?? 0,
+            weight: v.weight ?? 100
           };
         }
         return { 
           ...v, 
           attributes: v.attributes || {},
           stockQuantity: v.stockQuantity ?? v.stock ?? 0,
-          stock: v.stockQuantity ?? v.stock ?? 0
+          stock: v.stockQuantity ?? v.stock ?? 0,
+          weight: v.weight ?? 100
         };
       });
       
@@ -254,6 +256,15 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
       ...prev,
       variants: prev.variants.map((v, i) =>
         i === index ? { ...v, stockQuantity: parseInt(stock) || 0, stock: parseInt(stock) || 0 } : v
+      ),
+    }));
+  };
+
+  const updateVariantWeight = (index, weight) => {
+    setFormData(prev => ({
+      ...prev,
+      variants: prev.variants.map((v, i) =>
+        i === index ? { ...v, weight: parseInt(weight) || 100 } : v
       ),
     }));
   };
@@ -538,6 +549,7 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
               variants={formData.variants}
               onUpdatePrice={updateVariantPrice}
               onUpdateStock={updateVariantStock}
+              onUpdateWeight={updateVariantWeight}
               onUpdateImage={updateVariantImage}
               onRemove={removeVariant}
             />

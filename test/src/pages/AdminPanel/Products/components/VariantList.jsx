@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import Badge from '@/components/ui/badge';
 import { parsePrice } from '@/utils/priceUtils';
 
-const VariantList = ({ variants, onUpdatePrice, onUpdateStock, onRemove, onUpdateImage }) => {
+const VariantList = ({ variants, onUpdatePrice, onUpdateStock, onUpdateWeight, onRemove, onUpdateImage }) => {
   if (variants.length === 0) return null;
 
   // Handle file selection for variant image
@@ -145,7 +145,7 @@ const VariantList = ({ variants, onUpdatePrice, onUpdateStock, onRemove, onUpdat
                       min='0'
                       placeholder='100'
                       value={variant.weight || 100}
-                      onChange={(e) => onUpdateStock(index, e.target.value)}
+                      onChange={(e) => onUpdateWeight(index, e.target.value)}
                       className='h-9'
                     />
                   </div>
