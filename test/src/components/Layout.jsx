@@ -4,10 +4,13 @@ import { Outlet } from 'react-router-dom'
 import { Fragment } from 'react'
 import { Toaster } from './ui/sonner'
 import Footer from './Footer'
+import ScrollToTop from './ScrollToTop'
 
 const Layout = () => {
     return (
         <div className='min-h-screen flex flex-col overflow-x-hidden w-full relative'>
+            {/* Scroll to top on route change */}
+            <ScrollToTop />
             {/* Animated background from feat2911 */}
             <div className="global-animated-bg animated-gradient" aria-hidden="true" />
             <Navbar />

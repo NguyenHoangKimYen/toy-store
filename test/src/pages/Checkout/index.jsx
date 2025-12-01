@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -55,7 +55,11 @@ const transformCartItem = (item) => {
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const [selectedAddressId, setSelectedAddressId] = useState(null);
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   
   const {
     cartItems,
@@ -75,10 +79,20 @@ const Checkout = () => {
     submitting,
     handlePaymentMethodChange,
     handleDeliveryTypeChange,
+    handleAddressChange,
     handleSubmitOrder,
     handleDiscountApplied,
     handlePointsApplied,
   } = useCheckout();
+
+  // Track selected address locally for form display
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+
+  // When address changes, notify the hook to recalculate shipping
+  const onAddressSelect = useCallback((addressId) => {
+    setSelectedAddressId(addressId);
+    handleAddressChange(addressId);
+  }, [handleAddressChange]);
 
   // Transform cart items for display
   const transformedItems = useMemo(() => {
@@ -86,7 +100,8 @@ const Checkout = () => {
     return cartItems.map(transformCartItem);
   }, [cartItems]);
 
-  if (loading) {
+  // Only show full loading for cart/order loading, not shipping fee updates
+  if (loading && !cartItems?.length) {
     return (
       <div className="checkout-loading">
         <LoadingSpinner />
@@ -149,17 +164,18 @@ const Checkout = () => {
           {/* Shipping Information */}
           <ShippingForm
             selectedAddressId={selectedAddressId}
-            onAddressSelect={setSelectedAddressId}
+            onAddressSelect={onAddressSelect}
           />
 
           {/* Delivery Type Selection */}
           <DeliveryTypeSelector
             deliveryTypes={deliveryTypes}
             selectedType={deliveryType}
-            onChange={handleDeliveryTypeChange}
-            fees={shippingFees}
+            onSelect={handleDeliveryTypeChange}
+            shippingFees={shippingFees}
             weather={shippingWeather}
             loading={shippingLoading}
+            orderValue={subtotal}
           />
 
           {/* Payment Method */}
