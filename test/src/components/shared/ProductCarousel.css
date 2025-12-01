@@ -3,7 +3,7 @@
 :root{
     --item1-transform: translateX(-100%) translateY(-5%) scale(1.5);
     --item1-filter: blur(30px);
-    --item1-zIndex: 11;
+    --item1-zIndex: 1;
     --item1-opacity: 0;
 
     --item2-transform: translateX(0);
@@ -11,19 +11,20 @@
     --item2-zIndex: 10;
     --item2-opacity: 1;
 
-    --item3-transform: translate(50%,10%) scale(0.8);
-    --item3-filter: blur(10px);
-    --item3-zIndex: 9;
+    /* Smaller scale for bigger size gap, lower z-index */
+    --item3-transform: translate(65%,12%) scale(0.55);
+    --item3-filter: blur(8px);
+    --item3-zIndex: 3;
     --item3-opacity: 1;
 
-    --item4-transform: translate(90%,20%) scale(0.5);
-    --item4-filter: blur(30px);
-    --item4-zIndex: 8;
-    --item4-opacity: 1;
+    --item4-transform: translate(105%,22%) scale(0.32);
+    --item4-filter: blur(20px);
+    --item4-zIndex: 2;
+    --item4-opacity: 0.7;
     
-    --item5-transform: translate(120%,30%) scale(0.3);
-    --item5-filter: blur(40px);
-    --item5-zIndex: 7;
+    --item5-transform: translate(135%,30%) scale(0.18);
+    --item5-filter: blur(30px);
+    --item5-zIndex: 1;
     --item5-opacity: 0;
 }
 

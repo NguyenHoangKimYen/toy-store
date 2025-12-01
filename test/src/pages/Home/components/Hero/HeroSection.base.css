@@ -37,7 +37,7 @@
 }
 
 .hero-carousel .list .item:nth-child(2) {
-    z-index: 0;
+    z-index: var(--hero-item2-zIndex, 10);
     transform: translateX(0);
 }
 
@@ -83,20 +83,21 @@
 }
 
 .hero-carousel .list .item .introduce .tag {
-    font-size: 1.1em;
+    font-size: 0.85em;
     font-weight: 700;
     line-height: 1em;
-    letter-spacing: 0.16em;
-    color: var(--accent, #6b21a8);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #ffffff;
     margin-bottom: 0.75em;
-    padding: 8px 14px;
+    padding: 8px 16px;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: rgba(255, 255, 255, 0.8);
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
     border-radius: 999px;
-    border: 1px solid rgba(148, 163, 184, 0.35);
-    box-shadow: 0 12px 26px -18px rgba(99, 102, 241, 0.35);
+    border: none;
+    box-shadow: 0 4px 14px -4px rgba(124, 58, 237, 0.5);
 }
 
 .hero-carousel .list .item .introduce .name {
