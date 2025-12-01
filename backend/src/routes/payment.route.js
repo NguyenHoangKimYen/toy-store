@@ -60,6 +60,8 @@ router.post("/zalopay/:orderId", createZaloPayOrder);
 router.post("/zalopay/callback", zaloPayCallback);
 router.get("/zalopay/return", zaloPayReturn);
 
+// Payment success routes - handle both patterns
 router.get("/success", paymentSuccess);
+router.get("/success/payment/:orderId", paymentSuccess); // Handle redirect URL pattern
 
 module.exports = router;
