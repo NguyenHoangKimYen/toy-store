@@ -74,6 +74,45 @@
   gap: 6px;
 }
 
+/* Nav Link Items - No transform, just underline */
+.nav-link-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0;
+  transition: color 0.2s ease;
+}
+
+.nav-link-item:hover {
+  color: #f97316;
+}
+
+.nav-link-underline {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 60%;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.nav-link-item:hover .nav-link-underline {
+  opacity: 0.5;
+  transform: translateX(-50%) scaleX(1);
+}
+
+.nav-link-active {
+  color: #f97316;
+}
+
+.nav-link-active .nav-link-underline {
+  opacity: 1;
+  transform: translateX(-50%) scaleX(1);
+  background: #f97316;
+}
+
 /* Navbar Logo */
 .navbar-logo {
   transition: opacity 0.2s ease, transform 0.2s ease;

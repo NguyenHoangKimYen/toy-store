@@ -259,12 +259,12 @@ const Navbar = () => {
                 // Special handling for CATEGORIES with dropdown
                 if (label === 'CATEGORIES') {
                     return (
-                        <li key={to} className='group relative flex flex-col items-center gap-1'>
+                        <li key={to} className='nav-link-item group relative'>
                             <div className='flex items-center gap-1 cursor-pointer'>
                                 <p>{label}</p>
                                 <ChevronDown size={14} className='transition-transform group-hover:rotate-180' />
                             </div>
-                            <hr className='w-2/4 border-none h-[1.5px] bg-gray-700 hidden' />
+                            <hr className='nav-link-underline w-2/4 border-none h-[1.5px] bg-gray-700' />
                             
                             {/* Mega Dropdown Menu */}
                             <div className='group-hover:block hidden absolute top-full left-1/2 -translate-x-1/2 pt-4 z-[1100]'>
@@ -344,9 +344,15 @@ const Navbar = () => {
                 
                 // Regular nav links
                 return (
-                    <NavLink key={to} to={to} className='flex flex-col items-center gap-1 text-sm md:text-base font-semibold tracking-tight'>
+                    <NavLink 
+                        key={to} 
+                        to={to} 
+                        className={({ isActive }) => 
+                            `nav-link-item text-sm md:text-base font-semibold tracking-tight ${isActive ? 'nav-link-active' : ''}`
+                        }
+                    >
                         <p className="leading-none">{label}</p>
-                        <hr className='w-2/4 border-none h-[1.5px] bg-gray-700 hidden' />
+                        <hr className='nav-link-underline border-none h-[1.5px] bg-gray-700' />
                     </NavLink>
                 );
             })}
