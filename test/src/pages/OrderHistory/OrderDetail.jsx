@@ -290,9 +290,9 @@ const OrderDetail = () => {
                       <Badge variant={getStatusVariant(item.status)}>{item.status}</Badge>
                     </div>
                     <p className="timeline-date">
-                      {formatDateTime(item.timestamp)}
-                      {formatRelativeTime(item.timestamp) && (
-                        <span className="relative-time">({formatRelativeTime(item.timestamp)})</span>
+                      {formatDateTime(item.updatedAt)}
+                      {formatRelativeTime(item.updatedAt) && (
+                        <span className="relative-time">({formatRelativeTime(item.updatedAt)})</span>
                       )}
                     </p>
                     {item.note && <p className="timeline-note">{item.note}</p>}
