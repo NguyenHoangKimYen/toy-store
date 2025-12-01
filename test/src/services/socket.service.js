@@ -26,6 +26,9 @@ class SocketService {
     // Store event callbacks for socket events
     this.socketCallbacks = new Map(); // event -> Set of callbacks
     
+    // Pending product rooms to join when socket connects
+    this.pendingProductRooms = new Set();
+    
     // Initialize BroadcastChannel for cross-tab sync
     this._initBroadcastChannel();
   }
@@ -85,22 +88,36 @@ class SocketService {
 
     this.socket.on('connect', () => {
       this.connected = true;
+      console.log('📡 [Socket] Connected');
 
       // Join user room
       if (this.userId) {
         this.socket.emit('join_user_room', this.userId);
       }
+      
+      // Join any pending product rooms
+      this.pendingProductRooms.forEach(productId => {
+        this.socket.emit('join_product_room', productId);
+        console.log(`📡 [Socket] Joined pending product room: ${productId}`);
+      });
     });
 
     this.socket.on('disconnect', () => {
       this.connected = false;
+      console.log('📡 [Socket] Disconnected');
     });
 
     this.socket.on('reconnect', () => {
-      // Rejoin room on reconnect
+      console.log('📡 [Socket] Reconnected');
+      // Rejoin user room on reconnect
       if (this.userId) {
         this.socket.emit('join_user_room', this.userId);
       }
+      // Rejoin all product rooms on reconnect
+      this.pendingProductRooms.forEach(productId => {
+        this.socket.emit('join_product_room', productId);
+        console.log(`📡 [Socket] Rejoined product room: ${productId}`);
+      });
     });
 
     this.socket.on('connect_error', () => {
@@ -185,15 +202,28 @@ class SocketService {
 
   // Join a product room for real-time review/comment updates
   joinProductRoom(productId) {
-    if (productId && this.socket?.connected) {
+    if (!productId) return;
+    
+    // Add to pending rooms (will be joined when connected)
+    this.pendingProductRooms.add(productId);
+    
+    // If already connected, join immediately
+    if (this.socket?.connected) {
       this.socket.emit('join_product_room', productId);
       console.log(`📡 [Socket] Joined product room: ${productId}`);
+    } else {
+      console.log(`📡 [Socket] Queued product room (will join on connect): ${productId}`);
     }
   }
 
   // Leave a product room
   leaveProductRoom(productId) {
-    if (productId && this.socket?.connected) {
+    if (!productId) return;
+    
+    // Remove from pending rooms
+    this.pendingProductRooms.delete(productId);
+    
+    if (this.socket?.connected) {
       this.socket.emit('leave_product_room', productId);
       console.log(`📡 [Socket] Left product room: ${productId}`);
     }

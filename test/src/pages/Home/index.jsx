@@ -2,19 +2,18 @@
 import { useHomeData } from './hooks';
 import './Home.css';
 
-// Lazy load sections for better initial load performance
 const HeroSection = lazy(() => import('./components/Hero').then(m => ({ default: m.HeroSection })));
 const ProductShowcaseSection = lazy(() => import('./components/Category').then(m => ({ default: m.ProductShowcaseSection })));
 const CategorizedProductsSection = lazy(() => import('./components/Category').then(m => ({ default: m.CategorizedProductsSection })));
 
-// Loading skeleton component
+/* Loading Skeletons */
 const SectionSkeleton = () => (
-  <div className="home-section">
-    <div className="section-container">
-      <div className="skeleton" style={{ width: '200px', height: '32px', marginBottom: '1.5rem' }} />
-      <div style={{ display: 'flex', gap: '1.25rem', overflow: 'hidden' }}>
+  <div className="py-12 px-4 sm:px-6 lg:px-[5%]">
+    <div className="max-w-[1400px] mx-auto">
+      <div className="skeleton w-48 h-8 mb-6 rounded" />
+      <div className="flex gap-4 sm:gap-5 overflow-hidden">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="skeleton skeleton-card" />
+          <div key={i} className="skeleton w-[220px] h-[320px] flex-shrink-0 rounded-lg" />
         ))}
       </div>
     </div>
@@ -22,20 +21,15 @@ const SectionSkeleton = () => (
 );
 
 const HeroSkeleton = () => (
-  <div className="skeleton" style={{ height: '70vh', minHeight: '500px', maxHeight: '700px' }} />
+  <div className="skeleton h-[70vh] min-h-[500px] max-h-[700px]" />
 );
 
 const Home = () => {
-  const { 
-    featuredProducts, 
-    newProducts, 
-    bestSellers, 
-    loading,
-  } = useHomeData();
+  const { featuredProducts, newProducts, bestSellers, loading } = useHomeData();
 
   return (
-    <div className="home-page">
-      {/* Hero Section */}
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-100 to-slate-200">
+      {/* Hero */}
       {loading.featured ? (
         <HeroSkeleton />
       ) : featuredProducts.length > 0 ? (
@@ -67,7 +61,7 @@ const Home = () => {
       </Suspense>
 
       {/* Shop by Category */}
-      <Suspense fallback={<SectionSkeleton height="500px" />}>
+      <Suspense fallback={<SectionSkeleton />}>
         <CategorizedProductsSection />
       </Suspense>
     </div>

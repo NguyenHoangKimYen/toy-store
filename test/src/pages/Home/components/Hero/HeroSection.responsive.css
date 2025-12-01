@@ -1,4 +1,4 @@
-/* HeroSection Responsive Styles */
+/* Hero Responsive - Breakpoints at 991px, 767px, 390px */
 
 @media screen and (max-width: 991px) {
     .hero-carousel {

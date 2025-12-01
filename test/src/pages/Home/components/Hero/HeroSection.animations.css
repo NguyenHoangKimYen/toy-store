@@ -1,6 +1,6 @@
-/* HeroSection Animations */
+/* Hero Animations - showContent keyframes, next/prev slide transitions */
 
-/* Animation for text in item2 */
+/* Text reveal animation for active slide */
 .hero-carousel .list .item:nth-child(2) .introduce .tag,
 .hero-carousel .list .item:nth-child(2) .introduce .name,
 .hero-carousel .list .item:nth-child(2) .introduce .des,

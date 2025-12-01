@@ -1,11 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { getProducts } from '@/services';
 import { getCategories } from '@/services/categories.service';
 
-/**
- * Custom hook to fetch all home page data in a structured way
- * Reduces multiple useEffect calls and provides unified loading state
- */
+/* Fetches all homepage data in parallel with unified loading states */
 export const useHomeData = () => {
   const [data, setData] = useState({
     featuredProducts: [],
@@ -23,11 +20,9 @@ export const useHomeData = () => {
   
   const [error, setError] = useState(null);
 
-  // Fetch all data on mount
   useEffect(() => {
     const fetchAllData = async () => {
       try {
-        // Fetch all data in parallel for better performance
         const [featuredRes, newRes, bestSellersRes, categoriesRes] = await Promise.allSettled([
           getProducts({ isFeatured: true, limit: 6 }),
           getProducts({ sort: 'createdAt:desc', limit: 8 }),
@@ -62,26 +57,18 @@ export const useHomeData = () => {
       } catch (err) {
         console.error('Error fetching home data:', err);
         setError(err.message);
-        setLoading({
-          featured: false,
-          new: false,
-          bestSellers: false,
-          categories: false,
-        });
+        setLoading({ featured: false, new: false, bestSellers: false, categories: false });
       }
     };
 
     fetchAllData();
   }, []);
 
-  const isLoading = Object.values(loading).some(Boolean);
-  const isFullyLoaded = Object.values(loading).every(v => !v);
-
   return {
     ...data,
     loading,
-    isLoading,
-    isFullyLoaded,
+    isLoading: Object.values(loading).some(Boolean),
+    isFullyLoaded: Object.values(loading).every(v => !v),
     error,
   };
 };

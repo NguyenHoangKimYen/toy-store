@@ -1,4 +1,4 @@
-/* HeroSection Transform & Position Variables */
+/* Hero Transforms - CSS vars for carousel item positions (scale, translate, blur, z-index) */
 :root {
     --hero-item1-transform: translateX(-100%) translateY(-5%) scale(1.5);
     --hero-item1-filter: blur(30px);
@@ -10,7 +10,6 @@
     --hero-item2-zIndex: 10;
     --hero-item2-opacity: 1;
 
-    /* Smaller scale (0.75 -> 0.55) for bigger size gap */
     --hero-item3-transform: translate(65%, 12%) scale(0.55);
     --hero-item3-filter: blur(8px);
     --hero-item3-zIndex: 3;

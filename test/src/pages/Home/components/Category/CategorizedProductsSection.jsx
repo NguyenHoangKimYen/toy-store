@@ -23,32 +23,31 @@ const CategorizedProductsSection = () => {
       try {
         setLoading(productsLoading);
         
-        const categoriesResponse = await getCategories();
-        const allCategories = Array.isArray(categoriesResponse)
-          ? categoriesResponse
-          : (categoriesResponse.categories || categoriesResponse.data || []);
+        const response = await getCategories();
+        const allCategories = Array.isArray(response)
+          ? response
+          : (response.categories || response.data || []);
         
-        // Create category data with products
-        const categoryData = allCategories.map((category) => {
-          const categoryProducts = allProducts.filter(p => 
+        const categoryData = allCategories.map((cat) => {
+          const products = allProducts.filter(p => 
             Array.isArray(p.categoryId) 
-              ? p.categoryId.some(catId => catId === category._id || catId._id === category._id)
-              : p.categoryId === category._id || p.categoryId?._id === category._id
+              ? p.categoryId.some(id => id === cat._id || id._id === cat._id)
+              : p.categoryId === cat._id || p.categoryId?._id === cat._id
           ).slice(0, 10);
           
           return {
-            id: category._id,
-            name: category.name,
-            description: category.description || 'Discover our collection',
-            products: categoryProducts,
-            viewAllLink: `/products?category=${category._id}`,
-            bgImageUrl: category.backgroundImage || '', // Add background images later
+            id: cat._id,
+            name: cat.name,
+            description: cat.description || 'Discover our collection',
+            products,
+            viewAllLink: `/products?category=${cat._id}`,
+            bgImageUrl: cat.backgroundImage || '',
           };
         }).filter(cat => cat.products.length > 0);
         
         setCategories(categoryData);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching categories:', error);
       } finally {
         setLoading(false);
       }
@@ -58,33 +57,17 @@ const CategorizedProductsSection = () => {
   }, [allProducts, productsLoading]);
 
   const scroll = (direction) => {
-    if (scrollRef.current) {
-      const scrollAmount = 800;
-      scrollRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
-    }
+    scrollRef.current?.scrollBy({
+      left: direction === 'left' ? -800 : 800,
+      behavior: 'smooth'
+    });
   };
 
   const scrollTabs = (direction) => {
-    if (tabsScrollRef.current) {
-      const scrollAmount = 300;
-      tabsScrollRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  const handleProductClick = (product) => {
-    navigate(`/products/${product._id}`);
-  };
-
-  const handleViewAll = () => {
-    if (activeCategory?.viewAllLink) {
-      navigate(activeCategory.viewAllLink);
-    }
+    tabsScrollRef.current?.scrollBy({
+      left: direction === 'left' ? -300 : 300,
+      behavior: 'smooth'
+    });
   };
 
   if (loading) {
@@ -95,9 +78,7 @@ const CategorizedProductsSection = () => {
     );
   }
 
-  if (categories.length === 0) {
-    return null;
-  }
+  if (categories.length === 0) return null;
 
   const activeCategory = categories[activeIndex];
   const MAX_VISIBLE_TABS = 6;
@@ -106,7 +87,7 @@ const CategorizedProductsSection = () => {
 
   return (
     <div className="categorized-products-showcase">
-      {/* Background Layer (Animated) */}
+      {/* Animated Background */}
       <AnimatePresence mode="wait">
         <motion.div
           key={activeCategory.id}
@@ -123,12 +104,10 @@ const CategorizedProductsSection = () => {
         />
       </AnimatePresence>
 
-      {/* Overlay */}
       <div className="categorized-products-overlay" />
 
-      {/* Content Layer */}
       <div className="categorized-products-content">
-        {/* Tabs with Scroll */}
+        {/* Category Tabs */}
         <div className="categorized-products-tabs-wrapper">
           {categories.length > 4 && (
             <button 
@@ -174,15 +153,14 @@ const CategorizedProductsSection = () => {
           )}
         </div>
 
-        {/* Title & Description */}
+        {/* Category Header */}
         <div className="categorized-products-header">
           <h2 className="categorized-products-title">{activeCategory.name}</h2>
           <p className="categorized-products-subtitle">{activeCategory.description}</p>
         </div>
 
-        {/* Animated Product List */}
+        {/* Products List */}
         <div className="categorized-products-list-wrapper">
-          {/* Scroll Arrows */}
           {activeCategory.products.length >= 5 && (
             <ScrollArrows 
               onScrollLeft={() => scroll('left')}
@@ -207,7 +185,7 @@ const CategorizedProductsSection = () => {
                     showBadges={false}
                     showCategory={false}
                     showQuickView={false}
-                    onClick={() => handleProductClick(product)}
+                    onClick={() => navigate(`/products/${product._id}`)}
                   />
                 </div>
               ))}
@@ -215,10 +193,10 @@ const CategorizedProductsSection = () => {
           </AnimatePresence>
         </div>
 
-        {/* View More Button */}
+        {/* View All Button */}
         <div className="categorized-products-footer">
           <button
-            onClick={handleViewAll}
+            onClick={() => navigate(activeCategory.viewAllLink)}
             className="categorized-view-more-btn"
           >
             View All <ArrowRight className="ml-2 h-4 w-4 inline" />

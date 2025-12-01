@@ -1,15 +1,9 @@
-/* Product Showcase Section - Clean Design */
-
-.product-showcase {
-  background: transparent;
-}
-
-/* Scroll wrapper with arrows */
+/* Scroll wrapper with positioned buttons */
 .products-scroll-wrapper {
   position: relative;
 }
 
-/* Scroll buttons */
+/* Scroll buttons - positioned absolutely */
 .scroll-btn {
   position: absolute;
   top: 50%;
@@ -38,22 +32,14 @@
   border-color: #cbd5e1;
 }
 
-.scroll-btn-left {
-  left: -20px;
-}
+.scroll-btn-left { left: -20px; }
+.scroll-btn-right { right: -20px; }
 
-.scroll-btn-right {
-  right: -20px;
-}
-
-/* Hide scroll buttons on mobile */
 @media (max-width: 768px) {
-  .scroll-btn {
-    display: none;
-  }
+  .scroll-btn { display: none; }
 }
 
-/* Products horizontal scroll */
+/* Horizontal scroll container - smooth scroll, hidden scrollbar */
 .products-scroll {
   display: flex;
   gap: 1rem;
@@ -64,9 +50,7 @@
   padding: 0.5rem 0;
 }
 
-.products-scroll::-webkit-scrollbar {
-  display: none;
-}
+.products-scroll::-webkit-scrollbar { display: none; }
 
 .products-scroll .product-card {
   flex-shrink: 0;
@@ -74,36 +58,11 @@
 }
 
 @media (min-width: 640px) {
-  .products-scroll {
-    gap: 1.25rem;
-  }
-  
-  .products-scroll .product-card {
-    width: 220px;
-  }
+  .products-scroll { gap: 1.25rem; }
+  .products-scroll .product-card { width: 220px; }
 }
 
 @media (min-width: 1024px) {
-  .products-scroll {
-    gap: 1.5rem;
-  }
-  
-  .products-scroll .product-card {
-    width: 240px;
-  }
-}
-
-/* Skeleton loading */
-.product-showcase .skeleton-card {
-  flex-shrink: 0;
-  width: 220px;
-  height: 320px;
-  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-  background-size: 200% 100%;
-  animation: skeleton-shimmer 1.5s ease-in-out infinite;
-}
-
-@keyframes skeleton-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  .products-scroll { gap: 1.5rem; }
+  .products-scroll .product-card { width: 240px; }
 }

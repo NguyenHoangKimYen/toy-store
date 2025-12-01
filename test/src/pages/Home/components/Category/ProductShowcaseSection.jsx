@@ -25,34 +25,29 @@ const ProductShowcaseSection = ({
     }
   };
 
-  const handleViewAll = () => {
-    navigate(viewAllLink);
-  };
-
-  const handleProductClick = (product) => {
-    navigate(`/products/${product._id}`);
-  };
-
   if (!loading && (!products || products.length === 0)) return null;
 
   return (
-    <section className="home-section product-showcase">
-      <div className="section-container">
+    <section className="py-8 px-4 sm:py-12 sm:px-6 lg:py-16 lg:px-[5%]">
+      <div className="max-w-[1400px] mx-auto">
         {/* Header */}
-        <div className="section-header">
-          <div className="section-title-group">
-            <h2 className="section-title">{title}</h2>
-            {subtitle && <p className="section-subtitle">{subtitle}</p>}
+        <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-2xl md:text-[1.75rem] font-bold text-slate-800 tracking-tight">{title}</h2>
+            {subtitle && <p className="text-sm text-slate-500">{subtitle}</p>}
           </div>
           {showViewAll && (
-            <button onClick={handleViewAll} className="view-all-btn">
+            <button 
+              onClick={() => navigate(viewAllLink)} 
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-800 transition-all"
+            >
               View All
               <ArrowRight size={16} />
             </button>
           )}
         </div>
 
-        {/* Products */}
+        {/* Products Scroll */}
         <div className="products-scroll-wrapper">
           <button 
             className="scroll-btn scroll-btn-left"
@@ -65,7 +60,7 @@ const ProductShowcaseSection = ({
           <div ref={scrollRef} className="products-scroll">
             {loading ? (
               [...Array(6)].map((_, i) => (
-                <div key={i} className="skeleton skeleton-card" />
+                <div key={i} className="skeleton w-[200px] sm:w-[220px] lg:w-[240px] h-[320px] flex-shrink-0 rounded-lg" />
               ))
             ) : (
               products.slice(0, 12).map((product) => (
@@ -75,7 +70,7 @@ const ProductShowcaseSection = ({
                   showBadges={true}
                   showCategory={false}
                   showQuickView={false}
-                  onClick={handleProductClick}
+                  onClick={() => navigate(`/products/${product._id}`)}
                 />
               ))
             )}
