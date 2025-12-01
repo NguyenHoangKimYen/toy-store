@@ -110,6 +110,12 @@ const OrderSchema = new mongoose.Schema(
             default: 0,
         },
 
+        // Track if discount code usage has been counted (to prevent double counting)
+        _discountCodeMarkedUsed: {
+            type: Boolean,
+            default: false,
+        },
+
         // Trạng thái hiện tại của đơn hàng
         status: {
             type: String,

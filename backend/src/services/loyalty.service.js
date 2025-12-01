@@ -52,7 +52,7 @@ const handleOrderCompleted = async (userId, orderAmount, orderId) => {
 
     // 2. Cập nhật tier
     const newTier = getTierFromSpent(user.spentLast12Months);
-    user.loyaltyTier = newTier;
+    user.loyaltyRank = newTier;
 
     // 3. Tính coin thưởng
     const multiplier = getCoinMultiplier(newTier);
@@ -84,7 +84,7 @@ const handleOrderCompleted = async (userId, orderAmount, orderId) => {
     });
 
     return {
-        tier: user.loyaltyTier,
+        tier: user.loyaltyRank,
         earnedCoins,
         currentPoints: user.loyaltyPoints,
         newBadges, // <-- ⭐ trả về cho controller
@@ -94,7 +94,7 @@ const handleOrderCompleted = async (userId, orderAmount, orderId) => {
 //Lấy thông tin loyalty của user
 const getMyLoyaltyInfo = async (userId) => {
     const user = await User.findById(userId).select(
-        "loyaltyTier loyaltyPoints lifetimeSpent spentLast12Months",
+        "loyaltyRank loyaltyPoints lifetimeSpent spentLast12Months",
     );
     if (!user) throw new Error('User not found');
     return user;
@@ -114,7 +114,7 @@ const MONTHLY_VOUCHERS = {
 };
 
 async function giveMonthlyVoucher(user) {
-    const tier = user.loyaltyTier;
+    const tier = user.loyaltyRank;
     if (!tier || tier === 'none') return null;
 
     const now = new Date();

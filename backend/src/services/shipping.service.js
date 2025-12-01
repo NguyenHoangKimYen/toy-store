@@ -281,8 +281,8 @@ async function calculateShippingFee(
     let discountFromTier = 0;
 
     if (address?.userId) {
-        const user = await User.findById(address.userId).select('loyaltyTier');
-        if (user) tier = user.loyaltyTier || 'none';
+        const user = await User.findById(address.userId).select('loyaltyRank');
+        if (user) tier = user.loyaltyRank || 'none';
     }
 
     discountFromTier = applyLoyaltyToShipping(tier, baseFee, deliveryType);

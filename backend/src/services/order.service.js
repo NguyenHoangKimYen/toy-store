@@ -539,6 +539,43 @@ module.exports = {
 
         await historyRepo.add(orderId, newStatus);
 
+        // ⭐ Mark discount code as used when order is confirmed
+        if (
+            newStatus === 'confirmed' &&
+            updated.discountCodeId &&
+            !updated._discountCodeMarkedUsed
+        ) {
+            try {
+                // Re-validate usage limit before marking as used (prevents race condition)
+                const canUse = await discountCodeService.checkUsageLimit(updated.discountCodeId);
+                if (canUse) {
+                    await discountCodeService.markUsed(updated.discountCodeId);
+                    // Mark order so we don't double-increment on subsequent status changes
+                    await orderRepository.update(orderId, { _discountCodeMarkedUsed: true });
+                    console.log(`[Order ${orderId}] Marked discount code ${updated.discountCodeId} as used`);
+                } else {
+                    console.warn(`[Order ${orderId}] Discount code ${updated.discountCodeId} has reached usage limit`);
+                }
+            } catch (err) {
+                console.error('Failed to mark discount code as used:', err);
+            }
+        }
+
+        // ⭐ Handle order cancellation - restore discount code usage
+        if (
+            newStatus === 'cancelled' &&
+            updated.discountCodeId &&
+            updated._discountCodeMarkedUsed
+        ) {
+            try {
+                await discountCodeService.decrementUsedCount(updated.discountCodeId);
+                await orderRepository.update(orderId, { _discountCodeMarkedUsed: false });
+                console.log(`[Order ${orderId}] Restored discount code ${updated.discountCodeId} usage`);
+            } catch (err) {
+                console.error('Failed to restore discount code usage:', err);
+            }
+        }
+
         // Nếu đơn hoàn tất
         if (newStatus === 'completed' || newStatus === 'delivered') {
             // ⭐ Update totalUnitsSold for each product in the order
