@@ -16,8 +16,17 @@ const increaseUsedCount = async (id) => {
     );
 };
 
+const decreaseUsedCount = async (id) => {
+    return DiscountCode.findByIdAndUpdate(
+        id,
+        { $inc: { usedCount: -1 } },
+        { new: true },
+    );
+};
+
 module.exports = {
   findById,
   findByCode,
   increaseUsedCount,
+  decreaseUsedCount,
 };

@@ -81,8 +81,8 @@ module.exports = {
 
         // Check tier restriction
         if (userId) {
-            const user = await User.findById(userId).select('loyaltyTier');
-            const userTier = user?.loyaltyTier || 'none';
+            const user = await User.findById(userId).select('loyaltyRank');
+            const userTier = user?.loyaltyRank || 'none';
 
             if (!isTierEligible(userTier, code.requiredTier)) {
                 throw new Error('DISCOUNT_TIER_NOT_ELIGIBLE');
@@ -116,8 +116,8 @@ module.exports = {
 
         // Check tier restriction
         if (userId) {
-            const user = await User.findById(userId).select("loyaltyTier");
-            const userTier = user?.loyaltyTier || "none";
+            const user = await User.findById(userId).select("loyaltyRank");
+            const userTier = user?.loyaltyRank || "none";
 
             if (!isTierEligible(userTier, doc.requiredTier)) {
                 throw new Error("DISCOUNT_TIER_NOT_ELIGIBLE");
@@ -138,5 +138,17 @@ module.exports = {
 
     async markUsed(discountCodeId) {
         await discountRepo.increaseUsedCount(discountCodeId);
+    },
+
+    async decrementUsedCount(discountCodeId) {
+        await discountRepo.decreaseUsedCount(discountCodeId);
+    },
+
+    async checkUsageLimit(discountCodeId) {
+        const code = await discountRepo.findById(discountCodeId);
+        if (!code) return false;
+        
+        // Check if code has remaining usage
+        return code.usedCount < code.usageLimit;
     },
 };
