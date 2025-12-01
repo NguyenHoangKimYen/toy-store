@@ -10,12 +10,15 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const DiscountCodeModal = ({ code, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     code: '',
     value: '',
     usageLimit: 1,
+    requiredTier: 'none',
+    expiresAt: '',
   })
   const [errors, setErrors] = useState({})
 
@@ -25,6 +28,8 @@ const DiscountCodeModal = ({ code, onClose, onSave }) => {
         code: code.code || '',
         value: parseFloat(code.value?.$numberDecimal || code.value || 0).toString(),
         usageLimit: code.usageLimit || 1,
+        requiredTier: code.requiredTier || 'none',
+        expiresAt: code.expiresAt ? new Date(code.expiresAt).toISOString().split('T')[0] : '',
       })
     }
   }, [code])
@@ -32,11 +37,11 @@ const DiscountCodeModal = ({ code, onClose, onSave }) => {
   const validateForm = () => {
     const newErrors = {}
 
-    // Code validation (5 characters, alphanumeric)
+    // Code validation (8-12 characters, alphanumeric)
     if (!formData.code) {
       newErrors.code = 'Code is required'
-    } else if (!/^[A-Z0-9]{5}$/.test(formData.code.toUpperCase())) {
-      newErrors.code = 'Code must be exactly 5 alphanumeric characters'
+    } else if (!/^[A-Z0-9]{8,12}$/.test(formData.code.toUpperCase())) {
+      newErrors.code = 'Code must be 8-12 alphanumeric characters'
     }
 
     // Value validation
@@ -64,11 +69,15 @@ const DiscountCodeModal = ({ code, onClose, onSave }) => {
       return
     }
 
-    onSave({
+    const saveData = {
       code: formData.code.toUpperCase(),
       value: parseFloat(formData.value),
       usageLimit: parseInt(formData.usageLimit),
-    })
+      requiredTier: formData.requiredTier,
+      expiresAt: formData.expiresAt ? new Date(formData.expiresAt).toISOString() : null,
+    }
+
+    onSave(saveData)
   }
 
   return (
@@ -89,8 +98,8 @@ const DiscountCodeModal = ({ code, onClose, onSave }) => {
               id="code"
               value={formData.code}
               onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-              placeholder="ABCD1"
-              maxLength={5}
+              placeholder="DISCOUNT01"
+              maxLength={12}
               className="font-mono text-lg"
               disabled={!!code} // Can't edit code once created
             />
@@ -98,13 +107,13 @@ const DiscountCodeModal = ({ code, onClose, onSave }) => {
               <p className="text-sm text-destructive">{errors.code}</p>
             )}
             <p className="text-xs text-muted-foreground">
-              5 alphanumeric characters (letters and numbers only)
+              8-12 alphanumeric characters (letters and numbers only)
             </p>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="value">
-              Discount Value ($) <span className="text-destructive">*</span>
+              Discount Value (₫) <span className="text-destructive">*</span>
             </Label>
             <Input
               id="value"
@@ -138,6 +147,45 @@ const DiscountCodeModal = ({ code, onClose, onSave }) => {
             )}
             <p className="text-xs text-muted-foreground">
               Maximum 10 uses per code
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="requiredTier">
+              Required Loyalty Tier
+            </Label>
+            <Select
+              value={formData.requiredTier}
+              onValueChange={(value) => setFormData({ ...formData, requiredTier: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select tier" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None (Everyone)</SelectItem>
+                <SelectItem value="silver">Silver+</SelectItem>
+                <SelectItem value="gold">Gold+</SelectItem>
+                <SelectItem value="diamond">Diamond Only</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Restrict code to specific loyalty tiers
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="expiresAt">
+              Expiration Date (Optional)
+            </Label>
+            <Input
+              id="expiresAt"
+              type="date"
+              value={formData.expiresAt}
+              onChange={(e) => setFormData({ ...formData, expiresAt: e.target.value })}
+              min={new Date().toISOString().split('T')[0]}
+            />
+            <p className="text-xs text-muted-foreground">
+              Leave empty for no expiration
             </p>
           </div>
 

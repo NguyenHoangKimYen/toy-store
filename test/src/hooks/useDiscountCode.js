@@ -25,10 +25,11 @@ export const useDiscountCode = (orderTotal = 0) => {
       return false;
     }
 
-    // Check format first (5 alphanumeric characters)
-    const isValid = /^[A-Z0-9]{5}$/i.test(codeToValidate.trim());
+    // Check format first (8-12 alphanumeric characters)
+    const trimmedCode = codeToValidate.trim();
+    const isValid = /^[A-Z0-9]{8,12}$/i.test(trimmedCode);
     if (!isValid) {
-      setError('Invalid code format. Code must be 5 alphanumeric characters.');
+      setError('Invalid code format. Code must be 8-12 alphanumeric characters.');
       return false;
     }
 

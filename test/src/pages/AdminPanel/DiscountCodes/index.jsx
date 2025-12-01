@@ -159,15 +159,18 @@ const DiscountCodes = () => {
               {filteredCodes.map((code) => {
                 const usagePercentage = getUsagePercentage(code)
                 const isFullyUsed = code.usedCount >= code.usageLimit
+                const isExpired = code.expiresAt && new Date(code.expiresAt) < new Date()
+                const isDisabled = isFullyUsed || isExpired
 
                 return (
-                  <Card key={code._id} className={`hover:shadow-md transition-shadow ${isFullyUsed ? 'opacity-60' : ''}`}>
+                  <Card key={code._id} className={`hover:shadow-md transition-shadow ${isDisabled ? 'opacity-60' : ''}`}>
                     <CardContent className="p-3 sm:p-4 space-y-2 sm:space-y-3">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <span className="text-lg sm:text-2xl font-bold font-mono truncate">{code.code}</span>
-                            {isFullyUsed && <Badge variant="secondary">Expired</Badge>}
+                            {isFullyUsed && <Badge variant="secondary">Limit Reached</Badge>}
+                            {isExpired && !isFullyUsed && <Badge variant="destructive">Expired</Badge>}
                           </div>
                           <p className="text-base sm:text-xl font-semibold text-primary">
                             {parseFloat(code.value?.$numberDecimal || code.value || 0).toLocaleString()}₫ OFF
@@ -217,6 +220,24 @@ const DiscountCodes = () => {
                             style={{ width: `${usagePercentage}%` }}
                           />
                         </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {code.requiredTier && code.requiredTier !== 'none' && (
+                          <Badge variant="outline" className="text-xs">
+                            {code.requiredTier.charAt(0).toUpperCase() + code.requiredTier.slice(1)}+
+                          </Badge>
+                        )}
+                        {code.expiresAt && (
+                          <Badge 
+                            variant={new Date(code.expiresAt) < new Date() ? 'destructive' : 'secondary'} 
+                            className="text-xs"
+                          >
+                            {new Date(code.expiresAt) < new Date() 
+                              ? 'Expired' 
+                              : `Expires ${new Date(code.expiresAt).toLocaleDateString()}`}
+                          </Badge>
+                        )}
                       </div>
 
                       <div className="text-xs text-muted-foreground pt-2 border-t">

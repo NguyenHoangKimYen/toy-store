@@ -53,7 +53,7 @@ const DiscountCodeInput = ({ orderTotal, onDiscountApplied }) => {
   }, [appliedCode, discountAmount, isApplied]);
 
   const handleInputChange = (e) => {
-    const value = e.target.value.toUpperCase().slice(0, 5);
+    const value = e.target.value.toUpperCase().slice(0, 12);
     setLocalCode(value);
     updateCode(value);
   };
