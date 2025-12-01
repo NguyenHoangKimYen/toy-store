@@ -391,6 +391,7 @@ const updateProduct = async (id, updateData, retryCount = 0) => {
                     const variantData = {
                         price: v.price?.$numberDecimal || v.price,
                         stockQuantity: v.stockQuantity || v.stock, // Support cả 2 tên field
+                        weight: parseInt(v.weight) || 100,
                         attributes: v.attributes,
                         isActive: v.isActive !== false,
                         imageUrls: v.imageUrls || [] // Include variant images
