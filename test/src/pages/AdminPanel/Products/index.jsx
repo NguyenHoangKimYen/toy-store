@@ -25,7 +25,7 @@ import {
 const Products = () => {
   const [activeTab, setActiveTab] = useState('products')
   const [searchQuery, setSearchQuery] = useState('')
-  const debouncedSearch = useDebounce(searchQuery, 400) // Debounce search input
+  const debouncedSearch = useDebounce(searchQuery, 500) // Debounce search input
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isFormModalOpen, setIsFormModalOpen] = useState(false)
@@ -178,37 +178,37 @@ const Products = () => {
   }
 
   const headerCard = (
-    <div className='admin-card bg-white/85 backdrop-blur-md border border-purple-100/70 rounded-2xl shadow-[0_18px_42px_-28px_rgba(124,58,237,0.22)] p-5 md:p-6'>
-      <div className='flex flex-col gap-4'>
-        <div className='flex flex-col gap-3 md:flex-row md:items-start md:justify-between'>
+    <div className='admin-card bg-white/85 backdrop-blur-md border border-purple-100/70 rounded-2xl shadow-[0_18px_42px_-28px_rgba(124,58,237,0.22)] p-4 sm:p-5 md:p-6'>
+      <div className='flex flex-col gap-3 sm:gap-4'>
+        <div className='flex flex-col gap-3'>
           <div className='space-y-1'>
-            <h2 className='text-2xl font-semibold text-slate-900'>Product Management</h2>
-            <p className='text-sm text-slate-500'>Manage product inventory and listings</p>
+            <h2 className='text-xl sm:text-2xl font-semibold text-slate-900'>Product Management</h2>
+            <p className='text-xs sm:text-sm text-slate-500'>Manage product inventory and listings</p>
           </div>
-          <div className='w-full md:w-auto grid grid-cols-12 gap-3 items-center'>
-            <label className='col-span-12 md:col-span-7 lg:col-span-8 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/85 border border-purple-100/80 shadow-inner backdrop-blur-sm'>
-              <Search className='w-4 h-4 text-slate-400' />
+          <div className='flex flex-col sm:flex-row gap-2 sm:gap-3'>
+            <label className='flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/85 border border-purple-100/80 shadow-inner backdrop-blur-sm'>
+              <Search className='w-4 h-4 text-slate-400 flex-shrink-0' />
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder='Search products'
+                placeholder='Search products...'
                 className='w-full bg-transparent outline-none text-sm text-slate-700 placeholder:text-slate-400'
               />
             </label>
-            <div className='col-span-12 md:col-span-5 lg:col-span-4 flex justify-end gap-2'>
+            <div className='flex gap-2'>
               <button
                 onClick={() => setShowFilters((v) => !v)}
                 className='px-3 py-2 rounded-xl border border-purple-100/80 bg-white/80 text-slate-700 hover:bg-purple-50 transition flex items-center gap-2'
               >
                 <Filter className='w-4 h-4' />
-                <span>Filter</span>
+                <span className='hidden sm:inline'>Filter</span>
               </button>
               <button 
                 onClick={handleAddProduct}
                 className='px-3 py-2 rounded-xl border border-purple-100/80 bg-white/80 text-slate-700 hover:bg-purple-50 transition flex items-center gap-2'
               >
                 <Plus className='w-4 h-4' />
-                <span>Add Product</span>
+                <span className='hidden sm:inline'>Add</span>
               </button>
             </div>
           </div>

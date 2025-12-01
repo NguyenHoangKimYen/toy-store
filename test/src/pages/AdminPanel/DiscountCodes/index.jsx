@@ -18,7 +18,7 @@ const DiscountCodes = () => {
   const [codes, setCodes] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const debouncedSearch = useDebounce(searchTerm, 400) // Debounce search input
+  const debouncedSearch = useDebounce(searchTerm, 500) // Debounce search input
   const [sortBy, setSortBy] = useState('newest')
   const [selectedCode, setSelectedCode] = useState(null)
   const [showModal, setShowModal] = useState(false)
@@ -113,32 +113,30 @@ const DiscountCodes = () => {
   }
 
   const headerCard = (
-    <div className="admin-card bg-white/85 backdrop-blur-md border border-purple-100/70 rounded-2xl shadow-[0_18px_42px_-28px_rgba(124,58,237,0.22)] p-5 md:p-6">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+    <div className="admin-card bg-white/85 backdrop-blur-md border border-purple-100/70 rounded-2xl shadow-[0_18px_42px_-28px_rgba(124,58,237,0.22)] p-4 sm:p-5 md:p-6">
+      <div className="flex flex-col gap-3 sm:gap-4">
+        <div className="flex flex-col gap-3">
           <div className="space-y-1">
-            <h2 className="text-2xl font-semibold text-slate-900">Discount Codes</h2>
-            <p className="text-sm text-slate-500">Create and manage discount codes for customers</p>
+            <h2 className="text-xl sm:text-2xl font-semibold text-slate-900">Discount Codes</h2>
+            <p className="text-xs sm:text-sm text-slate-500">Create and manage discount codes for customers</p>
           </div>
-          <div className="w-full md:w-auto grid grid-cols-12 gap-3 items-center">
-            <label className="col-span-12 md:col-span-7 lg:col-span-8 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/85 border border-purple-100/80 shadow-inner backdrop-blur-sm">
-              <Search className="w-4 h-4 text-slate-400" />
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            <label className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/85 border border-purple-100/80 shadow-inner backdrop-blur-sm">
+              <Search className="w-4 h-4 text-slate-400 flex-shrink-0" />
               <input
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search discount codes..."
+                placeholder="Search codes..."
                 className="w-full bg-transparent outline-none text-sm text-slate-700 placeholder:text-slate-400"
               />
             </label>
-            <div className="col-span-12 md:col-span-5 lg:col-span-4 flex justify-end gap-2">
-              <button
-                onClick={handleCreate}
-                className="px-3 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-sky-400 text-white shadow-[0_10px_26px_-14px_rgba(124,58,237,0.35)] hover:brightness-105 transition flex items-center gap-2"
-              >
-                <Plus size={16} />
-                <span>New Code</span>
-              </button>
-            </div>
+            <button
+              onClick={handleCreate}
+              className="px-3 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-sky-400 text-white shadow-[0_10px_26px_-14px_rgba(124,58,237,0.35)] hover:brightness-105 transition flex items-center justify-center gap-2"
+            >
+              <Plus size={16} />
+              <span className="sm:inline">New Code</span>
+            </button>
           </div>
         </div>
       </div>
@@ -157,28 +155,29 @@ const DiscountCodes = () => {
             No discount codes found
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {filteredCodes.map((code) => {
                 const usagePercentage = getUsagePercentage(code)
                 const isFullyUsed = code.usedCount >= code.usageLimit
 
                 return (
                   <Card key={code._id} className={`hover:shadow-md transition-shadow ${isFullyUsed ? 'opacity-60' : ''}`}>
-                    <CardContent className="p-4 space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-2xl font-bold font-mono">{code.code}</span>
+                    <CardContent className="p-3 sm:p-4 space-y-2 sm:space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <span className="text-lg sm:text-2xl font-bold font-mono truncate">{code.code}</span>
                             {isFullyUsed && <Badge variant="secondary">Expired</Badge>}
                           </div>
-                          <p className="text-xl font-semibold text-primary">
+                          <p className="text-base sm:text-xl font-semibold text-primary">
                             {parseFloat(code.value?.$numberDecimal || code.value || 0).toLocaleString()}₫ OFF
                           </p>
                         </div>
-                        <div className="flex gap-1">
+                        <div className="flex gap-1 flex-shrink-0">
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="h-8 w-8"
                             onClick={() => handleViewOrders(code)}
                             title="View orders using this code"
                           >
@@ -187,6 +186,7 @@ const DiscountCodes = () => {
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="h-8 w-8"
                             onClick={() => handleEdit(code)}
                           >
                             <Edit size={16} />
@@ -194,6 +194,7 @@ const DiscountCodes = () => {
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="h-8 w-8"
                             onClick={() => handleDelete(code)}
                           >
                             <Trash2 size={16} className="text-destructive" />

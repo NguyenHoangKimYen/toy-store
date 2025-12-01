@@ -116,6 +116,14 @@
   .admin-panel-sidebar {
     width: 240px;
   }
+  
+  .admin-dashboard-shell {
+    padding: 12px;
+  }
+  
+  .admin-card {
+    padding: 14px;
+  }
 }
 
 /* Mobile */
@@ -166,6 +174,19 @@
   .admin-panel-content {
     border-radius: 8px;
   }
+  
+  .admin-dashboard-shell {
+    padding: 8px;
+  }
+  
+  .admin-card {
+    padding: 12px;
+    border-radius: 6px;
+  }
+  
+  .admin-page-content {
+    gap: 12px;
+  }
 }
 
 /* Small mobile */
@@ -182,5 +203,43 @@
     width: 44px;
     height: 44px;
     margin-bottom: 0.5rem;
+  }
+  
+  .admin-dashboard-shell {
+    padding: 6px;
+  }
+  
+  .admin-card {
+    padding: 10px;
+  }
+  
+  .admin-page-content {
+    gap: 8px;
+  }
+}
+
+/* Responsive header styles */
+@media (max-width: 768px) {
+  .admin-card h2 {
+    font-size: 1.25rem;
+  }
+  
+  .admin-card p {
+    font-size: 0.75rem;
+  }
+}
+
+/* Products grid responsive */
+@media (max-width: 640px) {
+  .admin-products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .admin-products-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
   }
 }

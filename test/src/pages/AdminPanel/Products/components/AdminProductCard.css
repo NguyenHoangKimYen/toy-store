@@ -247,3 +247,154 @@
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   }
 }
+
+/* Tablet */
+@media (max-width: 768px) {
+  .admin-products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  
+  .admin-product-content {
+    padding: 10px;
+  }
+  
+  .admin-product-name {
+    font-size: 13px;
+    min-height: auto;
+    -webkit-line-clamp: 2;
+  }
+  
+  .admin-product-price {
+    font-size: 14px;
+  }
+  
+  .admin-product-meta {
+    gap: 8px;
+    padding: 8px 0;
+  }
+  
+  .admin-product-actions {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  
+  .admin-product-action-btn {
+    padding: 6px;
+    font-size: 11px;
+  }
+  
+  .admin-product-action-btn span {
+    display: none;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .admin-products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  
+  .admin-product-content {
+    padding: 8px;
+    gap: 4px;
+  }
+  
+  .admin-product-category {
+    font-size: 9px;
+  }
+  
+  .admin-product-name {
+    font-size: 11px;
+    min-height: auto;
+    -webkit-line-clamp: 1;
+  }
+  
+  .admin-product-price {
+    font-size: 12px;
+  }
+  
+  .admin-product-original-price {
+    font-size: 10px;
+  }
+  
+  .admin-product-meta {
+    gap: 6px;
+    padding: 6px 0;
+    flex-wrap: wrap;
+  }
+  
+  .admin-product-stock,
+  .admin-product-sold,
+  .admin-product-rating {
+    font-size: 10px;
+  }
+  
+  .admin-product-status {
+    padding: 2px 6px;
+    font-size: 9px;
+  }
+  
+  .admin-product-actions {
+    padding: 6px 8px;
+    gap: 4px;
+  }
+  
+  .admin-product-action-btn {
+    padding: 5px;
+    font-size: 10px;
+  }
+  
+  .admin-product-badges {
+    top: 4px;
+    left: 4px;
+  }
+  
+  .admin-product-badge {
+    padding: 2px 5px;
+    font-size: 8px;
+  }
+  
+  .admin-product-checkbox {
+    top: 4px;
+    right: 4px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Extra small mobile */
+@media (max-width: 360px) {
+  .admin-products-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .admin-product-card {
+    flex-direction: row;
+    height: auto;
+  }
+  
+  .admin-product-image {
+    width: 100px;
+    min-width: 100px;
+    aspect-ratio: 1;
+    border-bottom: none;
+    border-right: 1px solid #e2e8f0;
+  }
+  
+  .admin-product-content {
+    padding: 10px;
+    flex: 1;
+  }
+  
+  .admin-product-name {
+    font-size: 12px;
+    -webkit-line-clamp: 2;
+  }
+  
+  .admin-product-actions {
+    flex-wrap: nowrap;
+  }
+}
