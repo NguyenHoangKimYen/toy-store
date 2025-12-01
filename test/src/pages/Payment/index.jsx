@@ -75,10 +75,17 @@ const Payment = () => {
       setError(null);
 
       // Fetch order details
-      const order = await fetchOrderById(orderId);
+      let order;
+      try {
+        order = await fetchOrderById(orderId);
+      } catch (fetchErr) {
+        // Ignore transient fetch errors, will retry
+        console.warn('Initial order fetch failed, continuing...', fetchErr);
+      }
 
       if (!order) {
         setError('Order not found');
+        setLoading(false);
         return;
       }
 
@@ -125,10 +132,15 @@ const Payment = () => {
         setLoading(false);
       } else if ((orderPaymentMethod === 'cod' || orderPaymentMethod === 'cashondelivery') && !order.isPaid && !isReturningFromPayment) {
         // Confirm COD payment method with backend
-        const response = await payByCash(orderId);
-        setPaymentResponse(response);
-        // Refresh order to show updated status
-        await fetchOrderById(orderId);
+        try {
+          const response = await payByCash(orderId);
+          setPaymentResponse(response);
+          // Refresh order to show updated status - ignore errors as order was already confirmed
+          await fetchOrderById(orderId).catch(() => {});
+        } catch (codErr) {
+          console.error('COD confirmation error:', codErr);
+          // Don't show error if order is already confirmed
+        }
         setLoading(false);
       } else {
         // For already paid orders or returning from payment

@@ -257,13 +257,15 @@ export const useCheckout = () => {
       // Submit order via cart checkout
       const order = await checkoutCart(checkoutData);
 
+      // Get order ID first before clearing cart
+      const orderId = order._id || order.id;
+
       // Clear cart after successful order
       await clearAllItems();
 
-      // Get order ID
-      const orderId = order._id || order.id;
-
       // Redirect based on payment method
+      // NOTE: Don't set submitting=false here, let the navigation happen while still "submitting"
+      // This prevents the "Your cart is empty" flash
       if (paymentMethod === 'cod' || paymentMethod === 'cashondelivery') {
         try {
           await payByCash(orderId);
@@ -277,10 +279,14 @@ export const useCheckout = () => {
         });
         navigate(`/orders/${orderId}`, {
           state: { orderSuccess: true },
+          replace: true, // Prevent going back to checkout
         });
       } else {
-        navigate(`/payment/${orderId}`);
+        navigate(`/payment/${orderId}`, { replace: true });
       }
+      
+      // Keep submitting true - component will unmount during navigation
+      return;
     } catch (err) {
       console.error('Error submitting order:', err);
       const errorMessage = err.message || 'Failed to submit order. Please try again.';
@@ -288,7 +294,7 @@ export const useCheckout = () => {
       toast.error('Order failed', {
         description: errorMessage,
       });
-    } finally {
+      // Only set submitting false on error
       setSubmitting(false);
     }
   };

@@ -100,6 +100,13 @@ const Checkout = () => {
     return cartItems.map(transformCartItem);
   }, [cartItems]);
 
+  // Redirect to cart if cart is empty (and not loading/submitting)
+  useEffect(() => {
+    if (!loading && !submitting && (!transformedItems || transformedItems.length === 0)) {
+      navigate(ROUTES.CART, { replace: true });
+    }
+  }, [loading, submitting, transformedItems, navigate]);
+
   // Only show full loading for cart/order loading, not shipping fee updates
   if (loading && !cartItems?.length) {
     return (
@@ -128,12 +135,12 @@ const Checkout = () => {
     );
   }
 
+  // If cart is empty, redirect to cart page (which has the empty cart UI)
+  // Show loading while redirect happens
   if (!transformedItems || transformedItems.length === 0) {
     return (
-      <div className="checkout-empty">
-        <h2>Your cart is empty</h2>
-        <p>Add some products to checkout</p>
-        <Button onClick={() => navigate(ROUTES.PRODUCTS)}>Browse Products</Button>
+      <div className="checkout-loading">
+        <LoadingSpinner />
       </div>
     );
   }
