@@ -6,7 +6,7 @@ import {
   addItemToCart,
   removeItemFromCart,
   clearCart,
-  socketService,
+  socketService, // Keep for BroadcastChannel only
 } from "@/services";
 
 /**
@@ -33,7 +33,7 @@ export function useCart(userId = null) {
     return sessionId;
   }, []);
 
-  const fetchCart = useCallback(async (silent = false) => {
+  const fetchCart = useCallback(async (silent = false, broadcast = false) => {
     if (!silent) setLoading(true);
     setError(null);
     
@@ -59,10 +59,20 @@ export function useCart(userId = null) {
           }
         });
         serverQuantitiesRef.current = serverQtys;
+        
+        // Broadcast to other tabs if requested
+        if (broadcast) {
+          socketService.broadcastCartUpdate({ cart: cartData });
+        }
       } else {
         setCart(null);
         setItems([]);
         serverQuantitiesRef.current = {};
+        
+        // Broadcast empty cart to other tabs if requested
+        if (broadcast) {
+          socketService.broadcastCartUpdate({ cart: null });
+        }
       }
     } catch (err) {
       if (err.response?.status !== 404) {
@@ -87,6 +97,38 @@ export function useCart(userId = null) {
     setItems([]);
     return newCart;
   }, [cart, userId, getSessionId]);
+
+  // Helper to update local state from API response and broadcast instantly
+  const updateCartState = useCallback((cartData, shouldBroadcast = true) => {
+    if (cartData) {
+      setCart(cartData);
+      const cartItems = cartData.items || [];
+      setItems(cartItems);
+      
+      // Update server quantities ref
+      const serverQtys = {};
+      cartItems.forEach((item) => {
+        const variantId = item.variant?._id || item.variant?.id || item.variantId;
+        if (variantId) {
+          serverQtys[variantId] = item.quantity;
+        }
+      });
+      serverQuantitiesRef.current = serverQtys;
+      
+      // Broadcast instantly to other tabs
+      if (shouldBroadcast) {
+        socketService.broadcastCartUpdate({ cart: cartData });
+      }
+    } else {
+      setCart(null);
+      setItems([]);
+      serverQuantitiesRef.current = {};
+      
+      if (shouldBroadcast) {
+        socketService.broadcastCartUpdate({ cart: null });
+      }
+    }
+  }, []);
 
   const updateItemQuantity = useCallback(
     async (variantId, newQuantity) => {
@@ -128,27 +170,30 @@ export function useCart(userId = null) {
         setItemLoading((prev) => ({ ...prev, [variantId]: true }));
 
         try {
+          let updatedCart;
           if (diff > 0) {
-            await addItemToCart({ cartId, variantId, quantity: diff });
+            updatedCart = await addItemToCart({ cartId, variantId, quantity: diff });
           } else {
-            await removeItemFromCart(cartId, { variantId, quantity: Math.abs(diff) });
+            updatedCart = await removeItemFromCart(cartId, { variantId, quantity: Math.abs(diff) });
           }
           
           // Update server quantity ref
           serverQuantitiesRef.current[variantId] = targetQty;
           delete pendingQuantitiesRef.current[variantId];
-          // Socket will trigger refetch for all devices
+          
+          // Use API response directly + broadcast instantly (no refetch!)
+          updateCartState(updatedCart);
         } catch (err) {
           console.error("Failed to update quantity:", err);
           setError(err.message || "Failed to update quantity");
           delete pendingQuantitiesRef.current[variantId];
-          await fetchCart(true);
+          await fetchCart(true, false);
         } finally {
           setItemLoading((prev) => ({ ...prev, [variantId]: false }));
         }
       }, 300); // Wait 300ms after last change
     },
-    [cart, fetchCart]
+    [cart, fetchCart, updateCartState]
   );
 
   const addItem = useCallback(
@@ -161,17 +206,18 @@ export function useCart(userId = null) {
         const currentCart = await ensureCart();
         const cartId = currentCart._id || currentCart.id;
 
-        await addItemToCart({ cartId, variantId, quantity });
-        await fetchCart(true);
+        const updatedCart = await addItemToCart({ cartId, variantId, quantity });
+        // Use API response directly + broadcast instantly (no refetch!)
+        updateCartState(updatedCart);
       } catch (err) {
         console.error("Failed to add item:", err);
         setError(err.message || "Failed to add item");
-        await fetchCart(true);
+        await fetchCart(true, false);
       } finally {
         setItemLoading((prev) => ({ ...prev, [variantId]: false }));
       }
     },
-    [ensureCart, fetchCart]
+    [ensureCart, fetchCart, updateCartState]
   );
 
   const removeItem = useCallback(
@@ -182,17 +228,18 @@ export function useCart(userId = null) {
       setItemLoading((prev) => ({ ...prev, [variantId]: true }));
 
       try {
-        await removeItemFromCart(cartId, { variantId, quantity });
-        await fetchCart(true);
+        const updatedCart = await removeItemFromCart(cartId, { variantId, quantity });
+        // Use API response directly + broadcast instantly (no refetch!)
+        updateCartState(updatedCart);
       } catch (err) {
         console.error("Failed to remove item:", err);
         setError(err.message || "Failed to remove item");
-        await fetchCart(true);
+        await fetchCart(true, false);
       } finally {
         setItemLoading((prev) => ({ ...prev, [variantId]: false }));
       }
     },
-    [cart, fetchCart]
+    [cart, fetchCart, updateCartState]
   );
 
   const removeItemCompletely = useCallback(
@@ -214,31 +261,27 @@ export function useCart(userId = null) {
 
     setLoading(true);
     try {
-      await clearCart(cartId);
-      setItems([]);
-      await fetchCart(true);
+      const updatedCart = await clearCart(cartId);
+      // Use API response directly + broadcast instantly
+      updateCartState(updatedCart || { ...cart, items: [] });
     } catch (err) {
       console.error("Failed to clear cart:", err);
       setError(err.message || "Failed to clear cart");
-      await fetchCart(true);
+      await fetchCart(true, false);
     } finally {
       setLoading(false);
     }
-  }, [cart, fetchCart]);
+  }, [cart, fetchCart, updateCartState]);
 
   // Initial fetch
   useEffect(() => {
     fetchCart();
   }, [fetchCart]);
 
-  // Socket.io - Listen for updates from other devices
+  // BroadcastChannel - Listen for cart updates from other tabs (same browser only)
   useEffect(() => {
-    if (!userId) return;
-
-    socketService.connect(userId);
-
-    const handleCartUpdate = (data) => {
-      // Use the cart data directly from socket (no extra API call)
+    const handleBroadcastUpdate = (data) => {
+      // Use the cart data directly from broadcast (no extra API call)
       if (data?.cart) {
         const cartItems = data.cart.items || [];
         
@@ -247,7 +290,7 @@ export function useCart(userId = null) {
           (typeof cartItems[0] === 'object' && cartItems[0] !== null);
         
         if (!isPopulated) {
-          fetchCart(true);
+          fetchCart(true, false); // Silent fetch, no broadcast
           return;
         }
         
@@ -263,18 +306,24 @@ export function useCart(userId = null) {
           }
         });
         serverQuantitiesRef.current = serverQtys;
+      } else if (data?.cart === null) {
+        // Cart was cleared in another tab
+        setCart(null);
+        setItems([]);
+        serverQuantitiesRef.current = {};
       } else {
-        // Fallback: refetch if no cart data in socket
-        fetchCart(true);
+        // Fallback: refetch if no cart data in broadcast
+        fetchCart(true, false); // Silent fetch, no broadcast
       }
     };
 
-    socketService.on('cart_updated', handleCartUpdate);
+    // Subscribe to BroadcastChannel updates (same browser tabs only)
+    const unsubscribe = socketService.onCartUpdate(handleBroadcastUpdate);
 
     return () => {
-      socketService.off('cart_updated', handleCartUpdate);
+      unsubscribe();
     };
-  }, [userId, fetchCart]);
+  }, [fetchCart]);
 
   // Cart summary
   const cartSummary = {
