@@ -3,6 +3,9 @@ const router = express.Router();
 const loyaltyController = require('../controllers/loyalty.controller');
 const auth = require('../middlewares/auth.middleware');
 
+// Get loyalty tier configuration (public)
+router.get("/config", loyaltyController.getConfig);
+
 // Lấy thông tin loyalty của mình
 router.get("/me", auth, loyaltyController.getMyLoyalty);
 
