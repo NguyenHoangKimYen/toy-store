@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const HeroSlide = ({ product }) => {
+const HeroSlide = ({ product, isFirst = false }) => {
   const navigate = useNavigate();
 
   const handleShopNow = () => {
@@ -20,7 +20,12 @@ const HeroSlide = ({ product }) => {
 
   return (
     <div className="item">
-      <img src={productImage} alt={product.name} loading="lazy" />
+      <img 
+        src={productImage} 
+        alt={product.name} 
+        loading={isFirst ? "eager" : "lazy"}
+        fetchPriority={isFirst ? "high" : "auto"}
+      />
       <div className="introduce">
         <div className="tag">Top Picks</div>
         <div className="name">{product.name || 'Featured Product'}</div>

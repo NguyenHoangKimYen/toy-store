@@ -70,10 +70,11 @@ const HeroSection = ({ featuredProducts }) => {
   return (
     <div className="hero-carousel" ref={carouselRef}>
       <div className="list" ref={listRef}>
-        {featuredProducts.slice(0, 6).map((product) => (
+        {featuredProducts.slice(0, 6).map((product, index) => (
           <HeroSlide 
             key={product._id} 
             product={product}
+            isFirst={index === 0}
           />
         ))}
       </div>
