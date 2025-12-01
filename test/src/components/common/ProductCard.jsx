@@ -51,7 +51,14 @@ const ProductCard = ({
     categoryName = product.categoryId;
   }
   
-  const totalStock = product.totalStock ?? 0;
+  // Calculate total stock: use variants sum if available, fallback to totalStock field
+  const hasVariantsForStock = product.variants && product.variants.length > 0;
+  const totalStock = hasVariantsForStock 
+    ? product.variants.reduce((sum, v) => sum + (v.stockQuantity || 0), 0)
+    : (product.totalStock ?? product.stockQuantity ?? 0);
+  
+  // Sold count for bestsellers
+  const soldCount = product.totalUnitsSold || product.soldCount || 0;
 
   const handleCardClick = () => {
     onClick?.(product);
@@ -101,6 +108,12 @@ const ProductCard = ({
           <div className="product-price">
             <span className="current-price">{priceDisplay}</span>
           </div>
+          
+          {soldCount > 0 && (
+            <span className="product-sold" style={{ fontSize: '12px', color: '#64748b', marginRight: 'auto' }}>
+              {soldCount.toLocaleString()} sold
+            </span>
+          )}
           
           {onAddToCart ? (
             <button 

@@ -63,13 +63,20 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
 }
 
 .product-price {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
+}
+
+.product-sold {
+  font-size: 12px;
+  color: #64748b;
+  flex-shrink: 0;
 }
 
 .current-price {

@@ -88,14 +88,20 @@
 
 .admin-product-meta {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
   align-items: center;
   padding: 10px 0;
   border-top: 1px solid #e2e8f0;
   margin-top: auto;
 }
 
-.admin-product-stock {
+.admin-product-stock,
+.admin-product-sold,
+.admin-product-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
   color: #64748b;
 }
@@ -103,6 +109,14 @@
 .admin-product-stock.low {
   color: #dc2626;
   font-weight: 500;
+}
+
+.admin-product-sold {
+  color: #0891b2;
+}
+
+.admin-product-rating {
+  color: #d97706;
 }
 
 .admin-product-status {

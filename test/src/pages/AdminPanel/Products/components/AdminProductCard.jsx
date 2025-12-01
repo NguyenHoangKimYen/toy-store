@@ -97,6 +97,10 @@ const AdminProductCard = ({
                 </span>
               </div>
             )}
+            <div className="admin-product-sold">
+              <span>📦</span>
+              <span>Sold: {(product.totalUnitsSold || 0).toLocaleString()}</span>
+            </div>
             {showRating && product.averageRating !== undefined && (
               <div className="admin-product-rating">
                 <span>⭐</span>
