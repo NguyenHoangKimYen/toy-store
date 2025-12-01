@@ -1,6 +1,19 @@
 const loyaltyService = require('../services/loyalty.service');
 
 module.exports = {
+    // Get loyalty configuration (tiers, benefits, etc.)
+    async getConfig(req, res) {
+        try {
+            const config = loyaltyService.getLoyaltyConfig();
+            return res.json({ success: true, data: config });
+        } catch (err) {
+            console.error(err);
+            return res
+                .status(400)
+                .json({ success: false, message: err.message });
+        }
+    },
+
     async getMyLoyalty(req, res) {
         try {
             const userId = req.user.id;

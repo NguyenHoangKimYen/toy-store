@@ -12,6 +12,61 @@ const TIER_RULE = [
     { tier: 'none', min: 0 },
 ];
 
+// Tier benefits configuration
+const TIER_BENEFITS = {
+    none: {
+        name: 'Member',
+        color: '#94a3b8',
+        coinMultiplier: 0.25,
+        shippingDiscount: 0,
+        exclusiveOffers: false,
+        prioritySupport: false,
+        monthlyVoucher: 0,
+    },
+    silver: {
+        name: 'Silver',
+        color: '#9ca3af',
+        coinMultiplier: 0.5,
+        shippingDiscount: 5,
+        exclusiveOffers: true,
+        prioritySupport: false,
+        monthlyVoucher: 5000,
+    },
+    gold: {
+        name: 'Gold',
+        color: '#f59e0b',
+        coinMultiplier: 1.0,
+        shippingDiscount: 10,
+        exclusiveOffers: true,
+        prioritySupport: true,
+        monthlyVoucher: 10000,
+    },
+    diamond: {
+        name: 'Diamond',
+        color: '#06b6d4',
+        coinMultiplier: 1.5,
+        shippingDiscount: 15,
+        exclusiveOffers: true,
+        prioritySupport: true,
+        monthlyVoucher: 15000,
+    },
+};
+
+/**
+ * Get loyalty configuration for frontend display
+ */
+const getLoyaltyConfig = () => {
+    return {
+        tiers: TIER_RULE.map(rule => ({
+            tier: rule.tier,
+            minSpent: rule.min,
+            ...TIER_BENEFITS[rule.tier],
+        })),
+        coinRate: 1000, // 1000₫ = 1 coin base
+        coinValue: 1, // 1 coin = 1₫ discount
+    };
+};
+
 //Xác định tier dựa theo tổng chi tiêu 12 tháng gần nhất
 const getTierFromSpent = (spentLast12Months) => {
     for (const rule of TIER_RULE) {
@@ -180,4 +235,6 @@ module.exports = {
     getCoinMultiplier,
     giveMonthlyVoucher,
     redeemCoins,
+    getLoyaltyConfig,
+    TIER_BENEFITS,
 };
