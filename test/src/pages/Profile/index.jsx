@@ -1,5 +1,5 @@
 import React, { useState, lazy, Suspense } from 'react';
-import { User, Mail, Phone, MapPin, Camera, Save } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Camera, Save, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/common';
 import { toast } from 'sonner';
@@ -9,6 +9,7 @@ import './Profile.css';
 const PersonalInfoSection = lazy(() => import('./components/PersonalInfoSection'));
 const AddressSection = lazy(() => import('./components/AddressSection'));
 const SecuritySection = lazy(() => import('./components/SecuritySection'));
+const LoyaltySection = lazy(() => import('./components/LoyaltySection'));
 
 const Profile = () => {
   const { user, loading, error, updateProfile, updateAvatar } = useProfile();
@@ -92,6 +93,11 @@ const Profile = () => {
                   {user.socialProvider}
                 </span>
               )}
+              {user.loyaltyRank && user.loyaltyRank !== 'none' && (
+                <span className={`badge tier tier-${user.loyaltyRank}`}>
+                  <Crown size={12} /> {user.loyaltyRank.charAt(0).toUpperCase() + user.loyaltyRank.slice(1)}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -107,8 +113,8 @@ const Profile = () => {
             </div>
           )}
           <div className="stat-item">
-            <MapPin size={20} />
-            <span>Loyalty Points: {user.loyaltyPoints || 0}</span>
+            <Crown size={20} />
+            <span>{(user.loyaltyPoints || 0).toLocaleString()} Coins</span>
           </div>
         </div>
       </div>
@@ -136,18 +142,30 @@ const Profile = () => {
             <Save size={18} />
             Security
           </button>
+          <button
+            className={`tab-btn ${activeTab === 'loyalty' ? 'active' : ''}`}
+            onClick={() => setActiveTab('loyalty')}
+          >
+            <Crown size={18} />
+            Loyalty
+          </button>
         </div>
 
         <div className="profile-tab-content">
-          {activeTab === 'personal' && (
-            <PersonalInfoSection user={user} onUpdate={updateProfile} />
-          )}
-          {activeTab === 'address' && (
-            <AddressSection user={user} />
-          )}
-          {activeTab === 'security' && (
-            <SecuritySection user={user} />
-          )}
+          <Suspense fallback={<LoadingSpinner />}>
+            {activeTab === 'personal' && (
+              <PersonalInfoSection user={user} onUpdate={updateProfile} />
+            )}
+            {activeTab === 'address' && (
+              <AddressSection user={user} />
+            )}
+            {activeTab === 'security' && (
+              <SecuritySection user={user} />
+            )}
+            {activeTab === 'loyalty' && (
+              <LoyaltySection user={user} />
+            )}
+          </Suspense>
         </div>
       </div>
     </div>

@@ -135,6 +135,27 @@
   text-transform: capitalize;
 }
 
+.badge.tier {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.badge.tier-silver {
+  background: #f3f4f6;
+  color: #64748b;
+}
+
+.badge.tier-gold {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.badge.tier-diamond {
+  background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+  color: #4f46e5;
+}
+
 .profile-stats {
   display: flex;
   gap: 2rem;
