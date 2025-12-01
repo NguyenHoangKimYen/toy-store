@@ -96,6 +96,16 @@ const Checkout = () => {
     );
   }
 
+  // Show loading during order submission (even if cart is empty due to clearing)
+  if (submitting) {
+    return (
+      <div className="checkout-loading">
+        <LoadingSpinner />
+        <p style={{ marginTop: '1rem', color: '#666' }}>Placing your order...</p>
+      </div>
+    );
+  }
+
   if (!transformedItems || transformedItems.length === 0) {
     return (
       <div className="checkout-empty">
