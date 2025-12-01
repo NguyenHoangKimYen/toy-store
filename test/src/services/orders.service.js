@@ -29,11 +29,23 @@ export const getOrderById = async (orderId) => {
   // Check if user is authenticated
   const token = localStorage.getItem('authToken');
   
-  // Use guest endpoint if not authenticated
-  const endpoint = token ? `/orders/${orderId}` : `/orders/${orderId}/guest`;
-  
-  const response = await apiClient.get(endpoint);
-  return response;
+  if (token) {
+    // Authenticated user - backend will verify ownership
+    const response = await apiClient.get(`/orders/${orderId}`);
+    return response;
+  } else {
+    // Guest user - pass sessionId and stored email for verification
+    const sessionId = localStorage.getItem('sessionId');
+    const guestEmail = localStorage.getItem('guestEmail'); // Set during guest checkout
+    
+    const response = await apiClient.get(`/orders/${orderId}/guest`, {
+      params: { 
+        sessionId,
+        email: guestEmail 
+      }
+    });
+    return response;
+  }
 };
 
 // Create order directly

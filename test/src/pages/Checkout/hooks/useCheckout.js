@@ -228,7 +228,14 @@ export const useCheckout = () => {
       let checkoutData;
       
       if (isGuestAddress) {
-        const sessionId = localStorage.getItem('guestSessionId');
+        // Use the same sessionId as the cart (not guestSessionId)
+        const sessionId = localStorage.getItem('sessionId');
+        
+        // Store guest email for order verification later
+        if (addressId.email) {
+          localStorage.setItem('guestEmail', addressId.email);
+        }
+        
         checkoutData = {
           sessionId,
           guestInfo: {

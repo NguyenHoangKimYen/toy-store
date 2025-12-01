@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { ChevronLeft, Package, MapPin, CreditCard, Clock, History, Truck, Cloud } from 'lucide-react';
+import { ChevronLeft, Package, MapPin, CreditCard, Clock, History, Truck, Cloud, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { LoadingSpinner, ErrorMessage } from '@/components/common';
+import { LoadingSpinner, NotFoundPage } from '@/components/common';
 import { useOrders } from '@/hooks';
 import { formatPrice } from '@/utils';
 import { ROUTES } from '@/config/routes';
@@ -58,10 +58,13 @@ const OrderDetail = () => {
 
   if (error || !currentOrder) {
     return (
-      <div className="order-detail-error">
-        <ErrorMessage message={error || 'Order not found'} />
-        <Button onClick={() => navigate(ROUTES.ORDER_HISTORY)}>Back to Orders</Button>
-      </div>
+      <NotFoundPage
+        icon={ShoppingBag}
+        title="Order Not Found"
+        message="This order doesn't exist or you don't have permission to view it."
+        homeRoute={ROUTES.ORDER_HISTORY}
+        homeLabel="View My Orders"
+      />
     );
   }
 

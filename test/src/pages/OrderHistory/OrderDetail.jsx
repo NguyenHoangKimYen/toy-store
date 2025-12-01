@@ -1,8 +1,9 @@
 import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Package, MapPin, CreditCard, Clock, TrendingUp, CloudRain, Sun, Cloud, Wind, Star, Calendar, Hash, Truck, CheckCircle, XCircle, AlertCircle, Wallet, Receipt, Copy } from 'lucide-react';
+import { ArrowLeft, Package, MapPin, CreditCard, Clock, TrendingUp, CloudRain, Sun, Cloud, Wind, Star, Calendar, Hash, Truck, CheckCircle, XCircle, AlertCircle, Wallet, Receipt, Copy, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Badge from '@/components/ui/badge';
+import { NotFoundPage } from '@/components/common';
 import { formatPrice } from '@/utils/formatPrice';
 import { ROUTES } from '@/config/routes';
 import { useOrderDetail } from './hooks/useOrderDetail';
@@ -126,25 +127,15 @@ const OrderDetail = () => {
     );
   }
 
-  if (error) {
+  if (error || !order) {
     return (
-      <div className="order-detail-container">
-        <div className="error-message">
-          <p>{error}</p>
-          <Button onClick={() => navigate(ROUTES.ORDER_HISTORY)}>Back to Orders</Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!order) {
-    return (
-      <div className="order-detail-container">
-        <div className="error-message">
-          <p>Order not found</p>
-          <Button onClick={() => navigate(ROUTES.ORDER_HISTORY)}>Back to Orders</Button>
-        </div>
-      </div>
+      <NotFoundPage
+        icon={ShoppingBag}
+        title="Order Not Found"
+        message="This order doesn't exist or you don't have permission to view it."
+        homeRoute={ROUTES.ORDER_HISTORY}
+        homeLabel="View My Orders"
+      />
     );
   }
 

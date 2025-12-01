@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle, Clock, XCircle, QrCode } from 'lucide-react';
+import { CheckCircle, Clock, XCircle, QrCode, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { LoadingSpinner, ErrorMessage } from '@/components/common';
+import { LoadingSpinner, NotFoundPage } from '@/components/common';
 import { useOrders } from '@/hooks';
 import { getVietQR, customerConfirmVietQR, createMomoPayment, createZaloPayOrder, zaloPayReturn, payByCash } from '@/services';
 import { formatPrice } from '@/utils';
@@ -179,10 +179,13 @@ const Payment = () => {
 
   if (error) {
     return (
-      <div className="payment-error">
-        <ErrorMessage message={error} />
-        <Button onClick={() => navigate(`/orders/${orderId}`)}>View Order</Button>
-      </div>
+      <NotFoundPage
+        icon={ShoppingBag}
+        title="Order Not Found"
+        message="This order doesn't exist or you don't have permission to view it."
+        homeRoute={ROUTES.ORDER_HISTORY}
+        homeLabel="View My Orders"
+      />
     );
   }
 
