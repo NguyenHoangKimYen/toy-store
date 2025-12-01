@@ -15,7 +15,7 @@ const ImageGalleryManager = ({
   onAddFiles,
   onRemoveFile,
   uploading = false,
-  label = 'Product Images *',
+  label = 'Product Images',
   maxFiles = 10,
 }) => {
   const [inputMode, setInputMode] = useState('file'); // 'file' or 'url'

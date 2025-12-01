@@ -89,28 +89,6 @@ const CategoryManager = ({ categories, onAdd, onRemove }) => {
       <label className='text-sm font-medium text-gray-700 dark:text-gray-300'>
         Categories *
       </label>
-      
-      {/* Selected Categories */}
-      {categories.length > 0 && (
-        <div className='flex flex-wrap gap-2 p-2 bg-gray-50 dark:bg-gray-900 rounded-md'>
-          {categories.map((categoryId, index) => (
-            <Badge key={index} variant='secondary' className='flex items-center gap-1'>
-              {getCategoryName(categoryId)}
-              <button
-                type='button'
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onRemove(index);
-                }}
-                className='ml-1 hover:bg-red-100 dark:hover:bg-red-900 rounded-full p-0.5 transition-colors'
-              >
-                <X className='w-3 h-3 text-gray-500 hover:text-red-600' />
-              </button>
-            </Badge>
-          ))}
-        </div>
-      )}
 
       {/* Add Category Section */}
       <div className='relative'>
@@ -137,21 +115,21 @@ const CategoryManager = ({ categories, onAdd, onRemove }) => {
             type='button' 
             onClick={() => setIsCreatingNew(!isCreatingNew)} 
             size='sm'
-            variant={isCreatingNew ? 'secondary' : 'outline'}
+            variant={isCreatingNew ? 'destructive' : 'outline'}
           >
-            <Plus className='w-4 h-4 mr-1' />
+            {isCreatingNew ? <X className='w-4 h-4 mr-1' /> : <Plus className='w-4 h-4 mr-1' />}
             {isCreatingNew ? 'Cancel' : 'New'}
           </Button>
         </div>
 
         {/* Dropdown for existing categories */}
-        {showDropdown && searchQuery && (
+        {showDropdown && (
           <div className='absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-48 overflow-y-auto'>
             {loading ? (
               <div className='p-3 text-sm text-gray-500 text-center'>Loading...</div>
             ) : filteredCategories.length === 0 ? (
               <div className='p-3 text-sm text-gray-500 text-center'>
-                No categories found. Click "New" to create one.
+                {searchQuery ? 'No categories found. Click "New" to create one.' : 'No available categories. Click "New" to create one.'}
               </div>
             ) : (
               filteredCategories.map((cat) => (
@@ -204,6 +182,28 @@ const CategoryManager = ({ categories, onAdd, onRemove }) => {
           className='fixed inset-0 z-0' 
           onClick={() => setShowDropdown(false)}
         />
+      )}
+
+      {/* Selected Categories */}
+      {categories.length > 0 && (
+        <div className='flex flex-wrap gap-2 p-2 bg-gray-50 dark:bg-gray-900 rounded-md'>
+          {categories.map((categoryId, index) => (
+            <Badge key={index} variant='secondary' className='flex items-center gap-1'>
+              {getCategoryName(categoryId)}
+              <button
+                type='button'
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onRemove(index);
+                }}
+                className='ml-1 hover:bg-red-100 dark:hover:bg-red-900 rounded-full p-0.5 transition-colors'
+              >
+                <X className='w-3 h-3 text-gray-500 hover:text-red-600' />
+              </button>
+            </Badge>
+          ))}
+        </div>
       )}
     </div>
   );

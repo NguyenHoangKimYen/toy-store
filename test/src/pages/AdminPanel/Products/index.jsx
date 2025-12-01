@@ -168,14 +168,19 @@ const Products = () => {
   };
 
   const handleSaveProduct = async (productData) => {
-    if (formMode === 'create') {
-      await createProduct(productData)
-    } else {
-      await updateProduct(selectedProduct._id, productData)
+    try {
+      if (formMode === 'create') {
+        await createProduct(productData);
+      } else {
+        await updateProduct(selectedProduct._id, productData);
+      }
+      setIsFormModalOpen(false);
+      setSelectedProduct(null);
+    } catch (error) {
+      // Error is already handled by the hook with toast
+      console.error('Save product failed:', error);
     }
-    setIsFormModalOpen(false)
-    setSelectedProduct(null)
-  }
+  };
 
   const headerCard = (
     <div className='admin-card bg-white/85 backdrop-blur-md border border-purple-100/70 rounded-2xl shadow-[0_18px_42px_-28px_rgba(124,58,237,0.22)] p-4 sm:p-5 md:p-6'>
