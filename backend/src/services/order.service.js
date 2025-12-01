@@ -18,6 +18,7 @@ const discountCodeService = require("../services/discount-code.service");
 const { checkAndAssignBadges } = require("../services/badge.service");
 const voucherRepository = require("../repositories/voucher.repository");
 const userVoucherRepository = require("../repositories/user-voucher.repository");
+const Product = require("../models/product.model");
 
 const VERIFY_TTL_MINUTES = Number(process.env.VERIFY_TTL_MINUTES || 15);
 const BACKEND_URL =
@@ -540,6 +541,22 @@ module.exports = {
 
         // Nếu đơn hoàn tất
         if (newStatus === 'completed' || newStatus === 'delivered') {
+            // ⭐ Update totalUnitsSold for each product in the order
+            try {
+                const orderItems = await itemRepo.findByOrder(orderId);
+                for (const item of orderItems) {
+                    if (item.productId) {
+                        const productId = typeof item.productId === 'object' ? item.productId._id : item.productId;
+                        await Product.findByIdAndUpdate(productId, {
+                            $inc: { totalUnitsSold: item.quantity }
+                        });
+                    }
+                }
+                console.log(`[Order ${orderId}] Updated totalUnitsSold for ${orderItems.length} products`);
+            } catch (err) {
+                console.error('Failed to update totalUnitsSold:', err);
+            }
+
             if (updated.userId && updated.totalAmount) {
                 const goodsAmount =
                     updated.totalAmount -
