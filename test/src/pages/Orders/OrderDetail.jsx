@@ -281,12 +281,17 @@ const OrderDetail = () => {
             {order.items?.map((item, index) => {
               const itemUnitPrice = parseDecimal(item.unitPrice);
               const itemSubtotal = parseDecimal(item.subtotal);
+              // Get product image - check multiple possible locations
+              const productImage = item.productId?.imageUrls?.[0] || 
+                                   item.variantId?.imageUrls?.[0] || 
+                                   item.productId?.images?.[0] || 
+                                   '/placeholder-product.png';
               
               return (
                 <div key={index} className="order-item">
                   <div className="item-info">
                     <img
-                      src={item.productId?.images?.[0] || '/placeholder-product.png'}
+                      src={productImage}
                       alt={item.productId?.name || 'Product'}
                       className="item-image"
                     />

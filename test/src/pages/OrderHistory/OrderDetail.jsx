@@ -78,12 +78,13 @@ const getPaymentMethodInfo = (method) => {
 const getPaymentStatusInfo = (status) => {
   const statuses = {
     'paid': { label: 'Paid', variant: 'success', icon: CheckCircle },
+    'unpaid': { label: 'Unpaid', variant: 'secondary', icon: AlertCircle },
     'pending': { label: 'Pending', variant: 'secondary', icon: AlertCircle },
     'failed': { label: 'Failed', variant: 'destructive', icon: XCircle },
     'refunded': { label: 'Refunded', variant: 'default', icon: Wallet },
   };
   const key = (status || '').toLowerCase();
-  return statuses[key] || { label: status || 'Unknown', variant: 'secondary', icon: AlertCircle };
+  return statuses[key] || { label: status || 'Unpaid', variant: 'secondary', icon: AlertCircle };
 };
 
 const getWeatherIcon = (condition) => {

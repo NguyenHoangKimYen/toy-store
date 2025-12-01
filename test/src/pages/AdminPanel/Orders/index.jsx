@@ -35,6 +35,7 @@ const Orders = () => {
         deliveryType: deliveryTypeFilter !== 'all' ? deliveryTypeFilter : undefined,
         paymentMethod: paymentMethodFilter !== 'all' ? paymentMethodFilter : undefined,
         sortBy: sortBy || 'newest', // Send sort to backend
+        limit: 1000, // Fetch more orders for admin panel (default is 20)
       }
       const response = await getAllOrders(params)
       // Backend returns { success: true, orders: [...] }

@@ -114,7 +114,6 @@ const AdminProductCard = ({
           {onClick && (
             <button className="action-btn action-view" onClick={handleCardClick}>
               <Eye size={16} />
-              <span>View</span>
             </button>
           )}
           {onEdit && (
