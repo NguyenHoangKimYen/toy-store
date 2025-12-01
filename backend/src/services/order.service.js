@@ -103,24 +103,31 @@ module.exports = {
             deliveryType,
         } = payload;
 
+        // Validate delivery type
+        const validDeliveryTypes = ['economy', 'standard', 'express', 'expedited'];
         let finalDeliveryType = deliveryType;
-        if (!['standard', 'express'].includes(finalDeliveryType)) {
+        if (!validDeliveryTypes.includes(finalDeliveryType)) {
             finalDeliveryType = 'standard';
         }
 
         // Lấy cart theo user hoặc session
         let cart = null;
-        if (userId) cart = await cartRepository.findCartByUserId(userId);
-        else if (sessionId)
+        if (userId) {
+            cart = await cartRepository.findCartByUserId(userId);
+            console.log(`[Checkout] Found cart for user ${userId}:`, cart?._id);
+        } else if (sessionId) {
             cart = await cartRepository.findCartBySessionId(sessionId);
+            console.log(`[Checkout] Found cart for session ${sessionId}:`, cart?._id);
+        }
 
         if (!cart) throw new Error("Cart not found");
 
         const cartItems = await cartItemRepository.getAllByCartId(cart._id);
-        if (!cartItems || cartItems.length === 0)
+        console.log(`[Checkout] Cart ${cart._id} has ${cartItems?.length || 0} items`);
+        
+        if (!cartItems || cartItems.length === 0) {
             throw new Error('Cart is empty');
-        if (!cartItems || cartItems.length === 0)
-            throw new Error("Cart is empty");
+        }
 
         // Convert CartItem -> OrderItems
         let totalAmount = 0;
