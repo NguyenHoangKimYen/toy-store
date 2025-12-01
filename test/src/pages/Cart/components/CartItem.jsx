@@ -18,7 +18,11 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
   
   // Use item.price first (already calculated by backend), then fallback to variant/product
   const price = parsePrice(item.price || variant?.price || product?.minPrice || product?.price || 0);
-  const imageUrl = product?.imageUrls?.[0] || variant?.imageUrls?.[0] || '/placeholder.png';
+  
+  // Priority: variant images > product images > placeholder
+  // Variants may have specific images (e.g., different colors)
+  const imageUrl = variant?.imageUrls?.[0] || product?.imageUrls?.[0] || '/placeholder.png';
+  
   const stock = variant?.stockQuantity || product?.stockQuantity || 999;
   const total = price * item.quantity;
   
@@ -64,6 +68,11 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
           src={imageUrl}
           alt={productName}
           className="cart-item-image"
+          loading="lazy"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = '/placeholder.png';
+          }}
         />
       </div>
 

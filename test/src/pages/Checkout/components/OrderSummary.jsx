@@ -18,6 +18,7 @@ const OrderSummary = ({
   submitting,
   onDiscountApplied,
   onPointsApplied,
+  disabled = false,
 }) => {
   return (
     <Card className="order-summary-card">
@@ -28,10 +29,15 @@ const OrderSummary = ({
         {cartItems.map((item) => {
           // Extract price, handling $numberDecimal format
           const price = parsePrice(
-            item.variant?.price || item.product?.minPrice || item.product?.price || 0
+            item.price || item.variant?.price || item.product?.minPrice || item.product?.price || 0
           );
           
-          const imageUrl = item.variant?.imageUrls?.[0] || item.product?.imageUrls?.[0] || '/placeholder.png';
+          // Use pre-computed imageUrl from transform, with fallbacks
+          const imageUrl = item.imageUrl || 
+            item.variant?.imageUrls?.[0] || 
+            item.product?.imageUrls?.[0] || 
+            '/placeholder.png';
+            
           const variantInfo = item.variant?.attributes?.length > 0 ? (
             item.variant.attributes.map((attr, idx) => (
               <React.Fragment key={`${item._id}-${attr.name}-${idx}`}>
@@ -46,6 +52,11 @@ const OrderSummary = ({
                 src={imageUrl}
                 alt={item.product?.name || 'Product'}
                 className="order-item-image"
+                loading="lazy"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = '/placeholder.png';
+                }}
               />
               <div className="order-item-details">
                 <h3 className="order-item-name">{item.product?.name || 'Product'}</h3>
@@ -105,9 +116,9 @@ const OrderSummary = ({
         size="lg"
         className="place-order-button"
         onClick={onSubmit}
-        disabled={submitting}
+        disabled={submitting || disabled}
       >
-        {submitting ? 'Processing...' : 'Place Order'}
+        {submitting ? 'Processing...' : disabled ? 'Select Address' : 'Place Order'}
       </Button>
     </Card>
   );
