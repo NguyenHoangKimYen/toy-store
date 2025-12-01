@@ -7,6 +7,7 @@ import { ROUTES } from '@/config/routes';
 import OrderSummary from './components/OrderSummary';
 import ShippingForm from './components/ShippingForm';
 import PaymentMethodSelector from './components/PaymentMethodSelector';
+import DeliveryTypeSelector from './components/DeliveryTypeSelector';
 import { useCheckout } from './hooks/useCheckout';
 import './Checkout.css';
 
@@ -59,15 +60,21 @@ const Checkout = () => {
   const {
     cartItems,
     paymentMethod,
+    deliveryType,
+    deliveryTypes,
     subtotal,
     shipping,
+    shippingFees,
+    shippingWeather,
     discount,
     loyaltyPointsDiscount,
     total,
     loading,
+    shippingLoading,
     error,
     submitting,
     handlePaymentMethodChange,
+    handleDeliveryTypeChange,
     handleSubmitOrder,
     handleDiscountApplied,
     handlePointsApplied,
@@ -143,6 +150,16 @@ const Checkout = () => {
           <ShippingForm
             selectedAddressId={selectedAddressId}
             onAddressSelect={setSelectedAddressId}
+          />
+
+          {/* Delivery Type Selection */}
+          <DeliveryTypeSelector
+            deliveryTypes={deliveryTypes}
+            selectedType={deliveryType}
+            onChange={handleDeliveryTypeChange}
+            fees={shippingFees}
+            weather={shippingWeather}
+            loading={shippingLoading}
           />
 
           {/* Payment Method */}
