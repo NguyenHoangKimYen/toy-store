@@ -601,13 +601,14 @@ exports.zaloPayCallback = async (req, res) => {
 // Trang success (redirect) của ZaloPay → tự động cập nhật trạng thái nếu đủ thông tin
 exports.paymentSuccess = async (req, res) => {
   try {
-    const { apptransid, status, returncode, return_code, orderId, order_id, amount } = req.query;
+    const { apptransid, status, returncode, return_code, orderId: queryOrderId, order_id, amount } = req.query;
+    const { orderId: paramOrderId } = req.params; // Also check route params
 
     const codeRaw = returncode ?? return_code ?? status;
     const code = Number(codeRaw);
 
-    // Ưu tiên orderId từ query, nếu không có thì tìm bằng apptransid đã lưu
-    let oid = orderId || order_id || null;
+    // Ưu tiên orderId từ params, then query, nếu không có thì tìm bằng apptransid đã lưu
+    let oid = paramOrderId || queryOrderId || order_id || null;
     if (!oid && apptransid) {
       const found = await orderRepository.findByZaloAppTransId(apptransid);
       if (found?._id) oid = found._id.toString();
@@ -633,11 +634,12 @@ exports.paymentSuccess = async (req, res) => {
       await orderRepository.updatePaymentStatus(oid, update);
     }
 
-    // Redirect về trang chủ, đính kèm trạng thái thanh toán để FE xử lý
-    const redirectUrl = new URL("https://www.milkybloomtoystore.id.vn");
-    redirectUrl.searchParams.set("paymentStatus", code === 1 ? "success" : "failed");
-    if (oid) redirectUrl.searchParams.set("orderId", oid);
+    // Redirect to payment page with order ID so user sees payment result
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const redirectUrl = new URL(`${frontendUrl}/payment/${oid || 'unknown'}`);
+    redirectUrl.searchParams.set("status", code === 1 ? "1" : "-1");
     if (amount) redirectUrl.searchParams.set("amount", amount);
+    if (apptransid) redirectUrl.searchParams.set("apptransid", apptransid);
 
     return res.redirect(302, redirectUrl.toString());
   } catch (err) {
