@@ -32,7 +32,7 @@ const estimateFeesForTypes = (baseValue, types) => {
 
 export const useCheckout = () => {
   const navigate = useNavigate();
-  const { cart, cartItems, cartSummary, loading: cartLoading, clearAllItems } = useCartContext();
+  const { cart, cartItems, cartSummary, loading: cartLoading, clearAllItems, refetch: refetchCart } = useCartContext();
   const { checkoutCart, loading: orderLoading } = useOrders();
   const { user } = useAuth();
   
@@ -67,6 +67,11 @@ export const useCheckout = () => {
   const total = Math.max(0, subtotal + shippingFee - discount - loyaltyPointsUsed);
 
   const loading = cartLoading || orderLoading;
+
+  // Refetch cart on mount to ensure we have fresh data
+  useEffect(() => {
+    refetchCart();
+  }, [refetchCart]);
 
   // Fetch delivery types on mount
   useEffect(() => {
@@ -200,6 +205,18 @@ export const useCheckout = () => {
     const cartId = cart?._id || cart?.id;
     if (!cartId) {
       toast.error('Cart not found');
+      return;
+    }
+
+    // Prevent double submission
+    if (submitting) {
+      console.log('Already submitting order, ignoring duplicate click');
+      return;
+    }
+
+    // Check if cart has items before attempting checkout
+    if (!cartItems || cartItems.length === 0) {
+      toast.error('Your cart is empty');
       return;
     }
 
