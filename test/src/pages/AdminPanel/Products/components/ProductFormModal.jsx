@@ -264,7 +264,7 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
     setFormData(prev => ({
       ...prev,
       variants: prev.variants.map((v, i) =>
-        i === index ? { ...v, weight: parseInt(weight) || 100 } : v
+        i === index ? { ...v, weight: weight === '' ? '' : (parseInt(weight) || '') } : v
       ),
     }));
   };

@@ -57,14 +57,24 @@ const AdminProductCard = ({
           <div className="badge-stack">
             {product.isNew && <span className="badge badge-new">New</span>}
             {product.isFeatured && <span className="badge badge-featured">Featured</span>}
-            {product.status && product.status !== 'Published' && (
-              <span className={`badge badge-${product.status.toLowerCase()}`}>
-                {product.status}
-              </span>
-            )}
           </div>
         )}
-        {totalStock === 0 && (
+        {product.status === 'Draft' && (
+          <div className="draft-overlay">
+            <span className="draft-text">Draft</span>
+          </div>
+        )}
+        {product.status === 'Disabled' && (
+          <div className="disabled-overlay">
+            <span className="disabled-text">Disabled</span>
+          </div>
+        )}
+        {product.status === 'Archived' && (
+          <div className="archived-overlay">
+            <span className="archived-text">Archived</span>
+          </div>
+        )}
+        {totalStock === 0 && !['Draft', 'Disabled', 'Archived'].includes(product.status) && (
           <div className="out-of-stock-overlay">
             <span className="out-of-stock-text">Out of Stock</span>
           </div>

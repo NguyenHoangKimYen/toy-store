@@ -375,7 +375,7 @@ const VariantManager = ({ productId, variants: initialVariants = [], onUpdate })
                     </span>
                     {variant.weight > 0 && (
                       <span className='text-gray-600 dark:text-gray-400'>
-                        Weight: {variant.weight}kg
+                        Weight: {variant.weight} gram
                       </span>
                     )}
                   </div>
