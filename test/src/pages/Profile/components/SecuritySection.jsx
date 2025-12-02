@@ -228,16 +228,16 @@ const SecuritySection = ({ onChangePassword, loading }) => {
     <div className="profile-section">
       <div className="section-header">
         <h3>
-          <Shield size={20} className="inline mr-2" />
           Change Password
         </h3>
       </div>
 
-      <form onSubmit={handleSubmit} className="security-form max-w-md">
-        {renderPasswordField('currentPassword', 'Current Password', 'current')}
+      <form onSubmit={handleSubmit} className="security-form max-w-md mx-auto">
+        <div className="space-y-6">
+          {renderPasswordField('currentPassword', 'Current Password', 'current')}
 
-        <div className="form-group">
-          {renderPasswordField('newPassword', 'New Password', 'new')}
+          <div className="form-group">
+            {renderPasswordField('newPassword', 'New Password', 'new')}
 
           {/* Password Strength Meter */}
           {formData.newPassword && (
@@ -306,7 +306,7 @@ const SecuritySection = ({ onChangePassword, loading }) => {
         )}
 
         <div className="form-actions mt-6">
-          <Button type="submit" disabled={loading || !isFormValid} className="w-full sm:w-auto">
+          <Button type="submit" disabled={loading || !isFormValid} className="w-full">
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -319,6 +319,7 @@ const SecuritySection = ({ onChangePassword, loading }) => {
               </>
             )}
           </Button>
+        </div>
         </div>
       </form>
     </div>
