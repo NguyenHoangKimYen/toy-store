@@ -180,10 +180,18 @@
   display: flex;
   border-bottom: 1px solid #e5e7eb;
   background: #f9fafb;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.profile-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tab-btn {
   flex: 1;
+  min-width: max-content;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -196,6 +204,7 @@
   cursor: pointer;
   transition: all 0.2s;
   border-bottom: 2px solid transparent;
+  white-space: nowrap;
 }
 
 .tab-btn:hover {
@@ -210,7 +219,39 @@
 }
 
 .profile-tab-content {
-  padding: 2rem;
+  padding: 1.5rem;
+  min-height: 300px;
+}
+
+.profile-section {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.profile-section .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.profile-section .section-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .form-section {
@@ -291,8 +332,16 @@
   }
 
   .profile-tabs {
-    flex-direction: column;
-    gap: 0.5rem;
+    gap: 0;
+  }
+
+  .tab-btn {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .profile-tab-content {
+    padding: 1rem;
   }
 }
 

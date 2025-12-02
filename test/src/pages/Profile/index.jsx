@@ -122,6 +122,7 @@ const Profile = () => {
       <div className="profile-content">
         <div className="profile-tabs">
           <button
+            type="button"
             className={`tab-btn ${activeTab === 'personal' ? 'active' : ''}`}
             onClick={() => setActiveTab('personal')}
           >
@@ -129,6 +130,7 @@ const Profile = () => {
             Personal Info
           </button>
           <button
+            type="button"
             className={`tab-btn ${activeTab === 'address' ? 'active' : ''}`}
             onClick={() => setActiveTab('address')}
           >
@@ -136,6 +138,7 @@ const Profile = () => {
             Addresses
           </button>
           <button
+            type="button"
             className={`tab-btn ${activeTab === 'security' ? 'active' : ''}`}
             onClick={() => setActiveTab('security')}
           >
@@ -143,6 +146,7 @@ const Profile = () => {
             Security
           </button>
           <button
+            type="button"
             className={`tab-btn ${activeTab === 'loyalty' ? 'active' : ''}`}
             onClick={() => setActiveTab('loyalty')}
           >
