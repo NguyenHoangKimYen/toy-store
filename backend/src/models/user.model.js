@@ -122,8 +122,19 @@ const userSchema = new mongoose.Schema(
     {
         timestamps: true,
         collection: 'users',
+        toJSON: { virtuals: true },
+        toObject: { virtuals: true },
     },
 );
+
+// Virtual field: Always calculate correct tier from spending
+userSchema.virtual('calculatedTier').get(function() {
+    const spent = this.spentLast12Months || 0;
+    if (spent >= 20_000_000) return 'diamond';
+    if (spent >= 5_000_000) return 'gold';
+    if (spent >= 1_000_000) return 'silver';
+    return 'none';
+});
 
 // Cho phép setters chạy khi dùng update
 userSchema.set('settersOnQuery', true);

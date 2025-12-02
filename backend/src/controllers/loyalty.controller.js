@@ -81,4 +81,21 @@ module.exports = {
                 .json({ success: false, message: err.message });
         }
     },
+
+    // Admin: Sync all users' loyalty tiers based on spending
+    async syncAllTiers(req, res) {
+        try {
+            const result = await loyaltyService.syncAllUserTiers();
+            return res.json({ 
+                success: true, 
+                message: `Synced ${result.updated} users out of ${result.total}`,
+                data: result 
+            });
+        } catch (err) {
+            console.error(err);
+            return res
+                .status(500)
+                .json({ success: false, message: err.message });
+        }
+    },
 };
