@@ -109,10 +109,19 @@ const setUserPassword = async (id, plainPassword, currentPassword) => {
         !plainPassword ||
         typeof plainPassword !== 'string' ||
         !plainPassword.trim() ||
-        plainPassword.length < 8 ||
+        plainPassword.length < 12 ||
         plainPassword.length > 32
     ) {
-        throw new Error('Invalid password');
+        throw new Error('Password must be 12-32 characters long');
+    }
+
+    // Password strength validation
+    const hasUpperCase = /[A-Z]/.test(plainPassword);
+    const hasLowerCase = /[a-z]/.test(plainPassword);
+    const hasNumber = /[0-9]/.test(plainPassword);
+
+    if (!hasUpperCase || !hasLowerCase || !hasNumber) {
+        throw new Error('Password must contain uppercase, lowercase, and number');
     }
 
     // Verify current password - MUST use findByIdWithPassword to get the password field
@@ -130,6 +139,14 @@ const setUserPassword = async (id, plainPassword, currentPassword) => {
         const isMatch = await bcrypt.compare(currentPassword, user.password);
         if (!isMatch) {
             const error = new Error('Current password is incorrect');
+            error.status = 400;
+            throw error;
+        }
+
+        // Check if new password is the same as current password
+        const isSamePassword = await bcrypt.compare(plainPassword, user.password);
+        if (isSamePassword) {
+            const error = new Error('New password cannot be the same as current password');
             error.status = 400;
             throw error;
         }

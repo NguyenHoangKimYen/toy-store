@@ -38,7 +38,7 @@ const userSchema = Joi.object({
         .pattern(/^[0-9]{10,15}$/)
         .required(), // Số điện thoại từ 10-15 chữ số
     username: Joi.string().alphanum().min(3).max(30).required(), // Tên đăng nhập
-    password: Joi.string().min(8).max(32).required(),
+    password: Joi.string().min(12).max(32).required(),
 });
 
 const loginSchema = Joi.object({
@@ -142,6 +142,15 @@ const register = async (data) => {
     const phone = value.phone.trim();
     const username = value.username.trim();
     const plainPassword = value.password;
+
+    // Additional password complexity validation
+    const hasUpperCase = /[A-Z]/.test(plainPassword);
+    const hasLowerCase = /[a-z]/.test(plainPassword);
+    const hasNumber = /[0-9]/.test(plainPassword);
+
+    if (!hasUpperCase || !hasLowerCase || !hasNumber) {
+        throw new Error('Password must contain uppercase, lowercase, and number');
+    }
 
     const [byEmail, byPhone, byUsername] = await Promise.all([
         //truy vấn cùng lúc
