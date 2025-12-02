@@ -17,15 +17,12 @@ if (window.location.hash === '#_=_') {
   window.history.replaceState({}, document.title, cleanUrl);
 }
 
-// Nếu có tham số verified/token sau xác thực email, xóa khỏi URL để người dùng không thấy
+// Clean up 'verified' param after email verification (but NOT 'token' - that's handled by AuthProvider)
 (() => {
   const url = new URL(window.location.href);
-  const hasSensitiveParams =
-    url.searchParams.has('verified') || url.searchParams.has('token');
-  if (hasSensitiveParams) {
+  if (url.searchParams.has('verified')) {
     url.searchParams.delete('verified');
-    url.searchParams.delete('token');
-    const cleaned = url.origin + url.pathname + url.hash;
+    const cleaned = url.origin + url.pathname + url.search + url.hash;
     window.history.replaceState({}, document.title, cleaned);
   }
 })();

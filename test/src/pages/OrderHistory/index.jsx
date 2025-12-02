@@ -1,12 +1,17 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useOrderHistory } from './hooks/useOrderHistory';
+import { useAuth } from '@/hooks';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorMessage from '@/components/common/ErrorMessage';
 import OrderHistoryList from './components/OrderHistoryList';
 import OrderHistoryFilters from './components/OrderHistoryFilters';
+import { LogIn, ShoppingBag } from 'lucide-react';
 import './OrderHistory.css';
 
 const OrderHistory = () => {
+  const { user } = useAuth();
+  const isGuest = !user;
   const {
     orders,
     loading,
@@ -40,28 +45,47 @@ const OrderHistory = () => {
   return (
     <div className="order-history-page">
       <div className="order-history-container">
-        <div className="order-history-header">
-          <h1>Order History</h1>
-          <p className="order-count">
-            {orders.length} {orders.length === 1 ? 'order' : 'orders'}
-          </p>
-        </div>
-
-        <OrderHistoryFilters
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          onSearch={handleSearch}
-        />
-
-        {orders.length === 0 ? (
-          <div className="no-orders">
-            <p>No orders found</p>
-            <a href="/products" className="shop-now-link">
-              Start Shopping
-            </a>
+        {/* Guest Login Prompt - Show ONLY this for guests */}
+        {isGuest ? (
+          <div className="guest-login-prompt guest-only">
+            <div className="guest-login-content">
+              <LogIn size={32} className="guest-login-icon" />
+              <div className="guest-login-text">
+                <h3>Login to Save Your Orders</h3>
+                <p>Create an account or login to keep track of all your orders and enjoy a personalized shopping experience.</p>
+              </div>
+              <Link to="/login" className="guest-login-button">
+                Login / Register
+              </Link>
+            </div>
           </div>
         ) : (
-          <OrderHistoryList orders={orders} />
+          <>
+            <div className="order-history-header">
+              <h1>Order History</h1>
+              <p className="order-count">
+                {orders.length} {orders.length === 1 ? 'order' : 'orders'}
+              </p>
+            </div>
+
+            <OrderHistoryFilters
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onSearch={handleSearch}
+            />
+
+            {orders.length === 0 ? (
+              <div className="no-orders">
+                <ShoppingBag size={48} className="no-orders-icon" />
+                <p>No orders found</p>
+                <a href="/products" className="shop-now-link">
+                  Start Shopping
+                </a>
+              </div>
+            ) : (
+              <OrderHistoryList orders={orders} />
+            )}
+          </>
         )}
       </div>
     </div>
