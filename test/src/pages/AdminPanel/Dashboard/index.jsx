@@ -198,8 +198,24 @@ const Dashboard = () => {
                   {lowStock.length === 0 && <div className="text-sm text-stone-500">No data</div>}
                   {lowStock.map((item) => (
                     <div key={item._id} className="flex items-center justify-between">
-                      <div className="text-sm font-medium text-stone-800">{item.name}</div>
-                      <span className="text-xs px-2 py-1 rounded-full bg-red-50 text-red-600 border border-red-100">
+                      <div className="flex items-center gap-3 flex-1">
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="w-10 h-10 rounded object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded bg-stone-100" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-stone-800 truncate">{item.name}</div>
+                          <div className="text-xs text-stone-500">
+                            Sold {item.soldCount || 0} • Revenue {formatPrice(item.revenue || 0)}
+                          </div>
+                        </div>
+                      </div>
+                      <span className="text-xs px-2 py-1 rounded-full bg-red-50 text-red-600 border border-red-100 whitespace-nowrap ml-2">
                         {item.totalStock} left
                       </span>
                     </div>
