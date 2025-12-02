@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect } from 'react';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useProductDetail } from '@/hooks';
 import { useCartContext } from '@/context/CartProvider';
 import { ROUTES } from '@/config/routes';
+import { getReviewStats } from '@/services/reviews.service';
 import './ProductDetail.css';
 
 // Lazy load below-the-fold components
@@ -40,6 +41,20 @@ const ProductDetail = () => {
   } = useProductDetail(id);
 
   const [addingToCart, setAddingToCart] = React.useState(false);
+  const [reviewStats, setReviewStats] = useState({ averageRating: 0, total: 0 });
+
+  // Fetch review stats for consistent rating display
+  const refreshReviewStats = React.useCallback(() => {
+    if (product?._id) {
+      getReviewStats(product._id)
+        .then(stats => setReviewStats(stats))
+        .catch(err => console.error('Failed to fetch review stats:', err));
+    }
+  }, [product?._id]);
+
+  useEffect(() => {
+    refreshReviewStats();
+  }, [refreshReviewStats]);
 
   // Scroll to reviews section if hash is #reviews
   useEffect(() => {
@@ -226,8 +241,8 @@ const ProductDetail = () => {
           <div>
             <ProductInfo
               product={product}
-              rating={product.rating || 0}
-              reviewCount={product.reviewCount || 0}
+              rating={reviewStats.averageRating || 0}
+              reviewCount={reviewStats.total || 0}
               price={price}
               originalPrice={originalPrice}
               inStock={inStock}
@@ -262,7 +277,7 @@ const ProductDetail = () => {
         <ProductTabs product={product} />
 
         {/* Reviews Section - use product._id to ensure we pass MongoDB ObjectId, not slug */}
-        <ReviewSection productId={product._id} />
+        <ReviewSection productId={product._id} onStatsChange={refreshReviewStats} />
       </div>
 
       {/* Mobile Bottom Action Bar */}

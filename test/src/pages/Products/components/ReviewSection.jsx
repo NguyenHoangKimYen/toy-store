@@ -10,7 +10,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import LoginPromptDialog from '@/components/common/LoginPromptDialog';
 import './ReviewSection.css';
 
-const ReviewSection = ({ productId }) => {
+const ReviewSection = ({ productId, onStatsChange }) => {
   const { user } = useAuth();
   const isAuthenticated = !!user;
   const { reviews, stats, loading, submitting, hasMore, eligibility, submitReview, removeReview, loadMore, refetch, setReviews } = useProductReviews(productId);
@@ -28,12 +28,14 @@ const ReviewSection = ({ productId }) => {
     });
     // Refresh stats when new review arrives
     refetch();
-  }, [setReviews, refetch]);
+    onStatsChange?.();
+  }, [setReviews, refetch, onStatsChange]);
 
   const handleReviewDeleted = useCallback((reviewId) => {
     setReviews(prev => prev.filter(r => r._id !== reviewId));
     refetch(); // Refresh stats
-  }, [setReviews, refetch]);
+    onStatsChange?.();
+  }, [setReviews, refetch, onStatsChange]);
 
   // Use WebSocket for real-time updates instead of polling
   useProductSocket(productId, {
@@ -47,13 +49,17 @@ const ReviewSection = ({ productId }) => {
     });
     if (success) {
       setShowReviewForm(false);
+      onStatsChange?.(); // Refresh parent stats
     }
     return success;
   };
 
   const handleDeleteReview = async (reviewId) => {
     if (window.confirm('Are you sure you want to delete this rating? This action cannot be undone.')) {
-      await removeReview(reviewId);
+      const success = await removeReview(reviewId);
+      if (success) {
+        onStatsChange?.(); // Refresh parent stats
+      }
     }
   };
 
@@ -104,13 +110,13 @@ const ReviewSection = ({ productId }) => {
       {/* Write Review Section - Show for authenticated users who haven't reviewed yet */}
       {isAuthenticated && eligibility.canReview && (
         <Card className="write-review-card">
-          <h3 className="write-review-title">Write a Review</h3>
+          <h3 className="write-review-title">Rate This Product</h3>
           
           {!showReviewForm ? (
             <div className="start-review-section">
               <p>Share your thoughts about this product</p>
               <Button onClick={() => setShowReviewForm(true)}>
-                Write a Review
+                Rate This Product
               </Button>
             </div>
           ) : (
@@ -126,9 +132,9 @@ const ReviewSection = ({ productId }) => {
 
       {!isAuthenticated && (
         <Card className="login-prompt-card">
-          <p>Please log in to write a review</p>
+          <p>Please log in to rate this product</p>
           <Button variant="outline" onClick={() => {
-            setLoginPromptAction('write a review');
+            setLoginPromptAction('rate this product');
             setShowLoginPrompt(true);
           }}>
             Log In

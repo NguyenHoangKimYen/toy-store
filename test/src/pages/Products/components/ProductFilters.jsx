@@ -6,7 +6,6 @@ import {
   Star, 
   SlidersHorizontal,
   RotateCcw,
-  Sparkles,
   Package,
   Search,
   Tag,
@@ -15,7 +14,6 @@ import {
   Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import './ProductFilters.css';
 
 const ProductFilters = ({
@@ -34,7 +32,6 @@ const ProductFilters = ({
     categories: true,
     price: true,
     rating: true,
-    availability: true,
   });
 
   // Refs for price inputs (uncontrolled)
@@ -45,8 +42,6 @@ const ProductFilters = ({
   const [localFilters, setLocalFilters] = useState({
     category: filters.category || '',
     rating: filters.rating || '',
-    availability: filters.availability || '',
-    showFeatured: filters.showFeatured || '',
   });
 
   // Apply all filters at once
@@ -199,16 +194,6 @@ const ProductFilters = ({
               <X size={12} />
             </button>
           )}
-          {filters.showFeatured === 'true' && (
-            <button 
-              className="filter-tag featured"
-              onClick={() => onFilterChange('showFeatured', '')}
-            >
-              <Sparkles size={12} />
-              <span>Featured</span>
-              <X size={12} />
-            </button>
-          )}
         </div>
       )}
 
@@ -244,11 +229,11 @@ const ProductFilters = ({
         {/* Price Range Filter - MANDATORY */}
         <FilterSection id="price" title="Price Range" icon={DollarSign}>
           <div className="price-filter">
-            {/* Price Inputs */}
-            <div className="price-inputs">
-              <div className="price-input-group">
+            {/* Price Inputs - Stacked Layout */}
+            <div className="price-inputs" style={{ flexDirection: 'column', gap: '0.75rem' }}>
+              <div className="price-input-group" style={{ width: '100%' }}>
                 <span className="price-input-label">Min</span>
-                <div className="price-input-wrapper">
+                <div className="price-input-wrapper" style={{ flex: 1 }}>
                   <span className="price-currency">₫</span>
                   <input
                     ref={minPriceRef}
@@ -259,7 +244,7 @@ const ProductFilters = ({
                     className="price-input"
                     style={{ 
                       width: '100%',
-                      padding: '0.25rem 0.75rem',
+                      padding: '0.5rem 0.75rem',
                       fontSize: '0.875rem',
                       border: '1px solid #e5e7eb',
                       borderRadius: '0.375rem',
@@ -268,10 +253,9 @@ const ProductFilters = ({
                   />
                 </div>
               </div>
-              <span className="price-separator">to</span>
-              <div className="price-input-group">
+              <div className="price-input-group" style={{ width: '100%' }}>
                 <span className="price-input-label">Max</span>
-                <div className="price-input-wrapper">
+                <div className="price-input-wrapper" style={{ flex: 1 }}>
                   <span className="price-currency">₫</span>
                   <input
                     ref={maxPriceRef}
@@ -282,7 +266,7 @@ const ProductFilters = ({
                     className="price-input"
                     style={{ 
                       width: '100%',
-                      padding: '0.25rem 0.75rem',
+                      padding: '0.5rem 0.75rem',
                       fontSize: '0.875rem',
                       border: '1px solid #e5e7eb',
                       borderRadius: '0.375rem',
@@ -301,37 +285,37 @@ const ProductFilters = ({
                   className="quick-price-btn"
                   onClick={() => {
                     if (minPriceRef.current) minPriceRef.current.value = '';
-                    if (maxPriceRef.current) maxPriceRef.current.value = '25';
+                    if (maxPriceRef.current) maxPriceRef.current.value = '50000';
                   }}
                 >
-                  Under ₫25
+                  Under ₫50.000
                 </button>
                 <button 
                   className="quick-price-btn"
                   onClick={() => {
-                    if (minPriceRef.current) minPriceRef.current.value = '25';
-                    if (maxPriceRef.current) maxPriceRef.current.value = '50';
+                    if (minPriceRef.current) minPriceRef.current.value = '50000';
+                    if (maxPriceRef.current) maxPriceRef.current.value = '150000';
                   }}
                 >
-                  ₫25 - ₫50
+                  ₫50.000 - ₫150.000
                 </button>
                 <button 
                   className="quick-price-btn"
                   onClick={() => {
-                    if (minPriceRef.current) minPriceRef.current.value = '50';
-                    if (maxPriceRef.current) maxPriceRef.current.value = '100';
+                    if (minPriceRef.current) minPriceRef.current.value = '150000';
+                    if (maxPriceRef.current) maxPriceRef.current.value = '300000';
                   }}
                 >
-                  ₫50 - ₫100
+                  ₫150.000 - ₫300.000
                 </button>
                 <button 
                   className="quick-price-btn"
                   onClick={() => {
-                    if (minPriceRef.current) minPriceRef.current.value = '100';
+                    if (minPriceRef.current) minPriceRef.current.value = '300000';
                     if (maxPriceRef.current) maxPriceRef.current.value = '';
                   }}
                 >
-                  ₫100+
+                  Above ₫300.000
                 </button>
               </div>
             </div>
@@ -361,32 +345,6 @@ const ProductFilters = ({
                 {localFilters.rating === option.value && <Check size={14} className="check-icon" />}
               </button>
             ))}
-          </div>
-        </FilterSection>
-
-        {/* Availability & Featured Filter */}
-        <FilterSection id="availability" title="More Filters" icon={Package}>
-          <div className="filter-options checkbox-options">
-            <label className="checkbox-option">
-              <Checkbox
-                checked={localFilters.availability === 'inStock'}
-                onCheckedChange={(checked) => 
-                  setLocalFilters(prev => ({ ...prev, availability: checked ? 'inStock' : '' }))
-                }
-              />
-              <Package size={14} />
-              <span>In Stock Only</span>
-            </label>
-            <label className="checkbox-option featured-checkbox">
-              <Checkbox
-                checked={localFilters.showFeatured === 'true'}
-                onCheckedChange={(checked) => 
-                  setLocalFilters(prev => ({ ...prev, showFeatured: checked ? 'true' : '' }))
-                }
-              />
-              <Sparkles size={14} className="featured-icon" />
-              <span>Featured Products</span>
-            </label>
           </div>
         </FilterSection>
       </div>
