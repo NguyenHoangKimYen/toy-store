@@ -147,6 +147,7 @@ const Navbar = () => {
                                 <img
                                     src={category.imageUrl || category.image || 'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?w=400&h=300&fit=crop'}
                                     alt={category.name}
+                                    loading="lazy"
                                     onError={(e) => {
                                         e.target.src = 'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?w=400&h=300&fit=crop';
                                     }}
@@ -281,6 +282,7 @@ const Navbar = () => {
                                                         src={category.imageUrl || category.image || 'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?w=400&h=300&fit=crop'}
                                                         alt={category.name}
                                                         className='w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-300'
+                                                        loading="lazy"
                                                         onError={(e) => {
                                                             e.target.src = 'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?w=400&h=300&fit=crop';
                                                         }}

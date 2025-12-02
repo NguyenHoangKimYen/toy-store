@@ -209,7 +209,7 @@ const ReviewSection = ({ productId, onStatsChange }) => {
                         <div key={review._id} className="rating-item">
                           <div className="rating-item-user">
                             {userAvatar ? (
-                              <img src={userAvatar} alt={userName} className="rating-item-avatar" />
+                              <img src={userAvatar} alt={userName} className="rating-item-avatar" loading="lazy" />
                             ) : (
                               <div className="rating-item-avatar-placeholder">
                                 <User size={12} />

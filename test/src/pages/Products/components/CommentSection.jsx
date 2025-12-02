@@ -355,7 +355,7 @@ const CommentSection = ({ productId }) => {
                 <div className="comment-author">
                   <div className="author-avatar">
                     {comment.userId?.avatar ? (
-                      <img src={comment.userId.avatar} alt={getDisplayName(comment)} />
+                      <img src={comment.userId.avatar} alt={getDisplayName(comment)} loading="lazy" />
                     ) : (
                       <User size={20} />
                     )}
@@ -381,7 +381,7 @@ const CommentSection = ({ productId }) => {
                         className="comment-image-link"
                         onClick={() => openImageModal(comment.imageUrls, index)}
                       >
-                        <img src={url} alt={`Comment image ${index + 1}`} />
+                        <img src={url} alt={`Comment image ${index + 1}`} loading="lazy" />
                       </div>
                     ))}
                   </div>
@@ -459,7 +459,7 @@ const CommentSection = ({ productId }) => {
                         <div className="comment-author">
                           <div className="author-avatar small">
                             {reply.userId?.avatar ? (
-                              <img src={reply.userId.avatar} alt={getDisplayName(reply)} />
+                              <img src={reply.userId.avatar} alt={getDisplayName(reply)} loading="lazy" />
                             ) : (
                               <User size={16} />
                             )}

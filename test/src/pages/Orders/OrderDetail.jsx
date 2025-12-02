@@ -294,6 +294,7 @@ const OrderDetail = () => {
                       src={productImage}
                       alt={item.productId?.name || 'Product'}
                       className="item-image"
+                      loading="lazy"
                     />
                     <div className="item-details">
                       <h3>{item.productId?.name || 'Product'}</h3>

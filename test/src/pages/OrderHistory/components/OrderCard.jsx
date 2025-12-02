@@ -78,7 +78,7 @@ const OrderCard = ({ order }) => {
     <div className="order-card order-card-clickable" onClick={handleClick}>
       <div className="order-card-content">
         <div className="order-preview-image">
-          <img src={previewImage} alt="Order preview" />
+          <img src={previewImage} alt="Order preview" loading="lazy" />
           {itemCount > 1 && (
             <span className="item-count-badge">+{itemCount - 1}</span>
           )}

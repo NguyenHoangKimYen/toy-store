@@ -139,6 +139,7 @@ const ProductImageGallery = ({ images = [], selectedVariantImageIndex = 0, produ
                 src={image}
                 alt={`${productName} thumbnail ${index + 1}`}
                 className="thumbnail-image"
+                loading="lazy"
               />
             </div>
           ))}
