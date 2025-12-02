@@ -91,12 +91,27 @@ const verifyUser = async (req, res, next) => {
 const setUserPassword = async (req, res, next) => {
     try {
         const { id } = req.query;
-        const { password, confirmPassword } = req.body;
+        const { password, confirmPassword, currentPassword } = req.body;
 
         if (!id) {
             return res.status(400).json({
                 success: false,
                 message: 'Missing user id',
+            });
+        }
+
+        // Security check: users can only change their own password (unless admin)
+        if (req.user.id !== id && req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'You can only change your own password',
+            });
+        }
+
+        if (!currentPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'Current password is required',
             });
         }
 
@@ -114,11 +129,16 @@ const setUserPassword = async (req, res, next) => {
             });
         }
 
-        const updated = await userService.setUserPassword(id, password);
+        const updated = await userService.setUserPassword(id, password, currentPassword);
 
         res.json({ success: true, data: updated });
     } catch (error) {
-        next(error);
+        // Make sure error has proper status code
+        const statusCode = error.status || error.statusCode || 500;
+        return res.status(statusCode).json({
+            success: false,
+            message: error.message || 'Failed to change password',
+        });
     }
 };
 
