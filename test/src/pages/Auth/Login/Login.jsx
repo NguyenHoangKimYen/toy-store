@@ -431,16 +431,7 @@ const Login = () => {
               </div>
 
               <div className='space-y-2'>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-sm font-semibold text-white [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)]">Password</Label>
-                  <button
-                    type="button"
-                    onClick={() => setShowForgotPassword(true)}
-                    className="text-sm text-white/80 hover:text-white hover:underline font-medium [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)]"
-                  >
-                    Forgot password?
-                  </button>
-                </div>
+                <Label htmlFor="password" className="text-sm font-semibold text-white [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)]">Password</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -458,6 +449,13 @@ const Login = () => {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-sm text-white/80 hover:text-white hover:underline font-medium [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)] block mt-2 ml-auto"
+                >
+                  Forgot password?
+                </button>
               </div>
 
               <div className="pt-2">
