@@ -178,7 +178,7 @@ const toggleCommentLike = async ({ commentId, userId }) => {
 /**
  * Get all comments for admin management
  */
-const getAllCommentsAdmin = async ({ status, page = 1, limit = 50, sort = 'createdAt:desc' }) => {
+const getAllCommentsAdmin = async ({ status, search, page = 1, limit = 50, sort = 'createdAt:desc' }) => {
     const query = { parentId: null }; // Only top-level comments
     
     if (status) {
@@ -190,7 +190,56 @@ const getAllCommentsAdmin = async ({ status, page = 1, limit = 50, sort = 'creat
     
     const skip = (page - 1) * limit;
     
-    const comments = await Comment.find(query)
+    let comments;
+    
+    // If search is provided, we need to do a more complex query with populated fields
+    if (search && search.trim()) {
+        const escapedSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const searchRegex = new RegExp(escapedSearch, 'i');
+        
+        // First get all top-level comments with populated fields
+        const allComments = await Comment.find(query)
+            .populate('userId', 'fullName username email avatar')
+            .populate('productId', 'name images slug')
+            .lean();
+        
+        // Filter in-memory to search populated fields
+        const filtered = allComments.filter(comment => {
+            return searchRegex.test(comment.content) ||
+                   searchRegex.test(comment.guestName || '') ||
+                   searchRegex.test(comment.guestEmail || '') ||
+                   searchRegex.test(comment.userId?.fullName || '') ||
+                   searchRegex.test(comment.userId?.username || '') ||
+                   searchRegex.test(comment.userId?.email || '') ||
+                   searchRegex.test(comment.productId?.name || '');
+        });
+        
+        // Apply sorting and pagination to filtered results
+        const sorted = filtered.sort((a, b) => {
+            const aVal = a[sortField];
+            const bVal = b[sortField];
+            if (sortOrder === 'asc') {
+                return aVal > bVal ? 1 : -1;
+            }
+            return aVal < bVal ? 1 : -1;
+        });
+        
+        comments = sorted.slice(skip, skip + limit);
+        const total = filtered.length;
+        
+        return {
+            comments,
+            pagination: {
+                total,
+                page,
+                limit,
+                pages: Math.ceil(total / limit),
+            },
+        };
+    }
+    
+    // No search - use efficient database query
+    comments = await Comment.find(query)
         .populate('userId', 'fullName username email avatar')
         .populate('productId', 'name images slug')
         .sort(sortObj)

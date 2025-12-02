@@ -149,10 +149,11 @@ const toggleCommentLike = async (req, res, next) => {
  */
 const getAllCommentsAdmin = async (req, res, next) => {
     try {
-        const { status, page = 1, limit = 50, sort = 'createdAt:desc' } = req.query;
+        const { status, search, page = 1, limit = 50, sort = 'createdAt:desc' } = req.query;
         
         const result = await CommentService.getAllCommentsAdmin({
             status: status !== 'all' ? status : null,
+            search,
             page: parseInt(page),
             limit: parseInt(limit),
             sort,
