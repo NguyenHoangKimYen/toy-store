@@ -35,10 +35,20 @@ export default defineConfig({
             '@radix-ui/react-tabs'
           ],
         },
+        // Hashed filenames for long-term caching
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
       },
     },
-    // Use esbuild for minification (faster and built-in)
-    minify: 'esbuild',
+    // Use terser for better minification
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
     // Enable CSS code splitting
     cssCodeSplit: true,
     // Disable source maps for production
@@ -47,6 +57,8 @@ export default defineConfig({
     target: 'es2020',
     // Inline small assets (< 4kb)
     assetsInlineLimit: 4096,
+    // CSS minification
+    cssMinify: true,
   },
   // Optimize dependencies
   optimizeDeps: {

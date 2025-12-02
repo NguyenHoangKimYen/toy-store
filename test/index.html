@@ -7,17 +7,18 @@
     <meta name="description" content="MilkyBloom Toy Store - Quality toys for kids of all ages" />
     <title>MilkyBloom Toy Store</title>
     
-    <!-- Preconnect to external resources -->
-    <link rel="dns-prefetch" href="https://milkybloomtoystore.id.vn" />
-    <link rel="preconnect" href="https://milkybloomtoystore.id.vn" crossorigin />
-    <link rel="dns-prefetch" href="https://api.milkybloomtoystore.id.vn" />
+    <!-- Preconnect to API (highest priority) -->
     <link rel="preconnect" href="https://api.milkybloomtoystore.id.vn" crossorigin />
+    <link rel="dns-prefetch" href="https://api.milkybloomtoystore.id.vn" />
     
-    <!-- Preload critical fonts with display swap -->
+    <!-- Preconnect to Cloudinary for images -->
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+    <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+    
+    <!-- Async font loading (non-render-blocking) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
     <noscript>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" />
     </noscript>
