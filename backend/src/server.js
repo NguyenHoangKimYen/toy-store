@@ -5,13 +5,24 @@ if (process.env.NODE_ENV !== 'production') {
 
 const cors = require('cors');
 const express = require('express');
+const compression = require('compression');
 const http = require('http');
 const session = require('express-session');
 const connectDB = require('./config/db.js');
 const passportGoogle = require('./config/passportGoogle.js');
 const socket = require('./socket/index');
+const { apiCacheMiddleware } = require('./middlewares/cache.middleware.js');
 
 const app = express(); // Tạo app
+
+// Enable ETag for conditional requests
+app.set('etag', 'strong');
+
+// Gzip/Brotli compression for all responses
+app.use(compression({
+    level: 6,
+    threshold: 1024, // Only compress > 1KB
+}));
 
 app.use((req, res, next) => {
     const start = Date.now();
@@ -37,6 +48,9 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
 }));
+
+// API Cache headers for better PageSpeed scores
+app.use('/api', apiCacheMiddleware);
 
 app.use(
     session({
