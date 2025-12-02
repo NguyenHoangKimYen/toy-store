@@ -115,10 +115,22 @@ const setUserPassword = async (req, res, next) => {
             });
         }
 
-        if (!password || password.length < 8 || password.length > 32) {
+        if (!password || password.length < 12 || password.length > 32) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid password',
+                message: 'Password must be 12-32 characters long',
+            });
+        }
+
+        // Password strength validation
+        const hasUpperCase = /[A-Z]/.test(password);
+        const hasLowerCase = /[a-z]/.test(password);
+        const hasNumber = /[0-9]/.test(password);
+
+        if (!hasUpperCase || !hasLowerCase || !hasNumber) {
+            return res.status(400).json({
+                success: false,
+                message: 'Password must contain uppercase, lowercase, and number',
             });
         }
 

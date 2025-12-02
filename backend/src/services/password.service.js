@@ -61,6 +61,15 @@ const resetPassword = async (userId, token, newPassword) => {
         throw new Error('Invalid token');
     }
 
+    // Additional password complexity validation
+    const hasUpperCase = /[A-Z]/.test(newPassword);
+    const hasLowerCase = /[a-z]/.test(newPassword);
+    const hasNumber = /[0-9]/.test(newPassword);
+
+    if (!hasUpperCase || !hasLowerCase || !hasNumber) {
+        throw new Error('Password must contain uppercase, lowercase, and number');
+    }
+
     const hash = await bcrypt.hash(newPassword, 10);
     await userRepository.setPassword(userId, hash); //cập nhật mật khẩu mới đã băm
     await userRepository.clearResetToken(userId); //xóa token sau khi đặt lại mật khẩu
@@ -75,7 +84,7 @@ const forgotPasswordSchema = Joi.object({
 const resetPasswordSchema = Joi.object({
     userId: Joi.string().required(),
     token: Joi.string().required(),
-    newPassword: Joi.string().min(8).max(32).required(),
+    newPassword: Joi.string().min(12).max(32).required(),
 });
 
 module.exports = {
