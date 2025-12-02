@@ -96,4 +96,10 @@ const ProductSchema = new mongoose.Schema(
     },
 );
 
+// Compound indexes for common queries
+ProductSchema.index({ status: 1, createdAt: -1 }); // Published products sorted by date
+ProductSchema.index({ status: 1, totalUnitsSold: -1 }); // Best sellers
+ProductSchema.index({ categoryId: 1, status: 1, createdAt: -1 }); // Category page with filters
+ProductSchema.index({ isFeatured: 1, status: 1 }); // Featured products query
+
 module.exports = mongoose.model('Product', ProductSchema);

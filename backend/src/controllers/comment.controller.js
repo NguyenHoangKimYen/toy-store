@@ -142,10 +142,72 @@ const toggleCommentLike = async (req, res, next) => {
     }
 };
 
+/**
+ * Get all comments for admin management
+ * @route GET /api/comments/admin/all
+ * @access Admin only
+ */
+const getAllCommentsAdmin = async (req, res, next) => {
+    try {
+        const { status, search, page = 1, limit = 50, sort = 'createdAt:desc' } = req.query;
+        
+        const result = await CommentService.getAllCommentsAdmin({
+            status: status !== 'all' ? status : null,
+            search,
+            page: parseInt(page),
+            limit: parseInt(limit),
+            sort,
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Comments fetched successfully',
+            metadata: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Moderate a comment (approve/reject/flag)
+ * @route PATCH /api/comments/:commentId/moderate
+ * @access Admin only
+ */
+const moderateComment = async (req, res, next) => {
+    try {
+        const { commentId } = req.params;
+        const { status, reason } = req.body;
+
+        if (!['approved', 'flagged', 'rejected'].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid status. Must be approved, flagged, or rejected',
+            });
+        }
+
+        const result = await CommentService.moderateComment({
+            commentId,
+            status,
+            reason,
+        });
+
+        res.status(200).json({
+            success: true,
+            message: `Comment ${status} successfully`,
+            metadata: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createComment,
     getCommentsByProductId,
     getReplies,
     deleteComment,
     toggleCommentLike,
+    getAllCommentsAdmin,
+    moderateComment,
 };

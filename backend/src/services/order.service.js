@@ -18,6 +18,7 @@ const discountCodeService = require("../services/discount-code.service");
 const { checkAndAssignBadges } = require("../services/badge.service");
 const voucherRepository = require("../repositories/voucher.repository");
 const userVoucherRepository = require("../repositories/user-voucher.repository");
+const Product = require("../models/product.model");
 
 const VERIFY_TTL_MINUTES = Number(process.env.VERIFY_TTL_MINUTES || 15);
 const BACKEND_URL =
@@ -103,24 +104,31 @@ module.exports = {
             deliveryType,
         } = payload;
 
+        // Validate delivery type
+        const validDeliveryTypes = ['economy', 'standard', 'express', 'expedited'];
         let finalDeliveryType = deliveryType;
-        if (!['standard', 'express'].includes(finalDeliveryType)) {
+        if (!validDeliveryTypes.includes(finalDeliveryType)) {
             finalDeliveryType = 'standard';
         }
 
         // Lấy cart theo user hoặc session
         let cart = null;
-        if (userId) cart = await cartRepository.findCartByUserId(userId);
-        else if (sessionId)
+        if (userId) {
+            cart = await cartRepository.findCartByUserId(userId);
+            console.log(`[Checkout] Found cart for user ${userId}:`, cart?._id);
+        } else if (sessionId) {
             cart = await cartRepository.findCartBySessionId(sessionId);
+            console.log(`[Checkout] Found cart for session ${sessionId}:`, cart?._id);
+        }
 
         if (!cart) throw new Error("Cart not found");
 
         const cartItems = await cartItemRepository.getAllByCartId(cart._id);
-        if (!cartItems || cartItems.length === 0)
+        console.log(`[Checkout] Cart ${cart._id} has ${cartItems?.length || 0} items`);
+        
+        if (!cartItems || cartItems.length === 0) {
             throw new Error('Cart is empty');
-        if (!cartItems || cartItems.length === 0)
-            throw new Error("Cart is empty");
+        }
 
         // Convert CartItem -> OrderItems
         let totalAmount = 0;
@@ -531,8 +539,61 @@ module.exports = {
 
         await historyRepo.add(orderId, newStatus);
 
+        // ⭐ Mark discount code as used when order is confirmed
+        if (
+            newStatus === 'confirmed' &&
+            updated.discountCodeId &&
+            !updated._discountCodeMarkedUsed
+        ) {
+            try {
+                // Re-validate usage limit before marking as used (prevents race condition)
+                const canUse = await discountCodeService.checkUsageLimit(updated.discountCodeId);
+                if (canUse) {
+                    await discountCodeService.markUsed(updated.discountCodeId);
+                    // Mark order so we don't double-increment on subsequent status changes
+                    await orderRepository.update(orderId, { _discountCodeMarkedUsed: true });
+                    console.log(`[Order ${orderId}] Marked discount code ${updated.discountCodeId} as used`);
+                } else {
+                    console.warn(`[Order ${orderId}] Discount code ${updated.discountCodeId} has reached usage limit`);
+                }
+            } catch (err) {
+                console.error('Failed to mark discount code as used:', err);
+            }
+        }
+
+        // ⭐ Handle order cancellation - restore discount code usage
+        if (
+            newStatus === 'cancelled' &&
+            updated.discountCodeId &&
+            updated._discountCodeMarkedUsed
+        ) {
+            try {
+                await discountCodeService.decrementUsedCount(updated.discountCodeId);
+                await orderRepository.update(orderId, { _discountCodeMarkedUsed: false });
+                console.log(`[Order ${orderId}] Restored discount code ${updated.discountCodeId} usage`);
+            } catch (err) {
+                console.error('Failed to restore discount code usage:', err);
+            }
+        }
+
         // Nếu đơn hoàn tất
         if (newStatus === 'completed' || newStatus === 'delivered') {
+            // ⭐ Update totalUnitsSold for each product in the order
+            try {
+                const orderItems = await itemRepo.findByOrder(orderId);
+                for (const item of orderItems) {
+                    if (item.productId) {
+                        const productId = typeof item.productId === 'object' ? item.productId._id : item.productId;
+                        await Product.findByIdAndUpdate(productId, {
+                            $inc: { totalUnitsSold: item.quantity }
+                        });
+                    }
+                }
+                console.log(`[Order ${orderId}] Updated totalUnitsSold for ${orderItems.length} products`);
+            } catch (err) {
+                console.error('Failed to update totalUnitsSold:', err);
+            }
+
             if (updated.userId && updated.totalAmount) {
                 const goodsAmount =
                     updated.totalAmount -

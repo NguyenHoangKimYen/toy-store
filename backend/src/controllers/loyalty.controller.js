@@ -1,6 +1,19 @@
 const loyaltyService = require('../services/loyalty.service');
 
 module.exports = {
+    // Get loyalty configuration (tiers, benefits, etc.)
+    async getConfig(req, res) {
+        try {
+            const config = loyaltyService.getLoyaltyConfig();
+            return res.json({ success: true, data: config });
+        } catch (err) {
+            console.error(err);
+            return res
+                .status(400)
+                .json({ success: false, message: err.message });
+        }
+    },
+
     async getMyLoyalty(req, res) {
         try {
             const userId = req.user.id;
@@ -65,6 +78,23 @@ module.exports = {
             console.error(err);
             return res
                 .status(400)
+                .json({ success: false, message: err.message });
+        }
+    },
+
+    // Admin: Sync all users' loyalty tiers based on spending
+    async syncAllTiers(req, res) {
+        try {
+            const result = await loyaltyService.syncAllUserTiers();
+            return res.json({ 
+                success: true, 
+                message: `Synced ${result.updated} users out of ${result.total}`,
+                data: result 
+            });
+        } catch (err) {
+            console.error(err);
+            return res
+                .status(500)
                 .json({ success: false, message: err.message });
         }
     },

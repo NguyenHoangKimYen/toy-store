@@ -4,6 +4,48 @@ const { getWeatherCondition } = require("./weather.service");
 const { applyLoyaltyToShipping } = require("../utils/loyalty-ship.helper.js");
 const User = require("../models/user.model");
 
+// Delivery type configurations
+const DELIVERY_TYPES = {
+    standard: {
+        name: "Standard Shipping",
+        description: "Delivered in 3-5 business days",
+        feeMultiplier: 1.0,
+        weatherFeeApplied: false,
+        freeShippingThreshold: 500000,
+        freeShippingDiscount: 1.0, // 100% off shipping
+        estimatedDays: { min: 3, max: 5 },
+    },
+    economy: {
+        name: "Economy Shipping",
+        description: "Delivered in 5-7 business days",
+        feeMultiplier: 0.7, // 30% cheaper than standard
+        weatherFeeApplied: false,
+        freeShippingThreshold: 500000,
+        freeShippingDiscount: 1.0, // 100% off shipping
+        estimatedDays: { min: 5, max: 7 },
+    },
+    express: {
+        name: "Express Shipping",
+        description: "Delivered in 1-2 business days",
+        feeMultiplier: 1.5, // 50% more expensive than standard
+        weatherFeeApplied: false,
+        freeShippingThreshold: 500000,
+        freeShippingDiscount: 1.0, // 100% off shipping
+        estimatedDays: { min: 1, max: 2 },
+        requiresUrbanArea: true, // Only available in urban areas
+    },
+    expedited: {
+        name: "Expedited Shipping",
+        description: "Priority delivery with weather-adjusted fees, same-day possible",
+        feeMultiplier: 2.0, // 2x base price
+        weatherFeeApplied: true, // Only this type has weather fees
+        freeShippingThreshold: 500000,
+        freeShippingDiscount: 0.3, // Only 30% off shipping (not 100%)
+        estimatedDays: { min: 0, max: 1 },
+        requiresUrbanArea: true,
+    },
+};
+
 //Chuan hoa chu
 function normalizeVN(str = "") {
     return str
@@ -56,12 +98,31 @@ function detectRegion(distanceKm) {
 }
 
 /**
+ * Get list of available delivery types for a given region
+ */
+function getAvailableDeliveryTypes(region) {
+    const isUrban = region === "noi_thanh";
+    
+    return Object.entries(DELIVERY_TYPES).map(([key, config]) => {
+        const available = !config.requiresUrbanArea || isUrban;
+        return {
+            id: key,
+            name: config.name,
+            description: config.description,
+            estimatedDays: config.estimatedDays,
+            available,
+            unavailableReason: !available ? "Only available in urban areas" : null,
+        };
+    });
+}
+
+/**
  * 🚚 Tính phí giao hàng
  * @param {{lat:number,lng:number,province:string,addressLine?:string}} address
  * @param {number} weightGram
  * @param {number} orderValue
  * @param {boolean} hasFreeship
- * @param {'standard'|'express'} deliveryType
+ * @param {'standard'|'economy'|'express'|'expedited'} deliveryType
  */
 async function calculateShippingFee(
     address,
@@ -77,15 +138,26 @@ async function calculateShippingFee(
             region: "unknown",
             distanceKm: 0,
             notes: ["Không thấy cửa hàng gần nhất"],
+            availableDeliveryTypes: [],
         };
 
     let distanceKm = nearest.distanceKm;
     let region = detectRegion(distanceKm);
+    const isUrban = region === "noi_thanh";
+
+    // Get delivery type config
+    const deliveryConfig = DELIVERY_TYPES[deliveryType] || DELIVERY_TYPES.standard;
+    
+    // Check if delivery type requires urban area
+    if (deliveryConfig.requiresUrbanArea && !isUrban) {
+        // Fallback to standard for non-urban areas
+        deliveryType = "standard";
+    }
 
     let baseFee = 0;
     let extraFee = 0;
     let notes = [];
-    let isExpressAllowed = region === "noi_thanh";
+    let weatherFee = 0;
 
     //Phí cơ bản theo vùng
     switch (region) {
@@ -114,21 +186,15 @@ async function calculateShippingFee(
         baseFee += steps * extraFee;
     }
 
-    //Voucher / Freeship
-    if (hasFreeship && orderValue >= 500000) {
-        baseFee = 0;
-        notes.push("FREESHIP");
-    } else if (hasFreeship) {
-        baseFee = Math.max(baseFee - 15000, 0);
-        notes.push("DISCOUNT_DELIVERY");
-    } else if (orderValue >= 500000) {
-        baseFee = 0;
-        notes.push("FREESHIP");
-    }
+    // Apply delivery type multiplier
+    const activeConfig = DELIVERY_TYPES[deliveryType] || DELIVERY_TYPES.standard;
+    baseFee *= activeConfig.feeMultiplier;
+    notes.push(`Delivery: ${activeConfig.name}`);
 
-    //Phí ship phụ thuộc vào thời tiết
+    // Get weather data (needed for expedited shipping)
     const weather = await getWeatherCondition(address.lat, address.lng);
 
+    // Check for island areas (not supported)
     const matchedIsland = [
         { name: "Phú Quốc", province: "Kiên Giang" },
         { name: "Côn Đảo", province: "Bà Rịa - Vũng Tàu" },
@@ -142,87 +208,103 @@ async function calculateShippingFee(
             ),
     );
 
-    //Tạm thời không hỗ trợ giao hàng ở đảo
     if (matchedIsland) {
         return {
             success: false,
             region: "dao",
             fee: 0,
             deliveryType,
-            isExpressAllowed: false,
+            availableDeliveryTypes: [],
             notes: [
                 `Hiện không hỗ trợ giao hàng đến khu vực đảo: ${matchedIsland.name}`,
             ],
         };
     }
 
-    // Express chỉ áp dụng nội thành
-    if (deliveryType === "express" && !isExpressAllowed) {
-        notes.push("Không thể giao hoả tốc tại khu vực này");
-        return {
-            nearestWarehouse: nearest,
-            region,
-            distanceKm,
-            deliveryType: "standard",
-            isExpressAllowed: false,
-            fee: Math.round(baseFee),
-            notes,
-            weather,
-        };
-    }
-
-    if (deliveryType === "express" && isExpressAllowed) {
+    // Apply weather fee ONLY for expedited shipping
+    if (deliveryType === "expedited" && activeConfig.weatherFeeApplied) {
         if (weather.isBadWeather) {
-            baseFee *= 1.3;
-            notes.push(
-                `Thời tiết xấu: ${weather.description} → phí hoả tốc tăng`,
-            );
+            weatherFee = Math.round(baseFee * 0.3); // 30% extra for bad weather
+            baseFee += weatherFee;
+            notes.push(`Weather surcharge (${weather.description}): +${weatherFee.toLocaleString()}₫`);
         }
 
-        const hour = new Date().getHours() + 7; // VN timezone
+        // Time-based surcharges for expedited
+        const hour = new Date().getHours() + 7;
         const realHour = hour >= 24 ? hour - 24 : hour;
 
         if (realHour >= 20 || realHour < 6) {
-            baseFee += 15000;
-            notes.push("Phụ phí giao ban đêm");
+            const nightFee = 15000;
+            baseFee += nightFee;
+            notes.push(`Night delivery surcharge: +${nightFee.toLocaleString()}₫`);
         }
 
-        if (
-            (realHour >= 7 && realHour < 9) ||
-            (realHour >= 17 && realHour < 19)
-        ) {
-            baseFee += 10000;
-            notes.push("Phụ phí giờ cao điểm");
+        if ((realHour >= 7 && realHour < 9) || (realHour >= 17 && realHour < 19)) {
+            const rushFee = 10000;
+            baseFee += rushFee;
+            notes.push(`Rush hour surcharge: +${rushFee.toLocaleString()}₫`);
         }
     }
 
-    // ⭐⭐⭐ ÁP DỤNG LOYALTY TIER ⭐⭐⭐
+    // Express delivery restrictions (urban only, no weather fees)
+    if (deliveryType === "express" && !isUrban) {
+        notes.push("Express not available, falling back to Standard");
+        deliveryType = "standard";
+    }
+
+    // Apply free shipping / discounts
+    const freeshipThreshold = activeConfig.freeShippingThreshold;
+    const freeshipDiscount = activeConfig.freeShippingDiscount;
+
+    if (hasFreeship && orderValue >= freeshipThreshold) {
+        // Full freeship from voucher + order threshold
+        baseFee = 0;
+        notes.push("FREESHIP (voucher + order threshold)");
+    } else if (orderValue >= freeshipThreshold) {
+        // Order threshold discount
+        const discountAmount = Math.round(baseFee * freeshipDiscount);
+        baseFee = Math.max(baseFee - discountAmount, 0);
+        
+        if (freeshipDiscount === 1.0) {
+            notes.push("FREESHIP (order ≥ 500,000₫)");
+        } else {
+            notes.push(`${Math.round(freeshipDiscount * 100)}% shipping discount (order ≥ 500,000₫)`);
+        }
+    } else if (hasFreeship) {
+        // Freeship voucher but order under threshold
+        baseFee = Math.max(baseFee - 15000, 0);
+        notes.push("DISCOUNT_DELIVERY (voucher)");
+    }
+
+    // ⭐ Apply loyalty tier discount
     let tier = 'none';
     let discountFromTier = 0;
 
     if (address?.userId) {
-        const user = await User.findById(address.userId).select('loyaltyTier');
-        if (user) tier = user.loyaltyTier || 'none';
+        const user = await User.findById(address.userId).select('loyaltyRank');
+        if (user) tier = user.loyaltyRank || 'none';
     }
 
-    // Nhận số tiền giảm từ helper
     discountFromTier = applyLoyaltyToShipping(tier, baseFee, deliveryType);
-
-    // Trừ phí ship theo loyalty
     baseFee = Math.max(baseFee - discountFromTier, 0);
 
-    // Ghi chú để FE hiển thị
-    notes.push(`LOYALTY_APPLIED: ${tier}`);
+    if (discountFromTier > 0) {
+        notes.push(`Loyalty discount (${tier}): -${discountFromTier.toLocaleString()}₫`);
+    }
 
     return {
         nearestWarehouse: nearest,
         region,
         distanceKm,
         deliveryType,
-        isExpressAllowed,
+        deliveryTypeName: activeConfig.name,
+        estimatedDays: activeConfig.estimatedDays,
+        availableDeliveryTypes: getAvailableDeliveryTypes(region),
         fee: Math.round(baseFee),
+        baseFee: Math.round(baseFee),
+        weatherFee,
         notes,
-        weather,
+        weather: deliveryType === "expedited" ? weather : null, // Only show weather for expedited
         loyaltyTier: tier,
         loyaltyDiscount: discountFromTier,
     };
@@ -232,4 +314,6 @@ module.exports = {
     findNearestWarehouse,
     detectRegion,
     calculateShippingFee,
+    getAvailableDeliveryTypes,
+    DELIVERY_TYPES,
 };

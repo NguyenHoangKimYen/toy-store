@@ -44,7 +44,12 @@ module.exports = {
         
         // Add search filter if provided
         if (search && search.trim()) {
-            const searchTerm = search.trim();
+            let searchTerm = search.trim();
+            
+            // Remove # prefix if present (users often search #A1B2C3D4)
+            if (searchTerm.startsWith('#')) {
+                searchTerm = searchTerm.substring(1);
+            }
             
             // Escape special regex characters to prevent errors
             const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -72,9 +77,24 @@ module.exports = {
                 console.error('Error searching users:', err);
             }
             
-            // Search by order ID - if it's a valid ObjectId, search directly
+            // Search by order ID - support full ID or partial match anywhere
             if (/^[0-9a-fA-F]{24}$/.test(searchTerm)) {
+                // Full ObjectId - exact match
                 orConditions.push({ _id: searchTerm });
+            } else if (/^[0-9a-fA-F]+$/.test(searchTerm)) {
+                // Partial hex string - search orders whose ID contains this anywhere
+                try {
+                    const allOrderIds = await Order.find({}).select('_id').lean();
+                    const matchingOrderIds = allOrderIds
+                        .filter(o => o._id.toString().toLowerCase().includes(searchTerm.toLowerCase()))
+                        .map(o => o._id);
+                    
+                    if (matchingOrderIds.length > 0) {
+                        orConditions.push({ _id: { $in: matchingOrderIds } });
+                    }
+                } catch (err) {
+                    console.error('Error searching by partial order ID:', err);
+                }
             }
             
             // Only add $or if we have conditions, otherwise return empty result

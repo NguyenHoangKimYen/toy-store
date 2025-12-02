@@ -12,6 +12,61 @@ const TIER_RULE = [
     { tier: 'none', min: 0 },
 ];
 
+// Tier benefits configuration
+const TIER_BENEFITS = {
+    none: {
+        name: 'Member',
+        color: '#94a3b8',
+        coinMultiplier: 0.25,
+        shippingDiscount: 0,
+        exclusiveOffers: false,
+        prioritySupport: false,
+        monthlyVoucher: 0,
+    },
+    silver: {
+        name: 'Silver',
+        color: '#9ca3af',
+        coinMultiplier: 0.5,
+        shippingDiscount: 5,
+        exclusiveOffers: true,
+        prioritySupport: false,
+        monthlyVoucher: 5000,
+    },
+    gold: {
+        name: 'Gold',
+        color: '#f59e0b',
+        coinMultiplier: 1.0,
+        shippingDiscount: 10,
+        exclusiveOffers: true,
+        prioritySupport: true,
+        monthlyVoucher: 10000,
+    },
+    diamond: {
+        name: 'Diamond',
+        color: '#06b6d4',
+        coinMultiplier: 1.5,
+        shippingDiscount: 15,
+        exclusiveOffers: true,
+        prioritySupport: true,
+        monthlyVoucher: 15000,
+    },
+};
+
+/**
+ * Get loyalty configuration for frontend display
+ */
+const getLoyaltyConfig = () => {
+    return {
+        tiers: TIER_RULE.map(rule => ({
+            tier: rule.tier,
+            minSpent: rule.min,
+            ...TIER_BENEFITS[rule.tier],
+        })),
+        coinRate: 1000, // 1000₫ = 1 coin base
+        coinValue: 1, // 1 coin = 1₫ discount
+    };
+};
+
 //Xác định tier dựa theo tổng chi tiêu 12 tháng gần nhất
 const getTierFromSpent = (spentLast12Months) => {
     for (const rule of TIER_RULE) {
@@ -52,7 +107,7 @@ const handleOrderCompleted = async (userId, orderAmount, orderId) => {
 
     // 2. Cập nhật tier
     const newTier = getTierFromSpent(user.spentLast12Months);
-    user.loyaltyTier = newTier;
+    user.loyaltyRank = newTier;
 
     // 3. Tính coin thưởng
     const multiplier = getCoinMultiplier(newTier);
@@ -84,7 +139,7 @@ const handleOrderCompleted = async (userId, orderAmount, orderId) => {
     });
 
     return {
-        tier: user.loyaltyTier,
+        tier: user.loyaltyRank,
         earnedCoins,
         currentPoints: user.loyaltyPoints,
         newBadges, // <-- ⭐ trả về cho controller
@@ -94,10 +149,25 @@ const handleOrderCompleted = async (userId, orderAmount, orderId) => {
 //Lấy thông tin loyalty của user
 const getMyLoyaltyInfo = async (userId) => {
     const user = await User.findById(userId).select(
-        "loyaltyTier loyaltyPoints lifetimeSpent spentLast12Months",
+        "loyaltyRank loyaltyPoints lifetimeSpent spentLast12Months",
     );
     if (!user) throw new Error('User not found');
-    return user;
+    
+    // Always return calculated tier based on spending (source of truth)
+    const calculatedTier = getTierFromSpent(user.spentLast12Months || 0);
+    
+    // Update if out of sync
+    if (user.loyaltyRank !== calculatedTier) {
+        user.loyaltyRank = calculatedTier;
+        await user.save();
+    }
+    
+    return {
+        loyaltyRank: calculatedTier,
+        loyaltyPoints: user.loyaltyPoints,
+        lifetimeSpent: user.lifetimeSpent,
+        spentLast12Months: user.spentLast12Months,
+    };
 };
 
 /**
@@ -114,7 +184,7 @@ const MONTHLY_VOUCHERS = {
 };
 
 async function giveMonthlyVoucher(user) {
-    const tier = user.loyaltyTier;
+    const tier = user.loyaltyRank;
     if (!tier || tier === 'none') return null;
 
     const now = new Date();
@@ -172,6 +242,32 @@ async function redeemCoins(userId, amount) {
     return { balance: user.loyaltyPoints };
 }
 
+/**
+ * Sync all users' loyaltyRank based on their spentLast12Months
+ * This fixes any out-of-sync tier data
+ */
+async function syncAllUserTiers() {
+    const users = await User.find({}).select('_id loyaltyRank spentLast12Months');
+    let updated = 0;
+    const results = { none: 0, silver: 0, gold: 0, diamond: 0 };
+    
+    for (const user of users) {
+        const correctTier = getTierFromSpent(user.spentLast12Months || 0);
+        results[correctTier]++;
+        
+        if (user.loyaltyRank !== correctTier) {
+            await User.findByIdAndUpdate(user._id, { loyaltyRank: correctTier });
+            updated++;
+        }
+    }
+    
+    return {
+        total: users.length,
+        updated,
+        distribution: results,
+    };
+}
+
 module.exports = {
     handleOrderCompleted,
     getMyLoyaltyInfo,
@@ -180,4 +276,7 @@ module.exports = {
     getCoinMultiplier,
     giveMonthlyVoucher,
     redeemCoins,
+    getLoyaltyConfig,
+    syncAllUserTiers,
+    TIER_BENEFITS,
 };

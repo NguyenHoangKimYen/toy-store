@@ -8,7 +8,8 @@ const {
     moderateReview,
     getPendingReviews,
     checkEligibility,
-    toggleHelpful
+    toggleHelpful,
+    getAllReviewsAdmin
 } = require("../controllers/review.controller");
 
 const { uploadReviewImages } = require("../middlewares/upload.middleware.js");
@@ -45,6 +46,8 @@ router.delete("/:reviewId", deleteReview);
 
 // --- ADMIN ROUTES ---
 router.use(adminOnly);
-router.patch("/:reviewId/moderate", moderateReview); 
+router.get("/admin/all", getAllReviewsAdmin); // Get all reviews for admin management
+router.patch("/:reviewId/moderate", moderateReview);
+router.delete("/admin/:reviewId", deleteReview); // Admin can delete any review 
 
 module.exports = router;

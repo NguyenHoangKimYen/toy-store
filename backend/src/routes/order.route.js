@@ -16,10 +16,10 @@ router.get("/discount/:discountCodeId", auth, adminOnly, orderController.getOrde
 // Admin xem tất cả đơn hàng
 router.get("/admin/all", auth, adminOnly, orderController.adminGetAll);
 
-// Lấy chi tiết đơn (guest - no auth required)
-router.get("/:id/guest", orderController.getDetail);
+// Lấy chi tiết đơn guest (requires sessionId or email verification)
+router.get("/:id/guest", orderController.getGuestOrderDetail);
 
-// Lấy chi tiết đơn (authenticated)
+// Lấy chi tiết đơn (authenticated - user can only see their own)
 router.get("/:id", auth, orderController.getDetail);
 
 // User xem đơn của mình
