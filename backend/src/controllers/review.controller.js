@@ -180,19 +180,7 @@ const getPendingReviews = async (req, res, next) => {
  */
 const getAllReviewsAdmin = async (req, res, next) => {
     try {
-        const { status, rating, sort = 'createdAt:desc', page = 1, limit = 50 } = req.query;
-        
-        const query = {};
-        
-        // Filter by status if provided
-        if (status && status !== 'all') {
-            query.status = status;
-        }
-        
-        // Filter by rating if provided
-        if (rating && rating !== 'all') {
-            query.rating = parseInt(rating);
-        }
+        const { status, rating, search, sort = 'createdAt:desc', page = 1, limit = 50 } = req.query;
         
         // Parse sort
         const [sortField, sortOrder] = sort.split(':');
@@ -200,15 +188,72 @@ const getAllReviewsAdmin = async (req, res, next) => {
         
         const skip = (parseInt(page) - 1) * parseInt(limit);
         
-        const reviews = await Review.find(query)
-            .populate('userId', 'fullName username email avatar')
-            .populate('productId', 'name images slug')
-            .sort(sortObj)
-            .skip(skip)
-            .limit(parseInt(limit))
-            .lean();
+        let reviews;
+        let total;
         
-        const total = await Review.countDocuments(query);
+        // If search is provided, we need to search across populated fields
+        if (search && search.trim()) {
+            const escapedSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const searchRegex = new RegExp(escapedSearch, 'i');
+            
+            // Build base query
+            const query = {};
+            if (status && status !== 'all') {
+                query.status = status;
+            }
+            if (rating && rating !== 'all') {
+                query.rating = parseInt(rating);
+            }
+            
+            // Get all reviews with populated fields
+            const allReviews = await Review.find(query)
+                .populate('userId', 'fullName username email avatar')
+                .populate('productId', 'name images slug')
+                .lean();
+            
+            // Filter in-memory to search populated fields
+            const filtered = allReviews.filter(review => {
+                return searchRegex.test(review.review || '') ||
+                       searchRegex.test(review.userId?.fullName || '') ||
+                       searchRegex.test(review.userId?.username || '') ||
+                       searchRegex.test(review.userId?.email || '') ||
+                       searchRegex.test(review.productId?.name || '');
+            });
+            
+            // Apply sorting and pagination
+            const sorted = filtered.sort((a, b) => {
+                const aVal = a[sortField];
+                const bVal = b[sortField];
+                if (sortOrder === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                }
+                return aVal < bVal ? 1 : -1;
+            });
+            
+            reviews = sorted.slice(skip, skip + parseInt(limit));
+            total = filtered.length;
+        } else {
+            // No search - use efficient database query
+            const query = {};
+            
+            if (status && status !== 'all') {
+                query.status = status;
+            }
+            
+            if (rating && rating !== 'all') {
+                query.rating = parseInt(rating);
+            }
+            
+            reviews = await Review.find(query)
+                .populate('userId', 'fullName username email avatar')
+                .populate('productId', 'name images slug')
+                .sort(sortObj)
+                .skip(skip)
+                .limit(parseInt(limit))
+                .lean();
+            
+            total = await Review.countDocuments(query);
+        }
         
         return res.status(200).json({
             message: 'Reviews fetched successfully',
