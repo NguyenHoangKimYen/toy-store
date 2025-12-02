@@ -24,15 +24,18 @@ app.use(compression({
     threshold: 1024, // Only compress > 1KB
 }));
 
-app.use((req, res, next) => {
-    const start = Date.now();
-    res.on('finish', () => {
-        console.log(
-            `➡️ ${req.method} ${req.originalUrl} → ${res.statusCode} (${Date.now() - start}ms)`,
-        );
+// Request logging (only in development)
+if (process.env.NODE_ENV !== 'production') {
+    app.use((req, res, next) => {
+        const start = Date.now();
+        res.on('finish', () => {
+            console.log(
+                `➡️ ${req.method} ${req.originalUrl} → ${res.statusCode} (${Date.now() - start}ms)`,
+            );
+        });
+        next();
     });
-    next();
-});
+}
 
 
 app.use(cors({

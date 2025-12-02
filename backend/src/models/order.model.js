@@ -123,6 +123,7 @@ const OrderSchema = new mongoose.Schema(
             default: 'pending',
             required: true,
             lowercase: true,
+            index: true,
         },
 
         // createdAt / updatedAt (Tự động)
@@ -131,6 +132,11 @@ const OrderSchema = new mongoose.Schema(
         timestamps: true, // Tự động thêm createdAt và updatedAt
     },
 );
+
+// Compound indexes for common queries
+OrderSchema.index({ userId: 1, createdAt: -1 }); // User's orders sorted by date
+OrderSchema.index({ status: 1, createdAt: -1 }); // Orders by status sorted by date
+OrderSchema.index({ paymentStatus: 1, status: 1 }); // Payment and order status queries
 
 // Tạo Model từ Schema
 module.exports = mongoose.model('Order', OrderSchema);
