@@ -62,7 +62,7 @@ module.exports = {
                 $project: {
                     _id: 1,
                     name: '$product.name',
-                    image: '$product.thumbnail',
+                    image: { $arrayElemAt: ['$product.imageUrls', 0] },
                     quantitySold: 1,
                     revenue: 1,
                 },
@@ -116,10 +116,40 @@ module.exports = {
             },
             { $match: { totalStock: { $lte: maxStock } } },
             {
+                $lookup: {
+                    from: "orderitems",
+                    let: { productId: "$_id" },
+                    pipeline: [
+                        { $match: { $expr: { $eq: ["$productId", "$$productId"] } } },
+                        {
+                            $lookup: {
+                                from: "orders",
+                                localField: "orderId",
+                                foreignField: "_id",
+                                as: "order",
+                            },
+                        },
+                        { $unwind: "$order" },
+                        { $match: { "order.status": "Paid" } },
+                        {
+                            $group: {
+                                _id: null,
+                                totalRevenue: { $sum: { $toDouble: "$subtotal" } },
+                                totalSold: { $sum: "$quantity" },
+                            },
+                        },
+                    ],
+                    as: "salesData",
+                },
+            },
+            {
                 $project: {
                     name: 1,
                     totalStock: 1,
-                    thumbnail: 1,
+                    image: { $arrayElemAt: ['$imageUrls', 0] },
+                    price: 1,
+                    soldCount: { $ifNull: [{ $arrayElemAt: ["$salesData.totalSold", 0] }, 0] },
+                    revenue: { $ifNull: [{ $arrayElemAt: ["$salesData.totalRevenue", 0] }, 0] },
                 },
             },
             { $sort: { totalStock: 1 } },
