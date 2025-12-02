@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { Plus, Search, Filter, Package, MessageSquare } from 'lucide-react'
+import { Plus, Search, Filter, Package, MessageSquare, Star } from 'lucide-react'
 import ProductGrid from './components/ProductGrid'
 import ProductStats from './components/ProductStats'
 import ProductDetailModal from './components/ProductDetailModal'
 import ProductFormModal from './components/ProductFormModal'
 import ProductFilters from './components/ProductFilters'
 import CommentsManagement from './components/CommentsManagement'
+import ReviewsManagement from './components/ReviewsManagement'
 import { AdminContent, AdminHeader } from '../components'
 import { useProducts, useDebounce } from '@/hooks' // Using global hook
 import { PageHeader, SearchBar } from '@/components/common'
@@ -26,6 +27,7 @@ const Products = () => {
   const [activeTab, setActiveTab] = useState('products')
   const [searchQuery, setSearchQuery] = useState('')
   const [commentsSearchQuery, setCommentsSearchQuery] = useState('')
+  const [reviewsSearchQuery, setReviewsSearchQuery] = useState('')
   const debouncedSearch = useDebounce(searchQuery, 500) // Debounce search input
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
@@ -226,6 +228,16 @@ const Products = () => {
     />
   )
 
+  const reviewsHeader = (
+    <AdminHeader
+      title="Reviews Management"
+      description="View and manage product reviews"
+      searchQuery={reviewsSearchQuery}
+      onSearchChange={setReviewsSearchQuery}
+      searchPlaceholder="Search reviews..."
+    />
+  )
+
   return (
     <>
       <div className='space-y-4'>
@@ -245,6 +257,13 @@ const Products = () => {
             >
               <MessageSquare size={16} />
               Comments
+            </TabsTrigger>
+            <TabsTrigger 
+              value='reviews'
+              className='flex items-center gap-2 data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 px-4 py-2 rounded-lg transition-all'
+            >
+              <Star size={16} />
+              Reviews
             </TabsTrigger>
           </TabsList>
 
@@ -275,6 +294,13 @@ const Products = () => {
           <TabsContent value='comments' className='mt-4'>
             <AdminContent header={commentsHeader}>
               <CommentsManagement externalSearchQuery={commentsSearchQuery} />
+            </AdminContent>
+          </TabsContent>
+
+          {/* Reviews Tab Content */}
+          <TabsContent value='reviews' className='mt-4'>
+            <AdminContent header={reviewsHeader}>
+              <ReviewsManagement externalSearchQuery={reviewsSearchQuery} />
             </AdminContent>
           </TabsContent>
         </Tabs>
