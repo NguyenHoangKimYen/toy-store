@@ -195,16 +195,17 @@ export const verifyUser = async (id, token) => {
  * @param {string} id - User ID
  * @param {string} password - New password
  * @param {string} confirmPassword - Password confirmation
+ * @param {string} currentPassword - Current password for verification
  * @returns {Promise<Object>}
  */
-export const setUserPassword = async (id, password, confirmPassword) => {
-  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.USERS}/${id}/set-password`, {
+export const setUserPassword = async (id, password, confirmPassword, currentPassword) => {
+  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.USERS}/set-password?id=${id}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
       ...getAuthHeaders(),
     },
-    body: JSON.stringify({ password, confirmPassword }),
+    body: JSON.stringify({ password, confirmPassword, currentPassword }),
   });
   
   return handleResponse(response);

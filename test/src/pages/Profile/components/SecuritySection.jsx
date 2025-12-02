@@ -1,8 +1,25 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { Eye, EyeOff, Check, X, Loader2, Lock, Shield } from 'lucide-react';
+
+// Password strength checker
+const checkPasswordStrength = (password) => {
+  const checks = {
+    length: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /[0-9]/.test(password),
+    special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+  };
+
+  const passed = Object.values(checks).filter(Boolean).length;
+  const strength = (passed / 5) * 100;
+
+  return { checks, strength, passed };
+};
 
 const SecuritySection = ({ onChangePassword, loading }) => {
   const [formData, setFormData] = useState({
@@ -17,11 +34,55 @@ const SecuritySection = ({ onChangePassword, loading }) => {
     confirm: false,
   });
 
+  const [touchedFields, setTouchedFields] = useState({});
+
+  // Calculate password strength
+  const passwordStrength = useMemo(() => {
+    return checkPasswordStrength(formData.newPassword);
+  }, [formData.newPassword]);
+
+  // Validation errors
+  const validationErrors = useMemo(() => {
+    const errors = {};
+
+    if (touchedFields.currentPassword && !formData.currentPassword) {
+      errors.currentPassword = 'Current password is required';
+    }
+
+    if (touchedFields.newPassword) {
+      if (!formData.newPassword) {
+        errors.newPassword = 'New password is required';
+      } else if (formData.newPassword.length < 8) {
+        errors.newPassword = 'Password must be at least 8 characters';
+      } else if (passwordStrength.strength < 40) {
+        errors.newPassword = 'Password is too weak';
+      }
+    }
+
+    if (touchedFields.confirmPassword) {
+      if (!formData.confirmPassword) {
+        errors.confirmPassword = 'Please confirm your new password';
+      } else if (formData.newPassword !== formData.confirmPassword) {
+        errors.confirmPassword = 'Passwords do not match';
+      }
+    }
+
+    return errors;
+  }, [formData, touchedFields, passwordStrength]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
+    }));
+  };
+
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    setTouchedFields((prev) => ({
+      ...prev,
+      [name]: true,
     }));
   };
 
@@ -33,110 +94,222 @@ const SecuritySection = ({ onChangePassword, loading }) => {
   };
 
   const handleSubmit = async (e) => {
+    console.log('=== SecuritySection handleSubmit called ===');
     e.preventDefault();
+    e.stopPropagation();
 
-    // Validate passwords match
+    // Touch all fields to show errors
+    setTouchedFields({
+      currentPassword: true,
+      newPassword: true,
+      confirmPassword: true,
+    });
+
+    // Check for errors
+    if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
+      console.log('Validation failed: missing fields');
+      toast.error('Please fill in all fields');
+      return;
+    }
+
     if (formData.newPassword !== formData.confirmPassword) {
+      console.log('Validation failed: passwords do not match');
       toast.error('New passwords do not match');
       return;
     }
 
-    // Validate password length
     if (formData.newPassword.length < 8) {
+      console.log('Validation failed: password too short');
       toast.error('Password must be at least 8 characters long');
       return;
     }
 
-    const success = await onChangePassword(formData.currentPassword, formData.newPassword);
-    
+    if (passwordStrength.strength < 40) {
+      console.log('Validation failed: password too weak');
+      toast.error('Please use a stronger password');
+      return;
+    }
+
+    console.log('Calling onChangePassword...');
+    // Call password change with full error isolation
+    let success = false;
+    try {
+      success = await onChangePassword(formData.currentPassword, formData.newPassword);
+      console.log('onChangePassword returned:', success);
+    } catch (err) {
+      // Completely absorb any error
+      console.error('CAUGHT ERROR IN HANDLESUBMIT:', err);
+      console.error('Error type:', err.constructor.name);
+      console.error('Error stack:', err.stack);
+      success = false;
+    }
+
     if (success) {
-      // Reset form
+      console.log('Success! Clearing form');
       setFormData({
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
       });
+      setTouchedFields({});
+    } else {
+      console.log('Password change failed');
     }
+    
+    console.log('=== handleSubmit finished ===');
+  };
+
+  const isFormValid =
+    formData.currentPassword &&
+    formData.newPassword &&
+    formData.confirmPassword &&
+    formData.newPassword === formData.confirmPassword &&
+    passwordStrength.strength >= 40;
+
+  // Render password field inline instead of separate component
+  const renderPasswordField = (name, label, field) => {
+    const hasError = touchedFields[name] && validationErrors[name];
+    const isValid = touchedFields[name] && !validationErrors[name] && formData[name];
+
+    return (
+      <div className="form-group">
+        <Label htmlFor={name} className="flex items-center gap-2 text-sm font-medium text-gray-700">
+          <Lock size={14} className="text-gray-500" />
+          {label}
+        </Label>
+        <div className="relative">
+          <Input
+            id={name}
+            name={name}
+            type={showPasswords[field] ? 'text' : 'password'}
+            value={formData[name]}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            disabled={loading}
+            placeholder="••••••••"
+            className={`pr-20 transition-all ${
+              hasError
+                ? 'border-red-400 focus:border-red-400 focus:ring-red-400/20'
+                : isValid
+                ? 'border-green-400 focus:border-green-400 focus:ring-green-400/20'
+                : ''
+            }`}
+            required
+          />
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            <button
+              type="button"
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+              onClick={() => togglePasswordVisibility(field)}
+            >
+              {showPasswords[field] ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
+        {hasError && (
+          <p className="text-xs text-red-500 flex items-center gap-1 mt-1">
+            <X className="w-3 h-3" />
+            {validationErrors[name]}
+          </p>
+        )}
+      </div>
+    );
   };
 
   return (
     <div className="profile-section">
       <div className="section-header">
-        <h3>Change Password</h3>
+        <h3>
+          <Shield size={20} className="inline mr-2" />
+          Change Password
+        </h3>
       </div>
 
-      <form onSubmit={handleSubmit} className="security-form">
-        <div className="form-group">
-          <Label htmlFor="currentPassword">Current Password</Label>
-          <div className="password-input-wrapper">
-            <Input
-              id="currentPassword"
-              name="currentPassword"
-              type={showPasswords.current ? 'text' : 'password'}
-              value={formData.currentPassword}
-              onChange={handleChange}
-              disabled={loading}
-              required
-            />
-            <button
-              type="button"
-              className="password-toggle"
-              onClick={() => togglePasswordVisibility('current')}
-            >
-              {showPasswords.current ? '👁️' : '👁️‍🗨️'}
-            </button>
-          </div>
-        </div>
+      <form onSubmit={handleSubmit} className="security-form max-w-md">
+        {renderPasswordField('currentPassword', 'Current Password', 'current')}
 
         <div className="form-group">
-          <Label htmlFor="newPassword">New Password</Label>
-          <div className="password-input-wrapper">
-            <Input
-              id="newPassword"
-              name="newPassword"
-              type={showPasswords.new ? 'text' : 'password'}
-              value={formData.newPassword}
-              onChange={handleChange}
-              disabled={loading}
-              required
-              minLength={8}
-            />
-            <button
-              type="button"
-              className="password-toggle"
-              onClick={() => togglePasswordVisibility('new')}
-            >
-              {showPasswords.new ? '👁️' : '👁️‍🗨️'}
-            </button>
-          </div>
-          <p className="input-hint">Must be at least 8 characters long</p>
+          {renderPasswordField('newPassword', 'New Password', 'new')}
+
+          {/* Password Strength Meter */}
+          {formData.newPassword && (
+            <div className="mt-3 space-y-2 animate-in slide-in-from-top-2">
+              <div className="flex gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
+                      i < passwordStrength.passed
+                        ? passwordStrength.strength < 40
+                          ? 'bg-red-500'
+                          : passwordStrength.strength < 80
+                          ? 'bg-orange-500'
+                          : 'bg-green-500'
+                        : 'bg-gray-200'
+                    }`}
+                  />
+                ))}
+              </div>
+              <p
+                className={`text-xs font-semibold ${
+                  passwordStrength.strength < 40
+                    ? 'text-red-500'
+                    : passwordStrength.strength < 80
+                    ? 'text-orange-500'
+                    : 'text-green-500'
+                }`}
+              >
+                {passwordStrength.strength < 40
+                  ? 'Weak password'
+                  : passwordStrength.strength < 80
+                  ? 'Medium password'
+                  : 'Strong password'}
+              </p>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className={`flex items-center gap-1 ${passwordStrength.checks.length ? 'text-green-600' : 'text-gray-400'}`}>
+                  {passwordStrength.checks.length ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                  8+ characters
+                </div>
+                <div className={`flex items-center gap-1 ${passwordStrength.checks.uppercase ? 'text-green-600' : 'text-gray-400'}`}>
+                  {passwordStrength.checks.uppercase ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                  Uppercase letter
+                </div>
+                <div className={`flex items-center gap-1 ${passwordStrength.checks.lowercase ? 'text-green-600' : 'text-gray-400'}`}>
+                  {passwordStrength.checks.lowercase ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                  Lowercase letter
+                </div>
+                <div className={`flex items-center gap-1 ${passwordStrength.checks.number ? 'text-green-600' : 'text-gray-400'}`}>
+                  {passwordStrength.checks.number ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                  Number
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="form-group">
-          <Label htmlFor="confirmPassword">Confirm New Password</Label>
-          <div className="password-input-wrapper">
-            <Input
-              id="confirmPassword"
-              name="confirmPassword"
-              type={showPasswords.confirm ? 'text' : 'password'}
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              disabled={loading}
-              required
-            />
-            <button
-              type="button"
-              className="password-toggle"
-              onClick={() => togglePasswordVisibility('confirm')}
-            >
-              {showPasswords.confirm ? '👁️' : '👁️‍🗨️'}
-            </button>
-          </div>
-        </div>
+        {renderPasswordField('confirmPassword', 'Confirm New Password', 'confirm')}
 
-        <div className="form-actions">
-          <Button type="submit" disabled={loading}>
-            {loading ? 'Changing Password...' : 'Change Password'}
+        {/* Password match indicator */}
+        {touchedFields.confirmPassword && formData.confirmPassword && !validationErrors.confirmPassword && (
+          <p className="text-xs text-green-500 flex items-center gap-1 -mt-3 mb-4">
+            <Check className="w-3 h-3" />
+            Passwords match
+          </p>
+        )}
+
+        <div className="form-actions mt-6">
+          <Button type="submit" disabled={loading || !isFormValid} className="w-full sm:w-auto">
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Changing Password...
+              </>
+            ) : (
+              <>
+                <Shield className="w-4 h-4 mr-2" />
+                Change Password
+              </>
+            )}
           </Button>
         </div>
       </form>

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import * as usersService from '@/services/users.service';
 import { useAuth } from '@/hooks/useAuth';
 import { useUser } from '@/hooks'; // Using global user hook
+import { getAuthToken } from '@/utils/authHelpers';
 
 export const useProfile = () => {
   const navigate = useNavigate();
@@ -90,22 +91,81 @@ export const useProfile = () => {
   };
 
   const changePassword = async (currentPassword, newPassword) => {
+    console.log('=== changePassword called ===');
+    console.log('User ID:', user?._id);
+    console.log('Has token:', !!getAuthToken());
+    
     try {
       setError(null);
 
       if (!user?._id) {
-        throw new Error('No user ID found');
+        console.log('ERROR: No user ID');
+        toast.error('No user ID found');
+        return false;
       }
 
-      // Password change uses service directly (special operation)
-      await usersService.setUserPassword(user._id, newPassword, newPassword);
+      const token = getAuthToken();
+      if (!token) {
+        console.log('ERROR: No auth token');
+        toast.error('Not authenticated');
+        return false;
+      }
+
+      console.log('Making fetch request...');
+      let response;
+      try {
+        response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users/set-password?id=${user._id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ 
+            password: newPassword, 
+            confirmPassword: newPassword, 
+            currentPassword 
+          }),
+        });
+        console.log('Fetch completed. Status:', response.status, response.statusText);
+      } catch (fetchErr) {
+        console.error('FETCH ERROR:', fetchErr);
+        toast.error('Network error. Please try again.');
+        return false;
+      }
+
+      let data;
+      try {
+        data = await response.json();
+        console.log('Response data:', data);
+      } catch (parseErr) {
+        console.error('JSON PARSE ERROR:', parseErr);
+        toast.error('Invalid server response');
+        return false;
+      }
+
+      if (!response.ok || !data.success) {
+        const errorMessage = data.message || 'Failed to change password';
+        console.log('Request failed:', errorMessage);
+        // DO NOT setError - that causes Profile to show error page
+        // setError(errorMessage);
+        toast.error(errorMessage);
+        console.log('About to return false');
+        return false;
+      }
+
+      console.log('Password changed successfully');
       toast.success('Password changed successfully');
       return true;
     } catch (err) {
-      console.error('Error changing password:', err);
-      setError(err.message || 'Failed to change password');
-      toast.error('Failed to change password');
+      console.error('OUTER CATCH - PASSWORD CHANGE ERROR:', err);
+      console.error('Error stack:', err.stack);
+      const errorMessage = err.message || 'Failed to change password';
+      // DO NOT setError - that causes Profile to show error page
+      // setError(errorMessage);
+      toast.error(errorMessage);
       return false;
+    } finally {
+      console.log('=== changePassword finished ===');
     }
   };
 

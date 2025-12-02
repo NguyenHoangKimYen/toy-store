@@ -12,7 +12,7 @@ const SecuritySection = lazy(() => import('./components/SecuritySection'));
 const LoyaltySection = lazy(() => import('./components/LoyaltySection'));
 
 const Profile = () => {
-  const { user, loading, error, updateProfile, updateAvatar } = useProfile();
+  const { user, loading, error, updateProfile, updateAvatar, changePassword } = useProfile();
   const [activeTab, setActiveTab] = useState('personal');
 
   if (loading) {
@@ -164,7 +164,7 @@ const Profile = () => {
               <AddressSection user={user} />
             )}
             {activeTab === 'security' && (
-              <SecuritySection user={user} />
+              <SecuritySection user={user} onChangePassword={changePassword} loading={loading} />
             )}
             {activeTab === 'loyalty' && (
               <LoyaltySection user={user} />
