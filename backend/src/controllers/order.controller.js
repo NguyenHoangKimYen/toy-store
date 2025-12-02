@@ -16,13 +16,102 @@ module.exports = {
     },
 
     async getDetail(req, res) {
-        const order = await orderService.getOrderDetail(req.params.id);
-        if (!order)
-            return res
-                .status(404)
-                .json({ success: false, message: "Order not found" });
+        try {
+            const order = await orderService.getOrderDetail(req.params.id);
+            if (!order)
+                return res
+                    .status(404)
+                    .json({ success: false, message: "Order not found" });
 
-        return res.json({ success: true, data: order });
+            // Security check: user can only view their own orders
+            // req.user is set by auth middleware for authenticated routes
+            if (req.user) {
+                const userId = req.user.id || req.user._id;
+                const orderUserId = order.userId?._id?.toString() || order.userId?.toString();
+                
+                // Allow if user owns the order OR user is admin
+                if (orderUserId && orderUserId !== userId.toString() && req.user.role !== 'admin') {
+                    return res.status(403).json({ 
+                        success: false, 
+                        message: "You don't have permission to view this order" 
+                    });
+                }
+            }
+
+            return res.json({ success: true, data: order });
+        } catch (err) {
+            console.error('getDetail error:', err);
+            return res.status(500).json({ success: false, message: err.message });
+        }
+    },
+
+    // Guest order detail - requires matching session or email
+    async getGuestOrderDetail(req, res) {
+        try {
+            const order = await orderService.getOrderDetail(req.params.id);
+            if (!order)
+                return res
+                    .status(404)
+                    .json({ success: false, message: "Order not found" });
+
+            // For guest orders, verify by sessionId or email from query
+            const { sessionId, email } = req.query;
+            
+            // order.userId is just an ObjectId - we need to look up the user to get their email
+            let orderUserEmail = null;
+            if (order.userId) {
+                const User = require('../models/user.model');
+                const user = await User.findById(order.userId).lean();
+                orderUserEmail = user?.email;
+            }
+            
+            console.log('[getGuestOrderDetail] Verifying order:', {
+                orderId: req.params.id,
+                providedEmail: email,
+                providedSessionId: sessionId,
+                orderUserId: order.userId,
+                orderUserEmail: orderUserEmail,
+                orderShippingEmail: order.shippingAddress?.email,
+            });
+            
+            // Get email from order - check user's email or shipping address
+            const orderEmail = orderUserEmail || order.shippingAddress?.email;
+
+            // Verify by email match (case-insensitive)
+            const emailMatch = email && orderEmail && 
+                               orderEmail.toLowerCase() === email.toLowerCase();
+            
+            console.log('[getGuestOrderDetail] Email check:', {
+                providedEmail: email?.toLowerCase(),
+                orderEmail: orderEmail?.toLowerCase(),
+                match: emailMatch
+            });
+
+            // If email matches, allow access
+            if (emailMatch) {
+                console.log('[getGuestOrderDetail] Access granted via email match');
+                return res.json({ success: true, data: order });
+            }
+
+            // If neither email nor sessionId provided, reject
+            if (!sessionId && !email) {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: "Please provide email or session to verify order ownership." 
+                });
+            }
+
+            // If order has a userId but no matching email, 
+            // it's likely a registered user order - guest endpoint shouldn't work
+            console.log('[getGuestOrderDetail] Access denied - no match found');
+            return res.status(403).json({ 
+                success: false, 
+                message: "Cannot verify order ownership. Please login if you have an account." 
+            });
+        } catch (err) {
+            console.error('getGuestOrderDetail error:', err);
+            return res.status(500).json({ success: false, message: err.message });
+        }
     },
 
     async getMyOrders(req, res) {

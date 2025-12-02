@@ -104,15 +104,52 @@ const setUserVerified = async (id, isVerified = true) => {
 };
 
 // Đặt mật khẩu mới
-const setUserPassword = async (id, plainPassword) => {
+const setUserPassword = async (id, plainPassword, currentPassword) => {
     if (
         !plainPassword ||
         typeof plainPassword !== 'string' ||
         !plainPassword.trim() ||
-        plainPassword.length < 8 ||
+        plainPassword.length < 12 ||
         plainPassword.length > 32
     ) {
-        throw new Error('Invalid password');
+        throw new Error('Password must be 12-32 characters long');
+    }
+
+    // Password strength validation
+    const hasUpperCase = /[A-Z]/.test(plainPassword);
+    const hasLowerCase = /[a-z]/.test(plainPassword);
+    const hasNumber = /[0-9]/.test(plainPassword);
+
+    if (!hasUpperCase || !hasLowerCase || !hasNumber) {
+        throw new Error('Password must contain uppercase, lowercase, and number');
+    }
+
+    // Verify current password - MUST use findByIdWithPassword to get the password field
+    if (currentPassword) {
+        const user = await userRepository.findByIdWithPassword(id);
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        if (!user.password) {
+            // User might have signed up with social login and has no password
+            throw new Error('No password set for this account. Please use social login or reset password.');
+        }
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            const error = new Error('Current password is incorrect');
+            error.status = 400;
+            throw error;
+        }
+
+        // Check if new password is the same as current password
+        const isSamePassword = await bcrypt.compare(plainPassword, user.password);
+        if (isSamePassword) {
+            const error = new Error('New password cannot be the same as current password');
+            error.status = 400;
+            throw error;
+        }
     }
 
     const hashedPassword = await bcrypt.hash(plainPassword, 10);

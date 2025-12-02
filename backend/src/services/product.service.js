@@ -40,14 +40,19 @@ const getAllProducts = async (query) => {
     }
 
     // --- Lọc theo Khoảng giá (Price Range) ---
+    // Filter by OVERLAP: Show products that have ANY variant in the user's price range
+    // A product with minPrice=100k and maxPrice=500k should show for range 200k-400k
     const minPrice = parseFloat(params.get('minPrice') || '0');
     const maxPrice = parseFloat(params.get('maxPrice') || '0');
 
+    // Overlap logic:
+    // - User's minPrice: product's maxPrice must be >= user's minPrice (at least one variant is expensive enough)
+    // - User's maxPrice: product's minPrice must be <= user's maxPrice (at least one variant is cheap enough)
     if (minPrice > 0) {
-        filter.maxPrice = { $gte: minPrice };
+        filter.maxPrice = { $gte: minPrice };  // Product has at least one variant >= user's min
     }
     if (maxPrice > 0) {
-        filter.minPrice = { ...filter.minPrice, $lte: maxPrice };
+        filter.minPrice = { $lte: maxPrice };  // Product has at least one variant <= user's max
     }
 
     // --- Lọc theo Đánh giá (Rating) ---
@@ -406,7 +411,8 @@ const updateProduct = async (id, updateData, retryCount = 0) => {
                 for (const v of variantsInput) {
                     const variantData = {
                         price: v.price?.$numberDecimal || v.price,
-                        stockQuantity: v.stockQuantity || v.stock,
+                        stockQuantity: v.stockQuantity || v.stock, // Support cả 2 tên field
+                        weight: parseInt(v.weight) || 100,
                         attributes: v.attributes,
                         isActive: v.isActive !== false,
                         imageUrls: v.imageUrls || []

@@ -1,7 +1,44 @@
 const Address = require("../models/address.model");
 const User = require("../models/user.model");
-const { calculateShippingFee } = require("../services/shipping.service.js");
+const { calculateShippingFee, DELIVERY_TYPES, getAvailableDeliveryTypes } = require("../services/shipping.service.js");
 const { verifyAddress } = require("../utils/vietmap.helper.js");
+
+// Get all delivery types with their configurations
+exports.getDeliveryTypes = async (req, res) => {
+    try {
+        const { region } = req.query;
+        
+        // If region is provided, filter by availability
+        if (region) {
+            const available = getAvailableDeliveryTypes(region);
+            return res.json({
+                success: true,
+                deliveryTypes: available,
+            });
+        }
+        
+        // Return all delivery types with full config
+        const deliveryTypes = Object.entries(DELIVERY_TYPES).map(([id, config]) => ({
+            id,
+            name: config.name,
+            description: config.description,
+            estimatedDays: config.estimatedDays,
+            feeMultiplier: config.feeMultiplier,
+            weatherFeeApplied: config.weatherFeeApplied,
+            freeShippingThreshold: config.freeShippingThreshold,
+            freeShippingDiscount: config.freeShippingDiscount,
+            requiresUrbanArea: config.requiresUrbanArea || false,
+        }));
+        
+        return res.json({
+            success: true,
+            deliveryTypes,
+        });
+    } catch (error) {
+        console.error("getDeliveryTypes error:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
 
 // Ghi log khi bị từ chối giao hoả tốc
 function logExpressRejected(context) {
@@ -20,9 +57,20 @@ exports.calculateShippingFeeByUser = async (req, res) => {
                 .status(404)
                 .json({ success: false, message: "Không tìm thấy user" });
 
-        // Lấy địa chỉ mặc định
+        // Check if specific addressId is provided, otherwise use default
         let address = null;
-        if (user.defaultAddressId) {
+        const { addressId } = req.query;
+        
+        if (addressId) {
+            // Use the specific address provided
+            address = await Address.findById(addressId).lean();
+            if (!address) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Địa chỉ không tồn tại",
+                });
+            }
+        } else if (user.defaultAddressId) {
             address = await Address.findById(user.defaultAddressId).lean();
         } else {
             address = await Address.findOne({ userId, isDefault: true }).lean();

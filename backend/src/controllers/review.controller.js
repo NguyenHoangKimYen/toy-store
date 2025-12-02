@@ -174,6 +174,105 @@ const getPendingReviews = async (req, res, next) => {
 };
 
 /**
+ * @route   GET /api/reviews/admin/all
+ * @desc    Get all reviews for admin management
+ * @access  Admin only
+ */
+const getAllReviewsAdmin = async (req, res, next) => {
+    try {
+        const { status, rating, search, sort = 'createdAt:desc', page = 1, limit = 50 } = req.query;
+        
+        // Parse sort
+        const [sortField, sortOrder] = sort.split(':');
+        const sortObj = { [sortField]: sortOrder === 'asc' ? 1 : -1 };
+        
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        let reviews;
+        let total;
+        
+        // If search is provided, we need to search across populated fields
+        if (search && search.trim()) {
+            const escapedSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const searchRegex = new RegExp(escapedSearch, 'i');
+            
+            // Build base query
+            const query = {};
+            if (status && status !== 'all') {
+                query.status = status;
+            }
+            if (rating && rating !== 'all') {
+                query.rating = parseInt(rating);
+            }
+            
+            // Get all reviews with populated fields
+            const allReviews = await Review.find(query)
+                .populate('userId', 'fullName username email avatar')
+                .populate('productId', 'name images slug')
+                .lean();
+            
+            // Filter in-memory to search populated fields
+            const filtered = allReviews.filter(review => {
+                return searchRegex.test(review.review || '') ||
+                       searchRegex.test(review.userId?.fullName || '') ||
+                       searchRegex.test(review.userId?.username || '') ||
+                       searchRegex.test(review.userId?.email || '') ||
+                       searchRegex.test(review.productId?.name || '');
+            });
+            
+            // Apply sorting and pagination
+            const sorted = filtered.sort((a, b) => {
+                const aVal = a[sortField];
+                const bVal = b[sortField];
+                if (sortOrder === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                }
+                return aVal < bVal ? 1 : -1;
+            });
+            
+            reviews = sorted.slice(skip, skip + parseInt(limit));
+            total = filtered.length;
+        } else {
+            // No search - use efficient database query
+            const query = {};
+            
+            if (status && status !== 'all') {
+                query.status = status;
+            }
+            
+            if (rating && rating !== 'all') {
+                query.rating = parseInt(rating);
+            }
+            
+            reviews = await Review.find(query)
+                .populate('userId', 'fullName username email avatar')
+                .populate('productId', 'name images slug')
+                .sort(sortObj)
+                .skip(skip)
+                .limit(parseInt(limit))
+                .lean();
+            
+            total = await Review.countDocuments(query);
+        }
+        
+        return res.status(200).json({
+            message: 'Reviews fetched successfully',
+            metadata: {
+                reviews,
+                pagination: {
+                    total,
+                    page: parseInt(page),
+                    limit: parseInt(limit),
+                    pages: Math.ceil(total / parseInt(limit))
+                }
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
  * @route   POST /api/reviews/:reviewId/helpful
  * @desc    Toggle helpful status for a review
  * @access  Private
@@ -234,5 +333,6 @@ module.exports = {
     moderateReview,
     getPendingReviews,
     checkEligibility,
-    toggleHelpful
+    toggleHelpful,
+    getAllReviewsAdmin
 };
