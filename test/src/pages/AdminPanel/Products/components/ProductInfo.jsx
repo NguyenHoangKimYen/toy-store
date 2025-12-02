@@ -141,7 +141,7 @@ const ProductInfo = ({ product }) => {
                     <span className='font-semibold text-gray-900 dark:text-white'>
                       {formatPrice(parsePrice(variant.price))}
                     </span>
-                    <span className={`${variant.stockQuantity > 0 ? 'text-green-600' : 'text-red-600'} font-medium`}>
+                    <span className={`${variant.stockQuantity >= 0 ? 'text-green-600' : 'text-red-600'} font-medium`}>
                       Stock: {variant.stockQuantity || 0}
                     </span>
                   </div>

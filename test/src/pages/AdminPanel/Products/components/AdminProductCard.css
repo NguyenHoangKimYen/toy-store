@@ -96,6 +96,57 @@
   letter-spacing: 0.5px;
 }
 
+/* Caution Ribbon - Diagonal Stripe Across Product */
+.caution-ribbon {
+  position: absolute;
+  top: 50%;
+  left: -10%;
+  width: 120%;
+  height: 40px;
+  background: repeating-linear-gradient(
+    90deg,
+    #FFD700 0px,
+    #FFD700 20px,
+    #1a1a1a 20px,
+    #1a1a1a 40px
+  );
+  transform: translateY(-50%) rotate(-15deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 15;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Disabled Gray Mask */
+.disabled-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(128, 128, 128, 0.5);
+  z-index: 10;
+}
+
+.caution-icon {
+  color: #c00101;
+  font-size: 16px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  z-index: 16;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
 /* Draft Product Overlay */
 .draft-overlay {
   position: absolute;
@@ -116,7 +167,6 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
-  font-style: italic;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
@@ -140,7 +190,6 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
-  font-style: italic;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
@@ -164,7 +213,6 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
-  font-style: italic;
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
 }
 
