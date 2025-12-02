@@ -303,7 +303,7 @@ const Main = () => {
 
       <div className="px-4">
         {loading && (
-          <div className="text-sm text-stone-500">Đang tải dashboard...</div>
+          <div className="text-sm text-stone-500">Loading dashboard...</div>
         )}
         {error && (
           <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
@@ -315,34 +315,34 @@ const Main = () => {
           <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               <StatCard
-                title="Tổng người dùng"
+                title="Total Users"
                 value={overview?.totalUsers || 0}
                 pill="User segmentation"
                 accent={`High: ${overview?.high || 0} • Medium: ${overview?.medium || 0} • Low: ${overview?.low || 0}`}
               />
               <StatCard
-                title="Doanh thu năm nay"
+                title="Revenue This Year"
                 value={formatPriceNumber(totalRevenueThisYear)}
                 pill="Paid orders"
-                accent="Cộng dồn 12 tháng"
+                accent="Cumulative 12 months"
               />
               <StatCard
-                title="7 ngày gần nhất"
+                title="Last 7 Days"
                 value={formatPrice(totalRevenue7Days)}
-                accent={`Đơn: ${revenueUpdates.reduce(
+                accent={`Orders: ${revenueUpdates.reduce(
                   (s, d) => s + toNumber(d.orders),
                   0
                 )}`}
               />
               <StatCard
-                title="Tổng doanh thu"
+                title="Total Revenue"
                 value={formatPrice(
                   toNumber(paymentSummary?.cod) +
                     toNumber(paymentSummary?.momo) +
                     toNumber(paymentSummary?.vietqr ?? paymentSummary?.vnpay) +
                     toNumber(paymentSummary?.zalopay)
                 )}
-                accent="Gồm COD, MoMo, VietQR, ZaloPay"
+                accent="Includes COD, MoMo, VietQR, ZaloPay"
               />
             </div>
 
@@ -359,11 +359,11 @@ const Main = () => {
 
               <div className="lg:col-span-2 p-4 rounded-xl bg-white shadow-sm border border-stone-200">
                 <h3 className="text-sm font-semibold text-stone-700 mb-3">
-                  Doanh thu theo cổng thanh toán
+                  Revenue by Payment Gateway
                 </h3>
                 <BarChart data={paymentData} colors={paymentData.map((p) => p.color)} />
                 <div className="mt-2 text-[11px] text-stone-500">
-                  COD vàng • MoMo hồng • VietQR xanh biển • ZaloPay xanh lá
+                  COD Yellow • MoMo Pink • VietQR Blue • ZaloPay Green
                 </div>
               </div>
             </div>
@@ -371,14 +371,14 @@ const Main = () => {
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="p-4 rounded-xl bg-white shadow-sm border border-stone-200">
                 <h3 className="text-sm font-semibold text-stone-700 mb-3">
-                  Doanh thu 7 ngày (Bar)
+                  7-Day Revenue (Bar Chart)
                 </h3>
                 <BarChart data={revenue7Data} colors={revenue7Data.map(() => '#6366f1')} />
               </div>
 
               <div className="p-4 rounded-xl bg-white shadow-sm border border-stone-200">
                 <h3 className="text-sm font-semibold text-stone-700 mb-3">
-                  Doanh thu theo tháng (Heatmap)
+                  Monthly Revenue (Heatmap)
                 </h3>
                 <div className="grid grid-cols-6 md:grid-cols-12 gap-2">
                   {revenueMonthData.map((m) => (
@@ -404,7 +404,7 @@ const Main = () => {
 
             <div className="grid gap-4 lg:grid-cols-2">
               <ListCard
-                title="Sản phẩm bán chạy"
+                title="Best Selling Products"
                 items={topSelling.slice(0, 5)}
                 renderItem={(item) => (
                   <div
@@ -426,7 +426,7 @@ const Main = () => {
                           {item.name}
                         </div>
                         <div className="text-xs text-stone-500">
-                          Đã bán {item.quantitySold} • Doanh thu{' '}
+                          Sold {item.quantitySold} • Revenue{' '}
                           {formatPrice(item.revenue)}
                         </div>
                       </div>
@@ -436,7 +436,7 @@ const Main = () => {
               />
 
               <ListCard
-                title="Sắp hết hàng"
+                title="Low Stock"
                 items={lowStock.slice(0, 5)}
                 renderItem={(item) => (
                   <div
@@ -447,7 +447,7 @@ const Main = () => {
                       {item.name}
                     </div>
                     <span className="text-xs px-2 py-1 rounded-full bg-red-50 text-red-600 border border-red-100">
-                      {item.totalStock} tồn
+                      {item.totalStock} left
                     </span>
                   </div>
                 )}
@@ -456,7 +456,7 @@ const Main = () => {
 
             <div className="p-4 rounded-xl bg-white shadow-sm border border-stone-200">
               <h3 className="text-sm font-semibold text-stone-700 mb-3">
-                Doanh thu theo danh mục
+                Revenue by Category
               </h3>
               <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                 {categoryStats.map((c) => (
@@ -474,20 +474,20 @@ const Main = () => {
                     {formatPrice(c.revenue)}
                   </div>
                 </div>
-              ))}
-              {categoryStats.length === 0 && (
-                <div className="text-sm text-stone-500">Chưa có dữ liệu</div>
+                ))}
+                {categoryStats.length === 0 && (
+                <div className="text-sm text-stone-500">No data available</div>
               )}
               </div>
             </div>
 
             <div className="p-4 rounded-xl bg-white shadow-sm border border-stone-200">
               <h3 className="text-sm font-semibold text-stone-700 mb-3">
-                Bản đồ chi nhánh (Vietmap)
+                Branch Map (Vietmap)
               </h3>
               <BranchMap branches={branches} />
               <div className="text-[11px] text-stone-500 mt-2">
-                Nguồn: /dashboard/branches-map. Có thể cấu hình khóa VietMap qua VITE_VIETMAP_API_KEY.
+                Source: /dashboard/branches-map. VietMap API key can be configured via VITE_VIETMAP_API_KEY.
               </div>
             </div>
           </div>
