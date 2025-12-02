@@ -75,9 +75,23 @@ const getProductByRating = async (req, res, next) => {
 /** Tạo sản phẩm mới */
 const createProduct = async (req, res) => {
     try {
+        console.log('\n🎯 Controller: Create Product Request');
+        console.log('📦 Request Body:', JSON.stringify(req.body, null, 2));
+        console.log('🖼️  Files Count:', req.files?.length || 0);
+
         const product = await productService.createProduct(req.body, req.files);
+
+        console.log('\n✅ Controller: Success');
+        console.log('📦 Response Data:', {
+            _id: product._id,
+            name: product.name,
+            attributes: product.attributes,
+            variants: product.variants?.length || 0
+        });
+
         res.status(201).json({ success: true, data: product });
     } catch (error) {
+        console.error('\n❌ Controller: Error creating product:', error);
         res.status(400).json({ success: false, message: error.message });
     }
 };
@@ -94,16 +108,28 @@ const updateProduct = async (req, res, next) => {
             });
         }
 
-        // console.log('📝 Update Product Request:', req.body);
+        console.log('\n==================== CONTROLLER: UPDATE PRODUCT ====================');
+        console.log('📝 Product ID:', id);
+        console.log('📦 Request Body:', JSON.stringify(req.body, null, 2));
+        console.log('📁 Files:', req.files?.length || 0);
 
         const updatedProduct = await productService.updateProduct(id, req.body);
+
+        console.log('\n✅ Controller Success');
+        console.log('📦 Response Data:', {
+            _id: updatedProduct._id,
+            name: updatedProduct.name,
+            attributes: updatedProduct.attributes,
+            variants: updatedProduct.variants?.length || 0
+        });
+        console.log('==================== CONTROLLER: END ====================\n');
 
         return res.status(200).json({
             success: true,
             data: updatedProduct,
         });
     } catch (error) {
-        console.error('❌ Update Product Error:', error.message);
+        console.error('❌ Controller Error:', error.message);
         next(error);
     }
 };
