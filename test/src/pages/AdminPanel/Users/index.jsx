@@ -1,15 +1,18 @@
 import React, { useState, useMemo } from 'react'
-import { UserPlus, Search, Filter } from 'lucide-react'
+import { UserPlus, Search, Filter, Users as UsersIcon, Crown } from 'lucide-react'
 import UserTable from './components/UserTable'
 import UserStats from './components/UserStats'
 import UserDetailModal from './components/UserDetailModal'
 import UserFormModal from './components/UserFormModal'
 import UserFilters from './components/UserFilters'
+import LoyaltyManagement from './components/LoyaltyManagement'
 import { AdminContent } from '../components'
 import { useUsers, useDebounce } from '@/hooks' // Using global hook
 import { PageHeader, SearchBar, ConfirmDialog } from '@/components/common'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 const Users = () => {
+  const [activeTab, setActiveTab] = useState('users')
   const [searchQuery, setSearchQuery] = useState('')
   const debouncedSearch = useDebounce(searchQuery, 500) // Debounce search input
   const [selectedUser, setSelectedUser] = useState(null)
@@ -196,23 +199,65 @@ const Users = () => {
     </div>
   )
 
+  const loyaltyHeader = (
+    <div className='admin-card bg-white/85 backdrop-blur-md border border-purple-100/70 rounded-2xl shadow-[0_18px_42px_-28px_rgba(124,58,237,0.22)] p-5 md:p-6'>
+      <div className='space-y-1'>
+        <h2 className='text-2xl font-semibold text-slate-900'>Loyalty Management</h2>
+        <p className='text-sm text-slate-500'>View and manage customer loyalty points and tiers</p>
+      </div>
+    </div>
+  )
+
   return (
     <>
-      <AdminContent
-        header={headerCard}
-        filters={null}
-        stats={<UserStats stats={stats} />}
-        loading={loading}
-        error={error}
-        onRetry={() => window.location.reload()}
-      >
-        <UserTable 
-          users={users} 
-          onViewDetails={handleViewDetails}
-          onEdit={handleEditUser}
-          onDelete={handleDeleteUser}
-        />
-      </AdminContent>
+      <div className='space-y-4'>
+        {/* Horizontal Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className='w-full'>
+          <TabsList className='bg-white/80 border border-purple-100/60 p-1 rounded-xl'>
+            <TabsTrigger 
+              value='users' 
+              className='flex items-center gap-2 data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 px-4 py-2 rounded-lg transition-all'
+            >
+              <UsersIcon size={16} />
+              Users
+            </TabsTrigger>
+            <TabsTrigger 
+              value='loyalty'
+              className='flex items-center gap-2 data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 px-4 py-2 rounded-lg transition-all'
+            >
+              <Crown size={16} />
+              Loyalty
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Users Tab Content */}
+          <TabsContent value='users' className='mt-4'>
+            <AdminContent
+              header={headerCard}
+              filters={null}
+              stats={<UserStats stats={stats} />}
+              loading={loading}
+              error={error}
+              onRetry={() => window.location.reload()}
+            >
+              <UserTable 
+                users={users} 
+                onViewDetails={handleViewDetails}
+                onEdit={handleEditUser}
+                onDelete={handleDeleteUser}
+              />
+            </AdminContent>
+          </TabsContent>
+
+          {/* Loyalty Tab Content */}
+          <TabsContent value='loyalty' className='mt-4'>
+            <div className='space-y-4'>
+              {loyaltyHeader}
+              <LoyaltyManagement />
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
 
       {/* User Detail Modal */}
       {isDetailModalOpen && selectedUser && (

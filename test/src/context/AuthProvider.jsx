@@ -51,12 +51,13 @@ export const AuthProvider = ({ children }) => {
     };
 
     const bootstrapFromOAuth = async (token) => {
-      setAuthToken(token);
-
+      // Token already saved before this function is called
       const decoded = decodeToken(token);
       const userId = decoded?.id || decoded?._id;
 
       if (!userId) {
+        console.error('OAuth token missing user ID');
+        removeAuthToken();
         setUser(null);
         setLoading(false);
         return;
@@ -76,11 +77,18 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem('user', JSON.stringify(fetchedUser));
           setUser(fetchedUser);
         } else {
-          setUser(null);
+          console.error('Failed to fetch user after OAuth:', resp.status);
+          // Keep token but set basic user from decoded token
+          const basicUser = { _id: userId, id: userId, email: decoded.email, role: decoded.role };
+          localStorage.setItem('user', JSON.stringify(basicUser));
+          setUser(basicUser);
         }
       } catch (err) {
         console.error('Lấy thông tin user sau OAuth lỗi:', err);
-        setUser(null);
+        // Keep token but set basic user from decoded token
+        const basicUser = { _id: userId, id: userId, email: decoded.email, role: decoded.role };
+        localStorage.setItem('user', JSON.stringify(basicUser));
+        setUser(basicUser);
       } finally {
         setLoading(false);
       }
@@ -88,6 +96,8 @@ export const AuthProvider = ({ children }) => {
 
     // Ưu tiên token trả về qua query (OAuth)
     if (tokenFromQuery) {
+      // Save token FIRST before cleaning URL
+      setAuthToken(tokenFromQuery);
       cleanUrl();
       bootstrapFromOAuth(tokenFromQuery);
       return;
