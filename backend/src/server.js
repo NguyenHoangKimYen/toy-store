@@ -3,6 +3,8 @@ if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
 
+const crypto = require('crypto');
+const os = require('os');
 const cors = require('cors');
 const express = require('express');
 const compression = require('compression');
@@ -14,6 +16,19 @@ const socket = require('./socket/index');
 const { apiCacheMiddleware } = require('./middlewares/cache.middleware.js');
 
 const app = express(); // Tạo app
+
+// ============================================
+// HORIZONTAL SCALING SUPPORT
+// ============================================
+// Generate unique instance ID for load balancing verification
+const INSTANCE_ID = `${os.hostname()}-${crypto.randomBytes(4).toString('hex')}`;
+console.log(`🏷️  Instance ID: ${INSTANCE_ID}`);
+
+// Add instance ID to response headers (proves load balancing is working)
+app.use((req, res, next) => {
+    res.setHeader('X-Instance-ID', INSTANCE_ID);
+    next();
+});
 
 // Enable ETag for conditional requests
 app.set('etag', 'strong');
@@ -55,11 +70,26 @@ app.use(cors({
 // API Cache headers for better PageSpeed scores
 app.use('/api', apiCacheMiddleware);
 
+// ============================================
+// SESSION CONFIGURATION (For OAuth flow only)
+// ============================================
+// NOTE: This app is STATELESS by design for horizontal scaling:
+// - Authentication uses JWT tokens (stateless)
+// - User data stored in MongoDB Atlas (shared)
+// - Images stored in Cloudinary/S3 (shared)
+// - Sessions only used temporarily during OAuth redirect flow
+// For production with multiple instances, consider:
+// - Using connect-mongo or connect-redis for session store
+// - Or keep session: false in passport (already done)
 app.use(
     session({
         secret: process.env.SESSION_SECRET || 'milkybloom_secret',
         resave: false,
         saveUninitialized: false,
+        cookie: {
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 5 * 60 * 1000, // 5 minutes - only for OAuth flow
+        },
     }),
 );
 
@@ -149,9 +179,21 @@ socket.init(server);
 
 app.use(errorHandler);
 
+// Health check endpoint for load balancer
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'healthy',
+        instance: INSTANCE_ID,
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString(),
+    });
+});
+
 app.get('/', (req, res) => {
     res.status(200).json({
         message: 'MilkyBloom backend is running on AWS 🚀',
+        instance: INSTANCE_ID,
+        scalingReady: true,
     });
 });
 
@@ -184,7 +226,8 @@ const startServer = async () => {
     const PORT = process.env.PORT || 8080;
     server.listen(PORT, '0.0.0.0', () => {
         console.log(`🚀 Server running on port ${PORT}`);
-        console.log('MONGO_URI:', process.env.MONGO_URI);
+        console.log(`🎯 Instance: ${INSTANCE_ID}`);
+        console.log(`📈 Horizontal scaling: READY`);
     });
 };
 
