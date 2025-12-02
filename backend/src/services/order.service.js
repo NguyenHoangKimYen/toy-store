@@ -19,6 +19,7 @@ const { checkAndAssignBadges } = require("../services/badge.service");
 const voucherRepository = require("../repositories/voucher.repository");
 const userVoucherRepository = require("../repositories/user-voucher.repository");
 const Product = require("../models/product.model");
+const { sendOrderConfirmationEmail, sendGuestOrderConfirmationEmail, sendOrderStatusUpdateEmail } = require("./email.service");
 
 const VERIFY_TTL_MINUTES = Number(process.env.VERIFY_TTL_MINUTES || 15);
 const BACKEND_URL =
@@ -163,7 +164,34 @@ module.exports = {
             discountCodeId: null,
         });
 
-        return await this.getOrderDetail(order._id);
+        // Get order detail for email and response
+        const orderDetail = await this.getOrderDetail(order._id);
+
+        // Send order confirmation email (async, don't await to not block response)
+        this.sendOrderEmail(orderDetail, guestInfo).catch(err => {
+            console.error('[EMAIL] Failed to send order confirmation:', err);
+        });
+
+        return orderDetail;
+    },
+
+    // Send order confirmation email based on user type
+    async sendOrderEmail(orderDetail, guestInfo) {
+        try {
+            const user = orderDetail.userId ? await userRepository.findById(orderDetail.userId) : null;
+            const address = orderDetail.addressId;
+            const items = orderDetail.items || [];
+
+            if (user && !guestInfo) {
+                // Registered user
+                await sendOrderConfirmationEmail(orderDetail, user, items, address);
+            } else {
+                // Guest user
+                await sendGuestOrderConfirmationEmail(orderDetail, guestInfo, items, address);
+            }
+        } catch (err) {
+            console.error('[EMAIL] Error in sendOrderEmail:', err);
+        }
     },
 
     // Tạo đơn hàng
@@ -539,6 +567,11 @@ module.exports = {
 
         await historyRepo.add(orderId, newStatus);
 
+        // Send status update email (async, don't block response)
+        this.sendStatusUpdateEmail(updated, newStatus).catch(err => {
+            console.error('[EMAIL] Failed to send status update:', err);
+        });
+
         // ⭐ Mark discount code as used when order is confirmed
         if (
             newStatus === 'confirmed' &&
@@ -633,6 +666,20 @@ module.exports = {
         }
 
         return updated;
+    },
+
+    // Send order status update email
+    async sendStatusUpdateEmail(order, newStatus) {
+        try {
+            if (!order.userId) return; // Skip for guest orders without user
+
+            const user = await userRepository.findById(order.userId);
+            if (!user?.email) return;
+
+            await sendOrderStatusUpdateEmail(order, user, newStatus);
+        } catch (err) {
+            console.error('[EMAIL] Error in sendStatusUpdateEmail:', err);
+        }
     },
 
     async getOrdersByDiscountCode(discountCodeId) {

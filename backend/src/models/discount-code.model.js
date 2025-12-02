@@ -9,7 +9,7 @@ const DiscountCodeSchema = new mongoose.Schema(
             uppercase: true,
             trim: true,
             minlength: 8,
-            maxlength: 12,
+            maxlength: 20,
         },
 
         value: {
