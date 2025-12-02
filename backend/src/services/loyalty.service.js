@@ -152,7 +152,22 @@ const getMyLoyaltyInfo = async (userId) => {
         "loyaltyRank loyaltyPoints lifetimeSpent spentLast12Months",
     );
     if (!user) throw new Error('User not found');
-    return user;
+    
+    // Always return calculated tier based on spending (source of truth)
+    const calculatedTier = getTierFromSpent(user.spentLast12Months || 0);
+    
+    // Update if out of sync
+    if (user.loyaltyRank !== calculatedTier) {
+        user.loyaltyRank = calculatedTier;
+        await user.save();
+    }
+    
+    return {
+        loyaltyRank: calculatedTier,
+        loyaltyPoints: user.loyaltyPoints,
+        lifetimeSpent: user.lifetimeSpent,
+        spentLast12Months: user.spentLast12Months,
+    };
 };
 
 /**
@@ -227,6 +242,32 @@ async function redeemCoins(userId, amount) {
     return { balance: user.loyaltyPoints };
 }
 
+/**
+ * Sync all users' loyaltyRank based on their spentLast12Months
+ * This fixes any out-of-sync tier data
+ */
+async function syncAllUserTiers() {
+    const users = await User.find({}).select('_id loyaltyRank spentLast12Months');
+    let updated = 0;
+    const results = { none: 0, silver: 0, gold: 0, diamond: 0 };
+    
+    for (const user of users) {
+        const correctTier = getTierFromSpent(user.spentLast12Months || 0);
+        results[correctTier]++;
+        
+        if (user.loyaltyRank !== correctTier) {
+            await User.findByIdAndUpdate(user._id, { loyaltyRank: correctTier });
+            updated++;
+        }
+    }
+    
+    return {
+        total: users.length,
+        updated,
+        distribution: results,
+    };
+}
+
 module.exports = {
     handleOrderCompleted,
     getMyLoyaltyInfo,
@@ -236,5 +277,6 @@ module.exports = {
     giveMonthlyVoucher,
     redeemCoins,
     getLoyaltyConfig,
+    syncAllUserTiers,
     TIER_BENEFITS,
 };
