@@ -17,7 +17,7 @@ export const Step3Password = ({
 }) => {
   const isStepValid = formData.password && formData.confirmPassword && 
     !validationErrors.password && !validationErrors.confirmPassword && 
-    passwordStrength?.strength >= 60
+    passwordStrength?.strength === 100
 
   return (
     <div className="space-y-5">
@@ -43,14 +43,14 @@ export const Step3Password = ({
         {formData.password && passwordStrength && (
           <div className="space-y-2 animate-in slide-in-from-top-2">
             <div className="flex gap-1">
-              {[...Array(5)].map((_, i) => (
+              {[...Array(4)].map((_, i) => (
                 <div
                   key={i}
                   className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                    i < (passwordStrength.strength / 20)
-                      ? passwordStrength.strength < 40
+                    i < (passwordStrength.strength / 25)
+                      ? passwordStrength.strength < 50
                         ? 'bg-red-500'
-                        : passwordStrength.strength < 80
+                        : passwordStrength.strength < 100
                         ? 'bg-orange-500'
                         : 'bg-green-500'
                       : 'bg-gray-200'
@@ -59,18 +59,18 @@ export const Step3Password = ({
               ))}
             </div>
             <p className={`text-xs font-semibold ${
-              passwordStrength.strength < 40 ? 'text-red-300' :
-              passwordStrength.strength < 80 ? 'text-orange-300' :
+              passwordStrength.strength < 50 ? 'text-red-300' :
+              passwordStrength.strength < 100 ? 'text-orange-300' :
               'text-green-300'
             }`}>
-              {passwordStrength.strength < 40 ? 'Weak password' :
-               passwordStrength.strength < 80 ? 'Medium password' :
+              {passwordStrength.strength < 50 ? 'Weak password' :
+               passwordStrength.strength < 100 ? 'Medium password' :
                'Strong password'}
             </p>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className={`flex items-center gap-1 ${passwordStrength.checks.length ? 'text-green-300' : 'text-white/40'}`}>
                 {passwordStrength.checks.length ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
-                8+ characters
+                12+ characters
               </div>
               <div className={`flex items-center gap-1 ${passwordStrength.checks.uppercase ? 'text-green-300' : 'text-white/40'}`}>
                 {passwordStrength.checks.uppercase ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
@@ -150,7 +150,7 @@ export const Step3Password = ({
         </Button>
       </div>
 
-      {passwordStrength?.strength < 60 && formData.password && (
+      {passwordStrength?.strength < 100 && formData.password && (
         <p className="text-xs text-center text-orange-300">
           Please create a stronger password to continue
         </p>

@@ -28,18 +28,16 @@ const Signup = () => {
     const calculatePasswordStrength = (password) => {
         let strength = 0
         const checks = {
-            length: password.length >= 8,
+            length: password.length >= 12,
             uppercase: /[A-Z]/.test(password),
             lowercase: /[a-z]/.test(password),
             number: /[0-9]/.test(password),
-            special: /[^A-Za-z0-9]/.test(password)
         }
         
-        if (checks.length) strength += 20
-        if (checks.uppercase) strength += 20
-        if (checks.lowercase) strength += 20
-        if (checks.number) strength += 20
-        if (checks.special) strength += 20
+        if (checks.length) strength += 25
+        if (checks.uppercase) strength += 25
+        if (checks.lowercase) strength += 25
+        if (checks.number) strength += 25
         
         return { strength, checks }
     }
@@ -64,7 +62,7 @@ const Signup = () => {
                 if (!/^[0-9]{10,15}$/.test(value)) errors.phone = 'Phone must be 10-15 digits'
                 break
             case 'password':
-                if (value.length < 8) errors.password = 'Password must be at least 8 characters'
+                if (value.length < 12) errors.password = 'Password must be at least 12 characters'
                 else if (value.length > 32) errors.password = 'Password must not exceed 32 characters'
                 break
             case 'confirmPassword':

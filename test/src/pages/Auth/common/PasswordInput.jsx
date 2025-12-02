@@ -34,6 +34,7 @@ export const PasswordInput = ({
           value={value}
           onChange={onChange}
           onBlur={onBlur}
+          maxLength={32}
           className={`pr-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20 ${
             touched && error ? 'border-red-400' : ''
           } ${className}`}

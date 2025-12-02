@@ -8,15 +8,14 @@ import { Eye, EyeOff, Check, X, Loader2, Lock, Shield } from 'lucide-react';
 // Password strength checker
 const checkPasswordStrength = (password) => {
   const checks = {
-    length: password.length >= 8,
+    length: password.length >= 12,
     uppercase: /[A-Z]/.test(password),
     lowercase: /[a-z]/.test(password),
     number: /[0-9]/.test(password),
-    special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
   };
 
   const passed = Object.values(checks).filter(Boolean).length;
-  const strength = (passed / 5) * 100;
+  const strength = (passed / 4) * 100;
 
   return { checks, strength, passed };
 };
@@ -52,10 +51,12 @@ const SecuritySection = ({ onChangePassword, loading }) => {
     if (touchedFields.newPassword) {
       if (!formData.newPassword) {
         errors.newPassword = 'New password is required';
-      } else if (formData.newPassword.length < 8) {
-        errors.newPassword = 'Password must be at least 8 characters';
-      } else if (passwordStrength.strength < 40) {
-        errors.newPassword = 'Password is too weak';
+      } else if (formData.newPassword.length < 12) {
+        errors.newPassword = 'Password must be at least 12 characters';
+      } else if (formData.newPassword.length > 32) {
+        errors.newPassword = 'Password must not exceed 32 characters';
+      } else if (passwordStrength.strength < 100) {
+        errors.newPassword = 'Password must meet all requirements';
       }
     }
 
@@ -118,15 +119,21 @@ const SecuritySection = ({ onChangePassword, loading }) => {
       return;
     }
 
-    if (formData.newPassword.length < 8) {
+    if (formData.newPassword.length < 12) {
       console.log('Validation failed: password too short');
-      toast.error('Password must be at least 8 characters long');
+      toast.error('Password must be at least 12 characters long');
       return;
     }
 
-    if (passwordStrength.strength < 40) {
+    if (formData.newPassword.length > 32) {
+      console.log('Validation failed: password too long');
+      toast.error('Password must not exceed 32 characters');
+      return;
+    }
+
+    if (passwordStrength.strength < 100) {
       console.log('Validation failed: password too weak');
-      toast.error('Please use a stronger password');
+      toast.error('Password must meet all requirements (uppercase, lowercase, number)');
       return;
     }
 
@@ -164,7 +171,7 @@ const SecuritySection = ({ onChangePassword, loading }) => {
     formData.newPassword &&
     formData.confirmPassword &&
     formData.newPassword === formData.confirmPassword &&
-    passwordStrength.strength >= 40;
+    passwordStrength.strength === 100;
 
   // Render password field inline instead of separate component
   const renderPasswordField = (name, label, field) => {
@@ -187,6 +194,7 @@ const SecuritySection = ({ onChangePassword, loading }) => {
             onBlur={handleBlur}
             disabled={loading}
             placeholder="••••••••"
+            maxLength={32}
             className={`pr-20 transition-all ${
               hasError
                 ? 'border-red-400 focus:border-red-400 focus:ring-red-400/20'
@@ -235,7 +243,7 @@ const SecuritySection = ({ onChangePassword, loading }) => {
           {formData.newPassword && (
             <div className="mt-3 space-y-2 animate-in slide-in-from-top-2">
               <div className="flex gap-1">
-                {[...Array(5)].map((_, i) => (
+                {[...Array(4)].map((_, i) => (
                   <div
                     key={i}
                     className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
@@ -268,7 +276,7 @@ const SecuritySection = ({ onChangePassword, loading }) => {
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className={`flex items-center gap-1 ${passwordStrength.checks.length ? 'text-green-600' : 'text-gray-400'}`}>
                   {passwordStrength.checks.length ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
-                  8+ characters
+                  12+ characters
                 </div>
                 <div className={`flex items-center gap-1 ${passwordStrength.checks.uppercase ? 'text-green-600' : 'text-gray-400'}`}>
                   {passwordStrength.checks.uppercase ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
