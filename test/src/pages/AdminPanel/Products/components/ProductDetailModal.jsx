@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Edit, Trash2, ExternalLink, MessageSquare } from 'lucide-react'
+import { X, Edit, Trash2, ExternalLink } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import {
@@ -65,10 +65,6 @@ const ProductDetailModal = ({ product, onClose, onEdit, onDelete }) => {
     navigate(`/products/${product._id}`);
   };
 
-  const handleViewReviews = () => {
-    // TODO: Implement reviews view
-  };
-
   return (
     <>
       {createPortal(
@@ -81,10 +77,6 @@ const ProductDetailModal = ({ product, onClose, onEdit, onDelete }) => {
               <Button onClick={handleViewProduct} variant='outline' size='sm'>
                 <ExternalLink className='w-4 h-4 mr-2' />
                 View Page
-              </Button>
-              <Button onClick={handleViewReviews} variant='outline' size='sm'>
-                <MessageSquare className='w-4 h-4 mr-2' />
-                Reviews
               </Button>
               <Button onClick={handleEdit} variant='outline' size='sm'>
                 <Edit className='w-4 h-4 mr-2' />

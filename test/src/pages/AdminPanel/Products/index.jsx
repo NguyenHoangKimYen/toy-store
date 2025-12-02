@@ -6,7 +6,7 @@ import ProductDetailModal from './components/ProductDetailModal'
 import ProductFormModal from './components/ProductFormModal'
 import ProductFilters from './components/ProductFilters'
 import CommentsManagement from './components/CommentsManagement'
-import { AdminContent } from '../components'
+import { AdminContent, AdminHeader } from '../components'
 import { useProducts, useDebounce } from '@/hooks' // Using global hook
 import { PageHeader, SearchBar } from '@/components/common'
 import { getCategories } from '@/services/categories.service'
@@ -25,6 +25,7 @@ import {
 const Products = () => {
   const [activeTab, setActiveTab] = useState('products')
   const [searchQuery, setSearchQuery] = useState('')
+  const [commentsSearchQuery, setCommentsSearchQuery] = useState('')
   const debouncedSearch = useDebounce(searchQuery, 500) // Debounce search input
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
@@ -183,65 +184,46 @@ const Products = () => {
   };
 
   const headerCard = (
-    <div className='admin-card bg-white/85 backdrop-blur-md border border-purple-100/70 rounded-2xl shadow-[0_18px_42px_-28px_rgba(124,58,237,0.22)] p-4 sm:p-5 md:p-6'>
-      <div className='flex flex-col gap-3 sm:gap-4'>
-        <div className='flex flex-col gap-3'>
-          <div className='space-y-1'>
-            <h2 className='text-xl sm:text-2xl font-semibold text-slate-900'>Product Management</h2>
-            <p className='text-xs sm:text-sm text-slate-500'>Manage product inventory and listings</p>
-          </div>
-          <div className='flex flex-col sm:flex-row gap-2 sm:gap-3'>
-            <label className='flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/85 border border-purple-100/80 shadow-inner backdrop-blur-sm'>
-              <Search className='w-4 h-4 text-slate-400 flex-shrink-0' />
-              <input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder='Search products...'
-                className='w-full bg-transparent outline-none text-sm text-slate-700 placeholder:text-slate-400'
-              />
-            </label>
-            <div className='flex gap-2'>
-              <button
-                onClick={() => setShowFilters((v) => !v)}
-                className='px-3 py-2 rounded-xl border border-purple-100/80 bg-white/80 text-slate-700 hover:bg-purple-50 transition flex items-center gap-2'
-              >
-                <Filter className='w-4 h-4' />
-                <span className='hidden sm:inline'>Filter</span>
-              </button>
-              <button 
-                onClick={handleAddProduct}
-                className='px-3 py-2 rounded-xl border border-purple-100/80 bg-white/80 text-slate-700 hover:bg-purple-50 transition flex items-center gap-2'
-              >
-                <Plus className='w-4 h-4' />
-                <span className='hidden sm:inline'>Add</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {showFilters && (
-          <div className='pt-3 border-t border-purple-100/60'>
-            <ProductFilters
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              onClearFilters={handleClearFilters}
-              categories={categories}
-              showFilters={showFilters}
-              onToggleFilters={() => setShowFilters(!showFilters)}
-            />
-          </div>
-        )}
-      </div>
-    </div>
+    <AdminHeader
+      title="Product Management"
+      description="Manage product inventory and listings"
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
+      searchPlaceholder="Search products..."
+      actionButtons={[
+        {
+          icon: <Filter className='w-4 h-4' />,
+          label: 'Filter',
+          onClick: () => setShowFilters((v) => !v)
+        },
+        {
+          icon: <Plus className='w-4 h-4' />,
+          label: 'Add',
+          onClick: handleAddProduct
+        }
+      ]}
+      filters={
+        <ProductFilters
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          onClearFilters={handleClearFilters}
+          categories={categories}
+          showFilters={showFilters}
+          onToggleFilters={() => setShowFilters(!showFilters)}
+        />
+      }
+      showFilters={showFilters}
+    />
   )
 
   const commentsHeader = (
-    <div className='admin-card bg-white/85 backdrop-blur-md border border-purple-100/70 rounded-2xl shadow-[0_18px_42px_-28px_rgba(124,58,237,0.22)] p-5 md:p-6'>
-      <div className='space-y-1'>
-        <h2 className='text-2xl font-semibold text-slate-900'>Comments Management</h2>
-        <p className='text-sm text-slate-500'>Moderate and manage customer comments</p>
-      </div>
-    </div>
+    <AdminHeader
+      title="Comments Management"
+      description="Moderate and manage customer comments"
+      searchQuery={commentsSearchQuery}
+      onSearchChange={setCommentsSearchQuery}
+      searchPlaceholder="Search comments..."
+    />
   )
 
   return (
@@ -292,7 +274,7 @@ const Products = () => {
           {/* Comments Tab Content */}
           <TabsContent value='comments' className='mt-4'>
             <AdminContent header={commentsHeader}>
-              <CommentsManagement />
+              <CommentsManagement externalSearchQuery={commentsSearchQuery} />
             </AdminContent>
           </TabsContent>
         </Tabs>

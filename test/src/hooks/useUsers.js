@@ -76,9 +76,12 @@ export const useUsers = (options = {}) => {
       // Merge params with search query (for backwards compatibility)
       const queryParams = {
         ...params,
-        search: params.search || searchQuery || undefined,
+        keyword: params.keyword || params.search || searchQuery || undefined,
         limit: params.limit || ADMIN_USERS_PER_PAGE,
       }
+      
+      // Remove search param since backend uses keyword
+      delete queryParams.search;
       
       // Remove undefined/empty values
       Object.keys(queryParams).forEach(key => {

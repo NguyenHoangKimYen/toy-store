@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageSquare, Trash2, Search, User, Package, Calendar, AlertTriangle, CheckCircle, XCircle, ExternalLink, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,12 +20,12 @@ import { toast } from 'sonner';
 import apiClient from '@/services/config';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
-const CommentsManagement = () => {
+const CommentsManagement = ({ externalSearchQuery = '' }) => {
   const navigate = useNavigate();
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState(null);
@@ -33,12 +33,24 @@ const CommentsManagement = () => {
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
 
-  // Fetch all comments (admin)
-  const fetchComments = async () => {
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(externalSearchQuery);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [externalSearchQuery]);
+
+  // Fetch all comments (admin) with backend search and filtering
+  const fetchComments = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await apiClient.get('/comments/admin/all');
+      const params = new URLSearchParams();
+      if (statusFilter !== 'all') params.append('status', statusFilter);
+      if (debouncedSearch && debouncedSearch.trim()) params.append('search', debouncedSearch.trim());
+      
+      const response = await apiClient.get(`/comments/admin/all?${params.toString()}`);
       setComments(response.metadata?.comments || []);
     } catch (err) {
       console.error('Failed to fetch comments:', err);
@@ -47,36 +59,11 @@ const CommentsManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [debouncedSearch, statusFilter]);
 
   useEffect(() => {
     fetchComments();
-  }, []);
-
-  // Filter comments
-  const filteredComments = useMemo(() => {
-    return comments.filter(comment => {
-      // Search filter
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        const userName = comment.userId?.fullName || comment.userId?.username || comment.guestName || '';
-        const productName = comment.productId?.name || '';
-        const content = comment.content || '';
-        if (!userName.toLowerCase().includes(query) && 
-            !productName.toLowerCase().includes(query) &&
-            !content.toLowerCase().includes(query)) {
-          return false;
-        }
-      }
-
-      // Status filter
-      if (statusFilter !== 'all' && comment.status !== statusFilter) {
-        return false;
-      }
-
-      return true;
-    });
-  }, [comments, searchQuery, statusFilter]);
+  }, [fetchComments]);
 
   // Stats
   const stats = useMemo(() => {
@@ -163,6 +150,23 @@ const CommentsManagement = () => {
 
   return (
     <div className="space-y-6">
+      {/* Controls */}
+      <div className="admin-card bg-white/85 backdrop-blur-md border border-purple-100/70 rounded-2xl shadow-[0_18px_42px_-28px_rgba(124,58,237,0.22)] p-4 sm:p-5">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-40">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="approved">Approved</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="flagged">Flagged</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card className="p-4 bg-white/80 backdrop-blur-sm">
@@ -189,34 +193,6 @@ const CommentsManagement = () => {
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card className="p-4 bg-white/80 backdrop-blur-sm">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by user, product, or content..."
-                className="pl-10"
-              />
-            </div>
-          </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full md:w-40">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="flagged">Flagged</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </Card>
-
       {/* Error State */}
       {error && (
         <Card className="p-6 bg-red-50 border-red-200">
@@ -229,13 +205,13 @@ const CommentsManagement = () => {
 
       {/* Comments List */}
       <div className="space-y-3">
-        {filteredComments.length === 0 ? (
+        {comments.length === 0 ? (
           <Card className="p-8 text-center text-slate-500">
             <MessageSquare size={48} className="mx-auto mb-4 text-slate-300" />
             <p>No comments found</p>
           </Card>
         ) : (
-          filteredComments.map((comment) => (
+          comments.map((comment) => (
             <Card key={comment._id} className="p-4 bg-white/80 backdrop-blur-sm">
               <div className="flex flex-col md:flex-row md:items-start gap-4">
                 {/* User Info */}

@@ -95,7 +95,7 @@ const ProductInfo = ({ product }) => {
         <div className='p-3 bg-gray-50 dark:bg-gray-700 rounded-lg'>
           <p className='text-sm text-gray-600 dark:text-gray-400'>Sold Count</p>
           <p className='text-2xl font-bold text-purple-600'>
-            {product.soldCount || 0}
+            {product.totalUnitsSold || 0}
           </p>
         </div>
       </div>

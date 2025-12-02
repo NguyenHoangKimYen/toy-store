@@ -6,7 +6,7 @@ import UserDetailModal from './components/UserDetailModal'
 import UserFormModal from './components/UserFormModal'
 import UserFilters from './components/UserFilters'
 import LoyaltyManagement from './components/LoyaltyManagement'
-import { AdminContent } from '../components'
+import { AdminContent, AdminHeader } from '../components'
 import { useUsers, useDebounce } from '@/hooks' // Using global hook
 import { PageHeader, SearchBar, ConfirmDialog } from '@/components/common'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 const Users = () => {
   const [activeTab, setActiveTab] = useState('users')
   const [searchQuery, setSearchQuery] = useState('')
+  const [loyaltySearchQuery, setLoyaltySearchQuery] = useState('')
   const debouncedSearch = useDebounce(searchQuery, 500) // Debounce search input
   const [selectedUser, setSelectedUser] = useState(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
@@ -149,63 +150,44 @@ const Users = () => {
   }
 
   const headerCard = (
-    <div className='admin-card bg-white/85 backdrop-blur-md border border-purple-100/70 rounded-2xl shadow-[0_18px_42px_-28px_rgba(124,58,237,0.22)] p-4 sm:p-5 md:p-6'>
-      <div className='flex flex-col gap-3 sm:gap-4'>
-        <div className='flex flex-col gap-3'>
-          <div className='space-y-1'>
-            <h2 className='text-xl sm:text-2xl font-semibold text-slate-900'>User Management</h2>
-            <p className='text-xs sm:text-sm text-slate-500'>Manage user accounts and permissions</p>
-          </div>
-          <div className='flex flex-col sm:flex-row gap-2 sm:gap-3'>
-            <label className='flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/85 border border-purple-100/80 shadow-inner backdrop-blur-sm'>
-              <Search className='w-4 h-4 text-slate-400 flex-shrink-0' />
-              <input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder='Search users...'
-                className='w-full bg-transparent outline-none text-sm text-slate-700 placeholder:text-slate-400'
-              />
-            </label>
-            <div className='flex gap-2'>
-              <button
-                onClick={() => setShowFilters((v) => !v)}
-                className='px-3 py-2 rounded-xl border border-purple-100/80 bg-white/80 text-slate-700 hover:bg-purple-50 transition flex items-center gap-2'
-              >
-                <Filter className='w-4 h-4' />
-                <span className='hidden sm:inline'>Filter</span>
-              </button>
-              <button 
-                onClick={handleAddUser}
-                className='px-3 py-2 rounded-xl border border-purple-100/80 bg-white/80 text-slate-700 hover:bg-purple-50 transition flex items-center gap-2'
-              >
-                <UserPlus className='w-4 h-4' />
-                <span className='hidden sm:inline'>Add</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {showFilters && (
-          <div className='pt-3 border-t border-purple-100/60'>
-            <UserFilters
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              onClearFilters={handleClearFilters}
-              showFilters={showFilters}
-            />
-          </div>
-        )}
-      </div>
-    </div>
+    <AdminHeader
+      title="User Management"
+      description="Manage user accounts and permissions"
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
+      searchPlaceholder="Search users..."
+      actionButtons={[
+        {
+          icon: <Filter className='w-4 h-4' />,
+          label: 'Filter',
+          onClick: () => setShowFilters((v) => !v)
+        },
+        {
+          icon: <UserPlus className='w-4 h-4' />,
+          label: 'Add',
+          onClick: handleAddUser
+        }
+      ]}
+      filters={
+        <UserFilters
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          onClearFilters={handleClearFilters}
+          showFilters={showFilters}
+        />
+      }
+      showFilters={showFilters}
+    />
   )
 
   const loyaltyHeader = (
-    <div className='admin-card bg-white/85 backdrop-blur-md border border-purple-100/70 rounded-2xl shadow-[0_18px_42px_-28px_rgba(124,58,237,0.22)] p-5 md:p-6'>
-      <div className='space-y-1'>
-        <h2 className='text-2xl font-semibold text-slate-900'>Loyalty Management</h2>
-        <p className='text-sm text-slate-500'>View and manage customer loyalty points and tiers</p>
-      </div>
-    </div>
+    <AdminHeader
+      title="Loyalty Management"
+      description="View and manage customer loyalty points and tiers"
+      searchQuery={loyaltySearchQuery}
+      onSearchChange={setLoyaltySearchQuery}
+      searchPlaceholder="Search loyalty members..."
+    />
   )
 
   return (
@@ -253,7 +235,7 @@ const Users = () => {
           <TabsContent value='loyalty' className='mt-4'>
             <div className='space-y-4'>
               {loyaltyHeader}
-              <LoyaltyManagement />
+              <LoyaltyManagement externalSearchQuery={loyaltySearchQuery} />
             </div>
           </TabsContent>
         </Tabs>

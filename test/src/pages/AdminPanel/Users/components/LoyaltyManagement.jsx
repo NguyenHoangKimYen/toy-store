@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Crown, Coins, TrendingUp, Search, RefreshCw } from 'lucide-react';
 import { useUsers } from '@/hooks';
 import { formatPrice } from '@/utils';
@@ -18,13 +18,24 @@ const TIER_THRESHOLDS = {
   diamond: 20_000_000,
 };
 
-const LoyaltyManagement = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+const LoyaltyManagement = ({ externalSearchQuery = '' }) => {
   const [tierFilter, setTierFilter] = useState('all');
   const [sortBy, setSortBy] = useState('points-high');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Debounce external search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(externalSearchQuery);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [externalSearchQuery]);
 
   const { users, loading, error, refetch } = useUsers({
-    params: { limit: 1000 },
+    params: { 
+      limit: 1000,
+      keyword: debouncedSearch.trim() || undefined
+    },
   });
 
   // Get tier - use backend calculatedTier (virtual) or calculate from spending as fallback
@@ -42,17 +53,6 @@ const LoyaltyManagement = () => {
     if (!users) return [];
 
     let result = [...users];
-
-    // Search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (u) =>
-          u.fullName?.toLowerCase().includes(query) ||
-          u.email?.toLowerCase().includes(query) ||
-          u.username?.toLowerCase().includes(query)
-      );
-    }
 
     // Tier filter - use calculated tier from spending
     if (tierFilter !== 'all') {
@@ -80,7 +80,7 @@ const LoyaltyManagement = () => {
     });
 
     return result;
-  }, [users, searchQuery, tierFilter, sortBy]);
+  }, [users, tierFilter, sortBy]);
 
   // Calculate stats - use calculated tier from spending
   const stats = useMemo(() => {
@@ -121,6 +121,30 @@ const LoyaltyManagement = () => {
 
   return (
     <div className="space-y-4">
+      {/* Controls */}
+      <div className="admin-card bg-white/85 backdrop-blur-md border border-purple-100/70 rounded-2xl shadow-[0_18px_42px_-28px_rgba(124,58,237,0.22)] p-4 sm:p-5">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="flex-1 px-3 py-2.5 rounded-xl bg-white/85 border border-purple-100/80 text-sm shadow-inner"
+          >
+            <option value="points-high">Coins: High → Low</option>
+            <option value="points-low">Coins: Low → High</option>
+            <option value="spent-high">Spent: High → Low</option>
+            <option value="spent-low">Spent: Low → High</option>
+            <option value="tier">By Tier</option>
+          </select>
+          <button
+            onClick={refetch}
+            className="px-3 py-2 rounded-xl bg-white/85 border border-purple-100/80 hover:bg-purple-50 transition"
+            title="Refresh"
+          >
+            <RefreshCw size={16} />
+          </button>
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-white/85 border border-purple-100/70 rounded-xl p-4">
@@ -179,48 +203,6 @@ const LoyaltyManagement = () => {
             );
           })}
         </div>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <label className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/85 border border-purple-100/80">
-          <Search className="w-4 h-4 text-slate-400" />
-          <input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by name, email, username..."
-            className="w-full bg-transparent outline-none text-sm text-slate-700 placeholder:text-slate-400"
-          />
-        </label>
-        <select
-          value={tierFilter}
-          onChange={(e) => setTierFilter(e.target.value)}
-          className="px-3 py-2 rounded-xl bg-white/85 border border-purple-100/80 text-sm"
-        >
-          <option value="all">All Tiers</option>
-          <option value="diamond">💎 Diamond</option>
-          <option value="gold">🥇 Gold</option>
-          <option value="silver">🥈 Silver</option>
-          <option value="none">👤 Member</option>
-        </select>
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          className="px-3 py-2 rounded-xl bg-white/85 border border-purple-100/80 text-sm"
-        >
-          <option value="points-high">Coins: High → Low</option>
-          <option value="points-low">Coins: Low → High</option>
-          <option value="spent-high">Spent: High → Low</option>
-          <option value="spent-low">Spent: Low → High</option>
-          <option value="tier">By Tier</option>
-        </select>
-        <button
-          onClick={refetch}
-          className="px-3 py-2 rounded-xl bg-white/85 border border-purple-100/80 hover:bg-purple-50 transition"
-          title="Refresh"
-        >
-          <RefreshCw size={16} />
-        </button>
       </div>
 
       {/* Users Table */}
