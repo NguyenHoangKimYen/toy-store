@@ -246,7 +246,7 @@ const Payment = () => {
             <>
               <XCircle size={64} className="result-icon failed" />
               <h1>Thanh toán thất bại</h1>
-              <p>{backendMessage || 'Không thể xử lý giao dịch của bạn. Vui lòng thử lại.'}</p>
+              <p>{backendMessage || 'Unable to process your transaction. Please try again.'}</p>
               
               <div className="result-actions">
                 <Button variant="outline" onClick={() => loadPaymentInfo()}>

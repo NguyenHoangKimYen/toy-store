@@ -161,7 +161,7 @@ const BranchMap = ({ branches = [] }) => {
       />
       {!branches?.length && (
         <div className="absolute inset-0 flex items-center justify-center text-sm text-stone-500 bg-white/70">
-          Không có dữ liệu chi nhánh
+          No branch data available
         </div>
       )}
     </div>

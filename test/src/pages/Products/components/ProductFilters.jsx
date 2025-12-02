@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { 
   X, 
   ChevronDown, 
@@ -15,16 +15,14 @@ import {
   Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import './ProductFilters.css';
 
 const ProductFilters = ({
   filters = {},
   categories = [],
-  brands = [],
-  priceRange = { min: 0, max: 500 },
   onFilterChange,
+  onMultipleFiltersChange,
   onClearFilters,
   hasActiveFilters = false,
   isMobile = false,
@@ -36,23 +34,29 @@ const ProductFilters = ({
     categories: true,
     price: true,
     rating: true,
-    brands: true,
     availability: true,
   });
 
-  // Local state for price inputs (to avoid constant URL updates)
-  const [localMinPrice, setLocalMinPrice] = useState(filters.minPrice || '');
-  const [localMaxPrice, setLocalMaxPrice] = useState(filters.maxPrice || '');
+  // Refs for price inputs (uncontrolled)
+  const minPriceRef = useRef(null);
+  const maxPriceRef = useRef(null);
 
-  // Search within categories/brands
-  const [categorySearch, setCategorySearch] = useState('');
-  const [brandSearch, setBrandSearch] = useState('');
+  // Local filter state (excluding price - use refs for those)
+  const [localFilters, setLocalFilters] = useState({
+    category: filters.category || '',
+    rating: filters.rating || '',
+    availability: filters.availability || '',
+    showFeatured: filters.showFeatured || '',
+  });
 
-  // Sync local price with filters
-  useEffect(() => {
-    setLocalMinPrice(filters.minPrice || '');
-    setLocalMaxPrice(filters.maxPrice || '');
-  }, [filters.minPrice, filters.maxPrice]);
+  // Apply all filters at once
+  const applyFilters = () => {
+    onMultipleFiltersChange({
+      ...localFilters,
+      minPrice: minPriceRef.current?.value || '',
+      maxPrice: maxPriceRef.current?.value || '',
+    });
+  };
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
@@ -60,32 +64,6 @@ const ProductFilters = ({
       [section]: !prev[section],
     }));
   };
-
-  // Apply price filter
-  const handlePriceApply = () => {
-    if (localMinPrice !== filters.minPrice) {
-      onFilterChange('minPrice', localMinPrice || '');
-    }
-    if (localMaxPrice !== filters.maxPrice) {
-      onFilterChange('maxPrice', localMaxPrice || '');
-    }
-  };
-
-  // Filter categories by search
-  const filteredCategories = useMemo(() => {
-    if (!categorySearch) return categories;
-    return categories.filter(cat => 
-      (cat.name || cat).toLowerCase().includes(categorySearch.toLowerCase())
-    );
-  }, [categories, categorySearch]);
-
-  // Filter brands by search
-  const filteredBrands = useMemo(() => {
-    if (!brandSearch) return brands;
-    return brands.filter(brand => 
-      brand.toLowerCase().includes(brandSearch.toLowerCase())
-    );
-  }, [brands, brandSearch]);
 
   // Rating options
   const ratingOptions = [
@@ -99,7 +77,6 @@ const ProductFilters = ({
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (filters.category) count++;
-    if (filters.brand) count++;
     if (filters.minPrice || filters.maxPrice) count++;
     if (filters.rating) count++;
     if (filters.availability) count++;
@@ -171,6 +148,17 @@ const ProductFilters = ({
         </div>
       </div>
 
+      {/* Apply Filters Button */}
+      <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e5e7eb' }}>
+        <Button 
+          onClick={applyFilters}
+          className="w-full"
+          size="default"
+        >
+          Apply Filters
+        </Button>
+      </div>
+
       {/* Results count on mobile */}
       {isMobile && (
         <div className="filters-result-count">
@@ -191,22 +179,13 @@ const ProductFilters = ({
               <X size={12} />
             </button>
           )}
-          {filters.brand && (
-            <button 
-              className="filter-tag"
-              onClick={() => onFilterChange('brand', '')}
-            >
-              <span>Brand: {filters.brand}</span>
-              <X size={12} />
-            </button>
-          )}
           {(filters.minPrice || filters.maxPrice) && (
             <button 
               className="filter-tag"
               onClick={() => { onFilterChange('minPrice', ''); onFilterChange('maxPrice', ''); }}
             >
               <span>
-                Price: {filters.minPrice ? `$${filters.minPrice}` : '$0'} - {filters.maxPrice ? `$${filters.maxPrice}` : 'Any'}
+                Price: {filters.minPrice ? `₫${filters.minPrice}` : '₫0'} - {filters.maxPrice ? `₫${filters.maxPrice}` : 'Any'}
               </span>
               <X size={12} />
             </button>
@@ -237,36 +216,25 @@ const ProductFilters = ({
       <div className="filters-body">
         {/* Categories Filter */}
         <FilterSection id="categories" title="Categories" icon={Layers} count={categories.length}>
-          {categories.length > 6 && (
-            <div className="filter-search">
-              <Search size={14} />
-              <input
-                type="text"
-                placeholder="Search categories..."
-                value={categorySearch}
-                onChange={(e) => setCategorySearch(e.target.value)}
-              />
-            </div>
-          )}
           <div className="filter-options categories-list">
             <button
-              className={`filter-option ${!filters.category ? 'active' : ''}`}
-              onClick={() => onFilterChange('category', '')}
+              className={`filter-option ${!localFilters.category ? 'active' : ''}`}
+              onClick={() => setLocalFilters(prev => ({ ...prev, category: '' }))}
             >
               <span className="option-name">All Categories</span>
-              {!filters.category && <Check size={14} className="check-icon" />}
+              {!localFilters.category && <Check size={14} className="check-icon" />}
             </button>
-            {filteredCategories.map((category) => {
+            {categories.map((category) => {
               const id = category._id || category;
               const name = category.name || category;
               return (
                 <button
                   key={id}
-                  className={`filter-option ${filters.category === id ? 'active' : ''}`}
-                  onClick={() => onFilterChange('category', id)}
+                  className={`filter-option ${localFilters.category === id ? 'active' : ''}`}
+                  onClick={() => setLocalFilters(prev => ({ ...prev, category: id }))}
                 >
                   <span className="option-name">{name}</span>
-                  {filters.category === id && <Check size={14} className="check-icon" />}
+                  {localFilters.category === id && <Check size={14} className="check-icon" />}
                 </button>
               );
             })}
@@ -281,16 +249,22 @@ const ProductFilters = ({
               <div className="price-input-group">
                 <span className="price-input-label">Min</span>
                 <div className="price-input-wrapper">
-                  <span className="price-currency">$</span>
-                  <Input
+                  <span className="price-currency">₫</span>
+                  <input
+                    ref={minPriceRef}
                     type="number"
                     placeholder="0"
-                    value={localMinPrice}
-                    onChange={(e) => setLocalMinPrice(e.target.value)}
-                    onBlur={handlePriceApply}
-                    onKeyDown={(e) => e.key === 'Enter' && handlePriceApply()}
+                    defaultValue={filters.minPrice || ''}
                     min={0}
                     className="price-input"
+                    style={{ 
+                      width: '100%',
+                      padding: '0.25rem 0.75rem',
+                      fontSize: '0.875rem',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '0.375rem',
+                      outline: 'none'
+                    }}
                   />
                 </div>
               </div>
@@ -298,99 +272,69 @@ const ProductFilters = ({
               <div className="price-input-group">
                 <span className="price-input-label">Max</span>
                 <div className="price-input-wrapper">
-                  <span className="price-currency">$</span>
-                  <Input
+                  <span className="price-currency">₫</span>
+                  <input
+                    ref={maxPriceRef}
                     type="number"
                     placeholder="Any"
-                    value={localMaxPrice}
-                    onChange={(e) => setLocalMaxPrice(e.target.value)}
-                    onBlur={handlePriceApply}
-                    onKeyDown={(e) => e.key === 'Enter' && handlePriceApply()}
+                    defaultValue={filters.maxPrice || ''}
                     min={0}
                     className="price-input"
+                    style={{ 
+                      width: '100%',
+                      padding: '0.25rem 0.75rem',
+                      fontSize: '0.875rem',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '0.375rem',
+                      outline: 'none'
+                    }}
                   />
                 </div>
               </div>
             </div>
-
-            {/* Apply Price Button */}
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={handlePriceApply}
-              className="apply-price-btn"
-            >
-              Apply Price
-            </Button>
 
             {/* Quick Price Ranges */}
             <div className="quick-price-ranges">
               <span className="quick-label">Quick select:</span>
               <div className="quick-buttons">
                 <button 
-                  className={`quick-price-btn ${filters.maxPrice === '25' && !filters.minPrice ? 'active' : ''}`}
-                  onClick={() => { onFilterChange('minPrice', ''); onFilterChange('maxPrice', '25'); }}
+                  className="quick-price-btn"
+                  onClick={() => {
+                    if (minPriceRef.current) minPriceRef.current.value = '';
+                    if (maxPriceRef.current) maxPriceRef.current.value = '25';
+                  }}
                 >
-                  Under $25
+                  Under ₫25
                 </button>
                 <button 
-                  className={`quick-price-btn ${filters.minPrice === '25' && filters.maxPrice === '50' ? 'active' : ''}`}
-                  onClick={() => { onFilterChange('minPrice', '25'); onFilterChange('maxPrice', '50'); }}
+                  className="quick-price-btn"
+                  onClick={() => {
+                    if (minPriceRef.current) minPriceRef.current.value = '25';
+                    if (maxPriceRef.current) maxPriceRef.current.value = '50';
+                  }}
                 >
-                  $25 - $50
+                  ₫25 - ₫50
                 </button>
                 <button 
-                  className={`quick-price-btn ${filters.minPrice === '50' && filters.maxPrice === '100' ? 'active' : ''}`}
-                  onClick={() => { onFilterChange('minPrice', '50'); onFilterChange('maxPrice', '100'); }}
+                  className="quick-price-btn"
+                  onClick={() => {
+                    if (minPriceRef.current) minPriceRef.current.value = '50';
+                    if (maxPriceRef.current) maxPriceRef.current.value = '100';
+                  }}
                 >
-                  $50 - $100
+                  ₫50 - ₫100
                 </button>
                 <button 
-                  className={`quick-price-btn ${filters.minPrice === '100' && !filters.maxPrice ? 'active' : ''}`}
-                  onClick={() => { onFilterChange('minPrice', '100'); onFilterChange('maxPrice', ''); }}
+                  className="quick-price-btn"
+                  onClick={() => {
+                    if (minPriceRef.current) minPriceRef.current.value = '100';
+                    if (maxPriceRef.current) maxPriceRef.current.value = '';
+                  }}
                 >
-                  $100+
+                  ₫100+
                 </button>
               </div>
             </div>
-          </div>
-        </FilterSection>
-
-        {/* Brands Filter - MANDATORY */}
-        <FilterSection id="brands" title="Brands" icon={Tag} count={brands.length}>
-          {brands.length > 6 && (
-            <div className="filter-search">
-              <Search size={14} />
-              <input
-                type="text"
-                placeholder="Search brands..."
-                value={brandSearch}
-                onChange={(e) => setBrandSearch(e.target.value)}
-              />
-            </div>
-          )}
-          <div className="filter-options brands-list">
-            <button
-              className={`filter-option ${!filters.brand ? 'active' : ''}`}
-              onClick={() => onFilterChange('brand', '')}
-            >
-              <span className="option-name">All Brands</span>
-              {!filters.brand && <Check size={14} className="check-icon" />}
-            </button>
-            {filteredBrands.length > 0 ? (
-              filteredBrands.map((brand) => (
-                <button
-                  key={brand}
-                  className={`filter-option ${filters.brand === brand ? 'active' : ''}`}
-                  onClick={() => onFilterChange('brand', brand)}
-                >
-                  <span className="option-name">{brand}</span>
-                  {filters.brand === brand && <Check size={14} className="check-icon" />}
-                </button>
-              ))
-            ) : (
-              <p className="no-brands-message">No brands available</p>
-            )}
           </div>
         </FilterSection>
 
@@ -398,23 +342,23 @@ const ProductFilters = ({
         <FilterSection id="rating" title="Customer Rating" icon={Star}>
           <div className="filter-options rating-options">
             <button
-              className={`rating-option ${!filters.rating ? 'active' : ''}`}
-              onClick={() => onFilterChange('rating', '')}
+              className={`rating-option ${!localFilters.rating ? 'active' : ''}`}
+              onClick={() => setLocalFilters(prev => ({ ...prev, rating: '' }))}
             >
               <span className="rating-label">All Ratings</span>
-              {!filters.rating && <Check size={14} className="check-icon" />}
+              {!localFilters.rating && <Check size={14} className="check-icon" />}
             </button>
             {ratingOptions.map((option) => (
               <button
                 key={option.value}
-                className={`rating-option ${filters.rating === option.value ? 'active' : ''}`}
-                onClick={() => onFilterChange('rating', filters.rating === option.value ? '' : option.value)}
+                className={`rating-option ${localFilters.rating === option.value ? 'active' : ''}`}
+                onClick={() => setLocalFilters(prev => ({ ...prev, rating: prev.rating === option.value ? '' : option.value }))}
               >
                 <div className="rating-stars">
                   {renderStars(option.stars)}
                 </div>
                 <span className="rating-label">& Up</span>
-                {filters.rating === option.value && <Check size={14} className="check-icon" />}
+                {localFilters.rating === option.value && <Check size={14} className="check-icon" />}
               </button>
             ))}
           </div>
@@ -425,9 +369,9 @@ const ProductFilters = ({
           <div className="filter-options checkbox-options">
             <label className="checkbox-option">
               <Checkbox
-                checked={filters.availability === 'inStock'}
+                checked={localFilters.availability === 'inStock'}
                 onCheckedChange={(checked) => 
-                  onFilterChange('availability', checked ? 'inStock' : '')
+                  setLocalFilters(prev => ({ ...prev, availability: checked ? 'inStock' : '' }))
                 }
               />
               <Package size={14} />
@@ -435,9 +379,9 @@ const ProductFilters = ({
             </label>
             <label className="checkbox-option featured-checkbox">
               <Checkbox
-                checked={filters.showFeatured === 'true'}
+                checked={localFilters.showFeatured === 'true'}
                 onCheckedChange={(checked) => 
-                  onFilterChange('showFeatured', checked ? 'true' : '')
+                  setLocalFilters(prev => ({ ...prev, showFeatured: checked ? 'true' : '' }))
                 }
               />
               <Sparkles size={14} className="featured-icon" />
@@ -462,5 +406,7 @@ const ProductFilters = ({
     </div>
   );
 };
+
+ProductFilters.displayName = 'ProductFilters';
 
 export default ProductFilters;

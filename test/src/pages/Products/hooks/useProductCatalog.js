@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getProducts, getProductCategories } from '@/services/products.service';
 
@@ -18,7 +18,6 @@ export const useProductCatalog = () => {
   // State
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -94,23 +93,12 @@ export const useProductCatalog = () => {
     fetchProducts();
   }, [currentPage, filters]); // filters is memoized by searchParams
 
-  // Fetch metadata (categories and brands)
+  // Fetch metadata (categories)
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
         const categoriesData = await getProductCategories();
         setCategories(categoriesData || []);
-
-        // Fetch all products to extract unique brands
-        // Note: Backend doesn't have brand field yet, so brands will be empty
-        const allProducts = await getProducts({ status: 'all', limit: 1000 });
-        const productsArray = allProducts.products || allProducts || [];
-        const uniqueBrands = [...new Set(
-          productsArray
-            .map(p => p.brand)
-            .filter(Boolean)
-        )];
-        setBrands(uniqueBrands);
       } catch (err) {
         console.error('Error fetching metadata:', err);
       }
@@ -120,7 +108,7 @@ export const useProductCatalog = () => {
   }, []);
 
   // Update filter in URL
-  const handleFilterChange = (filterName, value) => {
+  const handleFilterChange = useCallback((filterName, value) => {
     const newParams = new URLSearchParams(searchParams);
     
     if (value) {
@@ -131,30 +119,45 @@ export const useProductCatalog = () => {
     
     setCurrentPage(1);
     setSearchParams(newParams);
-  };
+  }, [searchParams, setSearchParams]);
+
+  // Update multiple filters at once
+  const handleMultipleFilters = useCallback((filtersObj) => {
+    const newParams = new URLSearchParams(searchParams);
+    
+    Object.entries(filtersObj).forEach(([key, value]) => {
+      if (value) {
+        newParams.set(key, value);
+      } else {
+        newParams.delete(key);
+      }
+    });
+    
+    setCurrentPage(1);
+    setSearchParams(newParams);
+  }, [searchParams, setSearchParams]);
 
   // Update sort
-  const handleSortChange = (newSortBy, newSortOrder) => {
+  const handleSortChange = useCallback((newSortBy, newSortOrder) => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set('sortBy', newSortBy);
     newParams.set('sortOrder', newSortOrder);
     setSearchParams(newParams);
-  };
+  }, [searchParams, setSearchParams]);
 
   // Clear all filters
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setSearchParams({});
     setCurrentPage(1);
-  };
+  }, [setSearchParams]);
 
-  // Check if any filters are active (exclude brand since not supported)
+  // Check if any filters are active
   const hasActiveFilters = filters.search || filters.category || 
                           filters.minPrice || filters.maxPrice || filters.rating;
 
   return {
     products,
     categories,
-    brands,
     loading,
     error,
     currentPage,
@@ -164,6 +167,7 @@ export const useProductCatalog = () => {
     hasActiveFilters,
     setCurrentPage,
     handleFilterChange,
+    handleMultipleFilters,
     handleSortChange,
     clearFilters,
   };

@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense } from 'react';
+import React, { useState, lazy, Suspense, useMemo, useCallback } from 'react';
 import { SlidersHorizontal, X, ArrowUpDown, Grid3X3, LayoutList, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useProductCatalog } from './hooks';
@@ -19,7 +19,6 @@ const Products = () => {
   const {
     products,
     categories,
-    brands,
     loading,
     error,
     currentPage,
@@ -29,27 +28,28 @@ const Products = () => {
     hasActiveFilters,
     setCurrentPage,
     handleFilterChange,
+    handleMultipleFilters,
     handleSortChange,
     clearFilters,
   } = useProductCatalog();
 
-  const handlePageChange = (page) => {
+  const handlePageChange = useCallback((page) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, [setCurrentPage]);
 
-  const toggleFilters = () => {
+  const toggleFilters = useCallback(() => {
     setShowFilters(!showFilters);
-  };
+  }, [showFilters]);
 
-  const toggleMobileFilters = () => {
+  const toggleMobileFilters = useCallback(() => {
     setShowMobileFilters(!showMobileFilters);
     if (!showMobileFilters) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
     }
-  };
+  }, [showMobileFilters]);
 
   // Sort options
   const sortOptions = [
@@ -68,6 +68,9 @@ const Products = () => {
   ) || sortOptions[0];
 
   const showVideo = !!catalogBannerVideo && !videoError;
+
+  // Memoize priceRange to prevent unnecessary re-renders
+  const priceRange = useMemo(() => ({ min: 0, max: 500 }), []);
 
   return (
     <div className="products-page">
@@ -171,11 +174,12 @@ const Products = () => {
           {/* Filters Sidebar (Desktop) */}
           <aside className={`products-filters ${showFilters ? 'show' : ''}`}>
             <ProductFilters
+              key="desktop-filters"
               filters={filters}
               categories={categories}
-              brands={brands}
-              priceRange={{ min: 0, max: 500 }}
+              priceRange={priceRange}
               onFilterChange={handleFilterChange}
+              onMultipleFiltersChange={handleMultipleFilters}
               onClearFilters={clearFilters}
               hasActiveFilters={hasActiveFilters}
               productCount={totalProducts}
@@ -188,11 +192,12 @@ const Products = () => {
               <div className="filters-backdrop" onClick={toggleMobileFilters} />
               <aside className="products-filters mobile-drawer show">
                 <ProductFilters
+                  key="mobile-filters"
                   filters={filters}
                   categories={categories}
-                  brands={brands}
-                  priceRange={{ min: 0, max: 500 }}
+                  priceRange={priceRange}
                   onFilterChange={handleFilterChange}
+                  onMultipleFiltersChange={handleMultipleFilters}
                   onClearFilters={clearFilters}
                   hasActiveFilters={hasActiveFilters}
                   isMobile={true}
