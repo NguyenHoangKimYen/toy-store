@@ -51,7 +51,8 @@
   padding: 0.5rem;
   border: 1px solid rgba(255, 255, 255, 0.7);
   box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.08);
-  width: fit-content;
+  width: 100%;
+  max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -84,6 +85,8 @@
   scrollbar-width: none;
   scroll-behavior: smooth;
   padding: 0.25rem;
+  flex: 1;
+  min-width: 0;
 }
 
 .categorized-products-tabs::-webkit-scrollbar { display: none; }

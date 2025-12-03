@@ -11,7 +11,7 @@ const CategorizedProductsSection = () => {
   const [categories, setCategories] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [showAllCategories, setShowAllCategories] = useState(false);
+  const [showAllCategories, setShowAllCategories] = useState(true); // default show all to allow scroll arrows
   const scrollRef = useRef(null);
   const tabsScrollRef = useRef(null);
   const navigate = useNavigate();
@@ -82,7 +82,7 @@ const CategorizedProductsSection = () => {
 
   const activeCategory = categories[activeIndex];
   const MAX_VISIBLE_TABS = 6;
-  const visibleCategories = showAllCategories ? categories : categories.slice(0, MAX_VISIBLE_TABS);
+  const visibleCategories = categories; // render all categories; scrolling handled by arrows
   const hasMoreCategories = categories.length > MAX_VISIBLE_TABS;
 
   return (
@@ -130,16 +130,7 @@ const CategorizedProductsSection = () => {
               </button>
             ))}
             
-            {hasMoreCategories && !showAllCategories && (
-              <button
-                onClick={() => setShowAllCategories(true)}
-                className="categorized-products-tab categorized-more-tab"
-                title="Show all categories"
-              >
-                <MoreHorizontal size={20} />
-                <span className="ml-1">More</span>
-              </button>
-            )}
+            {/* "More" button removed because we now render all and rely on scroll arrows */}
           </div>
           
           {categories.length > 4 && (
