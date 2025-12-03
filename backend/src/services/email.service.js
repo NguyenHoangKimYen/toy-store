@@ -186,6 +186,12 @@ async function sendGuestOrderConfirmationEmail(order, guestInfo, items, address)
 
     // Check if this is a new account with generated password
     const isNewAccount = guestInfo?.generatedPassword;
+    console.log('[sendGuestOrderConfirmationEmail] Email params:', { 
+        email, 
+        isNewAccount, 
+        hasPassword: !!guestInfo?.generatedPassword,
+        password: guestInfo?.generatedPassword ? '***' + guestInfo.generatedPassword.slice(-3) : 'none'
+    });
     const accountInfoHtml = isNewAccount ? `
             <div style="background: #d4edda; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745;">
                 <h3 style="margin: 0 0 15px; color: #155724;">🔐 Thông tin tài khoản của bạn</h3>
@@ -197,8 +203,16 @@ async function sendGuestOrderConfirmationEmail(order, guestInfo, items, address)
                 <p style="margin: 10px 0 0; font-size: 13px; color: #155724;">💡 Vui lòng lưu lại mật khẩu này để đăng nhập và theo dõi đơn hàng!</p>
             </div>
     ` : `
-            <div style="background: #d1ecf1; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #0dcaf0;">
-                <p style="margin: 0;"><strong>💡 Lưu ý:</strong> Bạn có thể đăng nhập bằng email <strong>${email}</strong> để theo dõi đơn hàng này.</p>
+            <div style="background: #d1ecf1; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #0dcaf0;">
+                <h3 style="margin: 0 0 15px; color: #0c5460;">✅ Email đã có tài khoản</h3>
+                <p style="margin: 5px 0;">Email <strong>${email}</strong> đã được gắn với tài khoản trước đó.</p>
+                <p style="margin: 10px 0 5px; color: #0c5460;">🔑 Bạn có thể <strong>đăng nhập ngay</strong> bằng email này để:</p>
+                <ul style="margin: 5px 0; padding-left: 20px;">
+                    <li>Theo dõi trạng thái đơn hàng</li>
+                    <li>Xem lịch sử mua hàng</li>
+                    <li>Quản lý địa chỉ giao hàng</li>
+                </ul>
+                <p style="margin: 10px 0 0; font-size: 13px; color: #0c5460;">💡 Nếu quên mật khẩu, hãy sử dụng chức năng "Quên mật khẩu" để đặt lại.</p>
             </div>
     `;
 

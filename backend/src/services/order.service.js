@@ -61,7 +61,10 @@ module.exports = {
             normalizedEmail,
             phone,
         );
-        if (existing) return { user: existing, isNewAccount: false };
+        if (existing) {
+            console.log('[createOrGetUserForGuest] Existing user found:', { email: normalizedEmail, userId: existing._id });
+            return { user: existing, isNewAccount: false };
+        }
 
         const randomPass = Math.random().toString(36).slice(-8);
         const hash = await bcrypt.hash(randomPass, 10);
@@ -72,10 +75,11 @@ module.exports = {
             phone,
             username: autoUsername,
             password: hash,
-            isVerified: false,
+            isVerified: true, // Auto-verify guest accounts so they can login immediately
             role: 'customer',
         });
 
+        console.log('[createOrGetUserForGuest] New user created:', { email: normalizedEmail, userId: newUser._id, password: randomPass });
         // Return user with password for email
         return { user: newUser, isNewAccount: true, generatedPassword: randomPass };
     },
@@ -154,10 +158,16 @@ module.exports = {
         // Get order detail for email and response
         const orderDetail = await this.getOrderDetail(order._id);
 
-        // NOTE: Email sẽ KHÔNG được gửi ngay khi tạo order
-        // Email chỉ được gửi khi thanh toán thực sự thành công:
-        // - COD: gửi khi gọi /payments/cash/:orderId (trong payByCash controller)
-        // - MoMo/ZaloPay/VietQR: gửi trong payment callback khi thanh toán thành công
+        // Gửi email ngay sau khi tạo order để có thể gửi kèm password (nếu là guest mới)
+        // Password chỉ có trong bộ nhớ lúc này, sau đó sẽ mất
+        if (guestInfo) {
+            try {
+                await this.sendOrderEmail(orderDetail, guestInfo);
+                console.log('[createOrderFromCart] Guest order email sent with password info');
+            } catch (err) {
+                console.error('[createOrderFromCart] Failed to send guest email:', err);
+            }
+        }
         
         return orderDetail;
     },
@@ -231,9 +241,18 @@ module.exports = {
             const user = result.user;
             userId = user._id;
             
+            console.log('[createOrder] Guest user result:', { 
+                isNewAccount: result.isNewAccount, 
+                hasPassword: !!result.generatedPassword,
+                userId: user._id 
+            });
+            
             // Store generated password to pass to email
             if (result.isNewAccount && result.generatedPassword) {
                 guestInfo.generatedPassword = result.generatedPassword;
+                console.log('[createOrder] Password stored in guestInfo:', guestInfo.generatedPassword);
+            } else {
+                console.log('[createOrder] No password - existing account');
             }
 
             if (!user.loyaltyPoints) user.loyaltyPoints = 0;
@@ -262,14 +281,8 @@ module.exports = {
             addressId = addr._id;
             shippingAddress = addr;
 
-            // Yêu cầu xác thực email trước khi tiếp tục
-            if (!user.isVerified) {
-                await sendVerifyEmail(user);
-                throw Object.assign(
-                    new Error("Vui lòng xác thực email trước khi đặt hàng."),
-                    { status: 400, code: "EMAIL_NOT_VERIFIED" },
-                );
-            }
+            // Guest checkout không yêu cầu xác thực email
+            // Email xác thực sẽ được gửi sau khi đặt hàng thành công
         }
 
         if (!shippingAddress) throw new Error('SHIPPING_ADDRESS_NOT_FOUND');

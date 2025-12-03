@@ -323,11 +323,22 @@ exports.payByCash = async (req, res) => {
     const updatedOrder = await orderRepository.updatePaymentStatus(orderId, updatePayload);
 
     // Gửi email xác nhận cho COD (vì đơn đã confirmed)
+    // Chỉ gửi cho user đã đăng ký (guest đã nhận email ngay sau khi tạo order)
     if (order.status === "pending") {
       const orderService = require('../services/order.service');
+      const User = require('../models/user.model');
       try {
-        const orderDetail = await orderService.getOrderDetail(orderId);
-        await orderService.sendOrderEmail(orderDetail, null);
+        const user = await User.findById(order.userId);
+        
+        // Only send email for registered users (verified accounts)
+        // Guest users already received email immediately after order creation (with password if new)
+        if (user && user.isVerified) {
+          const orderDetail = await orderService.getOrderDetail(orderId);
+          await orderService.sendOrderEmail(orderDetail, null);
+          console.log('[payByCash] Sent confirmation email to registered user');
+        } else {
+          console.log('[payByCash] Skipping email - guest already received email at order creation');
+        }
       } catch (err) {
         console.error('[EMAIL] Failed to send COD confirmation email:', err);
       }
