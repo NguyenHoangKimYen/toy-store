@@ -36,7 +36,6 @@ const deleteFromS3 = async (urls) => {
             }
 
             const decodedKey = decodeURIComponent(key.replace(/\+/g, ' '));
-            console.log('Extracted and decoded key:', decodedKey);
 
             const params = {
                 Bucket: process.env.AWS_BUCKET_NAME,

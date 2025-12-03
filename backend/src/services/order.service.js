@@ -62,7 +62,6 @@ module.exports = {
             phone,
         );
         if (existing) {
-            console.log('[createOrGetUserForGuest] Existing user found:', { email: normalizedEmail, userId: existing._id });
             return { user: existing, isNewAccount: false };
         }
 
@@ -79,7 +78,6 @@ module.exports = {
             role: 'customer',
         });
 
-        console.log('[createOrGetUserForGuest] New user created:', { email: normalizedEmail, userId: newUser._id, password: randomPass });
         // Return user with password for email
         return { user: newUser, isNewAccount: true, generatedPassword: randomPass };
     },
@@ -106,16 +104,13 @@ module.exports = {
         let cart = null;
         if (userId) {
             cart = await cartRepository.findCartByUserId(userId);
-            console.log(`[Checkout] Found cart for user ${userId}:`, cart?._id);
         } else if (sessionId) {
             cart = await cartRepository.findCartBySessionId(sessionId);
-            console.log(`[Checkout] Found cart for session ${sessionId}:`, cart?._id);
         }
 
         if (!cart) throw new Error("Cart not found");
 
         const cartItems = await cartItemRepository.getAllByCartId(cart._id);
-        console.log(`[Checkout] Cart ${cart._id} has ${cartItems?.length || 0} items`);
         
         if (!cartItems || cartItems.length === 0) {
             throw new Error('Cart is empty');
@@ -163,9 +158,8 @@ module.exports = {
         if (guestInfo) {
             try {
                 await this.sendOrderEmail(orderDetail, guestInfo);
-                console.log('[createOrderFromCart] Guest order email sent with password info');
             } catch (err) {
-                console.error('[createOrderFromCart] Failed to send guest email:', err);
+                // Silently fail - order is still created
             }
         }
         
@@ -187,7 +181,7 @@ module.exports = {
                 await sendGuestOrderConfirmationEmail(orderDetail, guestInfo, items, address);
             }
         } catch (err) {
-            console.error('[EMAIL] Error in sendOrderEmail:', err);
+            // Email sending failed - non-critical error
         }
     },
 
@@ -241,18 +235,9 @@ module.exports = {
             const user = result.user;
             userId = user._id;
             
-            console.log('[createOrder] Guest user result:', { 
-                isNewAccount: result.isNewAccount, 
-                hasPassword: !!result.generatedPassword,
-                userId: user._id 
-            });
-            
             // Store generated password to pass to email
             if (result.isNewAccount && result.generatedPassword) {
                 guestInfo.generatedPassword = result.generatedPassword;
-                console.log('[createOrder] Password stored in guestInfo:', guestInfo.generatedPassword);
-            } else {
-                console.log('[createOrder] No password - existing account');
             }
 
             if (!user.loyaltyPoints) user.loyaltyPoints = 0;
@@ -508,8 +493,6 @@ module.exports = {
         const Order = require('../models/order.model');
         const mongoose = require('mongoose');
         
-        console.log('[getOrdersByUser] Fetching orders for userId:', userId);
-        
         // Use aggregation to avoid N+1 query problem
         const ordersWithItems = await Order.aggregate([
             { $match: { userId: new mongoose.Types.ObjectId(userId) } },
@@ -649,12 +632,6 @@ module.exports = {
             }
         ]);
         
-        console.log('[getOrdersByUser] Found', ordersWithItems.length, 'orders');
-        if (ordersWithItems.length > 0) {
-            console.log('[getOrdersByUser] First order items count:', ordersWithItems[0].items?.length || 0);
-            console.log('[getOrdersByUser] First item sample:', JSON.stringify(ordersWithItems[0].items?.[0], null, 2));
-        }
-        
         return ordersWithItems;
     },
 
@@ -726,12 +703,9 @@ module.exports = {
                     await discountCodeService.markUsed(updated.discountCodeId);
                     // Mark order so we don't double-increment on subsequent status changes
                     await orderRepository.update(orderId, { _discountCodeMarkedUsed: true });
-                    console.log(`[Order ${orderId}] Marked discount code ${updated.discountCodeId} as used`);
-                } else {
-                    console.warn(`[Order ${orderId}] Discount code ${updated.discountCodeId} has reached usage limit`);
                 }
             } catch (err) {
-                console.error('Failed to mark discount code as used:', err);
+                // Non-critical error - order still proceeds
             }
         }
 
@@ -744,9 +718,8 @@ module.exports = {
             try {
                 await discountCodeService.decrementUsedCount(updated.discountCodeId);
                 await orderRepository.update(orderId, { _discountCodeMarkedUsed: false });
-                console.log(`[Order ${orderId}] Restored discount code ${updated.discountCodeId} usage`);
             } catch (err) {
-                console.error('Failed to restore discount code usage:', err);
+                // Non-critical error
             }
         }
 
@@ -763,9 +736,8 @@ module.exports = {
                         });
                     }
                 }
-                console.log(`[Order ${orderId}] Updated totalUnitsSold for ${orderItems.length} products`);
             } catch (err) {
-                console.error('Failed to update totalUnitsSold:', err);
+                // Non-critical error
             }
 
             if (updated.userId && updated.totalAmount) {

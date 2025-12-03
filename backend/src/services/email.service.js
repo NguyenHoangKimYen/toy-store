@@ -55,7 +55,6 @@ function generateItemsHtml(items) {
  */
 async function sendOrderConfirmationEmail(order, user, items, address) {
     if (!user?.email) {
-        console.log('[EMAIL] No user email, skipping order confirmation');
         return;
     }
 
@@ -165,7 +164,6 @@ async function sendOrderConfirmationEmail(order, user, items, address) {
  */
 async function sendGuestOrderConfirmationEmail(order, guestInfo, items, address) {
     if (!guestInfo?.email && !address?.email) {
-        console.log('[EMAIL] No guest email, skipping order confirmation');
         return;
     }
 
@@ -186,12 +184,6 @@ async function sendGuestOrderConfirmationEmail(order, guestInfo, items, address)
 
     // Check if this is a new account with generated password
     const isNewAccount = guestInfo?.generatedPassword;
-    console.log('[sendGuestOrderConfirmationEmail] Email params:', { 
-        email, 
-        isNewAccount, 
-        hasPassword: !!guestInfo?.generatedPassword,
-        password: guestInfo?.generatedPassword ? '***' + guestInfo.generatedPassword.slice(-3) : 'none'
-    });
     const accountInfoHtml = isNewAccount ? `
             <div style="background: #d4edda; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745;">
                 <h3 style="margin: 0 0 15px; color: #155724;">🔐 Thông tin tài khoản của bạn</h3>

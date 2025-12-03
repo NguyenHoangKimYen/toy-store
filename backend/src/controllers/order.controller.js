@@ -65,31 +65,15 @@ module.exports = {
                 orderUserEmail = user?.email;
             }
             
-            console.log('[getGuestOrderDetail] Verifying order:', {
-                orderId: req.params.id,
-                providedEmail: email,
-                providedSessionId: sessionId,
-                orderUserId: order.userId,
-                orderUserEmail: orderUserEmail,
-                orderShippingEmail: order.shippingAddress?.email,
-            });
-            
             // Get email from order - check user's email or shipping address
             const orderEmail = orderUserEmail || order.shippingAddress?.email;
 
             // Verify by email match (case-insensitive)
             const emailMatch = email && orderEmail && 
                                orderEmail.toLowerCase() === email.toLowerCase();
-            
-            console.log('[getGuestOrderDetail] Email check:', {
-                providedEmail: email?.toLowerCase(),
-                orderEmail: orderEmail?.toLowerCase(),
-                match: emailMatch
-            });
 
             // If email matches, allow access
             if (emailMatch) {
-                console.log('[getGuestOrderDetail] Access granted via email match');
                 return res.json({ success: true, data: order });
             }
 
@@ -103,7 +87,6 @@ module.exports = {
 
             // If order has a userId but no matching email, 
             // it's likely a registered user order - guest endpoint shouldn't work
-            console.log('[getGuestOrderDetail] Access denied - no match found');
             return res.status(403).json({ 
                 success: false, 
                 message: "Cannot verify order ownership. Please login if you have an account." 

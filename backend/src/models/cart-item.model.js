@@ -89,10 +89,6 @@ async function recalculateCart(cartId) {
         totalItems: newTotalItems,
         items: itemIds,
     });
-
-    console.log(
-        `Updated Cart ${cartId}: ${newTotalPrice} VND, ${newTotalItems} total items & ${itemIds.length} unique items.`,
-    );
 }
 
 CartItemSchema.post("save", async function () {

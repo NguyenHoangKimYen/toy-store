@@ -90,14 +90,10 @@ exports.calculateShippingFeeByUser = async (req, res) => {
         //Tự động định vị nếu thiếu toạ độ
         let { lat, lng } = address;
         if ((!lat || !lng) && address.addressLine) {
-            console.log(
-                `Đang xác định tọa độ từ VietMap cho địa chỉ: ${address.addressLine}`,
-            );
             const verified = await verifyAddress(address.addressLine);
             if (verified?.valid && verified.lat && verified.lng) {
                 lat = verified.lat;
                 lng = verified.lng;
-                console.log(`Tìm được tọa độ: ${lat}, ${lng}`);
             } else {
                 return res.status(400).json({
                     success: false,
@@ -160,12 +156,10 @@ exports.getShippingFee = async (req, res) => {
 
         //API Vietmap tìm toạ độ
         if ((!lat || !lng) && addressLine) {
-            console.log(`Đang tìm toạ độ cho địa chỉ: ${addressLine}...`);
             const verified = await verifyAddress(addressLine);
             if (verified?.valid && verified.lat && verified.lng) {
                 lat = verified.lat;
                 lng = verified.lng;
-                console.log(`Lấy được toạ độ: ${lat}, ${lng}`);
             } else {
                 return res.status(400).json({
                     success: false,

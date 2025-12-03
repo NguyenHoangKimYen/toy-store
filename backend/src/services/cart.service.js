@@ -123,39 +123,22 @@ const _getPopulatedCart = async (cartId) => {
 // MAIN SERVICE FUNCTIONS
 // ==========================================
 
-// Debug logging
-const log = (...args) => console.log('[cart.service]', ...args);
-
 const getCartByUserOrSession = async ({ userId, sessionId }) => {
-    log('getCartByUserOrSession called:', { userId, sessionId });
     let cartDoc = null;
     
     // 1. Tìm Cart
     if (userId) {
-        log('Finding cart by userId:', userId);
         cartDoc = await CartRepository.findCartByUserId(userId);
-        log('findCartByUserId result:', cartDoc ? `cartId=${cartDoc._id}` : 'null');
     } else if (sessionId) {
-        log('Finding cart by sessionId:', sessionId);
         cartDoc = await CartRepository.findCartBySessionId(sessionId);
-        log('findCartBySessionId result:', cartDoc ? `cartId=${cartDoc._id}` : 'null');
     }
 
     if (!cartDoc) {
-        log('No cart found, returning null');
         return null;
     }
 
     // Use the shared helper for consistent cart structure
-    log('Fetching populated cart for cartId:', cartDoc._id);
-    const result = await _getPopulatedCart(cartDoc._id);
-    log('_getPopulatedCart result:', result ? `items=${result.items?.length}` : 'null');
-    
-    if (result?.items) {
-        log('Items:', result.items.map(i => ({ variantId: i.variantId, qty: i.quantity })));
-    }
-    
-    return result;
+    return await _getPopulatedCart(cartDoc._id);
 };
 
 const createCart = async ({ userId, sessionId }) => {
@@ -248,8 +231,7 @@ const clearCart = async (cartId) => {
     const objectId = new mongoose.Types.ObjectId(cartId);
     
     // Xóa tất cả item con
-    const deleteResult = await CartItem.deleteMany({ cartId: objectId });
-    console.log(`[clearCart] Deleted ${deleteResult.deletedCount} items from cart ${cartId}`);
+    await CartItem.deleteMany({ cartId: objectId });
 
     // Reset Cart cha
     await Cart.findByIdAndUpdate(

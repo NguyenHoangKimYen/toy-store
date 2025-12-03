@@ -13,13 +13,11 @@ const getAllProducts = async (query, user = null) => {
     // Use Atlas Search ONLY for keyword searches
     const keyword = query?.keyword;
     if (keyword && keyword.trim()) {
-        console.log('🔍 Using MongoDB Atlas Search for keyword search');
         return await searchProducts(query, user);
     }
     
     const startTime = Date.now();
     // Use regular MongoDB queries for filtering (category, price, etc.)
-    console.log('📊 Using MongoDB for product filtering');
     
     // 1. Phân tích các tham số (params) từ query
     const params = new URLSearchParams(Object.entries(query || {}));

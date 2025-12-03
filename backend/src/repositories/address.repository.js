@@ -92,7 +92,6 @@ const setDefault = async (userId, addressId) => {
     await Address.findByIdAndUpdate(addressId, { isDefault: true });
     await User.findByIdAndUpdate(userId, { defaultAddressId: addressId });
 
-    console.log(`✅ Đặt địa chỉ ${addressId} làm mặc định cho user ${userId}`);
     return Address.findById(addressId);
 };
 

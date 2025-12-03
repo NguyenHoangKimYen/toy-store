@@ -86,19 +86,10 @@ const deleteAddress = async (id) => {
         throw new Error("User not found for this address");
     }
 
-    console.log(`Đã xóa địa chỉ ${id} của user ${user._id}`);
-
     const remaining = await addressRepository.findByUserId(deleted.userId);
-    console.log(
-        `Còn lại ${remaining.length} địa chỉ:`,
-        remaining.map((a) => a._id),
-    );
 
     if (remaining.length === 0) {
         await userRepository.update(user._id, { defaultAddressId: null });
-        console.log(
-            `User ${user._id} không còn địa chỉ nào → reset defaultAddressId = null`,
-        );
         return deleted;
     }
 
@@ -109,13 +100,6 @@ const deleteAddress = async (id) => {
     ) {
         const newDefault = remaining[0];
         await addressRepository.setDefault(user._id, newDefault._id);
-        console.log(
-            `Đặt ${newDefault._id} làm mặc định mới cho user ${user._id}`,
-        );
-    } else {
-        console.log(
-            "Địa chỉ bị xóa không phải mặc định, giữ nguyên defaultAddressId",
-        );
     }
 
     return deleted;

@@ -133,7 +133,7 @@ exports.customerConfirmVietQR = async (req, res) => {
     });
 
   } catch (err) {
-    console.log("customerConfirmVietQR ERROR:", err);
+    console.error("customerConfirmVietQR ERROR:", err.message);
     return res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -150,7 +150,7 @@ exports.getPendingVietQROrders = async (req, res) => {
             orders,
         });
     } catch (err) {
-        console.log('getPendingVietQROrders ERROR:', err);
+        console.error('getPendingVietQROrders ERROR:', err.message);
         return res.status(500).json({ success: false, message: err.message });
     }
 };
@@ -232,7 +232,7 @@ exports.adminConfirmVietQR = async (req, res) => {
             status: 'confirmed',
         });
     } catch (err) {
-        console.log('adminConfirmVietQR ERROR:', err);
+        console.error('adminConfirmVietQR ERROR:', err.message);
         return res.status(500).json({ success: false, message: err.message });
     }
 };
@@ -280,7 +280,7 @@ exports.adminRejectVietQR = async (req, res) => {
     });
 
   } catch (err) {
-    console.log("adminRejectVietQR ERROR:", err);
+    console.error("adminRejectVietQR ERROR:", err.message);
     return res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -335,12 +335,9 @@ exports.payByCash = async (req, res) => {
         if (user && user.isVerified) {
           const orderDetail = await orderService.getOrderDetail(orderId);
           await orderService.sendOrderEmail(orderDetail, null);
-          console.log('[payByCash] Sent confirmation email to registered user');
-        } else {
-          console.log('[payByCash] Skipping email - guest already received email at order creation');
         }
       } catch (err) {
-        console.error('[EMAIL] Failed to send COD confirmation email:', err);
+        // Non-critical: email sending failed
       }
     }
 
@@ -376,7 +373,6 @@ exports.payByCash = async (req, res) => {
 
 //momo
 exports.createMomoPayment = async (req, res) => {
-    console.log('➡️ createMomoPayment CALLED');
     try {
         const orderIdParam = req.params.orderId;
         const order = await orderRepository.findById(orderIdParam);
@@ -420,9 +416,6 @@ exports.createMomoPayment = async (req, res) => {
         const signature =
             'efc0e887b15b27b39746decb1538a6f04e330f549ac5afbe454ef5894ea39cc1';
 
-        console.log('RAW SIGNATURE (HARDCODE):', rawSignature);
-        console.log('SIGNATURE (HARDCODE):', signature);
-
         const payload = {
             partnerCode,
             accessKey,
@@ -438,8 +431,6 @@ exports.createMomoPayment = async (req, res) => {
             signature,
         };
 
-        console.log('MOMO PAYLOAD (HARDCODE):', payload);
-
         const response = await axios.post(MOMO_CONFIG.endpoint, payload);
 
         return res.json({
@@ -448,7 +439,7 @@ exports.createMomoPayment = async (req, res) => {
             momo: response.data,
         });
     } catch (err) {
-        console.log('MoMo ERROR:', err.response?.data || err.message);
+        console.error('MoMo ERROR:', err.response?.data || err.message);
         return res.status(500).json({
             success: false,
             message: 'MoMo request failed',
@@ -459,8 +450,6 @@ exports.createMomoPayment = async (req, res) => {
 
 exports.momoIpn = async (req, res) => {
     try {
-        console.log('➡️ MoMo IPN BODY:', JSON.stringify(req.body, null, 2));
-
         const {
             partnerCode,
             accessKey,
@@ -525,7 +514,7 @@ exports.momoIpn = async (req, res) => {
 
         return res.json({ resultCode: 0, message: 'OK' });
     } catch (err) {
-        console.log('MoMo IPN ERROR', err);
+        console.error('MoMo IPN ERROR:', err.message);
         return res.json({ resultCode: 1, message: err.message });
     }
 };
@@ -533,7 +522,6 @@ exports.momoIpn = async (req, res) => {
 //momo return
 exports.momoReturn = async (req, res) => {
     try {
-        console.log('➡️ MoMo RETURN QUERY:', req.query);
         const { resultCode, orderId } = req.query;
 
         if (resultCode === '0') {
@@ -572,7 +560,7 @@ exports.createZaloPayOrder = async (req, res) => {
             zaloPay: zaloResponse,
         });
     } catch (err) {
-        console.log('ZaloPay Error:', err.response?.data || err.message);
+        console.error('ZaloPay Error:', err.response?.data || err.message);
         return res.status(500).json({ success: false, message: err.message });
     }
 };
@@ -592,7 +580,7 @@ exports.zaloPayCallback = async (req, res) => {
         const embed = JSON.parse(data.embeddata);
         orderId = embed.orderId || null;
       } catch (e) {
-        console.log("Parse embeddata error:", e);
+        console.error("Parse embeddata error:", e.message);
       }
     }
 
@@ -624,7 +612,7 @@ exports.zaloPayCallback = async (req, res) => {
 
     const returnCode = Number(returnCodeRaw);
     if (Number.isNaN(returnCode)) {
-      console.log("ZaloPay callback missing/invalid returnCode", req.body);
+      console.error("ZaloPay callback missing/invalid returnCode");
       return res.json({ returncode: -1, returnmessage: "Missing return code" });
     }
 

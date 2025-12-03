@@ -124,9 +124,6 @@ const verifyAddress = async (addressLine) => {
             };
         }
 
-        console.log(
-            "⚠️ VietMap search returned no result, trying autocomplete...",
-        );
         const suggestions = await vietMapRequest("autocomplete", {
             text: addressLine,
         });
@@ -136,9 +133,6 @@ const verifyAddress = async (addressLine) => {
         );
 
         if (fallback) {
-            console.log(
-                `Auto corrected: "${addressLine}" → "${fallback.formatted}"`,
-            );
             return {
                 valid: true,
                 userInput: addressLine,
