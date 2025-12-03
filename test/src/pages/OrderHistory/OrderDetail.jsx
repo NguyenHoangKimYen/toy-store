@@ -411,54 +411,6 @@ const OrderDetail = () => {
           </div>
         </div>
 
-        {/* Payment Information */}
-        <div className="detail-section">
-          <h2><CreditCard size={20} /> Payment Details</h2>
-          <div className="payment-info enhanced">
-            <div className="payment-method-display">
-              <span 
-                className="payment-method-icon" 
-                style={{ backgroundColor: getPaymentMethodInfo(order.paymentMethod || order.payment?.method).color + '15' }}
-              >
-                {getPaymentMethodInfo(order.paymentMethod || order.payment?.method).icon}
-              </span>
-              <div className="payment-method-text">
-                <span className="method-name">{getPaymentMethodInfo(order.paymentMethod || order.payment?.method).name}</span>
-                <span className="method-status">
-                  <Badge variant={getPaymentStatusInfo(order.paymentStatus || order.payment?.status).variant}>
-                    {getPaymentStatusInfo(order.paymentStatus || order.payment?.status).label}
-                  </Badge>
-                </span>
-              </div>
-            </div>
-            
-            <div className="payment-details-grid">
-              {order.payment?.transactionId && (
-                <div className="payment-detail-item">
-                  <span className="detail-label">Transaction ID</span>
-                  <span className="detail-value mono">{order.payment.transactionId}</span>
-                </div>
-              )}
-              {order.zaloAppTransId && (
-                <div className="payment-detail-item">
-                  <span className="detail-label">ZaloPay Reference</span>
-                  <span className="detail-value mono">{order.zaloAppTransId}</span>
-                </div>
-              )}
-              {order.payment?.paidAt && (
-                <div className="payment-detail-item">
-                  <span className="detail-label">Payment Time</span>
-                  <span className="detail-value">{formatDateTime(order.payment.paidAt)}</span>
-                </div>
-              )}
-              <div className="payment-detail-item">
-                <span className="detail-label">Amount Paid</span>
-                <span className="detail-value amount">{formatPrice(totalAmount)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Order Summary */}
         <div className="detail-section">
           <h2><TrendingUp size={20} /> Order Summary</h2>

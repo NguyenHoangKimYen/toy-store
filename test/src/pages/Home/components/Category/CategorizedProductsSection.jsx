@@ -9,8 +9,8 @@ import './CategorizedProductsSection.css';
 
 const CategorizedProductsSection = () => {
   const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [showAllCategories, setShowAllCategories] = useState(true); // default show all to allow scroll arrows
   const scrollRef = useRef(null);
   const tabsScrollRef = useRef(null);
@@ -18,43 +18,49 @@ const CategorizedProductsSection = () => {
   
   const { products: allProducts, loading: productsLoading } = useProducts();
 
+  // Fetch categories immediately on mount (parallel with products)
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchCategories = async () => {
       try {
-        setLoading(productsLoading);
-        
         const response = await getCategories();
         const allCategories = Array.isArray(response)
           ? response
           : (response.categories || response.data || []);
-        
-        const categoryData = allCategories.map((cat) => {
-          const products = allProducts.filter(p => 
-            Array.isArray(p.categoryId) 
-              ? p.categoryId.some(id => id === cat._id || id._id === cat._id)
-              : p.categoryId === cat._id || p.categoryId?._id === cat._id
-          ).slice(0, 10);
-          
-          return {
-            id: cat._id,
-            name: cat.name,
-            description: cat.description || 'Discover our collection',
-            products,
-            viewAllLink: `/products?category=${cat._id}`,
-            bgImageUrl: cat.backgroundImage || '',
-          };
-        }).filter(cat => cat.products.length > 0);
-        
-        setCategories(categoryData);
+        setCategories(allCategories);
       } catch (error) {
         console.error('Error fetching categories:', error);
       } finally {
-        setLoading(false);
+        setCategoriesLoading(false);
       }
     };
+    fetchCategories();
+  }, []);
 
-    fetchData();
-  }, [allProducts, productsLoading]);
+  // Build category data when both categories and products are ready
+  const categoryData = React.useMemo(() => {
+    if (categoriesLoading || productsLoading || !categories.length || !allProducts.length) {
+      return [];
+    }
+    
+    return categories.map((cat) => {
+      const products = allProducts.filter(p => 
+        Array.isArray(p.categoryId) 
+          ? p.categoryId.some(id => id === cat._id || id._id === cat._id)
+          : p.categoryId === cat._id || p.categoryId?._id === cat._id
+      ).slice(0, 10);
+      
+      return {
+        id: cat._id,
+        name: cat.name,
+        description: cat.description || 'Discover our collection',
+        products,
+        viewAllLink: `/products?category=${cat._id}`,
+        bgImageUrl: cat.backgroundImage || '',
+      };
+    }).filter(cat => cat.products.length > 0);
+  }, [categories, allProducts, categoriesLoading, productsLoading]);
+
+  const loading = categoriesLoading || productsLoading;
 
   const scroll = (direction) => {
     scrollRef.current?.scrollBy({
@@ -78,12 +84,12 @@ const CategorizedProductsSection = () => {
     );
   }
 
-  if (categories.length === 0) return null;
+  if (categoryData.length === 0) return null;
 
-  const activeCategory = categories[activeIndex];
+  const activeCategory = categoryData[activeIndex] || categoryData[0];
   const MAX_VISIBLE_TABS = 6;
-  const visibleCategories = categories; // render all categories; scrolling handled by arrows
-  const hasMoreCategories = categories.length > MAX_VISIBLE_TABS;
+  const visibleCategories = categoryData; // render all categories; scrolling handled by arrows
+  const hasMoreCategories = categoryData.length > MAX_VISIBLE_TABS;
 
   return (
     <div className="categorized-products-showcase">
@@ -109,7 +115,7 @@ const CategorizedProductsSection = () => {
       <div className="categorized-products-content">
         {/* Category Tabs */}
         <div className="categorized-products-tabs-wrapper">
-          {categories.length > 4 && (
+          {categoryData.length > 4 && (
             <button 
               onClick={() => scrollTabs('left')} 
               className="categorized-tabs-scroll-btn categorized-tabs-scroll-left"
@@ -133,7 +139,7 @@ const CategorizedProductsSection = () => {
             {/* "More" button removed because we now render all and rely on scroll arrows */}
           </div>
           
-          {categories.length > 4 && (
+          {categoryData.length > 4 && (
             <button 
               onClick={() => scrollTabs('right')} 
               className="categorized-tabs-scroll-btn categorized-tabs-scroll-right"
