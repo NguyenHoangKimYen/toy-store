@@ -187,8 +187,12 @@ const suggestAddress = async (keyword) => {
         return suggestions.map((item) => {
             const props = item.properties || {};
             const coords = item.geometry?.coordinates || [];
+            
+            // Use label as full address, or fallback to name
+            const fullAddress = props.label || props.name || "";
+            
             return {
-                name: props.name || props.label || "",
+                name: fullAddress,
                 address: buildFormattedAddress(props),
                 lat: typeof coords[1] === "number" ? coords[1] : null,
                 lng: typeof coords[0] === "number" ? coords[0] : null,
