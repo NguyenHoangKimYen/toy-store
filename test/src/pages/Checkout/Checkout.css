@@ -4,6 +4,15 @@
   margin: 0 auto;
   padding: 1.5rem 1rem;
   min-height: calc(100vh - 160px);
+  box-sizing: border-box;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* Force all children to respect container width */
+.checkout-container * {
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .checkout-header {
@@ -25,17 +34,25 @@
   grid-template-columns: 1fr 380px;
   gap: 1.5rem;
   align-items: start;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .checkout-forms {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .checkout-summary {
   position: sticky;
   top: 100px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 /* Loading & Error States */
@@ -78,8 +95,12 @@
   }
 
   .checkout-summary {
-    order: -1;
     position: static;
+    width: 100%;
+  }
+
+  .checkout-forms {
+    width: 100%;
   }
 }
 
@@ -104,7 +125,8 @@
 
 @media (max-width: 480px) {
   .checkout-container {
-    padding: 0.75rem 0.5rem;
+    padding: 0.5rem;
+    width: 100%;
   }
 
   .checkout-title {
@@ -113,5 +135,14 @@
 
   .checkout-empty h2 {
     font-size: 1.125rem;
+  }
+
+  .checkout-header {
+    margin-bottom: 1rem;
+  }
+
+  .back-button {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
   }
 }

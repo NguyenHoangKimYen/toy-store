@@ -3,6 +3,8 @@
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .delivery-section-title {
@@ -197,6 +199,14 @@
 
 /* Responsive */
 @media (max-width: 640px) {
+  .delivery-type-selector {
+    padding: 1rem;
+  }
+
+  .delivery-section-title {
+    font-size: 1rem;
+  }
+
   .delivery-option {
     padding: 0.875rem;
   }
@@ -213,5 +223,39 @@
   
   .delivery-price {
     text-align: left;
+  }
+
+  .delivery-icon-wrapper {
+    width: 36px;
+    height: 36px;
+  }
+
+  .delivery-name {
+    font-size: 0.9rem;
+  }
+
+  .delivery-description {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .delivery-type-selector {
+    padding: 0.75rem;
+  }
+
+  .free-shipping-notice {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .delivery-option {
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .delivery-option input[type="radio"] {
+    width: 16px;
+    height: 16px;
   }
 }

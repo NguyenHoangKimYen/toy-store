@@ -3,6 +3,8 @@
   padding: 1.5rem;
   position: sticky;
   top: 2rem;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .order-summary-title {
@@ -40,6 +42,7 @@
 .order-item-details {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 
 .order-item-name {
@@ -49,12 +52,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  word-break: break-word;
 }
 
 .order-item-variant {
   font-size: 0.8rem;
   color: #ee4d2d;
   margin-bottom: 0.25rem;
+  word-break: break-word;
 }
 
 .order-item-quantity {
@@ -153,4 +158,70 @@
 
 .order-items::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+  .order-summary-card {
+    padding: 1rem;
+  }
+
+  .order-summary-title {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .order-items {
+    max-height: 200px;
+  }
+
+  .order-item-image {
+    width: 50px;
+    height: 50px;
+  }
+
+  .order-item-name {
+    font-size: 0.85rem;
+  }
+
+  .order-item-price {
+    font-size: 0.9rem;
+  }
+
+  .order-total-final {
+    font-size: 1.1rem;
+  }
+
+  .place-order-button {
+    padding: 1rem;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .order-summary-card {
+    padding: 0.75rem;
+  }
+
+  .order-item {
+    gap: 0.75rem;
+  }
+
+  .order-item-image {
+    width: 45px;
+    height: 45px;
+  }
+
+  .order-item-name {
+    font-size: 0.8rem;
+  }
+
+  .order-item-variant,
+  .order-item-quantity {
+    font-size: 0.75rem;
+  }
+
+  .order-total-row {
+    font-size: 0.875rem;
+  }
 }

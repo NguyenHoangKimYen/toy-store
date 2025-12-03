@@ -1,6 +1,8 @@
 /* Payment Method */
 .payment-method-card {
   padding: 1.5rem;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .payment-method-title {
@@ -70,4 +72,44 @@
   font-size: 0.875rem;
   color: #666;
   line-height: 1.4;
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+  .payment-method-card {
+    padding: 1rem;
+  }
+
+  .payment-method-title {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+
+  .payment-method-option {
+    padding: 0.875rem;
+    gap: 0.75rem;
+  }
+
+  .payment-method-name {
+    font-size: 0.9rem;
+  }
+
+  .payment-method-description {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .payment-method-card {
+    padding: 0.75rem;
+  }
+
+  .payment-method-option {
+    padding: 0.75rem;
+  }
+
+  .payment-radio {
+    width: 18px;
+    height: 18px;
+  }
 }
