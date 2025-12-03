@@ -15,7 +15,7 @@ const AdminSidebar = ({ onNavigate }) => {
   const [searchResults, setSearchResults] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const navigationTabs = [
     {title: 'Dashboard', route: ADMIN_ROUTES.DASHBOARD },
@@ -156,20 +156,21 @@ const AdminSidebar = ({ onNavigate }) => {
               <button
                 className="w-full text-left px-3 py-2 rounded-md hover:bg-slate-50 text-sm text-slate-700"
                 onClick={() => {
-                  navigate(PUBLIC_ROUTES.LOGIN);
-                  setShowAccountMenu(false);
-                }}
-              >
-                Switch Account
-              </button>
-              <button
-                className="w-full text-left px-3 py-2 rounded-md hover:bg-slate-50 text-sm text-slate-700"
-                onClick={() => {
                   navigate(PUBLIC_ROUTES.HOME);
                   setShowAccountMenu(false);
                 }}
               >
                 Go to Homepage
+              </button>
+              <button
+                className="w-full text-left px-3 py-2 rounded-md hover:bg-slate-50 text-sm text-red-600 font-medium"
+                onClick={() => {
+                  logout();
+                  setShowAccountMenu(false);
+                  navigate(PUBLIC_ROUTES.LOGIN);
+                }}
+              >
+                Log out
               </button>
             </div>
           )}
