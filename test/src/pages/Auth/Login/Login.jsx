@@ -66,7 +66,7 @@ const Login = () => {
     setLoading(true)
 
     const formData = new FormData(e.target)
-    const emailOrPhoneOrUsername = formData.get('email')
+    const emailOrPhoneOrUsername = formData.get('email')?.trim()
     const password = formData.get('password')
 
     setCredentials({ emailOrPhoneOrUsername, password })

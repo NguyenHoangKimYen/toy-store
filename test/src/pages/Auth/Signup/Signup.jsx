@@ -169,7 +169,13 @@ const Signup = () => {
             const res = await fetch(`${API_BASE_URL}/auth/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ fullName: fullname, username, email, phone, password })
+                body: JSON.stringify({ 
+                    fullName: fullname.trim(), 
+                    username: username.trim(), 
+                    email: email.trim(), 
+                    phone: phone.trim(), 
+                    password 
+                })
             })
 
             const data = await res.json()
