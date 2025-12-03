@@ -13,7 +13,11 @@ const session = require('express-session');
 const connectDB = require('./config/db.js');
 const passportGoogle = require('./config/passportGoogle.js');
 const socket = require('./socket/index');
-const { apiCacheMiddleware } = require('./middlewares/cache.middleware.js');
+const { 
+  apiCacheMiddleware, 
+  staticCacheMiddleware,
+  s3ImageCacheMiddleware 
+} = require('./middlewares/cache.middleware.js');
 
 const app = express(); // Tạo app
 
@@ -69,8 +73,10 @@ app.use(cors({
   exposedHeaders: ['X-Instance-ID'], // Allow frontend to read custom headers
 }));
 
-// API Cache headers for better PageSpeed scores
-app.use('/api', apiCacheMiddleware);
+// Cache headers for better PageSpeed scores
+app.use(staticCacheMiddleware); // Static files (.jpg, .png, .woff, etc.)
+app.use(s3ImageCacheMiddleware); // S3 images proxied through backend
+app.use('/api', apiCacheMiddleware); // API responses (no cache)
 
 // ============================================
 // SESSION CONFIGURATION (For OAuth flow only)

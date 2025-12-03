@@ -19,6 +19,34 @@ const CACHE_DURATIONS = {
 };
 
 /**
+ * S3 Image Cache Middleware
+ * Add cache headers for S3 images proxied through backend
+ * Images have UUID in filename so they're immutable
+ */
+const s3ImageCacheMiddleware = (req, res, next) => {
+  if (req.method !== 'GET') {
+    return next();
+  }
+
+  const url = req.url.toLowerCase();
+  
+  // Check if URL is S3 image (productImages, categoryImages, etc.)
+  const isS3Image = url.includes('/productimages/') || 
+                    url.includes('/categoryimages/') ||
+                    url.includes('/userimages/');
+  
+  if (isS3Image) {
+    // Images with UUID are immutable - cache forever
+    res.setHeader('Cache-Control', `public, max-age=${CACHE_DURATIONS.IMMUTABLE}, immutable`);
+    res.setHeader('Vary', 'Accept-Encoding');
+    // Add other performance headers
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+  }
+  
+  next();
+};
+
+/**
  * Static assets cache middleware
  * For images, fonts, and other static files
  */
@@ -76,6 +104,7 @@ const etagMiddleware = (req, res, next) => {
 
 module.exports = {
   staticCacheMiddleware,
+  s3ImageCacheMiddleware,
   apiCacheMiddleware,
   compressionHintsMiddleware,
   etagMiddleware,
