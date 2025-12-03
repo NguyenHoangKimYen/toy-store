@@ -7,6 +7,4 @@ module.exports = async function giveMonthlyLoyaltyRewards() {
     for (const u of users) {
         await giveMonthlyVoucher(u);
     }
-
-    console.log('Monthly loyalty vouchers delivered!');
 };

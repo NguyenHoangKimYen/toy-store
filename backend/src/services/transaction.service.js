@@ -22,8 +22,6 @@ async function pollBankTransactions() {
 
       // UPDATE ORDER THÀNH PAID + CONFIRMED
       await orderRepository.updatePaymentStatus(orderId, { paymentStatus: "paid", status: "confirmed" });
-
-      console.log("✔ Auto-paid order:", orderId, " → paid");
     }
 }
 

@@ -153,7 +153,6 @@ async function sendOrderConfirmationEmail(order, user, items, address) {
             subject: `✅ Đơn hàng #${orderIdShort} đã được tiếp nhận - MilkyBloom`,
             html
         });
-        console.log(`[EMAIL] Order confirmation sent to ${user.email} for order ${orderIdShort}`);
     } catch (err) {
         console.error('[EMAIL ERROR] Failed to send order confirmation:', err?.message || err);
     }
@@ -287,7 +286,6 @@ async function sendGuestOrderConfirmationEmail(order, guestInfo, items, address)
             subject: `✅ Đơn hàng #${orderIdShort} đã được tiếp nhận - MilkyBloom`,
             html
         });
-        console.log(`[EMAIL] Guest order confirmation sent to ${email} for order ${orderIdShort}`);
     } catch (err) {
         console.error('[EMAIL ERROR] Failed to send guest order confirmation:', err?.message || err);
     }
@@ -344,7 +342,6 @@ async function sendOrderStatusUpdateEmail(order, user, newStatus) {
             subject: `${statusInfo.icon} Đơn hàng #${orderIdShort} - ${statusInfo.statusText}`,
             html
         });
-        console.log(`[EMAIL] Order status update sent to ${user.email} for order ${orderIdShort}`);
     } catch (err) {
         console.error('[EMAIL ERROR] Failed to send status update:', err?.message || err);
     }

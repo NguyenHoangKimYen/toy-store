@@ -194,7 +194,6 @@ async function createZaloPayOrderService(order) {
 function verifyZaloPayCallback(params) {
     // 👉 BỎ QUA VERIFY KHI KHÔNG Ở PRODUCTION
     if (process.env.NODE_ENV !== "production") {
-        console.log("⚠️ [SANDBOX] Skip ZaloPay MAC verify");
         return true;
     }
 

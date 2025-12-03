@@ -26,7 +26,6 @@ const app = express(); // Tạo app
 // ============================================
 // Generate unique instance ID for load balancing verification
 const INSTANCE_ID = `${os.hostname()}-${crypto.randomBytes(4).toString('hex')}`;
-console.log(`🏷️  Instance ID: ${INSTANCE_ID}`);
 
 // Add instance ID to response headers (proves load balancing is working)
 app.use((req, res, next) => {
@@ -42,19 +41,6 @@ app.use(compression({
     level: 6,
     threshold: 1024, // Only compress > 1KB
 }));
-
-// Request logging (only in development)
-if (process.env.NODE_ENV !== 'production') {
-    app.use((req, res, next) => {
-        const start = Date.now();
-        res.on('finish', () => {
-            console.log(
-                `➡️ ${req.method} ${req.originalUrl} → ${res.statusCode} (${Date.now() - start}ms)`,
-            );
-        });
-        next();
-    });
-}
 
 
 app.use(cors({
@@ -231,14 +217,11 @@ const startServer = async () => {
     await connectDB();
 
     // MongoDB Atlas Search is ready once connected to MongoDB
-    console.log('✅ MongoDB Atlas Search ready');
-
+    
     // Sau đó, chỉ start server khi đã kết nối được db
     const PORT = process.env.PORT || 8080;
     server.listen(PORT, '0.0.0.0', () => {
-        console.log(`🚀 Server running on port ${PORT}`);
-        console.log(`🎯 Instance: ${INSTANCE_ID}`);
-        console.log(`📈 Horizontal scaling: READY`);
+        // Server is running
     });
 };
 

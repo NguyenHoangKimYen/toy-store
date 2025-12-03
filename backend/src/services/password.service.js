@@ -34,7 +34,6 @@ const requestReset = async (identifier, finders) => {
         process.env.FRONTEND_URL ||
         "https://www.milkybloomtoystore.id.vn";
     const link = `${linkBase}/reset-password?uid=${user._id}&token=${token}`; //tạo link đặt lại mật khẩu
-    console.log('Reset link:', link);
 
     await sendMail({
         //nội dung mail

@@ -21,8 +21,6 @@ const connectDB = async () => {
             socketTimeoutMS: 45000, // giữ socket mở 45s
         });
 
-        console.log(`MongoDB connected: ${conn.connection.host}`);
-
         // Nếu mất kết nối
         mongoose.connection.on("disconnected", () => {
             console.warn("MongoDB disconnected. Trying to reconnect...");
@@ -36,9 +34,6 @@ const connectDB = async () => {
         // Xử lý khi tắt server (Ctrl + C hoặc AWS deploy mới)
         process.on("SIGINT", async () => {
             await mongoose.connection.close();
-            console.log(`✅ MongoDB connected: ${conn.connection.host}`);
-            console.log(`📦 Database name: ${conn.connection.name}`);
-            console.log("MongoDB connection closed due to app termination");
             process.exit(0);
         });
     } catch (error) {
