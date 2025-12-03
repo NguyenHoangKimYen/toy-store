@@ -6,19 +6,19 @@ import { Button } from '@/components/ui/button'
 const contributors = [
   {
     name: 'Võ Xuân Quang',
-    role: 'Backend',
+    role: 'Backend + Amazon Web Services',
     github: 'QuangVoAI',
     email: 'vxq123@icloud.com',
     avatar: 'https://toy-store-project-of-springwang.s3.ap-southeast-2.amazonaws.com/contact/IMG_0253.jpeg',
-    bio: 'Builds backend and APIs for core features.'
+    bio: 'Develops backend services and manages AWS infrastructure.'
   },
   {
     name: 'Nguyễn Hoàng Kim Yến',
-    role: 'Backend',
+    role: 'Backend + Data Integration',
     github: 'NguyenHoangKimYen',
     email: 'nguyenhoangkimyen2102@gmail.com',
     avatar: 'https://toy-store-project-of-springwang.s3.ap-southeast-2.amazonaws.com/contact/0D5024FA-A29C-4CB8-A361-19A0C80F7663.png',
-    bio: 'Manages data and integrates with external systems.'
+    bio: 'Handles backend logic and integrates external data systems.'
   },
   {
     name: 'Ngô Gia Bảo',
@@ -26,7 +26,7 @@ const contributors = [
     github: 'cuchim123123',
     email: 'gia.huy@example.com',
     avatar: 'https://i.pravatar.cc/240?img=47',
-    bio: 'Builds UI and optimizes user experience.'
+    bio: 'Designs and builds the user interface for a smooth experience.'
   }
 ]
 
