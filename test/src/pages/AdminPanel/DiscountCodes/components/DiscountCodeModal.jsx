@@ -158,10 +158,10 @@ const DiscountCodeModal = ({ code, onClose, onSave }) => {
               value={formData.requiredTier}
               onValueChange={(value) => setFormData({ ...formData, requiredTier: value })}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select tier" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="z-[9999]">
                 <SelectItem value="none">None (Everyone)</SelectItem>
                 <SelectItem value="silver">Silver+</SelectItem>
                 <SelectItem value="gold">Gold+</SelectItem>
