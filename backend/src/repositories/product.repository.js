@@ -11,12 +11,13 @@ const findAll = async (filter = {}, options = {}) => {
             },
             {
                 path: 'variants',
-                // select: "name sku price stockQuantity",
+                select: 'sku price salePrice size color attributes stockQuantity imageUrls productId',
             },
         ])
         .skip(skip)
         .limit(limit)
         .sort(sort)
+        .lean()
         .exec();
 
     const totalQuery = Product.countDocuments(filter).lean().exec();

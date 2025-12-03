@@ -301,10 +301,22 @@ const mergeGuestCartIntoUserCart = async (userId, sessionId) => {
 
     const userCartItems = await CartItem.find({ cartId: userCart._id });
 
-    // 3. Merge Logic
+    // 3. Merge Logic - Optimized with bulk operations
+    // Fetch all variants at once to avoid N+1 queries
+    const variantIds = guestCartItems.map(item => item.variantId);
+    const variants = await Variant.find({ 
+        _id: { $in: variantIds },
+        stockQuantity: { $gt: 0 }
+    }).lean();
+    
+    const variantMap = new Map(variants.map(v => [v._id.toString(), v]));
+    
+    const bulkOps = [];
+    const newItems = [];
+    
     for (const guestItem of guestCartItems) {
-        const variant = await Variant.findById(guestItem.variantId);
-        if (!variant || variant.stockQuantity <= 0) continue;
+        const variant = variantMap.get(guestItem.variantId.toString());
+        if (!variant) continue;
 
         const existingUserItem = userCartItems.find(
             (item) =>
@@ -312,33 +324,48 @@ const mergeGuestCartIntoUserCart = async (userId, sessionId) => {
         );
 
         if (existingUserItem) {
-            // Cộng dồn
+            // Cộng dồn - prepare bulk update
             const newQuantity = existingUserItem.quantity + guestItem.quantity;
             const maxQuantity = Math.min(newQuantity, variant.stockQuantity);
 
-            existingUserItem.quantity = maxQuantity;
-            existingUserItem.price = variant.price;
-            await existingUserItem.save();
+            bulkOps.push({
+                updateOne: {
+                    filter: { _id: existingUserItem._id },
+                    update: { 
+                        $set: { 
+                            quantity: maxQuantity,
+                            price: variant.price 
+                        }
+                    }
+                }
+            });
         } else {
             // Tạo mới sang giỏ User
             const quantity = Math.min(
                 guestItem.quantity,
                 variant.stockQuantity,
             );
-            const newItem = await CartItem.create({
+            newItems.push({
                 cartId: userCart._id,
                 productId: guestItem.productId,
                 variantId: guestItem.variantId,
                 quantity,
                 price: variant.price,
             });
-
-            // Push vào mảng items của User Cart
-            await Cart.updateOne(
-                { _id: userCart._id },
-                { $push: { items: newItem._id } },
-            );
         }
+    }
+    
+    // Execute bulk operations
+    if (bulkOps.length > 0) {
+        await CartItem.bulkWrite(bulkOps);
+    }
+    
+    if (newItems.length > 0) {
+        const createdItems = await CartItem.insertMany(newItems);
+        await Cart.updateOne(
+            { _id: userCart._id },
+            { $push: { items: { $each: createdItems.map(item => item._id) } } },
+        );
     }
 
     // 4. Dọn dẹp giỏ Guest

@@ -184,6 +184,24 @@ async function sendGuestOrderConfirmationEmail(order, guestInfo, items, address)
         ? `${address.fullNameOfReceiver || fullName}, ${address.phone || guestInfo?.phone}<br>${address.addressLine || guestInfo?.addressLine}`
         : `${fullName}, ${guestInfo?.phone}<br>${guestInfo?.addressLine}`;
 
+    // Check if this is a new account with generated password
+    const isNewAccount = guestInfo?.generatedPassword;
+    const accountInfoHtml = isNewAccount ? `
+            <div style="background: #d4edda; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745;">
+                <h3 style="margin: 0 0 15px; color: #155724;">🔐 Thông tin tài khoản của bạn</h3>
+                <p style="margin: 5px 0;">Chúng tôi đã tạo tài khoản để bạn có thể theo dõi đơn hàng:</p>
+                <div style="background: white; padding: 15px; border-radius: 5px; margin-top: 10px;">
+                    <p style="margin: 5px 0;"><strong>📧 Email:</strong> ${email}</p>
+                    <p style="margin: 5px 0;"><strong>🔑 Mật khẩu:</strong> <code style="background: #f8f9fa; padding: 5px 10px; border-radius: 4px; font-size: 16px; color: #e83e8c;">${guestInfo.generatedPassword}</code></p>
+                </div>
+                <p style="margin: 10px 0 0; font-size: 13px; color: #155724;">💡 Vui lòng lưu lại mật khẩu này để đăng nhập và theo dõi đơn hàng!</p>
+            </div>
+    ` : `
+            <div style="background: #d1ecf1; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #0dcaf0;">
+                <p style="margin: 0;"><strong>💡 Lưu ý:</strong> Bạn có thể đăng nhập bằng email <strong>${email}</strong> để theo dõi đơn hàng này.</p>
+            </div>
+    `;
+
     const html = `
     <!DOCTYPE html>
     <html>
@@ -201,9 +219,7 @@ async function sendGuestOrderConfirmationEmail(order, guestInfo, items, address)
             <p>Xin chào <strong>${fullName}</strong>,</p>
             <p>Đơn hàng của bạn đã được tiếp nhận và đang được xử lý.</p>
             
-            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
-                <p style="margin: 0;"><strong>💡 Lưu ý:</strong> Bạn đang đặt hàng với tư cách khách. Để theo dõi đơn hàng dễ dàng hơn, hãy đăng ký tài khoản với email này!</p>
-            </div>
+            ${accountInfoHtml}
 
             <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="margin: 0 0 15px; color: #ff6b35;">📦 Thông tin đơn hàng #${orderIdShort}</h3>

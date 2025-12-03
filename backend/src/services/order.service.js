@@ -61,7 +61,7 @@ module.exports = {
             normalizedEmail,
             phone,
         );
-        if (existing) return existing;
+        if (existing) return { user: existing, isNewAccount: false };
 
         const randomPass = Math.random().toString(36).slice(-8);
         const hash = await bcrypt.hash(randomPass, 10);
@@ -76,22 +76,8 @@ module.exports = {
             role: 'customer',
         });
 
-        try {
-            await sendMail({
-                to: normalizedEmail,
-                subject: 'Tài khoản của bạn tại MilkyBloom',
-                html: `
-                <p>Chào ${fullName},</p>
-                <p>Chúng tôi đã tạo tài khoản cho bạn.</p>
-                <p>Email: <b>${normalizedEmail}</b></p>
-                <p>Password: <b>${randomPass}</b></p>
-            `,
-            });
-        } catch (err) {
-            console.error('SendMail guest error:', err);
-        }
-
-        return newUser;
+        // Return user with password for email
+        return { user: newUser, isNewAccount: true, generatedPassword: randomPass };
     },
 
     async createOrderFromCart(payload) {
@@ -156,8 +142,9 @@ module.exports = {
             totalAmount,
         });
 
-        // Clear cart
-        for (const ci of cartItems) await cartItemRepository.remove(ci._id);
+        // Clear cart - use bulk delete for better performance
+        const CartItem = require('../models/cart-item.model');
+        await CartItem.deleteMany({ cartId: cart._id });
         await cartRepository.update(cart._id, {
             items: [],
             totalPrice: 0,
@@ -240,8 +227,14 @@ module.exports = {
             if (!guestInfo.fullName || !guestInfo.email || !guestInfo.phone)
                 throw new Error('Guest must provide fullName, email, phone.');
 
-            const user = await this.createOrGetUserForGuest(guestInfo);
+            const result = await this.createOrGetUserForGuest(guestInfo);
+            const user = result.user;
             userId = user._id;
+            
+            // Store generated password to pass to email
+            if (result.isNewAccount && result.generatedPassword) {
+                guestInfo.generatedPassword = result.generatedPassword;
+            }
 
             if (!user.loyaltyPoints) user.loyaltyPoints = 0;
 
@@ -447,14 +440,12 @@ module.exports = {
         const order = await orderRepository.findById(orderId);
         if (!order) return null;
 
-        // Items
-        const items = await itemRepo.findByOrder(orderId);
-
-        // Status history
-        const history = await historyRepo.getHistory(orderId);
-
-        // Address để tính ship + weather
-        const address = await addressRepo.findById(order.addressId);
+        // Parallelize independent queries for better performance
+        const [items, history, address] = await Promise.all([
+            itemRepo.findByOrder(orderId),
+            historyRepo.getHistory(orderId),
+            addressRepo.findById(order.addressId),
+        ]);
         if (!address) {
             return null;
         }
@@ -501,18 +492,70 @@ module.exports = {
 
     // Lấy toàn bộ đơn của user
     async getOrdersByUser(userId) {
-        const orders = await orderRepository.findByUser(userId);
+        const Order = require('../models/order.model');
+        const mongoose = require('mongoose');
         
-        // Populate items for each order
-        const ordersWithItems = await Promise.all(
-            orders.map(async (order) => {
-                const items = await itemRepo.findByOrder(order._id);
-                return {
-                    ...order,
-                    items
-                };
-            })
-        );
+        // Use aggregation to avoid N+1 query problem
+        const ordersWithItems = await Order.aggregate([
+            { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+            { $sort: { createdAt: -1 } },
+            {
+                $lookup: {
+                    from: 'order_items',
+                    localField: '_id',
+                    foreignField: 'orderId',
+                    as: 'items'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'addresses',
+                    localField: 'addressId',
+                    foreignField: '_id',
+                    as: 'address'
+                }
+            },
+            { $unwind: { path: '$address', preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: 'discount_codes',
+                    localField: 'discountCodeId',
+                    foreignField: '_id',
+                    as: 'discountCode'
+                }
+            },
+            { $unwind: { path: '$discountCode', preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: 'vouchers',
+                    localField: 'voucherId',
+                    foreignField: '_id',
+                    as: 'voucher'
+                }
+            },
+            { $unwind: { path: '$voucher', preserveNullAndEmptyArrays: true } },
+            {
+                $project: {
+                    _id: 1,
+                    userId: 1,
+                    addressId: '$address',
+                    discountCodeId: { _id: '$discountCode._id', code: '$discountCode.code', value: '$discountCode.value' },
+                    voucherId: { _id: '$voucher._id', code: '$voucher.code', value: '$voucher.value', type: '$voucher.type' },
+                    totalAmount: 1,
+                    pointsUsed: 1,
+                    pointsEarned: 1,
+                    deliveryType: 1,
+                    shippingFee: 1,
+                    paymentMethod: 1,
+                    paymentStatus: 1,
+                    zaloAppTransId: 1,
+                    status: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    items: 1
+                }
+            }
+        ]);
         
         return ordersWithItems;
     },
