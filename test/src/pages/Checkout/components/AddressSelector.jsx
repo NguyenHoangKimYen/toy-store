@@ -55,18 +55,26 @@ const AddressSelector = ({ userId, selectedAddressId, onSelectAddress }) => {
   };
 
   const handleSaveAddress = async (addressData) => {
-    const newAddress = await createAddress(addressData);
-    // Auto-select the newly created address
-    // Backend returns the address object directly
-    if (newAddress && newAddress._id) {
-      // If it's a guest address, store it locally
-      if (newAddress.isGuest) {
-        setGuestAddresses(prev => [...prev, newAddress]);
-        // For guest checkout, pass the entire address object
-        onSelectAddress(newAddress);
-      } else {
-        onSelectAddress(newAddress._id);
+    try {
+      const newAddress = await createAddress(addressData);
+      // Auto-select the newly created address
+      // Backend returns the address object directly
+      if (newAddress && newAddress._id) {
+        // If it's a guest address, store it locally
+        if (newAddress.isGuest) {
+          setGuestAddresses(prev => [...prev, newAddress]);
+          // For guest checkout, pass the entire address object
+          onSelectAddress(newAddress);
+        } else {
+          onSelectAddress(newAddress._id);
+        }
       }
+      // Close modal after successful save
+      setIsFormModalOpen(false);
+    } catch (error) {
+      // Keep modal open if there's an error
+      console.error('Error saving address:', error);
+      throw error;
     }
   };
 

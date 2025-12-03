@@ -142,19 +142,19 @@ const OrderDetail = () => {
         </div>
 
         {/* Delivery Address Card */}
-        {order.addressId && (
+        {order.address && (
           <div className="order-info-card">
             <h2>
               <MapPin size={20} />
               Delivery Address
             </h2>
             <div className="address-info">
-              <p className="address-name">{order.addressId.fullNameOfReceiver || 'N/A'}</p>
-              <p className="address-phone">{order.addressId.phone || 'N/A'}</p>
-              <p className="address-street">{order.addressId.addressLine || 'N/A'}</p>
-              {order.addressId.lat && order.addressId.lng && (
+              <p className="address-name">{order.address.fullNameOfReceiver || 'N/A'}</p>
+              <p className="address-phone">{order.address.phone || 'N/A'}</p>
+              <p className="address-street">{order.address.addressLine || 'N/A'}</p>
+              {order.address.lat && order.address.lng && (
                 <p className="address-location">
-                  Coordinates: {order.addressId.lat}, {order.addressId.lng}
+                  Coordinates: {order.address.lat}, {order.address.lng}
                 </p>
               )}
             </div>

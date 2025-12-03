@@ -130,7 +130,6 @@ const Checkout = () => {
     return (
       <div className="checkout-loading">
         <LoadingSpinner />
-        <p style={{ marginTop: '1rem', color: '#666' }}>Placing your order...</p>
       </div>
     );
   }

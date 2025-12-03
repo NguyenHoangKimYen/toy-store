@@ -55,6 +55,8 @@ const AddressSection = ({ user }) => {
       }
       // Close modal after successful save and refresh
       setIsFormModalOpen(false);
+      setSelectedAddress(null);
+      setFormMode('create');
     } catch (error) {
       // Error is already handled in useAddresses hook
       // Keep modal open so user can fix errors

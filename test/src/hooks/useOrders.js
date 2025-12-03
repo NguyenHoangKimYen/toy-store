@@ -55,6 +55,7 @@ export const useOrders = () => {
       }
       
       console.log('Setting orders:', ordersArray);
+      console.log('First order items:', ordersArray[0]?.items);
       setOrders(ordersArray);
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.message || 'Failed to fetch orders';
