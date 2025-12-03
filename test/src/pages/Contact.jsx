@@ -12,14 +12,14 @@ const contributors = [
     avatar: 'https://toy-store-project-of-springwang.s3.ap-southeast-2.amazonaws.com/contact/IMG_0253.jpeg',
     bio: 'Develops backend services and manages AWS infrastructure.'
   },
-  {
-    name: 'Nguyễn Hoàng Kim Yến',
-    role: 'Backend + Data Integration',
-    github: 'NguyenHoangKimYen',
-    email: 'nguyenhoangkimyen2102@gmail.com',
-    avatar: 'https://toy-store-project-of-springwang.s3.ap-southeast-2.amazonaws.com/contact/0D5024FA-A29C-4CB8-A361-19A0C80F7663.png',
-    bio: 'Handles backend logic and integrates external data systems.'
-  },
+  // {
+  //   name: 'Nguyễn Hoàng Kim Yến',
+  //   role: 'Backend + Data Integration',
+  //   github: 'NguyenHoangKimYen',
+  //   email: 'nguyenhoangkimyen2102@gmail.com',
+  //   avatar: 'https://toy-store-project-of-springwang.s3.ap-southeast-2.amazonaws.com/contact/0D5024FA-A29C-4CB8-A361-19A0C80F7663.png',
+  //   bio: 'Handles backend logic and integrates external data systems.'
+  // },
   {
     name: 'Ngô Gia Bảo',
     role: 'Frontend',
