@@ -79,6 +79,9 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
           alt={productName}
           className="cart-item-image"
           loading="lazy"
+          decoding="async"
+          width="100"
+          height="100"
           onError={(e) => {
             e.target.onerror = null;
             e.target.src = '/placeholder.png';

@@ -88,6 +88,9 @@ const ProductCard = ({
           alt={product.name}
           className="product-image"
           loading="lazy"
+          decoding="async"
+          width="300"
+          height="300"
         />
         {showBadges && product.isNew && (
           <div className="badge-container">
