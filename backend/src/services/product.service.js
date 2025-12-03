@@ -411,8 +411,10 @@ const updateProduct = async (id, updateData, retryCount = 0) => {
                 for (const v of variantsInput) {
                     const variantData = {
                         price: v.price?.$numberDecimal || v.price,
-                        stockQuantity: v.stockQuantity || v.stock, // Support cả 2 tên field
-                        weight: parseInt(v.weight) || 100,
+                        stockQuantity: v.stockQuantity !== undefined && v.stockQuantity !== null 
+                            ? parseInt(v.stockQuantity) 
+                            : (v.stock !== undefined && v.stock !== null ? parseInt(v.stock) : 0),
+                        weight: v.weight ? parseInt(v.weight) : 100,
                         attributes: v.attributes,
                         isActive: v.isActive !== false,
                         imageUrls: v.imageUrls || []
@@ -501,6 +503,12 @@ const updateProduct = async (id, updateData, retryCount = 0) => {
             readConcern: { level: 'local' },
             writeConcern: { w: 'majority' }
         });
+
+        // Manually recalculate totalStock after transaction (since middleware is skipped during session)
+        if (updateData.variants) {
+            const Variant = mongoose.model('Variant');
+            await Variant.recalculateProductData(id);
+        }
 
         return result;
 
