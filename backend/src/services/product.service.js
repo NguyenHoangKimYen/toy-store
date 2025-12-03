@@ -7,11 +7,31 @@ const { searchProducts } = require('./atlas.search.service.js');
 
 /**
  * Lấy danh sách sản phẩm (có lọc + phân trang)
- * Uses MongoDB Atlas Search for fast, relevant results
+ * Uses Atlas Search for keyword search, MongoDB for filtering
  */
 const getAllProducts = async (query, user = null) => {
-    console.log('🔍 Using MongoDB Atlas Search for product search');
-    return await searchProducts(query, user);
+    // Use Atlas Search ONLY for keyword searches
+    const keyword = query?.keyword;
+    if (keyword && keyword.trim()) {
+        console.log('🔍 Using MongoDB Atlas Search for keyword search');
+        return await searchProducts(query, user);
+    }
+    
+    // Use regular MongoDB queries for filtering (category, price, etc.)
+    console.log('📊 Using MongoDB for product filtering');
+    
+    // 1. Phân tích các tham số (params) từ query
+    const params = new URLSearchParams(Object.entries(query || {}));
+
+    // Phân trang
+    const page = Math.max(1, parseInt(params.get('page') || '1', 10));
+    const limit = Math.max(1, parseInt(params.get('limit') || '20', 10));
+
+    // Sắp xếp
+    const sortParam = params.get('sort') || null;
+
+    // 2. Xây dựng đối tượng 'filter' (bộ lọc)
+    const filter = {};
 
     // --- Lọc theo Category ---
     const categoryId = params.get('categoryId') || null;
