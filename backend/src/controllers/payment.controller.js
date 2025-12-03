@@ -198,6 +198,15 @@ exports.adminConfirmVietQR = async (req, res) => {
       paymentMethod: "vietqr",
     });
 
+    // Gửi email xác nhận sau khi admin xác nhận thanh toán VietQR
+    const orderService = require('../services/order.service');
+    try {
+      const orderDetail = await orderService.getOrderDetail(orderId);
+      await orderService.sendOrderEmail(orderDetail, null);
+    } catch (err) {
+      console.error('[EMAIL] Failed to send VietQR confirmation email:', err);
+    }
+
     const existingPayment = await paymentRepository.findByOrderId(orderId);
     const txId = existingPayment?.transactionId || `VIETQR-${orderId}`;
     if (existingPayment) {
@@ -312,6 +321,17 @@ exports.payByCash = async (req, res) => {
     }
 
     const updatedOrder = await orderRepository.updatePaymentStatus(orderId, updatePayload);
+
+    // Gửi email xác nhận cho COD (vì đơn đã confirmed)
+    if (order.status === "pending") {
+      const orderService = require('../services/order.service');
+      try {
+        const orderDetail = await orderService.getOrderDetail(orderId);
+        await orderService.sendOrderEmail(orderDetail, null);
+      } catch (err) {
+        console.error('[EMAIL] Failed to send COD confirmation email:', err);
+      }
+    }
 
     const existingPayment = await paymentRepository.findByOrderId(orderId);
     const txId = existingPayment?.transactionId || `CASH-${orderId}`;
@@ -483,6 +503,14 @@ exports.momoIpn = async (req, res) => {
       : { paymentStatus: "failed", status: "cancelled" };
 
     await orderRepository.updatePaymentStatus(orderId, update);
+
+    // Gửi email khi thanh toán MoMo thành công
+    if (isSuccess) {
+      const orderService = require('../services/order.service');
+      orderService.getOrderDetail(orderId)
+        .then(orderDetail => orderService.sendOrderEmail(orderDetail, null))
+        .catch(err => console.error('[EMAIL] Failed to send MoMo IPN confirmation email:', err));
+    }
 
         return res.json({ resultCode: 0, message: 'OK' });
     } catch (err) {
