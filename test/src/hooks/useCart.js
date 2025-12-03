@@ -6,23 +6,36 @@ import {
   addItemToCart,
   removeItemFromCart,
   clearCart,
-  socketService, // Keep for BroadcastChannel only
 } from "@/services";
 
 /**
- * SIMPLIFIED Cart Hook - No optimistic updates, just trust the server
+ * Cart Hook - Refactored to prevent race conditions
+ * - Uses requestId to ignore stale responses
+ * - Locks cart mode (guest/user) to prevent overwrite
+ * - Only fetches when auth is stable
  */
-export function useCart(userId = null) {
+export function useCart(userId = null, authLoading = false) {
   const [cart, setCart] = useState(null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [itemLoading, setItemLoading] = useState({});
-
-  // Debounce timers for quantity updates
-  const updateTimersRef = useRef({});
-  const pendingQuantitiesRef = useRef({}); // variantId -> target quantity
-  const serverQuantitiesRef = useRef({}); // variantId -> last confirmed server quantity
+  
+  // Store userId in ref to avoid stale closure
+  const userIdRef = useRef(userId);
+  useEffect(() => {
+    userIdRef.current = userId;
+  }, [userId]);
+  
+  // Request tracking to prevent race conditions
+  const requestIdRef = useRef(0);
+  const abortControllerRef = useRef(null);
+  const fetchCartRef = useRef(null);
+  
+  // Cart mode lock: once we fetch with userId/sessionId, lock it
+  const cartModeRef = useRef(null); // 'user' | 'guest' | null
+  const lockedUserIdRef = useRef(null);
+  const lockedSessionIdRef = useRef(null);
 
   const getSessionId = useCallback(() => {
     let sessionId = localStorage.getItem("sessionId");
@@ -33,167 +46,184 @@ export function useCart(userId = null) {
     return sessionId;
   }, []);
 
-  const fetchCart = useCallback(async (silent = false, broadcast = false) => {
+  const fetchCart = useCallback(async (silent = false, forceMode = null) => {
+    // Abort previous request if exists
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Create new abort controller
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+    
+    // Generate unique request ID
+    const currentRequestId = ++requestIdRef.current;
+    
     if (!silent) setLoading(true);
     setError(null);
     
     try {
       let cartData = null;
-      if (userId) {
-        cartData = await getCartByUser(userId);
+      // Use ref to get latest userId (avoid stale closure)
+      const currentUserId = userIdRef.current;
+      const currentMode = forceMode || (currentUserId ? 'user' : 'guest');
+      const currentSessionId = getSessionId();
+      
+      console.log(`[useCart] 🔍 Fetching cart [requestId=${currentRequestId}, mode=${currentMode}, userId=${currentUserId}, sessionId=${currentSessionId}]`);
+      console.log(`[useCart] 🔒 Cart mode lock status: ${cartModeRef.current}, lockedUserId=${lockedUserIdRef.current}, lockedSessionId=${lockedSessionIdRef.current}`);
+      
+      if (currentUserId) {
+        console.log(`[useCart] 📡 Calling getCartByUser(${currentUserId})`);
+        cartData = await getCartByUser(currentUserId);
       } else {
-        cartData = await getCartBySession(getSessionId());
+        console.log(`[useCart] 📡 Calling getCartBySession(${currentSessionId})`);
+        cartData = await getCartBySession(currentSessionId);
+      }
+
+      console.log(`[useCart] ✅ Response received:`, cartData ? `${cartData.items?.length || 0} items` : 'null');
+
+      // Check if this response is still relevant
+      if (currentRequestId !== requestIdRef.current) {
+        console.warn(`[useCart] ⚠️ Ignoring stale response [requestId=${currentRequestId}, current=${requestIdRef.current}]`);
+        return;
+      }
+      
+      // Check if request was aborted
+      if (abortController.signal.aborted) {
+        console.warn(`[useCart] ⚠️ Request aborted [requestId=${currentRequestId}]`);
+        return;
+      }
+
+      // Lock cart mode on first successful fetch
+      if (cartData && !cartModeRef.current) {
+        cartModeRef.current = currentMode;
+        if (currentMode === 'user') {
+          lockedUserIdRef.current = currentUserId;
+        } else {
+          lockedSessionIdRef.current = currentSessionId;
+        }
+        console.log(`[useCart] 🔒 Cart mode locked to ${currentMode}`);
       }
 
       if (cartData) {
+        console.log(`[useCart] 💾 Setting cart with ${cartData.items?.length || 0} items`);
         setCart(cartData);
-        const cartItems = cartData.items || [];
-        setItems(cartItems);
-        
-        // Update server quantities ref
-        const serverQtys = {};
-        cartItems.forEach((item) => {
-          const variantId = item.variant?._id || item.variant?.id || item.variantId;
-          if (variantId) {
-            serverQtys[variantId] = item.quantity;
-          }
-        });
-        serverQuantitiesRef.current = serverQtys;
-        
-        // Broadcast to other tabs if requested
-        if (broadcast) {
-          socketService.broadcastCartUpdate({ cart: cartData });
-        }
+        setItems(cartData.items || []);
       } else {
+        console.log(`[useCart] ⚠️ No cart data, setting empty cart`);
         setCart(null);
         setItems([]);
-        serverQuantitiesRef.current = {};
-        
-        // Broadcast empty cart to other tabs if requested
-        if (broadcast) {
-          socketService.broadcastCartUpdate({ cart: null });
-        }
       }
     } catch (err) {
-      if (err.response?.status !== 404) {
+      // Ignore abort errors
+      if (err.name === 'AbortError' || abortController.signal.aborted) {
+        console.log(`[useCart] Request aborted [requestId=${currentRequestId}]`);
+        return;
+      }
+      
+      // Check if this response is still relevant
+      if (currentRequestId !== requestIdRef.current) {
+        return;
+      }
+      
+      // 404 is expected when cart doesn't exist yet - don't treat as error
+      const is404 = err.message?.includes('404') || 
+                    err.message?.includes('Cart not found') || 
+                    err.message?.includes('Không tìm thấy');
+      
+      if (!is404) {
+        console.error("Failed to fetch cart:", err);
         setError(err.message || "Failed to fetch cart");
       }
+      
+      // Set empty cart on any error (including 404)
       setCart(null);
       setItems([]);
     } finally {
-      setLoading(false);
+      if (currentRequestId === requestIdRef.current) {
+        setLoading(false);
+      }
     }
-  }, [userId, getSessionId]);
+  }, [getSessionId]); // Removed userId - it's captured in closure
+  
+  // Store fetchCart in ref for stable reference
+  fetchCartRef.current = fetchCart;
 
   const ensureCart = useCallback(async () => {
     if (cart) return cart;
 
+    const currentUserId = userIdRef.current;
     const cartData = {
-      userId: userId || null,
-      sessionId: userId ? null : getSessionId(),
+      userId: currentUserId || null,
+      sessionId: currentUserId ? null : getSessionId(),
     };
     const newCart = await createCart(cartData);
     setCart(newCart);
     setItems([]);
     return newCart;
-  }, [cart, userId, getSessionId]);
-
-  // Helper to update local state from API response and broadcast instantly
-  const updateCartState = useCallback((cartData, shouldBroadcast = true) => {
-    if (cartData) {
-      setCart(cartData);
-      const cartItems = cartData.items || [];
-      setItems(cartItems);
-      
-      // Update server quantities ref
-      const serverQtys = {};
-      cartItems.forEach((item) => {
-        const variantId = item.variant?._id || item.variant?.id || item.variantId;
-        if (variantId) {
-          serverQtys[variantId] = item.quantity;
-        }
-      });
-      serverQuantitiesRef.current = serverQtys;
-      
-      // Broadcast instantly to other tabs
-      if (shouldBroadcast) {
-        socketService.broadcastCartUpdate({ cart: cartData });
-      }
-    } else {
-      setCart(null);
-      setItems([]);
-      serverQuantitiesRef.current = {};
-      
-      if (shouldBroadcast) {
-        socketService.broadcastCartUpdate({ cart: null });
-      }
-    }
-  }, []);
+  }, [cart, getSessionId]);
 
   const updateItemQuantity = useCallback(
     async (variantId, newQuantity) => {
-      if (!variantId) return;
+      if (!variantId || newQuantity < 0) return;
       
       const cartId = cart?._id || cart?.id;
       if (!cartId) return;
 
-      // Store the target quantity
-      pendingQuantitiesRef.current[variantId] = newQuantity;
-
-      // Optimistic update - instant UI feedback
-      setItems((prevItems) =>
-        prevItems.map((item) => {
-          const itemVariantId = item.variant?._id || item.variant?.id || item.variantId;
-          return itemVariantId === variantId ? { ...item, quantity: newQuantity } : item;
-        })
-      );
-
-      // Clear existing timer
-      if (updateTimersRef.current[variantId]) {
-        clearTimeout(updateTimersRef.current[variantId]);
+      // Prevent duplicate calls - if already loading, skip
+      if (itemLoading[variantId]) {
+        console.log('[useCart] ⚠️ Already updating this item, skipping...', { variantId, itemLoading });
+        return;
       }
 
-      // Debounce the API call
-      updateTimersRef.current[variantId] = setTimeout(async () => {
-        const targetQty = pendingQuantitiesRef.current[variantId];
-        if (targetQty === undefined) return;
+      console.log('[useCart] 🔓 Setting itemLoading[' + variantId + '] = true');
+      setItemLoading((prev) => ({ ...prev, [variantId]: true }));
 
-        // Use server quantity (not stale closure quantity)
-        const serverQty = serverQuantitiesRef.current[variantId] || 0;
-        const diff = targetQty - serverQty;
+      try {
+        const currentItem = items.find(item => {
+          const itemVariantId = item.variant?._id || item.variant?.id || item.variantId;
+          return String(itemVariantId) === String(variantId);
+        });
         
+        const currentQty = currentItem?.quantity || 0;
+        const diff = newQuantity - currentQty;
+
         if (diff === 0) {
-          delete pendingQuantitiesRef.current[variantId];
+          setItemLoading((prev) => ({ ...prev, [variantId]: false }));
           return;
         }
 
-        setItemLoading((prev) => ({ ...prev, [variantId]: true }));
+        console.log(`[useCart] 🔄 Updating quantity: variantId=${variantId}, from ${currentQty} to ${newQuantity}`);
 
-        try {
-          let updatedCart;
-          if (diff > 0) {
-            updatedCart = await addItemToCart({ cartId, variantId, quantity: diff });
-          } else {
-            updatedCart = await removeItemFromCart(cartId, { variantId, quantity: Math.abs(diff) });
-          }
-          
-          // Update server quantity ref
-          serverQuantitiesRef.current[variantId] = targetQty;
-          delete pendingQuantitiesRef.current[variantId];
-          
-          // Use API response directly + broadcast instantly (no refetch!)
-          updateCartState(updatedCart);
-        } catch (err) {
-          console.error("Failed to update quantity:", err);
-          setError(err.message || "Failed to update quantity");
-          delete pendingQuantitiesRef.current[variantId];
-          await fetchCart(true, false);
-        } finally {
-          setItemLoading((prev) => ({ ...prev, [variantId]: false }));
+        // Call API and use response directly (no optimistic update to avoid race conditions)
+        let updatedCart;
+        if (newQuantity === 0) {
+          updatedCart = await removeItemFromCart(cartId, { variantId, quantity: currentQty });
+        } else if (diff > 0) {
+          updatedCart = await addItemToCart({ cartId, variantId, quantity: diff });
+        } else {
+          updatedCart = await removeItemFromCart(cartId, { variantId, quantity: Math.abs(diff) });
         }
-      }, 300); // Wait 300ms after last change
+
+        // Update state with server response
+        if (updatedCart) {
+          console.log(`[useCart] ✅ Server response: ${updatedCart.items?.length || 0} items`);
+          // Visual feedback for debugging
+          document.title = `✅ Updated: ${updatedCart.items?.length} items`;
+          setCart(updatedCart);
+          setItems(updatedCart.items || []);
+        }
+      } catch (err) {
+        console.error("[useCart] ❌ Failed to update quantity:", err);
+        setError(err.message || "Failed to update quantity");
+        // Revert on error
+        await fetchCartRef.current(true);
+      } finally {
+        console.log('[useCart] 🔓 Clearing itemLoading[' + variantId + ']');
+        setItemLoading((prev) => ({ ...prev, [variantId]: false }));
+      }
     },
-    [cart, fetchCart, updateCartState]
+    [cart, items, itemLoading]
   );
 
   const addItem = useCallback(
@@ -206,18 +236,21 @@ export function useCart(userId = null) {
         const currentCart = await ensureCart();
         const cartId = currentCart._id || currentCart.id;
 
+        // Backend returns updated cart
         const updatedCart = await addItemToCart({ cartId, variantId, quantity });
-        // Use API response directly + broadcast instantly (no refetch!)
-        updateCartState(updatedCart);
+        if (updatedCart) {
+          setCart(updatedCart);
+          setItems(updatedCart.items || []);
+        }
       } catch (err) {
         console.error("Failed to add item:", err);
         setError(err.message || "Failed to add item");
-        await fetchCart(true, false);
+        await fetchCartRef.current(true); // Only fetch on error
       } finally {
         setItemLoading((prev) => ({ ...prev, [variantId]: false }));
       }
     },
-    [ensureCart, fetchCart, updateCartState]
+    [ensureCart]
   );
 
   const removeItem = useCallback(
@@ -228,31 +261,59 @@ export function useCart(userId = null) {
       setItemLoading((prev) => ({ ...prev, [variantId]: true }));
 
       try {
+        console.log(`[useCart] ➖ Removing item: variantId=${variantId}, quantity=${quantity}`);
+        
+        // Use server response directly (no optimistic update)
         const updatedCart = await removeItemFromCart(cartId, { variantId, quantity });
-        // Use API response directly + broadcast instantly (no refetch!)
-        updateCartState(updatedCart);
+        if (updatedCart) {
+          console.log(`[useCart] ✅ Server response: ${updatedCart.items?.length || 0} items`);
+          setCart(updatedCart);
+          setItems(updatedCart.items || []);
+        }
       } catch (err) {
         console.error("Failed to remove item:", err);
         setError(err.message || "Failed to remove item");
-        await fetchCart(true, false);
+        await fetchCartRef.current(true); // Revert on error
       } finally {
         setItemLoading((prev) => ({ ...prev, [variantId]: false }));
       }
     },
-    [cart, fetchCart, updateCartState]
+    [cart]
   );
 
   const removeItemCompletely = useCallback(
     async (variantId) => {
+      const cartId = cart?._id || cart?.id;
+      if (!cartId || !variantId) return;
+
       const currentItem = items.find((item) => {
         const itemVariantId = item.variant?._id || item.variant?.id || item.variantId;
-        return itemVariantId === variantId;
+        return String(itemVariantId) === String(variantId);
       });
 
       if (!currentItem) return;
-      await removeItem(variantId, currentItem.quantity);
+
+      setItemLoading((prev) => ({ ...prev, [variantId]: true }));
+
+      try {
+        console.log(`[useCart] 🗑️ Removing item completely: variantId=${variantId}`);
+        
+        // Use server response directly (no optimistic update)
+        const updatedCart = await removeItemFromCart(cartId, { variantId, quantity: currentItem.quantity });
+        if (updatedCart) {
+          console.log(`[useCart] ✅ Server response: ${updatedCart.items?.length || 0} items`);
+          setCart(updatedCart);
+          setItems(updatedCart.items || []);
+        }
+      } catch (err) {
+        console.error("Failed to remove item:", err);
+        setError(err.message || "Failed to remove item");
+        await fetchCartRef.current(true); // Revert on error
+      } finally {
+        setItemLoading((prev) => ({ ...prev, [variantId]: false }));
+      }
     },
-    [items, removeItem]
+    [cart, items]
   );
 
   const clearAllItems = useCallback(async () => {
@@ -261,69 +322,70 @@ export function useCart(userId = null) {
 
     setLoading(true);
     try {
-      const updatedCart = await clearCart(cartId);
-      // Use API response directly + broadcast instantly
-      updateCartState(updatedCart || { ...cart, items: [] });
+      console.log('[useCart] 🧹 Clearing all items');
+      
+      // Use server response directly (no optimistic update)
+      const clearedCart = await clearCart(cartId);
+      if (clearedCart) {
+        console.log('[useCart] ✅ Cart cleared');
+        setCart(clearedCart);
+        setItems([]);
+      }
     } catch (err) {
       console.error("Failed to clear cart:", err);
       setError(err.message || "Failed to clear cart");
-      await fetchCart(true, false);
+      await fetchCartRef.current(true); // Revert on error
     } finally {
       setLoading(false);
     }
-  }, [cart, fetchCart, updateCartState]);
+  }, [cart]);
 
-  // Initial fetch
+  // Initial fetch - wait for auth to be ready, then fetch cart
+  // Use stable ref to track if we've already fetched for this user/guest session
+  const hasFetchedRef = useRef(false);
+  const lastUserIdRef = useRef(userId);
+  
   useEffect(() => {
-    fetchCart();
-  }, [fetchCart]);
-
-  // BroadcastChannel - Listen for cart updates from other tabs (same browser only)
+    console.log(`[useCart] 🔄 useEffect triggered: authLoading=${authLoading}, userId=${userId}, hasFetched=${hasFetchedRef.current}`);
+    
+    // Don't fetch cart while auth is still loading
+    if (authLoading) {
+      console.log('[useCart] ⏳ Waiting for auth to complete...');
+      return;
+    }
+    
+    // Detect userId change (login/logout)
+    const userIdChanged = lastUserIdRef.current !== userId;
+    
+    if (userIdChanged) {
+      console.log(`[useCart] 🔄 UserId changed from ${lastUserIdRef.current} to ${userId}, resetting cart mode`);
+      lastUserIdRef.current = userId;
+      hasFetchedRef.current = false;
+      
+      // Reset cart mode lock when user changes
+      cartModeRef.current = null;
+      lockedUserIdRef.current = null;
+      lockedSessionIdRef.current = null;
+    }
+    
+    // Only fetch if we haven't fetched for this user/guest session
+    if (!hasFetchedRef.current) {
+      console.log('[useCart] ✅ Auth ready, fetching cart for userId:', userId || 'guest');
+      hasFetchedRef.current = true;
+      fetchCartRef.current();
+    } else {
+      console.log('[useCart] ⏭️ Already fetched, skipping...');
+    }
+  }, [authLoading, userId]);
+  
+  // Cleanup on unmount
   useEffect(() => {
-    const handleBroadcastUpdate = (data) => {
-      // Use the cart data directly from broadcast (no extra API call)
-      if (data?.cart) {
-        const cartItems = data.cart.items || [];
-        
-        // Check if items are populated (objects with product) or just ObjectId strings
-        const isPopulated = cartItems.length === 0 || 
-          (typeof cartItems[0] === 'object' && cartItems[0] !== null);
-        
-        if (!isPopulated) {
-          fetchCart(true, false); // Silent fetch, no broadcast
-          return;
-        }
-        
-        setCart(data.cart);
-        setItems(cartItems);
-        
-        // Update server quantities ref
-        const serverQtys = {};
-        cartItems.forEach((item) => {
-          const variantId = item.variant?._id || item.variant?.id || item.variantId;
-          if (variantId) {
-            serverQtys[variantId] = item.quantity;
-          }
-        });
-        serverQuantitiesRef.current = serverQtys;
-      } else if (data?.cart === null) {
-        // Cart was cleared in another tab
-        setCart(null);
-        setItems([]);
-        serverQuantitiesRef.current = {};
-      } else {
-        // Fallback: refetch if no cart data in broadcast
-        fetchCart(true, false); // Silent fetch, no broadcast
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
     };
-
-    // Subscribe to BroadcastChannel updates (same browser tabs only)
-    const unsubscribe = socketService.onCartUpdate(handleBroadcastUpdate);
-
-    return () => {
-      unsubscribe();
-    };
-  }, [fetchCart]);
+  }, []);
 
   // Cart summary
   const cartSummary = {
@@ -360,14 +422,6 @@ export function useCart(userId = null) {
     return item?.variant?._id || item?.variant?.id || item?.variantId || null;
   }, []);
 
-  // Cleanup timers on unmount
-  useEffect(() => {
-    const timers = updateTimersRef.current;
-    return () => {
-      Object.values(timers).forEach(clearTimeout);
-    };
-  }, []);
-
   return {
     cart,
     items,
@@ -380,7 +434,7 @@ export function useCart(userId = null) {
     updateItemQuantity,
     removeItemCompletely,
     clearAllItems,
-    refetch: fetchCart,
+    refetch: () => fetchCartRef.current(),
     cartSummary,
     isInCart,
     getQuantity,

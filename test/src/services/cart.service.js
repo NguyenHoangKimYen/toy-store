@@ -49,9 +49,10 @@ export const deleteCart = async (cartId) => {
  * @returns {Promise<Object>} - Updated cart with items
  */
 export const addItemToCart = async ({ cartId, variantId, quantity }) => {
+  console.log('[cart.service] 📤 POST /carts/' + cartId + '/items', { variantId, quantity });
   const response = await apiClient.post(`/carts/${cartId}/items`, { variantId, quantity });
-  // Backend returns { success: true, data: cart }
-  return response.data || response;
+  console.log('[cart.service] 📥 Response:', response ? `${response.items?.length || 0} items` : 'null');
+  return response;
 };
 
 /**
@@ -61,8 +62,10 @@ export const addItemToCart = async ({ cartId, variantId, quantity }) => {
  * @returns {Promise<Object>} - Updated cart
  */
 export const removeItemFromCart = async (cartId, itemData) => {
+  console.log('[cart.service] 📤 POST /carts/' + cartId + '/remove-item', itemData);
   const response = await apiClient.post(`/carts/${cartId}/remove-item`, itemData);
-  return response.data || response;
+  console.log('[cart.service] 📥 Response:', response ? `${response.items?.length || 0} items` : 'null');
+  return response;
 };
 
 // Legacy aliases for backwards compatibility

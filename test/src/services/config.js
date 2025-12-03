@@ -60,6 +60,7 @@ const apiClient = {
       method,
       headers: defaultHeaders,
       keepalive: true, // Enable connection pooling
+      cache: 'no-store', // Prevent browser caching
       ...fetchOptions,
     };
 
@@ -81,7 +82,11 @@ const apiClient = {
         const error = await response.json().catch(() => ({
           message: `HTTP error! status: ${response.status}`,
         }));
-        console.error('API Error Response:', error);
+        
+        // Don't log 404 errors (expected for non-existent resources)
+        if (response.status !== 404) {
+          console.error('API Error Response:', error);
+        }
         
         // Handle expired token - auto logout
         if (response.status === 401 && (error.message === 'Invalid token' || error.message === 'Unauthorized')) {
@@ -94,10 +99,25 @@ const apiClient = {
       }
 
       const result = await response.json();
+      
+      // Debug cart responses
+      if (url.includes('/carts/')) {
+        console.log(`[apiClient] 📦 Response for ${method} ${url}:`, {
+          itemsCount: result?.items?.length,
+          totalItems: result?.totalItems,
+          firstItemQty: result?.items?.[0]?.quantity
+        });
+      }
+      
       return result;
     } catch (error) {
-      // Don't log 404 errors (expected for non-existent carts)
-      if (!error.message?.includes('404') && !error.message?.includes('Không tìm thấy')) {
+      // Don't log 404 or timeout errors for cleaner console
+      const is404 = error.message?.includes('404') || 
+                    error.message?.includes('Cart not found') || 
+                    error.message?.includes('Không tìm thấy');
+      const isTimeout = error.message?.includes('timeout');
+      
+      if (!is404 && !isTimeout) {
         console.error('API request failed:', error);
       }
       throw error;

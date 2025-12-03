@@ -10,9 +10,9 @@ export const CartContext = createContext(null);
  * This ensures all components share the same cart state
  */
 export const CartProvider = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const userId = user?._id || user?.id || null;
-  const cartState = useCartHook(userId);
+  const cartState = useCartHook(userId, authLoading);
 
   return (
     <CartContext.Provider value={cartState}>
