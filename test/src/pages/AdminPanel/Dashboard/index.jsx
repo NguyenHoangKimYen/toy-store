@@ -168,9 +168,12 @@ const Dashboard = () => {
                 <h3 className="text-sm font-semibold text-stone-700 mb-3">Best Selling Products</h3>
                 <div className="space-y-3">
                   {topSelling.length === 0 && <div className="text-sm text-stone-500">No data</div>}
-                  {topSelling.slice(0, 5).map((item) => (
+                  {topSelling.slice(0, 5).map((item, index) => (
                     <div key={item._id} className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
+                        <div className="text-lg font-bold text-stone-600 min-w-[2rem] text-center">
+                          #{index + 1}
+                        </div>
                         {item.image ? (
                           <img
                             src={item.image}
