@@ -3,14 +3,30 @@ const productRepository = require('../repositories/product.repository.js');
 const variantRepository = require('../repositories/variant.repository.js');
 const { uploadToS3, deleteFromS3 } = require('../utils/s3.helper.js');
 const { default: slugify } = require('slugify');
+const { searchProducts, isElasticSearchAvailable } = require('./elasticsearch.search.service.js');
+const { indexProduct, updateProduct: updateProductIndex, deleteProduct: deleteProductIndex } = require('./elasticsearch.index.service.js');
 
 /**
  * Lấy danh sách sản phẩm (có lọc + phân trang)
- */
-/**
- * Lấy danh sách sản phẩm (có lọc + phân trang)
+ * Uses ElasticSearch when available, falls back to MongoDB
  */
 const getAllProducts = async (query, user = null) => {
+    // Try ElasticSearch first if keyword search is present
+    const keyword = query?.keyword;
+    
+    if (keyword) {
+        try {
+            const isESAvailable = await isElasticSearchAvailable();
+            if (isESAvailable) {
+                console.log('🔍 Using ElasticSearch for product search');
+                return await searchProducts(query, user);
+            }
+        } catch (error) {
+            console.warn('⚠️  ElasticSearch unavailable, falling back to MongoDB:', error.message);
+        }
+    }
+
+    // MongoDB fallback (original implementation)
     // 1. Phân tích các tham số (params) từ query
     const params = new URLSearchParams(Object.entries(query || {}));
 
@@ -25,7 +41,7 @@ const getAllProducts = async (query, user = null) => {
     const filter = {};
 
     // --- Lọc theo Keyword (cho name và slug) ---
-    const keyword = params.get('keyword') || null;
+    // keyword already declared above, reuse it
     if (keyword) {
         filter.$or = [
             { name: { $regex: keyword, $options: 'i' } },
@@ -334,6 +350,12 @@ const createProduct = async (productData, imgFiles) => {
         // Trả về sản phẩm hoàn chỉnh
         // Có thể cần gọi lại getById để lấy data đầy đủ populate
         const finalProduct = await productRepository.findById(newProduct._id);
+        
+        // Sync to ElasticSearch (async, don't block response)
+        indexProduct(finalProduct).catch(err => {
+            console.error('⚠️  Failed to index product in ElasticSearch:', err.message);
+        });
+        
         return finalProduct;
     } catch (error) {
         // 9. Rollback (Hủy tất cả thao tác DB)
@@ -361,6 +383,11 @@ const deleteProduct = async (id) => {
 
     // Delete the product itself
     await productRepository.remove(id);
+
+    // Remove from ElasticSearch (async, don't block response)
+    deleteProductIndex(id).catch(err => {
+        console.error('⚠️  Failed to delete product from ElasticSearch:', err.message);
+    });
 
     return { message: 'Product deleted successfully' };
 };
@@ -516,6 +543,16 @@ const updateProduct = async (id, updateData, retryCount = 0) => {
             const Variant = mongoose.model('Variant');
             await Variant.recalculateProductData(id);
         }
+
+        // Sync to ElasticSearch (async, don't block response)
+        // Re-fetch product with populated data for indexing
+        productRepository.findById(id).then(product => {
+            if (product) {
+                return indexProduct(product);
+            }
+        }).catch(err => {
+            console.error('⚠️  Failed to update product in ElasticSearch:', err.message);
+        });
 
         return result;
 

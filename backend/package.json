@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "main": "index.js",
     "dependencies": {
+        "@elastic/elasticsearch": "^9.2.0",
         "@google/generative-ai": "^0.24.1",
         "aws-sdk": "^2.1692.0",
         "axios": "^1.13.2",
@@ -114,7 +115,8 @@
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "start": "node src/server.js",
-        "dev": "nodemon src/server.js"
+        "dev": "nodemon src/server.js",
+        "setup-elasticsearch": "node setup-elasticsearch.js"
     },
     "author": "",
     "license": "ISC",
