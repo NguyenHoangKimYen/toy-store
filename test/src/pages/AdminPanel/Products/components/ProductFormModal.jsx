@@ -144,7 +144,7 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
 
   // File upload handlers
   const addPendingFiles = async (files) => {
-    // Upload ngay lập tức lên S3
+    // Upload immediately to S3
     setUploading(true);
     try {
       const formDataUpload = new FormData();
@@ -154,7 +154,7 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
       
       const result = await productsService.uploadImagesToS3(formDataUpload);
       
-      // Thêm URLs vào imageUrls
+      // Add URLs to imageUrls
       if (result.imageUrls && result.imageUrls.length > 0) {
         setFormData(prev => ({
           ...prev,
@@ -264,7 +264,7 @@ const ProductFormModal = ({ product, isOpen, onClose, onSave, mode = 'create' })
     setFormData(prev => ({
       ...prev,
       variants: prev.variants.map((v, i) =>
-        i === index ? { ...v, weight: parseInt(weight) || 100 } : v
+        i === index ? { ...v, weight: weight === '' ? '' : (parseInt(weight) || '') } : v
       ),
     }));
   };
