@@ -101,12 +101,12 @@ const DiscountCodeInput = ({ orderTotal, onDiscountApplied }) => {
               value={localCode}
               onChange={handleInputChange}
               disabled={validating}
-              maxLength={5}
+              maxLength={15}
               className="discount-input"
             />
             <Button
               onClick={handleApply}
-              disabled={!localCode || validating || localCode.length !== 5}
+              disabled={!localCode.trim() || validating}
               className="apply-button"
             >
               {validating ? 'Checking...' : 'Apply'}
