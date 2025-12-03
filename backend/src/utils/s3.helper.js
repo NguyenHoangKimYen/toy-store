@@ -9,6 +9,13 @@ const uploadToS3 = async (files, folder = 'Uncategorized') => {
             Key: `${folder}/${uuidv4()}-${file.originalname}`,
             Body: file.buffer,
             ContentType: file.mimetype,
+            // Cache headers for better PageSpeed scores
+            // Images with UUID are immutable - cache for 1 year
+            CacheControl: 'public, max-age=31536000, immutable',
+            // Security header
+            Metadata: {
+                'cache-policy': 'immutable'
+            }
         };
 
         const result = await s3.upload(params).promise();
