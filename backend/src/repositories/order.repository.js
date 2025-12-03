@@ -27,13 +27,30 @@ module.exports = {
       .lean();
   },
 
-  findByUser(userId) {
-    return Order.find({ userId })
+  async findByUser(userId) {
+    const orders = await Order.find({ userId })
       .populate('addressId', 'fullNameOfReceiver phone addressLine city postalCode')
       .populate('discountCodeId', 'code value')
       .populate('voucherId', 'code value type')
       .sort({ createdAt: -1 })
       .lean();
+    
+    // Populate items for each order
+    const OrderItem = require('../models/order-item.model');
+    for (let order of orders) {
+      order.items = await OrderItem.find({ orderId: order._id })
+        .populate({
+          path: 'productId',
+          select: 'name imageUrls'
+        })
+        .populate({
+          path: 'variantId',
+          select: 'name imageUrls'
+        })
+        .lean();
+    }
+    
+    return orders;
   },
 
     async findAll(filter = {}, options = {}) {
@@ -143,7 +160,7 @@ module.exports = {
             }
         }
         
-        return Order.find(query)
+        const orders = await Order.find(query)
             .populate('userId', 'fullName email username phone')
             .populate('addressId', 'fullNameOfReceiver phone addressLine city postalCode lat lng')
             .populate('discountCodeId', 'code value')
@@ -152,6 +169,23 @@ module.exports = {
             .skip((page - 1) * limit)
             .limit(limit)
             .lean();
+        
+        // Populate items for each order for preview
+        const OrderItem = require('../models/order-item.model');
+        for (let order of orders) {
+            order.items = await OrderItem.find({ orderId: order._id })
+                .populate({
+                    path: 'productId',
+                    select: 'name imageUrls'
+                })
+                .populate({
+                    path: 'variantId',
+                    select: 'name imageUrls'
+                })
+                .lean();
+        }
+        
+        return orders;
     },
 
     updateStatus(orderId, status) {

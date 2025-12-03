@@ -508,16 +508,73 @@ module.exports = {
         const Order = require('../models/order.model');
         const mongoose = require('mongoose');
         
+        console.log('[getOrdersByUser] Fetching orders for userId:', userId);
+        
         // Use aggregation to avoid N+1 query problem
         const ordersWithItems = await Order.aggregate([
             { $match: { userId: new mongoose.Types.ObjectId(userId) } },
             { $sort: { createdAt: -1 } },
             {
                 $lookup: {
-                    from: 'order_items',
+                    from: 'orderitems',
                     localField: '_id',
                     foreignField: 'orderId',
                     as: 'items'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'products',
+                    localField: 'items.productId',
+                    foreignField: '_id',
+                    as: 'products'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'variants',
+                    localField: 'items.variantId',
+                    foreignField: '_id',
+                    as: 'variants'
+                }
+            },
+            {
+                $addFields: {
+                    items: {
+                        $map: {
+                            input: '$items',
+                            as: 'item',
+                            in: {
+                                $mergeObjects: [
+                                    '$$item',
+                                    {
+                                        productId: {
+                                            $arrayElemAt: [
+                                                {
+                                                    $filter: {
+                                                        input: '$products',
+                                                        cond: { $eq: ['$$this._id', '$$item.productId'] }
+                                                    }
+                                                },
+                                                0
+                                            ]
+                                        },
+                                        variantId: {
+                                            $arrayElemAt: [
+                                                {
+                                                    $filter: {
+                                                        input: '$variants',
+                                                        cond: { $eq: ['$$this._id', '$$item.variantId'] }
+                                                    }
+                                                },
+                                                0
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
                 }
             },
             {
@@ -565,10 +622,38 @@ module.exports = {
                     status: 1,
                     createdAt: 1,
                     updatedAt: 1,
-                    items: 1
+                    items: {
+                        $map: {
+                            input: '$items',
+                            as: 'item',
+                            in: {
+                                _id: '$$item._id',
+                                orderId: '$$item.orderId',
+                                quantity: '$$item.quantity',
+                                unitPrice: '$$item.unitPrice',
+                                subtotal: '$$item.subtotal',
+                                productId: {
+                                    _id: '$$item.productId._id',
+                                    name: '$$item.productId.name',
+                                    imageUrls: '$$item.productId.imageUrls'
+                                },
+                                variantId: {
+                                    _id: '$$item.variantId._id',
+                                    name: '$$item.variantId.name',
+                                    imageUrls: '$$item.variantId.imageUrls'
+                                }
+                            }
+                        }
+                    }
                 }
             }
         ]);
+        
+        console.log('[getOrdersByUser] Found', ordersWithItems.length, 'orders');
+        if (ordersWithItems.length > 0) {
+            console.log('[getOrdersByUser] First order items count:', ordersWithItems[0].items?.length || 0);
+            console.log('[getOrdersByUser] First item sample:', JSON.stringify(ordersWithItems[0].items?.[0], null, 2));
+        }
         
         return ordersWithItems;
     },
