@@ -118,7 +118,7 @@ const OrderSummary = ({
         onClick={onSubmit}
         disabled={submitting || disabled}
       >
-        {submitting ? 'Processing...' : disabled ? 'Select Address' : 'Place Order'}
+        {disabled ? 'Select Address' : 'Place Order'}
       </Button>
     </Card>
   );

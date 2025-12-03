@@ -64,7 +64,6 @@ export function useCart(userId = null, authLoading = false) {
         cart: updatedCart,
         timestamp: Date.now()
       });
-      console.log('[useCart] 📡 Broadcasted cart update to other tabs');
     }
   }, []);
 
@@ -91,28 +90,19 @@ export function useCart(userId = null, authLoading = false) {
       const currentMode = forceMode || (currentUserId ? 'user' : 'guest');
       const currentSessionId = getSessionId();
       
-      console.log(`[useCart] 🔍 Fetching cart [requestId=${currentRequestId}, mode=${currentMode}, userId=${currentUserId}, sessionId=${currentSessionId}]`);
-      console.log(`[useCart] 🔒 Cart mode lock status: ${cartModeRef.current}, lockedUserId=${lockedUserIdRef.current}, lockedSessionId=${lockedSessionIdRef.current}`);
-      
       if (currentUserId) {
-        console.log(`[useCart] 📡 Calling getCartByUser(${currentUserId})`);
         cartData = await getCartByUser(currentUserId);
       } else {
-        console.log(`[useCart] 📡 Calling getCartBySession(${currentSessionId})`);
         cartData = await getCartBySession(currentSessionId);
       }
 
-      console.log(`[useCart] ✅ Response received:`, cartData ? `${cartData.items?.length || 0} items` : 'null');
-
       // Check if this response is still relevant
       if (currentRequestId !== requestIdRef.current) {
-        console.warn(`[useCart] ⚠️ Ignoring stale response [requestId=${currentRequestId}, current=${requestIdRef.current}]`);
         return;
       }
       
       // Check if request was aborted
       if (abortController.signal.aborted) {
-        console.warn(`[useCart] ⚠️ Request aborted [requestId=${currentRequestId}]`);
         return;
       }
 
@@ -124,22 +114,18 @@ export function useCart(userId = null, authLoading = false) {
         } else {
           lockedSessionIdRef.current = currentSessionId;
         }
-        console.log(`[useCart] 🔒 Cart mode locked to ${currentMode}`);
       }
 
       if (cartData) {
-        console.log(`[useCart] 💾 Setting cart with ${cartData.items?.length || 0} items`);
         setCart(cartData);
         setItems(cartData.items || []);
       } else {
-        console.log(`[useCart] ⚠️ No cart data, setting empty cart`);
         setCart(null);
         setItems([]);
       }
     } catch (err) {
       // Ignore abort errors
       if (err.name === 'AbortError' || abortController.signal.aborted) {
-        console.log(`[useCart] Request aborted [requestId=${currentRequestId}]`);
         return;
       }
       
@@ -179,21 +165,17 @@ export function useCart(userId = null, authLoading = false) {
       // Listen for cart updates from other tabs
       broadcastChannelRef.current.onmessage = (event) => {
         if (event.data.type === 'CART_UPDATED') {
-          console.log('[useCart] 📨 Received cart update from another tab');
           const updatedCart = event.data.cart;
           setCart(updatedCart);
           setItems(updatedCart.items || []);
         }
       };
-
-      console.log('[useCart] 📡 BroadcastChannel initialized');
     }
 
     return () => {
       // Close BroadcastChannel
       if (broadcastChannelRef.current) {
         broadcastChannelRef.current.close();
-        console.log('[useCart] 📡 BroadcastChannel closed');
       }
     };
   }, []);
@@ -229,8 +211,6 @@ export function useCart(userId = null, authLoading = false) {
       const cartId = cart?._id || cart?.id;
       if (!cartId) return;
 
-      console.log(`[useCart] 🔄 Optimistic update: variantId=${variantId}, newQuantity=${newQuantity}`);
-
       // Store the pending quantity in ref (not affected by closure)
       pendingQuantityRef.current[variantId] = newQuantity;
 
@@ -249,13 +229,11 @@ export function useCart(userId = null, authLoading = false) {
       // Cancel previous debounce timer for this item
       if (debounceTimersRef.current[variantId]) {
         clearTimeout(debounceTimersRef.current[variantId]);
-        console.log(`[useCart] ⏰ Cancelled previous timer for ${variantId}`);
       }
 
       // Abort previous request for this item
       if (itemAbortControllersRef.current[variantId]) {
         itemAbortControllersRef.current[variantId].abort();
-        console.log(`[useCart] 🛑 Aborted previous request for ${variantId}`);
         delete itemAbortControllersRef.current[variantId];
       }
 
@@ -269,12 +247,9 @@ export function useCart(userId = null, authLoading = false) {
           const targetQuantity = pendingQuantityRef.current[variantId];
           
           if (targetQuantity === undefined) {
-            console.log(`[useCart] ⏭️ No pending update for ${variantId}`);
             setItemLoading((prev) => ({ ...prev, [variantId]: false }));
             return;
           }
-
-          console.log(`[useCart] 📡 Syncing with server: setting quantity to ${targetQuantity}`);
 
           // Create new abort controller for this request
           const abortController = new AbortController();
@@ -302,10 +277,7 @@ export function useCart(userId = null, authLoading = false) {
             const serverQty = serverItem?.quantity || 0;
             const actualDiff = targetQuantity - serverQty;
 
-            console.log(`[useCart] 📊 Server qty: ${serverQty}, Target: ${targetQuantity}, Diff: ${actualDiff}`);
-
             if (actualDiff === 0) {
-              console.log(`[useCart] ✅ Already in sync`);
               setItemLoading((prev) => ({ ...prev, [variantId]: false }));
               delete pendingQuantityRef.current[variantId];
               return;
@@ -329,7 +301,6 @@ export function useCart(userId = null, authLoading = false) {
 
           // Sync with server response (only if not aborted)
           if (updatedCart && !abortController.signal.aborted) {
-            console.log(`[useCart] ✅ Synced with server: ${updatedCart.items?.length || 0} items`);
             setCart(updatedCart);
             setItems(updatedCart.items || []);
             
@@ -343,17 +314,14 @@ export function useCart(userId = null, authLoading = false) {
         } catch (err) {
           // Ignore abort errors (from newer requests cancelling this one)
           if (err.name === 'AbortError') {
-            console.log(`[useCart] 🛑 Request aborted for ${variantId} (newer request took over)`);
             return;
           }
           
           console.error("[useCart] ❌ Failed to sync quantity:", err);
           setError(err.message || "Failed to update quantity");
           // Revert optimistic update on error
-          console.log(`[useCart] ⏪ Reverting optimistic update`);
           await fetchCartRef.current(true);
         } finally {
-          console.log('[useCart] 🔓 Clearing itemLoading[' + variantId + ']');
           setItemLoading((prev) => ({ ...prev, [variantId]: false }));
           // Clear debounce timer
           delete debounceTimersRef.current[variantId];
@@ -394,7 +362,6 @@ export function useCart(userId = null, authLoading = false) {
         }
       } catch (err) {
         if (err.name === 'AbortError') {
-          console.log(`[useCart] 🛑 Add item request aborted for ${variantId}`);
           return;
         }
         console.error("Failed to add item:", err);
@@ -415,8 +382,6 @@ export function useCart(userId = null, authLoading = false) {
       setItemLoading((prev) => ({ ...prev, [variantId]: true }));
 
       try {
-        console.log(`[useCart] ➖ Removing item: variantId=${variantId}, quantity=${quantity}`);
-        
         // Create abort controller
         const abortController = new AbortController();
         itemAbortControllersRef.current[variantId] = abortController;
@@ -429,7 +394,6 @@ export function useCart(userId = null, authLoading = false) {
         });
         if (updatedCart) {
           delete itemAbortControllersRef.current[variantId];
-          console.log(`[useCart] ✅ Server response: ${updatedCart.items?.length || 0} items`);
           setCart(updatedCart);
           setItems(updatedCart.items || []);
           
@@ -438,7 +402,6 @@ export function useCart(userId = null, authLoading = false) {
         }
       } catch (err) {
         if (err.name === 'AbortError') {
-          console.log(`[useCart] 🛑 Remove item request aborted for ${variantId}`);
           return;
         }
         console.error("Failed to remove item:", err);
@@ -466,8 +429,6 @@ export function useCart(userId = null, authLoading = false) {
       setItemLoading((prev) => ({ ...prev, [variantId]: true }));
 
       try {
-        console.log(`[useCart] 🗑️ Removing item completely: variantId=${variantId}`);
-        
         // Cancel any pending debounced updates for this item
         if (debounceTimersRef.current[variantId]) {
           clearTimeout(debounceTimersRef.current[variantId]);
@@ -486,7 +447,6 @@ export function useCart(userId = null, authLoading = false) {
           signal: abortController.signal 
         });
         if (updatedCart) {
-          console.log(`[useCart] ✅ Server response: ${updatedCart.items?.length || 0} items`);
           setCart(updatedCart);
           setItems(updatedCart.items || []);
           
@@ -510,12 +470,9 @@ export function useCart(userId = null, authLoading = false) {
 
     setLoading(true);
     try {
-      console.log('[useCart] 🧹 Clearing all items');
-      
       // Use server response directly (no optimistic update)
       const clearedCart = await clearCart(cartId);
       if (clearedCart) {
-        console.log('[useCart] ✅ Cart cleared');
         setCart(clearedCart);
         setItems([]);
         
@@ -537,11 +494,8 @@ export function useCart(userId = null, authLoading = false) {
   const lastUserIdRef = useRef(userId);
   
   useEffect(() => {
-    console.log(`[useCart] 🔄 useEffect triggered: authLoading=${authLoading}, userId=${userId}, hasFetched=${hasFetchedRef.current}`);
-    
     // Don't fetch cart while auth is still loading
     if (authLoading) {
-      console.log('[useCart] ⏳ Waiting for auth to complete...');
       return;
     }
     
@@ -549,7 +503,6 @@ export function useCart(userId = null, authLoading = false) {
     const userIdChanged = lastUserIdRef.current !== userId;
     
     if (userIdChanged) {
-      console.log(`[useCart] 🔄 UserId changed from ${lastUserIdRef.current} to ${userId}, resetting cart mode`);
       lastUserIdRef.current = userId;
       hasFetchedRef.current = false;
       
@@ -561,11 +514,8 @@ export function useCart(userId = null, authLoading = false) {
     
     // Only fetch if we haven't fetched for this user/guest session
     if (!hasFetchedRef.current) {
-      console.log('[useCart] ✅ Auth ready, fetching cart for userId:', userId || 'guest');
       hasFetchedRef.current = true;
       fetchCartRef.current();
-    } else {
-      console.log('[useCart] ⏭️ Already fetched, skipping...');
     }
   }, [authLoading, userId]);
   
