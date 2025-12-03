@@ -210,7 +210,6 @@ export const useCheckout = () => {
 
     // Prevent double submission
     if (submitting) {
-      console.log('Already submitting order, ignoring duplicate click');
       return;
     }
 

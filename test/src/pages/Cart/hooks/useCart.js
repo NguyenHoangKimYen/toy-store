@@ -22,10 +22,8 @@ export const useCart = () => {
   const subtotal = cartSummary.subtotal;
 
   const handleUpdateQuantity = async (variantId, newQuantity) => {
-    console.log('[Cart/useCart] 🔄 handleUpdateQuantity called:', { variantId, newQuantity });
     try {
       await updateItemQuantity(variantId, newQuantity);
-      console.log('[Cart/useCart] ✅ updateItemQuantity completed');
       // No need to dispatch event - context handles reactivity
     } catch (err) {
       console.error('[Cart/useCart] ❌ Error updating quantity:', err);

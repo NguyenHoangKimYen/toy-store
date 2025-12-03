@@ -11,8 +11,6 @@ export const useAddToCart = () => {
   const { addItem } = useCartContext();
 
   const handleAddToCart = async (product, variant = null) => {
-    const startTime = performance.now();
-    
     try {
       setLoading(true);
 
@@ -36,14 +34,9 @@ export const useAddToCart = () => {
         });
         return false;
       }
-
-      console.log('[ADD TO CART] Starting...', { productId: product._id, variantId });
-      const addStartTime = performance.now();
       
       // Add to cart using the cart context - addItem expects (variantId, quantity)
       await addItem(variantId, 1);
-      
-      console.log('[ADD TO CART] Completed in', (performance.now() - addStartTime).toFixed(0), 'ms');
 
       // Show success message with variant info
       let variantInfo = '';
@@ -71,10 +64,9 @@ export const useAddToCart = () => {
         description: `${product.name}${variantInfo} has been added to your cart`,
       });
 
-      console.log('[ADD TO CART] Total time:', (performance.now() - startTime).toFixed(0), 'ms');
       return true;
     } catch (err) {
-      console.error('[ADD TO CART] Error after', (performance.now() - startTime).toFixed(0), 'ms:', err);
+      console.error('[ADD TO CART] Error:', err);
       const errorMessage = err.message || 'Failed to add item to cart';
       toast.error('Add to cart failed', {
         description: errorMessage,

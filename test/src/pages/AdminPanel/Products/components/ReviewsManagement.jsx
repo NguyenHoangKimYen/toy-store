@@ -219,7 +219,7 @@ const ReviewsManagement = ({ externalSearchQuery = '' }) => {
                 <div className="flex items-center gap-3 min-w-[180px]">
                   <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden">
                     {review.userId?.avatar ? (
-                      <img src={review.userId.avatar} alt="" className="w-full h-full object-cover" />
+                      <img src={review.userId.avatar} alt="" className="w-full h-full object-cover" loading="lazy" />
                     ) : (
                       <User size={20} className="text-slate-400" />
                     )}

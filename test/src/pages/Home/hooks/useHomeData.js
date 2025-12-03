@@ -24,9 +24,9 @@ export const useHomeData = () => {
     const fetchAllData = async () => {
       try {
         const [featuredRes, newRes, bestSellersRes, categoriesRes] = await Promise.allSettled([
-          getProducts({ isFeatured: true, limit: 6 }),
-          getProducts({ sort: 'createdAt:desc', limit: 8 }),
-          getProducts({ sort: 'totalUnitsSold:desc', limit: 12 }),
+          getProducts({ isFeatured: true, limit: 5 }),
+          getProducts({ sort: 'createdAt:desc', limit: 6 }),
+          getProducts({ sort: 'totalUnitsSold:desc', limit: 8 }),
           getCategories(),
         ]);
 

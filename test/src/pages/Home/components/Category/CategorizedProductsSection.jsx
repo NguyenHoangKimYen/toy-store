@@ -3,64 +3,70 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 import { ProductCard, ScrollArrows } from '@/components/common';
-import { useProducts } from '@/hooks';
 import { getCategories } from '@/services/categories.service';
+import { getProducts } from '@/services/products.service';
 import './CategorizedProductsSection.css';
 
 const CategorizedProductsSection = () => {
   const [categories, setCategories] = useState([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoryData, setCategoryData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [showAllCategories, setShowAllCategories] = useState(true); // default show all to allow scroll arrows
   const scrollRef = useRef(null);
   const tabsScrollRef = useRef(null);
   const navigate = useNavigate();
-  
-  const { products: allProducts, loading: productsLoading } = useProducts();
 
-  // Fetch categories immediately on mount (parallel with products)
+  // Fetch categories and their products efficiently
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
+        setLoading(true);
+        
+        // 1. First get categories
         const response = await getCategories();
         const allCategories = Array.isArray(response)
           ? response
           : (response.categories || response.data || []);
         setCategories(allCategories);
+
+        // 2. Fetch products for each category (limited to 10 per category)
+        // Only fetch for first 6 categories to reduce load
+        const categoriesToFetch = allCategories.slice(0, 6);
+        
+        const categoryProducts = await Promise.all(
+          categoriesToFetch.map(async (cat) => {
+            try {
+              const products = await getProducts({ 
+                categoryId: cat._id, 
+                limit: 10,
+                status: 'Published'
+              });
+              const productList = products?.products || products || [];
+              return {
+                id: cat._id,
+                name: cat.name,
+                description: cat.description || 'Discover our collection',
+                products: Array.isArray(productList) ? productList : [],
+                viewAllLink: `/products?category=${cat._id}`,
+                bgImageUrl: cat.backgroundImage || '',
+              };
+            } catch (err) {
+              return null;
+            }
+          })
+        );
+
+        setCategoryData(categoryProducts.filter(cat => cat && cat.products.length > 0));
       } catch (error) {
         console.error('Error fetching categories:', error);
       } finally {
-        setCategoriesLoading(false);
+        setLoading(false);
       }
     };
-    fetchCategories();
-  }, []);
-
-  // Build category data when both categories and products are ready
-  const categoryData = React.useMemo(() => {
-    if (categoriesLoading || productsLoading || !categories.length || !allProducts.length) {
-      return [];
-    }
     
-    return categories.map((cat) => {
-      const products = allProducts.filter(p => 
-        Array.isArray(p.categoryId) 
-          ? p.categoryId.some(id => id === cat._id || id._id === cat._id)
-          : p.categoryId === cat._id || p.categoryId?._id === cat._id
-      ).slice(0, 10);
-      
-      return {
-        id: cat._id,
-        name: cat.name,
-        description: cat.description || 'Discover our collection',
-        products,
-        viewAllLink: `/products?category=${cat._id}`,
-        bgImageUrl: cat.backgroundImage || '',
-      };
-    }).filter(cat => cat.products.length > 0);
-  }, [categories, allProducts, categoriesLoading, productsLoading]);
-
-  const loading = categoriesLoading || productsLoading;
+    fetchData();
+  }, []);
 
   const scroll = (direction) => {
     scrollRef.current?.scrollBy({

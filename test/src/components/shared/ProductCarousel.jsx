@@ -101,7 +101,7 @@ const ProductCarousel = () => {
       <div className="list">
         {displayProducts.map((product) => (
           <div className="item" key={product._id}>
-            <img src={product.imageUrls?.[0] || '/placeholder.png'} alt={product.name} />
+            <img src={product.imageUrls?.[0] || '/placeholder.png'} alt={product.name} loading="lazy" decoding="async" />
             <div className="introduce">
               <div className="title">FEATURED</div>
               <div className="topic">{product.name}</div>

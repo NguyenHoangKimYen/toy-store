@@ -86,30 +86,22 @@ export const useProducts = (options = {}) => {
       setLoading(true);
       setError(null);
 
-      console.log('\n==================== FRONTEND: CREATE PRODUCT ====================');
-      console.log('📦 Raw Product Data:', productData);
-
       // 1. Get product images (already uploaded to S3 by ProductFormModal)
       const uploadedImageUrls = productData.imageUrls || [];
-      console.log('📸 Product Images:', uploadedImageUrls.length, 'images');
 
       // 2. Upload variant images to S3 FIRST (if any)
       const processedVariants = [];
       if (productData.variants && productData.variants.length > 0) {
-        console.log('🔧 Processing Variants with Images...', productData.variants.length, 'variants');
-        
         for (const variant of productData.variants) {
           let variantImageUrls = variant.imageUrls || [];
           
           // Upload variant image if pending
           if (variant.pendingImageFile) {
             try {
-              console.log('📤 Uploading variant image to S3...');
               const uploadResult = await productsService.uploadVariantImagesToS3([variant.pendingImageFile]);
               variantImageUrls = uploadResult.urls || [];
-              console.log('✅ Variant image uploaded:', variantImageUrls);
             } catch (imgErr) {
-              console.error('❌ Error uploading variant image:', imgErr);
+              console.error('Error uploading variant image:', imgErr);
             }
           }
 
@@ -129,12 +121,6 @@ export const useProducts = (options = {}) => {
             imageUrls: variantImageUrls,
           };
 
-          console.log('🔹 Prepared variant:', { 
-            sku: variantPayload.sku, 
-            price: variantPayload.price,
-            stock: variantPayload.stock,
-            attributes: variantPayload.attributes 
-          });
           processedVariants.push(variantPayload);
         }
       }
@@ -149,26 +135,13 @@ export const useProducts = (options = {}) => {
         variants: processedVariants, // Include all variants with their S3 image URLs
       };
 
-      console.log('📤 Sending Product Payload:', JSON.stringify(productPayload, null, 2));
-
       const newProduct = await productsService.createProduct(productPayload);
-      
-      console.log('\n✅ Frontend Success');
-      console.log('📦 Created Product:', {
-        _id: newProduct._id,
-        name: newProduct.name,
-        attributes: newProduct.attributes,
-        variantsCount: newProduct.variants?.length || 0,
-        imageUrls: newProduct.imageUrls
-      });
-      console.log('==================== FRONTEND: END ====================\n');
       
       await fetchData(); // Refresh list
       toast.success('Product created successfully');
       return newProduct;
     } catch (err) {
-      console.error('\n❌ Frontend Error:', err);
-      console.error('Error Response:', err.response?.data);
+      console.error('Error creating product:', err);
       setError(err.message || 'Failed to create product');
       toast.error('Failed to create product', { description: err.message });
       throw err;
@@ -182,10 +155,6 @@ export const useProducts = (options = {}) => {
     try {
       setLoading(true);
       setError(null);
-
-      console.log('\n==================== FRONTEND: UPDATE PRODUCT ====================');
-      console.log('📝 Product ID:', id);
-      console.log('📦 Raw Product Data:', productData);
 
       // 1. Handle image operations FIRST (if needed)
       // Note: Images should be uploaded/deleted separately before calling this
@@ -235,26 +204,14 @@ export const useProducts = (options = {}) => {
         payload.deletedImageUrls = productData.deletedImageUrls;
       }
 
-      console.log('📤 Sending Payload:', JSON.stringify(payload, null, 2));
-
       // Use patchProduct which now sends JSON
       const updated = await productsService.patchProduct(id, payload);
-      
-      console.log('\n✅ Frontend Success');
-      console.log('📦 Updated Product:', {
-        _id: updated._id,
-        name: updated.name,
-        attributes: updated.attributes,
-        variants: updated.variants?.length || 0
-      });
-      console.log('==================== FRONTEND: END ====================\n');
       
       await fetchData(); // Refresh list
       toast.success('Product updated successfully');
       return updated;
     } catch (err) {
-      console.error('\n❌ Frontend Error:', err);
-      console.error('Error Response:', err.response?.data);
+      console.error('Error updating product:', err);
       setError(err.message || 'Failed to update product');
       toast.error('Failed to update product', { description: err.message });
       throw err;

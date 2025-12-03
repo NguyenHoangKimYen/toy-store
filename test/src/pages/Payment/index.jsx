@@ -360,7 +360,7 @@ const Payment = () => {
 
           <div className="qr-section">
             {qrUrl ? (
-              <img src={qrUrl} alt="VietQR Code" className="qr-code-image" />
+              <img src={qrUrl} alt="VietQR Code" className="qr-code-image" loading="lazy" decoding="async" />
             ) : (
               <div className="qr-placeholder">QR code not available</div>
             )}

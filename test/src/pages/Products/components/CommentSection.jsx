@@ -299,7 +299,7 @@ const CommentSection = ({ productId }) => {
               <div className="image-preview-grid">
                 {images.map((img, index) => (
                   <div key={index} className="image-preview-item">
-                    <img src={img.preview} alt={`Preview ${index + 1}`} />
+                    <img src={img.preview} alt={`Preview ${index + 1}`} loading="lazy" decoding="async" />
                     <button
                       type="button"
                       className="image-remove-btn"
