@@ -200,10 +200,10 @@ module.exports = {
 
         return {
             momo: raw.find((x) => x._id === "momo")?.total || 0,
-            vietqr:
-                raw.find((x) => x._id === "vietqr")?.total ||
-                raw.find((x) => x._id === "vnpay")?.total ||
-                0,
+            // Gộp cả vietqr và vnpay để tránh lệch tên method
+            vietqr: raw
+                .filter((x) => ["vietqr", "vnpay"].includes((x._id || "").toLowerCase()))
+                .reduce((sum, x) => sum + x.total, 0),
             zalopay: raw.find((x) => x._id === "zalopay")?.total || 0,
             cod: codTotal,
         };
