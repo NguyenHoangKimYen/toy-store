@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, Eye, Edit, Trash2 } from 'lucide-react';
+import { Package, Eye, Edit, Trash2, AlertTriangle } from 'lucide-react';
 import { formatPrice } from '@/utils/formatPrice';
 import { parsePrice } from '@/utils/priceUtils';
 import './AdminProductCard.css';
@@ -53,22 +53,35 @@ const AdminProductCard = ({
     >
       <div className="admin-product-image">
         <img src={imageUrl} alt={product.name} loading="lazy" />
+        
         {showBadges && (
           <div className="badge-stack">
             {product.isNew && <span className="badge badge-new">New</span>}
             {product.isFeatured && <span className="badge badge-featured">Featured</span>}
-            {product.status && product.status !== 'Published' && (
-              <span className={`badge badge-${product.status.toLowerCase()}`}>
-                {product.status}
-              </span>
-            )}
           </div>
         )}
-        {totalStock === 0 && (
-          <div className="out-of-stock-overlay">
-            <span className="out-of-stock-text">Out of Stock</span>
+        
+        {/* Priority: Disabled > Out of Stock > Archived > Draft */}
+        {product.status === 'Disabled' ? (
+          <>
+            <div className="disabled-mask"></div>
+            <div className="caution-ribbon">
+              <span className="caution-icon">DISABLED</span>
+            </div>
+          </>
+        ) : totalStock === 0 ? (
+          <div className="disabled-overlay">
+            <span className="disabled-text">Out of Stock</span>
           </div>
-        )}
+        ) : product.status === 'Archived' ? (
+          <div className="archived-overlay">
+            <span className="archived-text">Archived</span>
+          </div>
+        ) : product.status === 'Draft' ? (
+          <div className="draft-overlay">
+            <span className="draft-text">Draft</span>
+          </div>
+        ) : null}
       </div>
 
       <div className="admin-product-content">

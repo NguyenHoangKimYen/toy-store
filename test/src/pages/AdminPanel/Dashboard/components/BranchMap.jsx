@@ -120,7 +120,7 @@ const BranchMap = ({ branches = [] }) => {
         type: 'symbol',
         source: 'branches',
         layout: {
-          'text-field': ['format', ['get', 'name'], '\n', ['get', 'orderCount'], ' đơn'],
+          'text-field': ['format', ['get', 'name'], '\n', ['get', 'orderCount'], ' orders'],
           'text-size': 12,
           'text-offset': [0, 1.6],
           'text-anchor': 'top',

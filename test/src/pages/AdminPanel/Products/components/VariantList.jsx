@@ -114,9 +114,9 @@ const VariantList = ({ variants, onUpdatePrice, onUpdateStock, onUpdateWeight, o
                     </label>
                     <Input
                       type='number'
-                      step='0.01'
+                      step='1000'
                       min='0'
-                      placeholder='0.00'
+                      placeholder='VNĐ'
                       value={parsePrice(variant.price) || ''}
                       onChange={(e) => onUpdatePrice(index, e.target.value)}
                       className='h-9'
@@ -131,7 +131,7 @@ const VariantList = ({ variants, onUpdatePrice, onUpdateStock, onUpdateWeight, o
                       type='number'
                       min='0'
                       placeholder='0'
-                      value={variant.stockQuantity ?? variant.stock ?? 0}
+                      value={variant.stockQuantity ?? variant.stock ?? ''}
                       onChange={(e) => onUpdateStock(index, e.target.value)}
                       className='h-9'
                     />
@@ -144,7 +144,7 @@ const VariantList = ({ variants, onUpdatePrice, onUpdateStock, onUpdateWeight, o
                       type='number'
                       min='0'
                       placeholder='100'
-                      value={variant.weight || 100}
+                      value={variant.weight || ''}
                       onChange={(e) => onUpdateWeight(index, e.target.value)}
                       className='h-9'
                     />
