@@ -10,7 +10,7 @@ const { default: slugify } = require('slugify');
 /**
  * Lấy danh sách sản phẩm (có lọc + phân trang)
  */
-const getAllProducts = async (query) => {
+const getAllProducts = async (query, user = null) => {
     // 1. Phân tích các tham số (params) từ query
     const params = new URLSearchParams(Object.entries(query || {}));
 
@@ -64,6 +64,13 @@ const getAllProducts = async (query) => {
     // --- Lọc theo Nổi bật (Featured) ---
     if (params.get('isFeatured') === 'true') {
         filter.isFeatured = true;
+    }
+
+    // --- Lọc theo Status (chỉ Published cho non-admin) ---
+    // Admin có thể xem tất cả status, user thường chỉ xem Published
+    const isAdmin = user && user.role === 'admin';
+    if (!isAdmin) {
+        filter.status = 'Published';
     }
 
     // ================================================================

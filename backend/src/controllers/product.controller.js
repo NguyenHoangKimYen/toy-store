@@ -4,7 +4,7 @@ const productService = require('../services/product.service.js');
 /** Lấy danh sách sản phẩm */
 const getAllProducts = async (req, res, next) => {
     try {
-        const result = await productService.getAllProducts(req.query);
+        const result = await productService.getAllProducts(req.query, req.user);
         res.json({ success: true, data: result });
     } catch (err) {
         next(err);

@@ -20,9 +20,10 @@ const {
 const { uploadProductImages } = require('../middlewares/upload.middleware.js');
 const authMiddleware = require('../middlewares/auth.middleware.js');
 const adminOnly = require('../middlewares/admin.middleware.js');
+const optionalAuth = require('../middlewares/optionalAuth.middleware.js');
 const router = express.Router();
 
-router.get("/", getAllProducts);
+router.get("/", optionalAuth, getAllProducts);
 router.get("/slug/:slug", getProductBySlug);
 router.get("/price/range", getProductByPrice);
 router.get("/:productId/variants", getVariantsByProduct);
