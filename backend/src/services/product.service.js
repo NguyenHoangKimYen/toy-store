@@ -3,51 +3,15 @@ const productRepository = require('../repositories/product.repository.js');
 const variantRepository = require('../repositories/variant.repository.js');
 const { uploadToS3, deleteFromS3 } = require('../utils/s3.helper.js');
 const { default: slugify } = require('slugify');
-const { searchProducts, isElasticSearchAvailable } = require('./elasticsearch.search.service.js');
-const { indexProduct, updateProduct: updateProductIndex, deleteProduct: deleteProductIndex } = require('./elasticsearch.index.service.js');
+const { searchProducts } = require('./atlas.search.service.js');
 
 /**
  * Lấy danh sách sản phẩm (có lọc + phân trang)
- * Uses ElasticSearch when available, falls back to MongoDB
+ * Uses MongoDB Atlas Search for fast, relevant results
  */
 const getAllProducts = async (query, user = null) => {
-    // Try ElasticSearch first if keyword search is present
-    const keyword = query?.keyword;
-    
-    if (keyword) {
-        try {
-            const isESAvailable = await isElasticSearchAvailable();
-            if (isESAvailable) {
-                console.log('🔍 Using ElasticSearch for product search');
-                return await searchProducts(query, user);
-            }
-        } catch (error) {
-            console.warn('⚠️  ElasticSearch unavailable, falling back to MongoDB:', error.message);
-        }
-    }
-
-    // MongoDB fallback (original implementation)
-    // 1. Phân tích các tham số (params) từ query
-    const params = new URLSearchParams(Object.entries(query || {}));
-
-    // Phân trang
-    const page = Math.max(1, parseInt(params.get('page') || '1', 10));
-    const limit = Math.max(1, parseInt(params.get('limit') || '20', 10));
-
-    // Sắp xếp
-    const sortParam = params.get('sort') || null;
-
-    // 2. Xây dựng đối tượng 'filter' (bộ lọc)
-    const filter = {};
-
-    // --- Lọc theo Keyword (cho name và slug) ---
-    // keyword already declared above, reuse it
-    if (keyword) {
-        filter.$or = [
-            { name: { $regex: keyword, $options: 'i' } },
-            { slug: { $regex: keyword, $options: 'i' } },
-        ];
-    }
+    console.log('🔍 Using MongoDB Atlas Search for product search');
+    return await searchProducts(query, user);
 
     // --- Lọc theo Category ---
     const categoryId = params.get('categoryId') || null;
@@ -351,10 +315,8 @@ const createProduct = async (productData, imgFiles) => {
         // Có thể cần gọi lại getById để lấy data đầy đủ populate
         const finalProduct = await productRepository.findById(newProduct._id);
         
-        // Sync to ElasticSearch (async, don't block response)
-        indexProduct(finalProduct).catch(err => {
-            console.error('⚠️  Failed to index product in ElasticSearch:', err.message);
-        });
+        // Atlas Search automatically indexes via MongoDB change streams
+        // No manual indexing needed
         
         return finalProduct;
     } catch (error) {
@@ -384,10 +346,8 @@ const deleteProduct = async (id) => {
     // Delete the product itself
     await productRepository.remove(id);
 
-    // Remove from ElasticSearch (async, don't block response)
-    deleteProductIndex(id).catch(err => {
-        console.error('⚠️  Failed to delete product from ElasticSearch:', err.message);
-    });
+    // Atlas Search automatically removes via MongoDB change streams
+    // No manual deletion needed
 
     return { message: 'Product deleted successfully' };
 };
@@ -544,15 +504,8 @@ const updateProduct = async (id, updateData, retryCount = 0) => {
             await Variant.recalculateProductData(id);
         }
 
-        // Sync to ElasticSearch (async, don't block response)
-        // Re-fetch product with populated data for indexing
-        productRepository.findById(id).then(product => {
-            if (product) {
-                return indexProduct(product);
-            }
-        }).catch(err => {
-            console.error('⚠️  Failed to update product in ElasticSearch:', err.message);
-        });
+        // Atlas Search automatically updates via MongoDB change streams
+        // No manual indexing needed
 
         return result;
 

@@ -155,7 +155,6 @@ const voucherRoutes = require('./routes/voucher.route.js');
 const badgeRoutes = require("./routes/badge.route.js");
 const dashboardRoutes = require('./routes/dashboard.routes.js');
 const chatRoutes = require("./routes/chat.route.js");
-const elasticsearchRoutes = require('./routes/elasticsearch.route.js');
 
 const errorHandler = require('./middlewares/error.middleware');
 
@@ -182,7 +181,6 @@ app.use('/api/vouchers', voucherRoutes);
 app.use("/api/badges", badgeRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use("/api/chat", chatRoutes);
-app.use('/api/elasticsearch', elasticsearchRoutes);
 
 const server = http.createServer(app);
 socket.init(server);
@@ -232,11 +230,8 @@ const startServer = async () => {
     // Chờ kết nối db trước
     await connectDB();
 
-    // Initialize ElasticSearch connection (non-blocking)
-    const { testConnection } = require('./config/elasticsearch.js');
-    testConnection().catch(err => {
-        console.warn('⚠️  ElasticSearch not available, search will use MongoDB');
-    });
+    // MongoDB Atlas Search is ready once connected to MongoDB
+    console.log('✅ MongoDB Atlas Search ready');
 
     // Sau đó, chỉ start server khi đã kết nối được db
     const PORT = process.env.PORT || 8080;
