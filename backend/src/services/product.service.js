@@ -17,6 +17,7 @@ const getAllProducts = async (query, user = null) => {
         return await searchProducts(query, user);
     }
     
+    const startTime = Date.now();
     // Use regular MongoDB queries for filtering (category, price, etc.)
     console.log('📊 Using MongoDB for product filtering');
     
@@ -27,8 +28,8 @@ const getAllProducts = async (query, user = null) => {
     const page = Math.max(1, parseInt(params.get('page') || '1', 10));
     const limit = Math.max(1, parseInt(params.get('limit') || '20', 10));
 
-    // Sắp xếp
-    const sortParam = params.get('sort') || null;
+    // Sắp xếp (hỗ trợ cả "field:order" và các preset giống nhánh Atlas Search)
+    const sortParam = params.get('sort') || '';
 
     // 2. Xây dựng đối tượng 'filter' (bộ lọc)
     const filter = {};
@@ -125,11 +126,37 @@ const getAllProducts = async (query, user = null) => {
     };
 
     const defaultSort = { createdAt: -1 };
-    if (sortParam) {
+    if (!sortParam || sortParam === 'relevance') {
+        options.sort = defaultSort;
+    } else if (sortParam.includes(':')) {
         const [key, order] = sortParam.split(':');
         options.sort[key] = order === 'desc' ? -1 : 1;
     } else {
-        options.sort = defaultSort;
+        switch (sortParam) {
+            case 'price-asc':
+                options.sort.minPrice = 1;
+                break;
+            case 'price-desc':
+                options.sort.minPrice = -1;
+                break;
+            case 'rating':
+                options.sort.averageRating = -1;
+                break;
+            case 'newest':
+                options.sort.createdAt = -1;
+                break;
+            case 'best-selling':
+                options.sort.soldCount = -1;
+                break;
+            case 'name-asc':
+                options.sort.name = 1;
+                break;
+            case 'name-desc':
+                options.sort.name = -1;
+                break;
+            default:
+                options.sort = defaultSort;
+        }
     }
 
     // 4. Gọi Repository
@@ -140,12 +167,19 @@ const getAllProducts = async (query, user = null) => {
 
     // 5. Trả về kết quả
     return {
+        success: true,
         products,
         pagination: {
-            totalProducts: total,
+            total,
             totalPages: Math.ceil(total / limit),
             currentPage: page,
             limit,
+            hasMore: (page - 1) * limit + products.length < total,
+        },
+        meta: {
+            took: Date.now() - startTime,
+            usingAtlasSearch: false,
+            keyword: null,
         },
     };
 };

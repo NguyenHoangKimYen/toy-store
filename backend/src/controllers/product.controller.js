@@ -1,11 +1,18 @@
 const { mongo } = require('mongoose');
 const productService = require('../services/product.service.js');
+const Product = require('../models/product.model.js');
+const atlasSearchService = require('../services/atlas.search.service.js');
+
 
 /** Lấy danh sách sản phẩm */
 const getAllProducts = async (req, res, next) => {
     try {
+        if (req.query.keyword) {
+            const result = await atlasSearchService.searchProducts(req.query, req.user);
+            return res.json({ success: true, data: result });
+        }
         const result = await productService.getAllProducts(req.query, req.user);
-        res.json({ success: true, data: result });
+        return res.json({ success: true, data: result });
     } catch (err) {
         next(err);
     }
@@ -214,6 +221,20 @@ const uploadImagesToS3 = async (req, res, next) => {
     }
 };
 
+/** Autocomplete product name using Atlas Search */
+const autocompleteProducts = async (req, res, next) => {
+    try {
+        const q = req.query.q || '';
+        if (!q.trim()) return res.json({ success: true, data: [] });
+
+        const names = await atlasSearchService.autocomplete(q);
+        return res.json({ success: true, data: names });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     getAllProducts,
     getProductById,
@@ -226,4 +247,5 @@ module.exports = {
     addProductImages,
     removeProductImages,
     uploadImagesToS3,
+    autocompleteProducts,
 };

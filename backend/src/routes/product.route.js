@@ -11,6 +11,7 @@ const {
     addProductImages,
     removeProductImages,
     uploadImagesToS3,
+    autocompleteProducts,
 } = require('../controllers/product.controller.js');
 
 const {
@@ -24,6 +25,7 @@ const optionalAuth = require('../middlewares/optionalAuth.middleware.js');
 const router = express.Router();
 
 router.get("/", optionalAuth, getAllProducts);
+router.get("/autocomplete", autocompleteProducts); //trả mảng tên sản phẩm cho ô search suggestion
 router.get("/slug/:slug", getProductBySlug);
 router.get("/price/range", getProductByPrice);
 router.get("/:productId/variants", getVariantsByProduct);

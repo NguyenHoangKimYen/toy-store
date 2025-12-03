@@ -167,19 +167,18 @@ const searchProducts = async (query = {}, user = null) => {
     });
 
     // 5. Price range filter (after calculating minPrice/maxPrice)
+    // Overlap logic: product.maxPrice >= userMin AND product.minPrice <= userMax
     if (minPrice || maxPrice) {
-        const priceFilter = {};
-        if (minPrice) priceFilter.$gte = parseFloat(minPrice);
-        if (maxPrice) priceFilter.$lte = parseFloat(maxPrice);
-        
-        pipeline.push({
-            $match: {
-                $or: [
-                    { minPrice: priceFilter },
-                    { maxPrice: priceFilter }
-                ]
-            }
-        });
+        const priceConditions = [];
+        if (minPrice) {
+            priceConditions.push({ maxPrice: { $gte: parseFloat(minPrice) } });
+        }
+        if (maxPrice) {
+            priceConditions.push({ minPrice: { $lte: parseFloat(maxPrice) } });
+        }
+        if (priceConditions.length > 0) {
+            pipeline.push({ $match: { $and: priceConditions } });
+        }
     }
 
     // 6. Rating filter
@@ -210,10 +209,14 @@ const searchProducts = async (query = {}, user = null) => {
 
     // 8. Sorting
     const sortStage = {};
-    
-    if (keyword && keyword.trim() && sort === 'relevance') {
-        // Sort by search score if keyword present
+
+    if (keyword && keyword.trim() && (!sort || sort === 'relevance')) {
+        // Sort by search score if keyword present and sort=relevance|empty
         sortStage.searchScore = -1;
+    } else if (typeof sort === 'string' && sort.includes(':')) {
+        // Accept "field:order" to match non-search path
+        const [field, order] = sort.split(':');
+        sortStage[field] = order === 'desc' ? -1 : 1;
     } else {
         switch (sort) {
             case 'price-asc':
