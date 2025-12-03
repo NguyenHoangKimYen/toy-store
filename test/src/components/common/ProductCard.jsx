@@ -41,9 +41,12 @@ const ProductCard = ({
 
   const imageUrl = product.imageUrls?.[0] || '/placeholder.png';
   
-  // Safely extract category name
+  // Safely extract category name (check both category and categoryId for search results)
   let categoryName = 'Uncategorized';
-  if (Array.isArray(product.categoryId)) {
+  if (product.category && typeof product.category === 'object') {
+    // Atlas Search returns category object
+    categoryName = product.category.name || 'Uncategorized';
+  } else if (Array.isArray(product.categoryId)) {
     categoryName = product.categoryId[0]?.name || 'Uncategorized';
   } else if (product.categoryId && typeof product.categoryId === 'object') {
     categoryName = product.categoryId.name || 'Uncategorized';
