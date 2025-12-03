@@ -167,11 +167,11 @@ module.exports = {
         // Get order detail for email and response
         const orderDetail = await this.getOrderDetail(order._id);
 
-        // Send order confirmation email (async, don't await to not block response)
-        this.sendOrderEmail(orderDetail, guestInfo).catch(err => {
-            console.error('[EMAIL] Failed to send order confirmation:', err);
-        });
-
+        // NOTE: Email sẽ KHÔNG được gửi ngay khi tạo order
+        // Email chỉ được gửi khi thanh toán thực sự thành công:
+        // - COD: gửi khi gọi /payments/cash/:orderId (trong payByCash controller)
+        // - MoMo/ZaloPay/VietQR: gửi trong payment callback khi thanh toán thành công
+        
         return orderDetail;
     },
 

@@ -94,6 +94,16 @@ async function handleMomoIpn(body) {
             paymentStatus: "paid",
             status: "confirmed",
         });
+        
+        // Gửi email xác nhận sau khi thanh toán thành công
+        const orderService = require('./order.service');
+        try {
+            const orderDetail = await orderService.getOrderDetail(orderId);
+            await orderService.sendOrderEmail(orderDetail, null);
+        } catch (err) {
+            console.error('[EMAIL] Failed to send MoMo confirmation email:', err);
+        }
+        
         return { success: true, message: 'Payment success' };
     }
 
@@ -206,6 +216,15 @@ async function handleZaloCallback(data) {
             paymentMethod: "zalopay",
         });
         await updateOrderStatus(orderId, "confirmed");
+        
+        // Gửi email xác nhận sau khi thanh toán thành công
+        const orderService = require('./order.service');
+        try {
+            const orderDetail = await orderService.getOrderDetail(orderId);
+            await orderService.sendOrderEmail(orderDetail, null);
+        } catch (err) {
+            console.error('[EMAIL] Failed to send ZaloPay confirmation email:', err);
+        }
     } else {
         await orderRepository.updatePaymentStatus(orderId, {
             paymentStatus: "failed",
