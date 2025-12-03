@@ -32,6 +32,10 @@ export function useCart(userId = null, authLoading = false) {
   const abortControllerRef = useRef(null);
   const fetchCartRef = useRef(null);
   
+  // Debounce timers and abort controllers per item (like Shopify/Amazon)
+  const debounceTimersRef = useRef({});
+  const itemAbortControllersRef = useRef({});
+  
   // Cart mode lock: once we fetch with userId/sessionId, lock it
   const cartModeRef = useRef(null); // 'user' | 'guest' | null
   const lockedUserIdRef = useRef(null);
@@ -149,6 +153,16 @@ export function useCart(userId = null, authLoading = false) {
   // Store fetchCart in ref for stable reference
   fetchCartRef.current = fetchCart;
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Clear all debounce timers
+      Object.values(debounceTimersRef.current).forEach(timer => clearTimeout(timer));
+      // Abort all pending requests
+      Object.values(itemAbortControllersRef.current).forEach(controller => controller.abort());
+    };
+  }, []);
+
   const ensureCart = useCallback(async () => {
     if (cart) return cart;
 
@@ -170,60 +184,94 @@ export function useCart(userId = null, authLoading = false) {
       const cartId = cart?._id || cart?.id;
       if (!cartId) return;
 
-      // Prevent duplicate calls - if already loading, skip
-      if (itemLoading[variantId]) {
-        console.log('[useCart] ⚠️ Already updating this item, skipping...', { variantId, itemLoading });
-        return;
+      // Cancel previous debounce timer for this item
+      if (debounceTimersRef.current[variantId]) {
+        clearTimeout(debounceTimersRef.current[variantId]);
       }
 
-      console.log('[useCart] 🔓 Setting itemLoading[' + variantId + '] = true');
+      // Abort previous request for this item
+      if (itemAbortControllersRef.current[variantId]) {
+        itemAbortControllersRef.current[variantId].abort();
+        console.log(`[useCart] 🛑 Aborted previous request for ${variantId}`);
+      }
+
+      // Show loading immediately for better UX
       setItemLoading((prev) => ({ ...prev, [variantId]: true }));
 
-      try {
-        const currentItem = items.find(item => {
-          const itemVariantId = item.variant?._id || item.variant?.id || item.variantId;
-          return String(itemVariantId) === String(variantId);
-        });
-        
-        const currentQty = currentItem?.quantity || 0;
-        const diff = newQuantity - currentQty;
+      // Debounce: wait 500ms before making API call (Amazon/Shopify pattern)
+      debounceTimersRef.current[variantId] = setTimeout(async () => {
+        try {
+          const currentItem = items.find(item => {
+            const itemVariantId = item.variant?._id || item.variant?.id || item.variantId;
+            return String(itemVariantId) === String(variantId);
+          });
+          
+          const currentQty = currentItem?.quantity || 0;
+          const diff = newQuantity - currentQty;
 
-        if (diff === 0) {
+          if (diff === 0) {
+            setItemLoading((prev) => ({ ...prev, [variantId]: false }));
+            return;
+          }
+
+          console.log(`[useCart] 🔄 Updating quantity: variantId=${variantId}, from ${currentQty} to ${newQuantity}`);
+
+          // Create new abort controller for this request
+          const abortController = new AbortController();
+          itemAbortControllersRef.current[variantId] = abortController;
+
+          // Call API and use response directly (no optimistic update to avoid race conditions)
+          let updatedCart;t;
+          if (newQuantity === 0) {
+            updatedCart = await removeItemFromCart(cartId, { 
+              variantId, 
+              quantity: currentQty,
+              signal: abortController.signal 
+            });
+          } else if (diff > 0) {
+            updatedCart = await addItemToCart({ 
+              cartId, 
+              variantId, 
+              quantity: diff,
+              signal: abortController.signal 
+            });
+          } else {
+            updatedCart = await removeItemFromCart(cartId, { 
+              variantId, 
+              quantity: Math.abs(diff),
+              signal: abortController.signal 
+            });
+          }
+
+          // Update state with server response
+          if (updatedCart) {
+            console.log(`[useCart] ✅ Server response: ${updatedCart.items?.length || 0} items`);
+            setCart(updatedCart);
+            setItems(updatedCart.items || []);
+          }
+          
+          // Clear abort controller after success
+          delete itemAbortControllersRef.current[variantId];
+        } catch (err) {
+          // Ignore abort errors
+          if (err.name === 'AbortError') {
+            console.log(`[useCart] 🛑 Request aborted for ${variantId}`);
+            return;
+          }
+          
+          console.error("[useCart] ❌ Failed to update quantity:", err);
+          setError(err.message || "Failed to update quantity");
+          // Revert on error
+          await fetchCartRef.current(true);
+        } finally {
+          console.log('[useCart] 🔓 Clearing itemLoading[' + variantId + ']');
           setItemLoading((prev) => ({ ...prev, [variantId]: false }));
-          return;
+          // Clear debounce timer
+          delete debounceTimersRef.current[variantId];
         }
-
-        console.log(`[useCart] 🔄 Updating quantity: variantId=${variantId}, from ${currentQty} to ${newQuantity}`);
-
-        // Call API and use response directly (no optimistic update to avoid race conditions)
-        let updatedCart;
-        if (newQuantity === 0) {
-          updatedCart = await removeItemFromCart(cartId, { variantId, quantity: currentQty });
-        } else if (diff > 0) {
-          updatedCart = await addItemToCart({ cartId, variantId, quantity: diff });
-        } else {
-          updatedCart = await removeItemFromCart(cartId, { variantId, quantity: Math.abs(diff) });
-        }
-
-        // Update state with server response
-        if (updatedCart) {
-          console.log(`[useCart] ✅ Server response: ${updatedCart.items?.length || 0} items`);
-          // Visual feedback for debugging
-          document.title = `✅ Updated: ${updatedCart.items?.length} items`;
-          setCart(updatedCart);
-          setItems(updatedCart.items || []);
-        }
-      } catch (err) {
-        console.error("[useCart] ❌ Failed to update quantity:", err);
-        setError(err.message || "Failed to update quantity");
-        // Revert on error
-        await fetchCartRef.current(true);
-      } finally {
-        console.log('[useCart] 🔓 Clearing itemLoading[' + variantId + ']');
-        setItemLoading((prev) => ({ ...prev, [variantId]: false }));
-      }
+      }, 500); // 500ms debounce like Amazon
     },
-    [cart, items, itemLoading]
+    [cart, items]
   );
 
   const addItem = useCallback(
@@ -236,13 +284,27 @@ export function useCart(userId = null, authLoading = false) {
         const currentCart = await ensureCart();
         const cartId = currentCart._id || currentCart.id;
 
+        // Create abort controller
+        const abortController = new AbortController();
+        itemAbortControllersRef.current[variantId] = abortController;
+
         // Backend returns updated cart
-        const updatedCart = await addItemToCart({ cartId, variantId, quantity });
+        const updatedCart = await addItemToCart({ 
+          cartId, 
+          variantId, 
+          quantity,
+          signal: abortController.signal 
+        });
         if (updatedCart) {
+          delete itemAbortControllersRef.current[variantId];
           setCart(updatedCart);
           setItems(updatedCart.items || []);
         }
       } catch (err) {
+        if (err.name === 'AbortError') {
+          console.log(`[useCart] 🛑 Add item request aborted for ${variantId}`);
+          return;
+        }
         console.error("Failed to add item:", err);
         setError(err.message || "Failed to add item");
         await fetchCartRef.current(true); // Only fetch on error
@@ -263,14 +325,27 @@ export function useCart(userId = null, authLoading = false) {
       try {
         console.log(`[useCart] ➖ Removing item: variantId=${variantId}, quantity=${quantity}`);
         
+        // Create abort controller
+        const abortController = new AbortController();
+        itemAbortControllersRef.current[variantId] = abortController;
+        
         // Use server response directly (no optimistic update)
-        const updatedCart = await removeItemFromCart(cartId, { variantId, quantity });
+        const updatedCart = await removeItemFromCart(cartId, { 
+          variantId, 
+          quantity,
+          signal: abortController.signal 
+        });
         if (updatedCart) {
+          delete itemAbortControllersRef.current[variantId];
           console.log(`[useCart] ✅ Server response: ${updatedCart.items?.length || 0} items`);
           setCart(updatedCart);
           setItems(updatedCart.items || []);
         }
       } catch (err) {
+        if (err.name === 'AbortError') {
+          console.log(`[useCart] 🛑 Remove item request aborted for ${variantId}`);
+          return;
+        }
         console.error("Failed to remove item:", err);
         setError(err.message || "Failed to remove item");
         await fetchCartRef.current(true); // Revert on error
@@ -298,8 +373,23 @@ export function useCart(userId = null, authLoading = false) {
       try {
         console.log(`[useCart] 🗑️ Removing item completely: variantId=${variantId}`);
         
+        // Cancel any pending debounced updates for this item
+        if (debounceTimersRef.current[variantId]) {
+          clearTimeout(debounceTimersRef.current[variantId]);
+        }
+        if (itemAbortControllersRef.current[variantId]) {
+          itemAbortControllersRef.current[variantId].abort();
+        }
+        
+        // Create abort controller for this request
+        const abortController = new AbortController();
+        
         // Use server response directly (no optimistic update)
-        const updatedCart = await removeItemFromCart(cartId, { variantId, quantity: currentItem.quantity });
+        const updatedCart = await removeItemFromCart(cartId, { 
+          variantId, 
+          quantity: currentItem.quantity,
+          signal: abortController.signal 
+        });
         if (updatedCart) {
           console.log(`[useCart] ✅ Server response: ${updatedCart.items?.length || 0} items`);
           setCart(updatedCart);

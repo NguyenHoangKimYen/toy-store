@@ -20,7 +20,7 @@ export const REQUEST_TIMEOUT = 15000;
 // API Client with optimizations
 const apiClient = {
   async request(method, url, options = {}) {
-    const { data, params, headers = {}, ...fetchOptions } = options;
+    const { data, params, headers = {}, signal, ...fetchOptions } = options;
     
     // Build URL with query params
     let fullUrl = `${API_BASE_URL}${url}`;
@@ -61,6 +61,7 @@ const apiClient = {
       headers: defaultHeaders,
       keepalive: true, // Enable connection pooling
       cache: 'no-store', // Prevent browser caching
+      signal, // Support abort controller
       ...fetchOptions,
     };
 
