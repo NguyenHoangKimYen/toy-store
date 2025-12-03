@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cart Test</title>
+</head>
+<body>
+    <h1>Direct API Test</h1>
+    <button onclick="testFetch()">Test Fetch Cart</button>
+    <button onclick="testUpdate()">Test Update +1</button>
+    <pre id="result"></pre>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        const userId = '6921bc46b69891162a3f694b';
+        const cartId = '6929f8d0006cc56657d44bdb';
+        const variantId = '69177b5bee82c5a12fc851e0';
+
+        async function testFetch() {
+            try {
+                const response = await fetch(`${API_URL}/carts/user/${userId}`);
+                const data = await response.json();
+                document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+                console.log('Cart data:', data);
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function testUpdate() {
+            try {
+                const response = await fetch(`${API_URL}/carts/${cartId}/items`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ variantId, quantity: 1 })
+                });
+                const data = await response.json();
+                document.getElementById('result').textContent = 'Updated!\n' + JSON.stringify(data, null, 2);
+                console.log('Updated cart:', data);
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
