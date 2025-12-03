@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Minus, Plus, Trash2 } from 'lucide-react';
+import { Minus, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatPrice } from '@/utils/formatPrice';
 import { parsePrice } from '@/utils/priceUtils';
@@ -62,6 +62,16 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
 
   return (
     <div className="cart-item">
+      {/* Remove Button - Top Right */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => onRemove(variantId)}
+        className="remove-btn-corner"
+      >
+        <X size={20} />
+      </Button>
+
       {/* Product Image */}
       <div className="cart-item-image-wrapper" onClick={handleNavigateToProduct}>
         <img
@@ -104,44 +114,36 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
         )}
       </div>
 
-      {/* Quantity Controls */}
-      <div className="cart-item-quantity">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleDecrement}
-          disabled={item.quantity <= 1}
-          className="quantity-btn"
-        >
-          <Minus size={16} />
-        </Button>
-        <span className="quantity-value">{item.quantity}</span>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleIncrement}
-          disabled={item.quantity >= stock}
-          className="quantity-btn"
-        >
-          <Plus size={16} />
-        </Button>
-      </div>
-
       {/* Total Price */}
       <div className="cart-item-total">
         <span className="total-label">Total:</span>
         <span className="total-price">{formatPrice(total)}</span>
       </div>
 
-      {/* Remove Button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onRemove(variantId)}
-        className="remove-btn"
-      >
-        <Trash2 size={20} />
-      </Button>
+      {/* Quantity Controls */}
+      <div className="cart-item-actions">
+        <div className="cart-item-quantity">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDecrement}
+            disabled={item.quantity <= 1}
+            className="quantity-btn"
+          >
+            <Minus size={16} />
+          </Button>
+          <span className="quantity-value">{item.quantity}</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleIncrement}
+            disabled={item.quantity >= stock}
+            className="quantity-btn"
+          >
+            <Plus size={16} />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };

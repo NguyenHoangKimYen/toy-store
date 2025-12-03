@@ -44,6 +44,9 @@ export function useCart(userId = null, authLoading = false) {
   const lockedUserIdRef = useRef(null);
   const lockedSessionIdRef = useRef(null);
 
+  // BroadcastChannel for cross-tab sync
+  const broadcastChannelRef = useRef(null);
+
   const getSessionId = useCallback(() => {
     let sessionId = localStorage.getItem("sessionId");
     if (!sessionId) {
@@ -51,6 +54,18 @@ export function useCart(userId = null, authLoading = false) {
       localStorage.setItem("sessionId", sessionId);
     }
     return sessionId;
+  }, []);
+
+  // Broadcast cart update to other tabs
+  const broadcastCartUpdate = useCallback((updatedCart) => {
+    if (broadcastChannelRef.current && updatedCart) {
+      broadcastChannelRef.current.postMessage({
+        type: 'CART_UPDATED',
+        cart: updatedCart,
+        timestamp: Date.now()
+      });
+      console.log('[useCart] 📡 Broadcasted cart update to other tabs');
+    }
   }, []);
 
   const fetchCart = useCallback(async (silent = false, forceMode = null) => {
@@ -155,6 +170,33 @@ export function useCart(userId = null, authLoading = false) {
   
   // Store fetchCart in ref for stable reference
   fetchCartRef.current = fetchCart;
+
+  // Initialize BroadcastChannel for cross-tab sync
+  useEffect(() => {
+    if (typeof BroadcastChannel !== 'undefined') {
+      broadcastChannelRef.current = new BroadcastChannel('cart-sync');
+      
+      // Listen for cart updates from other tabs
+      broadcastChannelRef.current.onmessage = (event) => {
+        if (event.data.type === 'CART_UPDATED') {
+          console.log('[useCart] 📨 Received cart update from another tab');
+          const updatedCart = event.data.cart;
+          setCart(updatedCart);
+          setItems(updatedCart.items || []);
+        }
+      };
+
+      console.log('[useCart] 📡 BroadcastChannel initialized');
+    }
+
+    return () => {
+      // Close BroadcastChannel
+      if (broadcastChannelRef.current) {
+        broadcastChannelRef.current.close();
+        console.log('[useCart] 📡 BroadcastChannel closed');
+      }
+    };
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -290,6 +332,9 @@ export function useCart(userId = null, authLoading = false) {
             console.log(`[useCart] ✅ Synced with server: ${updatedCart.items?.length || 0} items`);
             setCart(updatedCart);
             setItems(updatedCart.items || []);
+            
+            // Broadcast to other tabs
+            broadcastCartUpdate(updatedCart);
           }
           
           // Clear tracking after success
@@ -343,6 +388,9 @@ export function useCart(userId = null, authLoading = false) {
           delete itemAbortControllersRef.current[variantId];
           setCart(updatedCart);
           setItems(updatedCart.items || []);
+          
+          // Broadcast to other tabs
+          broadcastCartUpdate(updatedCart);
         }
       } catch (err) {
         if (err.name === 'AbortError') {
@@ -384,6 +432,9 @@ export function useCart(userId = null, authLoading = false) {
           console.log(`[useCart] ✅ Server response: ${updatedCart.items?.length || 0} items`);
           setCart(updatedCart);
           setItems(updatedCart.items || []);
+          
+          // Broadcast to other tabs
+          broadcastCartUpdate(updatedCart);
         }
       } catch (err) {
         if (err.name === 'AbortError') {
@@ -438,6 +489,9 @@ export function useCart(userId = null, authLoading = false) {
           console.log(`[useCart] ✅ Server response: ${updatedCart.items?.length || 0} items`);
           setCart(updatedCart);
           setItems(updatedCart.items || []);
+          
+          // Broadcast to other tabs
+          broadcastCartUpdate(updatedCart);
         }
       } catch (err) {
         console.error("Failed to remove item:", err);
@@ -464,6 +518,9 @@ export function useCart(userId = null, authLoading = false) {
         console.log('[useCart] ✅ Cart cleared');
         setCart(clearedCart);
         setItems([]);
+        
+        // Broadcast to other tabs
+        broadcastCartUpdate(clearedCart);
       }
     } catch (err) {
       console.error("Failed to clear cart:", err);

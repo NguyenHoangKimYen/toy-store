@@ -90,9 +90,13 @@
     grid-template-columns: 1fr;
   }
 
+  .cart-items-section {
+    order: 1;
+  }
+
   .cart-summary-section {
     position: static;
-    order: -1;
+    order: 2;
   }
 }
 
