@@ -36,6 +36,9 @@ export function useCart(userId = null, authLoading = false) {
   const debounceTimersRef = useRef({});
   const itemAbortControllersRef = useRef({});
   
+  // Store pending quantity updates per item to avoid closure issues
+  const pendingQuantityRef = useRef({});
+  
   // Cart mode lock: once we fetch with userId/sessionId, lock it
   const cartModeRef = useRef(null); // 'user' | 'guest' | null
   const lockedUserIdRef = useRef(null);
@@ -184,84 +187,125 @@ export function useCart(userId = null, authLoading = false) {
       const cartId = cart?._id || cart?.id;
       if (!cartId) return;
 
+      console.log(`[useCart] 🔄 Optimistic update: variantId=${variantId}, newQuantity=${newQuantity}`);
+
+      // Store the pending quantity in ref (not affected by closure)
+      pendingQuantityRef.current[variantId] = newQuantity;
+
+      // ✅ OPTIMISTIC UPDATE: Update UI immediately
+      const optimisticItems = items.map(item => {
+        const itemVariantId = item.variant?._id || item.variant?.id || item.variantId;
+        if (String(itemVariantId) === String(variantId)) {
+          return { ...item, quantity: newQuantity };
+        }
+        return item;
+      }).filter(item => item.quantity > 0); // Remove items with quantity 0
+
+      setItems(optimisticItems);
+      setCart(prev => ({ ...prev, items: optimisticItems }));
+
       // Cancel previous debounce timer for this item
       if (debounceTimersRef.current[variantId]) {
         clearTimeout(debounceTimersRef.current[variantId]);
+        console.log(`[useCart] ⏰ Cancelled previous timer for ${variantId}`);
       }
 
       // Abort previous request for this item
       if (itemAbortControllersRef.current[variantId]) {
         itemAbortControllersRef.current[variantId].abort();
         console.log(`[useCart] 🛑 Aborted previous request for ${variantId}`);
+        delete itemAbortControllersRef.current[variantId];
       }
 
-      // Show loading immediately for better UX
+      // Show loading indicator (but UI already updated)
       setItemLoading((prev) => ({ ...prev, [variantId]: true }));
 
-      // Debounce: wait 500ms before making API call (Amazon/Shopify pattern)
+      // Debounce API call: 300ms
       debounceTimersRef.current[variantId] = setTimeout(async () => {
         try {
-          const currentItem = items.find(item => {
-            const itemVariantId = item.variant?._id || item.variant?.id || item.variantId;
-            return String(itemVariantId) === String(variantId);
-          });
+          // Get the LATEST pending quantity from ref (not stale closure)
+          const targetQuantity = pendingQuantityRef.current[variantId];
           
-          const currentQty = currentItem?.quantity || 0;
-          const diff = newQuantity - currentQty;
-
-          if (diff === 0) {
+          if (targetQuantity === undefined) {
+            console.log(`[useCart] ⏭️ No pending update for ${variantId}`);
             setItemLoading((prev) => ({ ...prev, [variantId]: false }));
             return;
           }
 
-          console.log(`[useCart] 🔄 Updating quantity: variantId=${variantId}, from ${currentQty} to ${newQuantity}`);
+          console.log(`[useCart] 📡 Syncing with server: setting quantity to ${targetQuantity}`);
 
           // Create new abort controller for this request
           const abortController = new AbortController();
           itemAbortControllersRef.current[variantId] = abortController;
 
-          // Call API and use response directly (no optimistic update to avoid race conditions)
-          let updatedCart;t;
-          if (newQuantity === 0) {
+          // Fetch current server state to calculate correct diff
+          let updatedCart;
+          if (targetQuantity === 0) {
+            // Remove item completely
             updatedCart = await removeItemFromCart(cartId, { 
               variantId, 
-              quantity: currentQty,
-              signal: abortController.signal 
-            });
-          } else if (diff > 0) {
-            updatedCart = await addItemToCart({ 
-              cartId, 
-              variantId, 
-              quantity: diff,
+              quantity: 999, // Remove all
               signal: abortController.signal 
             });
           } else {
-            updatedCart = await removeItemFromCart(cartId, { 
-              variantId, 
-              quantity: Math.abs(diff),
-              signal: abortController.signal 
+            // Fetch fresh server cart to get accurate server quantity
+            const fetchFn = userIdRef.current ? getCartByUser : getCartBySession;
+            const param = userIdRef.current || getSessionId();
+            const serverCart = await fetchFn(param);
+            
+            const serverItem = serverCart?.items?.find(item => {
+              const itemVariantId = item.variant?._id || item.variant?.id || item.variantId;
+              return String(itemVariantId) === String(variantId);
             });
+            const serverQty = serverItem?.quantity || 0;
+            const actualDiff = targetQuantity - serverQty;
+
+            console.log(`[useCart] 📊 Server qty: ${serverQty}, Target: ${targetQuantity}, Diff: ${actualDiff}`);
+
+            if (actualDiff === 0) {
+              console.log(`[useCart] ✅ Already in sync`);
+              setItemLoading((prev) => ({ ...prev, [variantId]: false }));
+              delete pendingQuantityRef.current[variantId];
+              return;
+            }
+
+            if (actualDiff > 0) {
+              updatedCart = await addItemToCart({ 
+                cartId, 
+                variantId, 
+                quantity: actualDiff,
+                signal: abortController.signal 
+              });
+            } else {
+              updatedCart = await removeItemFromCart(cartId, { 
+                variantId, 
+                quantity: Math.abs(actualDiff),
+                signal: abortController.signal 
+              });
+            }
           }
 
-          // Update state with server response
-          if (updatedCart) {
-            console.log(`[useCart] ✅ Server response: ${updatedCart.items?.length || 0} items`);
+          // Sync with server response (only if not aborted)
+          if (updatedCart && !abortController.signal.aborted) {
+            console.log(`[useCart] ✅ Synced with server: ${updatedCart.items?.length || 0} items`);
             setCart(updatedCart);
             setItems(updatedCart.items || []);
           }
           
-          // Clear abort controller after success
+          // Clear tracking after success
           delete itemAbortControllersRef.current[variantId];
+          delete pendingQuantityRef.current[variantId];
         } catch (err) {
-          // Ignore abort errors
+          // Ignore abort errors (from newer requests cancelling this one)
           if (err.name === 'AbortError') {
-            console.log(`[useCart] 🛑 Request aborted for ${variantId}`);
+            console.log(`[useCart] 🛑 Request aborted for ${variantId} (newer request took over)`);
             return;
           }
           
-          console.error("[useCart] ❌ Failed to update quantity:", err);
+          console.error("[useCart] ❌ Failed to sync quantity:", err);
           setError(err.message || "Failed to update quantity");
-          // Revert on error
+          // Revert optimistic update on error
+          console.log(`[useCart] ⏪ Reverting optimistic update`);
           await fetchCartRef.current(true);
         } finally {
           console.log('[useCart] 🔓 Clearing itemLoading[' + variantId + ']');
@@ -269,9 +313,9 @@ export function useCart(userId = null, authLoading = false) {
           // Clear debounce timer
           delete debounceTimersRef.current[variantId];
         }
-      }, 500); // 500ms debounce like Amazon
+      }, 300);
     },
-    [cart, items]
+    [cart, items, getSessionId]
   );
 
   const addItem = useCallback(
