@@ -44,63 +44,13 @@ const staticCacheMiddleware = (req, res, next) => {
 
 /**
  * API cache middleware
- * Sets appropriate cache headers based on endpoint type
+ * DISABLE ALL CACHING - Always fetch fresh data
  */
 const apiCacheMiddleware = (req, res, next) => {
-  // Only apply to GET requests
-  if (req.method !== 'GET') {
-    // For mutations, ensure no caching
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    return next();
-  }
-
-  const url = req.path.toLowerCase();
-  
-  // Routes that should never be cached (user-specific data)
-  const noCacheRoutes = [
-    '/api/users',
-    '/api/auth',
-    '/api/carts',
-    '/api/orders',
-    '/api/payments',
-    '/api/addresses',
-    '/api/vouchers',
-    '/api/loyalty',
-    '/api/reviews/eligibility',
-  ];
-  
-  // Routes that can be cached for longer (rarely change)
-  const semiStaticRoutes = [
-    '/api/categories',
-    '/api/badges',
-  ];
-  
-  // Routes with moderate cache (change occasionally)
-  const moderateRoutes = [
-    '/api/products',
-    '/api/reviews/product',
-    '/api/reviews/stats',
-    '/api/comments',
-  ];
-
-  // Check route type and set headers
-  const isNoCache = noCacheRoutes.some(route => url.startsWith(route));
-  const isSemiStatic = semiStaticRoutes.some(route => url.startsWith(route));
-  const isModerate = moderateRoutes.some(route => url.startsWith(route));
-
-  if (isNoCache) {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-  } else if (isSemiStatic) {
-    res.setHeader('Cache-Control', `public, max-age=${CACHE_DURATIONS.SEMI_STATIC}, stale-while-revalidate=86400`);
-    res.setHeader('Vary', 'Accept-Encoding');
-  } else if (isModerate) {
-    res.setHeader('Cache-Control', `public, max-age=${CACHE_DURATIONS.MODERATE}, stale-while-revalidate=3600`);
-    res.setHeader('Vary', 'Accept-Encoding');
-  } else {
-    // Default: short cache with revalidation
-    res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
-  }
-
+  // NO CACHE FOR ALL API REQUESTS
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   next();
 };
 

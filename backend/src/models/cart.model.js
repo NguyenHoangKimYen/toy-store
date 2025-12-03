@@ -35,6 +35,12 @@ const CartSchema = new mongoose.Schema(
             default: 0.0,
         },
 
+        totalItems: {
+            type: Number,
+            required: true,
+            default: 0,
+        },
+
         discountCodeId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'DiscountCode', // Tham chiếu đến Model 'DiscountCode'

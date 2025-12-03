@@ -56,7 +56,8 @@ if (process.env.NODE_ENV !== 'production') {
 app.use(cors({
   origin: [
     'http://localhost:5173',
-     process.env.FRONTEND_URL,
+    'http://localhost:5174',
+    process.env.FRONTEND_URL,
     'https://www.milkybloomtoystore.id.vn',
     'https://milkybloomtoystore.id.vn',
     'https://d1qc4bz6yrxl8k.cloudfront.net',
@@ -64,7 +65,8 @@ app.use(cors({
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'X-Session-Id'],
+  exposedHeaders: ['X-Instance-ID'], // Allow frontend to read custom headers
 }));
 
 // API Cache headers for better PageSpeed scores

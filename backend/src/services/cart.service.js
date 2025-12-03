@@ -3,17 +3,30 @@ const CartItemRepository = require('../repositories/cart-item.repository');
 const Cart = require('../models/cart.model');
 const CartItem = require('../models/cart-item.model');
 const Variant = require('../models/variant.model');
+const mongoose = require('mongoose');
 
 // ==========================================
 // INTERNAL HELPER FUNCTIONS
 // ==========================================
 
 /**
+ * Helper to ensure ObjectId type
+ */
+const toObjectId = (id) => {
+    if (!id) return null;
+    if (id instanceof mongoose.Types.ObjectId) return id;
+    if (typeof id === 'string') return new mongoose.Types.ObjectId(id);
+    return id;
+};
+
+/**
  * Hàm tính toán lại tổng tiền và tổng số lượng item của Cart
- * Giúp đồng bộ dữ liệu chính xác tuyệt đối, tránh lỗi cộng dồn sai.
+ * OPTIMIZED: Uses lean() for faster query
  */
 const _recalculateCartTotals = async (cartId) => {
-    const items = await CartItem.find({ cartId });
+    const cartIdObj = toObjectId(cartId);
+    const items = await CartItem.find({ cartId: cartIdObj }).lean();
+    
     let totalPrice = 0;
     let totalItems = 0;
 
@@ -23,9 +36,9 @@ const _recalculateCartTotals = async (cartId) => {
         totalItems += item.quantity;
     });
 
-    // Cập nhật lại Cart cha (Sync ID và tổng tiền)
-    await CartRepository.update(cartId, {
-        items: items.map((item) => item._id), // Lưu ID để tham chiếu
+    // Cập nhật lại Cart cha
+    await CartRepository.update(cartIdObj, {
+        items: items.map((item) => item._id),
         totalPrice,
         totalItems,
     });
@@ -44,19 +57,30 @@ const toNumber = (value) => {
 
 /**
  * Helper function to get fully populated cart with items
- * Used by addItem, removeItem to return consistent cart structure for socket emission
+ * Returns cart with populated variant and product data
+ * OPTIMIZED: Single query with lean() for better performance
  */
-const _getPopulatedCartForSocket = async (cartId) => {
-    const cart = await Cart.findById(cartId);
-    if (!cart) return null;
+const _getPopulatedCart = async (cartId) => {
+    const cartIdObj = toObjectId(cartId);
     
-    const cartItems = await CartItem.find({ cartId })
-        .populate({
-            path: 'variantId',
-            populate: { path: 'productId' },
-        })
-        .lean();
+    // Parallel queries with field selection for better performance
+    const [cart, cartItems] = await Promise.all([
+        Cart.findById(cartIdObj).lean(),
+        CartItem.find({ cartId: cartIdObj })
+            .populate({
+                path: 'variantId',
+                select: 'sku price size color attributes stockQuantity imageUrls productId',
+                populate: { 
+                    path: 'productId',
+                    select: 'name slug imageUrls images minPrice maxPrice'
+                },
+            })
+            .lean()
+    ]);
+    
+    if (!cart) return null;
 
+    // Fast mapping with minimal transformations
     const fullItems = cartItems.map((item) => {
         const variant = item.variantId;
         const product = variant?.productId;
@@ -64,65 +88,74 @@ const _getPopulatedCartForSocket = async (cartId) => {
         return {
             _id: item._id,
             variantId: variant?._id || null,
-            variant: variant
-                ? {
-                      _id: variant._id,
-                      sku: variant.sku,
-                      price: toNumber(variant.price),
-                      size: variant.size,
-                      color: variant.color,
-                      attributes: variant.attributes || [],
-                      stockQuantity: variant.stockQuantity || 0,
-                      productId: product?._id || null,
-                      imageUrls: variant.imageUrls || [],
-                  }
-                : null,
-            product: product
-                ? {
-                      _id: product._id,
-                      name: product.name,
-                      slug: product.slug,
-                      imageUrls: product.imageUrls || product.images || [],
-                      minPrice: product.minPrice || 0,
-                      maxPrice: product.maxPrice || 0,
-                  }
-                : null,
+            variant: variant ? {
+                _id: variant._id,
+                sku: variant.sku,
+                price: toNumber(variant.price),
+                size: variant.size,
+                color: variant.color,
+                attributes: variant.attributes || [],
+                stockQuantity: variant.stockQuantity || 0,
+                productId: product?._id || null,
+                imageUrls: variant.imageUrls || [],
+            } : null,
+            product: product ? {
+                _id: product._id,
+                name: product.name,
+                slug: product.slug,
+                imageUrls: product.imageUrls || product.images || [],
+                minPrice: product.minPrice || 0,
+                maxPrice: product.maxPrice || 0,
+            } : null,
             quantity: item.quantity,
             price: toNumber(item.price),
         };
     });
-
-    const cartObj = cart.toObject();
     
-    const result = {
-        ...cartObj,
+    return {
+        ...cart,
         items: fullItems,
-        totalPrice: toNumber(cartObj.totalPrice), // Convert Decimal128 to number
+        totalPrice: toNumber(cart.totalPrice),
     };
-
-    return result;
 };
 
 // ==========================================
 // MAIN SERVICE FUNCTIONS
 // ==========================================
 
-// src/services/cart.service.js
+// Debug logging
+const log = (...args) => console.log('[cart.service]', ...args);
 
 const getCartByUserOrSession = async ({ userId, sessionId }) => {
+    log('getCartByUserOrSession called:', { userId, sessionId });
     let cartDoc = null;
     
     // 1. Tìm Cart
     if (userId) {
+        log('Finding cart by userId:', userId);
         cartDoc = await CartRepository.findCartByUserId(userId);
+        log('findCartByUserId result:', cartDoc ? `cartId=${cartDoc._id}` : 'null');
     } else if (sessionId) {
+        log('Finding cart by sessionId:', sessionId);
         cartDoc = await CartRepository.findCartBySessionId(sessionId);
+        log('findCartBySessionId result:', cartDoc ? `cartId=${cartDoc._id}` : 'null');
     }
 
-    if (!cartDoc) return null;
+    if (!cartDoc) {
+        log('No cart found, returning null');
+        return null;
+    }
 
     // Use the shared helper for consistent cart structure
-    return await _getPopulatedCartForSocket(cartDoc._id);
+    log('Fetching populated cart for cartId:', cartDoc._id);
+    const result = await _getPopulatedCart(cartDoc._id);
+    log('_getPopulatedCart result:', result ? `items=${result.items?.length}` : 'null');
+    
+    if (result?.items) {
+        log('Items:', result.items.map(i => ({ variantId: i.variantId, qty: i.quantity })));
+    }
+    
+    return result;
 };
 
 const createCart = async ({ userId, sessionId }) => {
@@ -142,11 +175,16 @@ const createCart = async ({ userId, sessionId }) => {
  */
 const addItem = async (cartId, itemData) => {
     const { variantId, quantity } = itemData;
-    const variant = await Variant.findById(variantId).populate('productId');
+    
+    // Convert IDs to ObjectId for proper MongoDB matching
+    const cartIdObj = toObjectId(cartId);
+    const variantIdObj = toObjectId(variantId);
+    
+    const variant = await Variant.findById(variantIdObj).populate('productId');
     if (!variant) throw new Error('Variant not found');
     const unitPrice = Number(variant.price);
 
-    let cartItem = await CartItem.findOne({ cartId, variantId });
+    let cartItem = await CartItem.findOne({ cartId: cartIdObj, variantId: variantIdObj });
 
     if (cartItem) {
         const newQuantity = cartItem.quantity + quantity;
@@ -157,18 +195,18 @@ const addItem = async (cartId, itemData) => {
     } else {
         if (quantity > variant.stockQuantity) throw new Error(`Not enough stock.`);
         await CartItem.create({
-            cartId,
+            cartId: cartIdObj,
             productId: variant.productId._id,
-            variantId,
+            variantId: variantIdObj,
             quantity,
             price: unitPrice,
         });
     }
 
-    await _recalculateCartTotals(cartId);
+    await _recalculateCartTotals(cartIdObj);
     
-    // Return fully populated cart for socket emission
-    return await _getPopulatedCartForSocket(cartId);
+    // Return fully populated cart
+    return await _getPopulatedCart(cartIdObj);
 };
 
 /**
@@ -176,40 +214,57 @@ const addItem = async (cartId, itemData) => {
  */
 const removeItem = async (cartId, itemData) => {
     const { variantId, quantity } = itemData;
-    const cartItem = await CartItem.findOne({ cartId, variantId });
-    if (!cartItem) throw new Error('Sản phẩm không có trong giỏ hàng');
+    
+    // Convert IDs to ObjectId for proper MongoDB matching
+    const cartIdObj = toObjectId(cartId);
+    const variantIdObj = toObjectId(variantId);
+    
+    const cartItem = await CartItem.findOne({ cartId: cartIdObj, variantId: variantIdObj });
+    
+    if (!cartItem) {
+        throw new Error('Sản phẩm không có trong giỏ hàng');
+    }
 
-    const variant = await Variant.findById(variantId);
-    const unitPrice = variant ? Number(variant.price) : cartItem.price;
     const newQuantity = cartItem.quantity - quantity;
 
     if (newQuantity > 0) {
         cartItem.quantity = newQuantity;
-        cartItem.price = unitPrice;
         await cartItem.save();
     } else {
         await CartItem.findOneAndDelete({ _id: cartItem._id });
     }
 
-    await _recalculateCartTotals(cartId);
+    await _recalculateCartTotals(cartIdObj);
     
-    // Return fully populated cart for socket emission
-    return await _getPopulatedCartForSocket(cartId);
+    // Return fully populated cart
+    return await _getPopulatedCart(cartIdObj);
 };
 
 /**
  * XÓA SẠCH GIỎ HÀNG
  */
 const clearCart = async (cartId) => {
+    const mongoose = require('mongoose');
+    const objectId = new mongoose.Types.ObjectId(cartId);
+    
     // Xóa tất cả item con
-    await CartItem.deleteMany({ cartId });
+    const deleteResult = await CartItem.deleteMany({ cartId: objectId });
+    console.log(`[clearCart] Deleted ${deleteResult.deletedCount} items from cart ${cartId}`);
 
     // Reset Cart cha
-    return await Cart.findByIdAndUpdate(
-        cartId,
+    await Cart.findByIdAndUpdate(
+        objectId,
         { items: [], totalPrice: 0, totalItems: 0 },
         { new: true },
     );
+    
+    // Return consistent structure (empty cart with items array)
+    return {
+        _id: objectId,
+        items: [],
+        totalPrice: 0,
+        totalItems: 0,
+    };
 };
 
 const deleteCart = async (cartId) => {

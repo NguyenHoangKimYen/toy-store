@@ -69,27 +69,29 @@ CartItemSchema.index({ cartId: 1, variantId: 1 }, { unique: true });
 async function recalculateCart(cartId) {
     if (!cartId) return;
 
-    const items = await mongoose.model('CartItem').find({ cartId: cartId });
+    const items = await mongoose.model('CartItem').find({ cartId: cartId }).lean();
 
     let newTotalPrice = 0;
+    let newTotalItems = 0;
     const itemIds = [];
 
     if (items.length > 0) {
-        newTotalPrice = items.reduce((sum, item) => {
+        items.forEach((item) => {
             itemIds.push(item._id);
-
             const unitPrice = parseFloat(item.price.toString());
-            return sum + unitPrice * item.quantity; // ⭐⭐ SỬA TẠI ĐÂY
-        }, 0);
+            newTotalPrice += unitPrice * item.quantity;
+            newTotalItems += item.quantity;
+        });
     }
 
     await mongoose.model('Cart').findByIdAndUpdate(cartId, {
         totalPrice: newTotalPrice,
+        totalItems: newTotalItems,
         items: itemIds,
     });
 
     console.log(
-        `Updated Cart ${cartId}: ${newTotalPrice} VND & ${itemIds.length} items.`,
+        `Updated Cart ${cartId}: ${newTotalPrice} VND, ${newTotalItems} total items & ${itemIds.length} unique items.`,
     );
 }
 

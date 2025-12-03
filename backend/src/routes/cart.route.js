@@ -11,6 +11,7 @@ const {
     removeItem,
     clearCart,
     deleteCart,
+    mergeGuestCart,
 } = require('../controllers/cart.controller');
 
 // Import Middlewares
@@ -58,5 +59,8 @@ router.post('/:cartId/remove-item', optionalAuth, removeItem);
 
 // Xóa sạch giỏ hàng
 router.delete('/:cartId/clear', optionalAuth, clearCart);
+
+// Merge guest cart into user cart (called after OAuth login)
+router.post('/merge', authMiddleware, mergeGuestCart);
 
 module.exports = router;
