@@ -87,14 +87,15 @@
   padding: 1.25rem;
   font-size: 1.1rem;
   font-weight: 600;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #1a1a1a;
   color: white;
-  transition: transform 0.2s;
+  transition: background-color 0.2s, transform 0.2s;
 }
 
 .checkout-btn:hover {
+  background: #333;
   transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
 .continue-btn {
