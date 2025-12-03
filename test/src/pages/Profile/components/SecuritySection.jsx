@@ -95,7 +95,6 @@ const SecuritySection = ({ onChangePassword, loading }) => {
   };
 
   const handleSubmit = async (e) => {
-    console.log('=== SecuritySection handleSubmit called ===');
     e.preventDefault();
     e.stopPropagation();
 
@@ -108,62 +107,47 @@ const SecuritySection = ({ onChangePassword, loading }) => {
 
     // Check for errors
     if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
-      console.log('Validation failed: missing fields');
       toast.error('Please fill in all fields');
       return;
     }
 
     if (formData.newPassword !== formData.confirmPassword) {
-      console.log('Validation failed: passwords do not match');
       toast.error('New passwords do not match');
       return;
     }
 
     if (formData.newPassword.length < 12) {
-      console.log('Validation failed: password too short');
       toast.error('Password must be at least 12 characters long');
       return;
     }
 
     if (formData.newPassword.length > 32) {
-      console.log('Validation failed: password too long');
       toast.error('Password must not exceed 32 characters');
       return;
     }
 
     if (passwordStrength.strength < 100) {
-      console.log('Validation failed: password too weak');
       toast.error('Password must meet all requirements (uppercase, lowercase, number)');
       return;
     }
 
-    console.log('Calling onChangePassword...');
     // Call password change with full error isolation
     let success = false;
     try {
       success = await onChangePassword(formData.currentPassword, formData.newPassword);
-      console.log('onChangePassword returned:', success);
     } catch (err) {
       // Completely absorb any error
-      console.error('CAUGHT ERROR IN HANDLESUBMIT:', err);
-      console.error('Error type:', err.constructor.name);
-      console.error('Error stack:', err.stack);
       success = false;
     }
 
     if (success) {
-      console.log('Success! Clearing form');
       setFormData({
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
       });
       setTouchedFields({});
-    } else {
-      console.log('Password change failed');
     }
-    
-    console.log('=== handleSubmit finished ===');
   };
 
   const isFormValid =

@@ -27,7 +27,6 @@ export const useOrders = () => {
   const fetchMyOrders = useCallback(async () => {
     const userId = user?._id || user?.id;
     if (!userId) {
-      console.log('No userId found, skipping fetch');
       return;
     }
 
@@ -35,9 +34,7 @@ export const useOrders = () => {
       setLoading(true);
       setError(null);
 
-      console.log('Fetching orders for user:', userId);
       const response = await getMyOrders();
-      console.log('Orders response:', response);
       
       // Backend returns { success: true, orders: [...] }
       // But response might already be the data object or need data extraction
@@ -54,8 +51,6 @@ export const useOrders = () => {
         ordersArray = response.orders;
       }
       
-      console.log('Setting orders:', ordersArray);
-      console.log('First order items:', ordersArray[0]?.items);
       setOrders(ordersArray);
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.message || 'Failed to fetch orders';
@@ -159,10 +154,6 @@ export const useOrders = () => {
           ? await checkoutFromCart(checkoutData) 
           : await guestCheckoutFromCart(checkoutData);
 
-        console.log('Checkout response:', response);
-        console.log('Response has success?', response?.success);
-        console.log('Response has data?', response?.data);
-
         // Backend returns { success: true, data: {...} }
         if (response.success && response.data) {
           setCurrentOrder(response.data);
@@ -211,9 +202,9 @@ export const useOrders = () => {
             setCurrentOrder(updatedOrder);
           }
 
-          // Show new badges if any
+          // New badges unlocked
           if (response.newBadges && response.newBadges.length > 0) {
-            console.log('New badges unlocked:', response.newBadges);
+            // TODO: Show badge notification to user
           }
 
           return updatedOrder;

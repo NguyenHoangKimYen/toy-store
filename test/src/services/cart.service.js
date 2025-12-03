@@ -49,9 +49,7 @@ export const deleteCart = async (cartId) => {
  * @returns {Promise<Object>} - Updated cart with items
  */
 export const addItemToCart = async ({ cartId, variantId, quantity, signal }) => {
-  console.log('[cart.service] 📤 POST /carts/' + cartId + '/items', { variantId, quantity });
   const response = await apiClient.post(`/carts/${cartId}/items`, { variantId, quantity }, { signal });
-  console.log('[cart.service] 📥 Response:', response ? `${response.items?.length || 0} items` : 'null');
   return response;
 };
 
@@ -63,9 +61,7 @@ export const addItemToCart = async ({ cartId, variantId, quantity, signal }) => 
  */
 export const removeItemFromCart = async (cartId, itemData) => {
   const { signal, ...data } = itemData;
-  console.log('[cart.service] 📤 POST /carts/' + cartId + '/remove-item', data);
   const response = await apiClient.post(`/carts/${cartId}/remove-item`, data, { signal });
-  console.log('[cart.service] 📥 Response:', response ? `${response.items?.length || 0} items` : 'null');
   return response;
 };
 

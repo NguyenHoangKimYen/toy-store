@@ -101,15 +101,6 @@ const apiClient = {
 
       const result = await response.json();
       
-      // Debug cart responses
-      if (url.includes('/carts/')) {
-        console.log(`[apiClient] 📦 Response for ${method} ${url}:`, {
-          itemsCount: result?.items?.length,
-          totalItems: result?.totalItems,
-          firstItemQty: result?.items?.[0]?.quantity
-        });
-      }
-      
       return result;
     } catch (error) {
       // Don't log 404 or timeout errors for cleaner console

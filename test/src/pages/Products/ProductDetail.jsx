@@ -104,8 +104,6 @@ const ProductDetail = () => {
   }, [selectedVariant, allImages]);
 
   const handleAddToCart = async () => {
-    const startTime = performance.now();
-    
     if (!selectedVariant) {
       toast.error('Please select a variant');
       return;
@@ -128,26 +126,16 @@ const ProductDetail = () => {
         description: `${variantInfo} • Quantity: ${quantity}`,
       });
       
-      console.log('[PRODUCT DETAIL] Adding to cart...', { 
-        productId: product._id, 
-        variantId: selectedVariant._id,
-        quantity 
-      });
-      
-      const apiStartTime = performance.now();
-      
       // Add to cart and update toast based on result
       // addItem expects (variantId, quantity)
       addItem(selectedVariant._id, quantity)
         .then(() => {
-          console.log('[PRODUCT DETAIL] Background API call completed in', (performance.now() - apiStartTime).toFixed(0), 'ms');
           toast.success(`${product.name} added to cart!`, {
             id: toastId,
             description: `${variantInfo} • Quantity: ${quantity}`,
           });
         })
         .catch(err => {
-          console.error('[PRODUCT DETAIL] Background API failed:', err);
           toast.error('Failed to add to cart', {
             id: toastId,
             description: err.message || 'Please try again.',
@@ -156,10 +144,7 @@ const ProductDetail = () => {
         .finally(() => {
           setAddingToCart(false);
         });
-      
-      console.log('[PRODUCT DETAIL] Toast shown in:', (performance.now() - startTime).toFixed(0), 'ms');
     } catch (err) {
-      console.error('[PRODUCT DETAIL] Error after', (performance.now() - startTime).toFixed(0), 'ms:', err);
       toast.error('Failed to add to cart', {
         description: 'Please try again.',
       });

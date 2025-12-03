@@ -44,8 +44,6 @@ class SocketService {
           return;
         }
         
-        console.log('📡 [BroadcastChannel] Received from tab:', sourceTabId);
-        
         if (type === 'cart_updated') {
           // Call all registered callbacks with timestamp for conflict resolution
           this.broadcastCallbacks.forEach(callback => {
@@ -88,7 +86,6 @@ class SocketService {
 
     this.socket.on('connect', () => {
       this.connected = true;
-      console.log('📡 [Socket] Connected');
 
       // Join user room
       if (this.userId) {
@@ -98,17 +95,14 @@ class SocketService {
       // Join any pending product rooms
       this.pendingProductRooms.forEach(productId => {
         this.socket.emit('join_product_room', productId);
-        console.log(`📡 [Socket] Joined pending product room: ${productId}`);
       });
     });
 
     this.socket.on('disconnect', () => {
       this.connected = false;
-      console.log('📡 [Socket] Disconnected');
     });
 
     this.socket.on('reconnect', () => {
-      console.log('📡 [Socket] Reconnected');
       // Rejoin user room on reconnect
       if (this.userId) {
         this.socket.emit('join_user_room', this.userId);
@@ -116,7 +110,6 @@ class SocketService {
       // Rejoin all product rooms on reconnect
       this.pendingProductRooms.forEach(productId => {
         this.socket.emit('join_product_room', productId);
-        console.log(`📡 [Socket] Rejoined product room: ${productId}`);
       });
     });
 
@@ -210,9 +203,6 @@ class SocketService {
     // If already connected, join immediately
     if (this.socket?.connected) {
       this.socket.emit('join_product_room', productId);
-      console.log(`📡 [Socket] Joined product room: ${productId}`);
-    } else {
-      console.log(`📡 [Socket] Queued product room (will join on connect): ${productId}`);
     }
   }
 
@@ -225,19 +215,16 @@ class SocketService {
     
     if (this.socket?.connected) {
       this.socket.emit('leave_product_room', productId);
-      console.log(`📡 [Socket] Left product room: ${productId}`);
     }
   }
 
   // Subscribe to cart updates from BroadcastChannel (returns unsubscribe function)
   onCartUpdate(callback) {
     this.broadcastCallbacks.add(callback);
-    console.log('📡 [BroadcastChannel] Subscribed, total listeners:', this.broadcastCallbacks.size);
     
     // Return unsubscribe function
     return () => {
       this.broadcastCallbacks.delete(callback);
-      console.log('📡 [BroadcastChannel] Unsubscribed, remaining:', this.broadcastCallbacks.size);
     };
   }
 
@@ -250,7 +237,6 @@ class SocketService {
     const timestamp = Date.now();
     
     if (this.broadcastChannel) {
-      console.log('📡 [BroadcastChannel] Broadcasting update at:', timestamp);
       this.broadcastChannel.postMessage({
         type: 'cart_updated',
         payload: { ...data, _variantTimestamps: variantTimestamps },
@@ -297,7 +283,6 @@ class SocketService {
    * Force refresh - useful for debugging
    */
   forceReconnect() {
-    console.log('🔄 [Socket] Force reconnecting...');
     const userId = this.userId;
     this.disconnect();
     if (userId) {
