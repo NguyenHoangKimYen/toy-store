@@ -159,7 +159,8 @@ module.exports = {
             try {
                 await this.sendOrderEmail(orderDetail, guestInfo);
             } catch (err) {
-                // Silently fail - order is still created
+                // Non-critical: order is still created, but log for debugging
+                console.error('[ORDER EMAIL ERROR]', err?.message || err);
             }
         }
         
@@ -181,7 +182,8 @@ module.exports = {
                 await sendGuestOrderConfirmationEmail(orderDetail, guestInfo, items, address);
             }
         } catch (err) {
-            // Email sending failed - non-critical error
+            // Non-critical: log for debugging but don't break order flow
+            console.error('[ORDER EMAIL ERROR]', err?.message || err);
         }
     },
 
@@ -705,7 +707,8 @@ module.exports = {
                     await orderRepository.update(orderId, { _discountCodeMarkedUsed: true });
                 }
             } catch (err) {
-                // Non-critical error - order still proceeds
+                // Non-critical: log for debugging but order still proceeds
+                console.error('[DISCOUNT CODE USAGE ERROR]', err?.message || err);
             }
         }
 
@@ -719,7 +722,8 @@ module.exports = {
                 await discountCodeService.decrementUsedCount(updated.discountCodeId);
                 await orderRepository.update(orderId, { _discountCodeMarkedUsed: false });
             } catch (err) {
-                // Non-critical error
+                // Non-critical: log for debugging
+                console.error('[DISCOUNT CODE RESTORE ERROR]', err?.message || err);
             }
         }
 
@@ -737,7 +741,8 @@ module.exports = {
                     }
                 }
             } catch (err) {
-                // Non-critical error
+                // Non-critical: log for debugging
+                console.error('[UPDATE UNITS SOLD ERROR]', err?.message || err);
             }
 
             if (updated.userId && updated.totalAmount) {
