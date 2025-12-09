@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GripVertical, Pencil, Trash2, Plus, X, Check, ArrowUpDown } from 'lucide-react';
+import { Pencil, Trash2, Plus, X, Check, ArrowUpDown, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -24,9 +24,9 @@ const CategoriesManagement = ({ externalSearchQuery = '' }) => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
-  const [editForm, setEditForm] = useState({ name: '', description: '', order: 99 });
+  const [editForm, setEditForm] = useState({ name: '', description: '', order: 99, imageUrl: '' });
   const [isCreating, setIsCreating] = useState(false);
-  const [newCategory, setNewCategory] = useState({ name: '', description: '', order: 99 });
+  const [newCategory, setNewCategory] = useState({ name: '', description: '', order: 99, imageUrl: '' });
   const [deleteDialog, setDeleteDialog] = useState({ open: false, category: null });
   const [saving, setSaving] = useState(false);
 
@@ -70,9 +70,10 @@ const CategoriesManagement = ({ externalSearchQuery = '' }) => {
         description: newCategory.description.trim() || undefined,
         slug,
         order: parseInt(newCategory.order) || 99,
+        imageUrl: newCategory.imageUrl.trim() || undefined,
       });
       toast.success('Category created');
-      setNewCategory({ name: '', description: '', order: 99 });
+      setNewCategory({ name: '', description: '', order: 99, imageUrl: '' });
       setIsCreating(false);
       fetchCategories();
     } catch (err) {
@@ -90,6 +91,7 @@ const CategoriesManagement = ({ externalSearchQuery = '' }) => {
       name: cat.name,
       description: cat.description || '',
       order: cat.order ?? 99,
+      imageUrl: cat.imageUrl || '',
     });
   };
 
@@ -106,6 +108,7 @@ const CategoriesManagement = ({ externalSearchQuery = '' }) => {
         name: editForm.name.trim(),
         description: editForm.description.trim() || undefined,
         order: parseInt(editForm.order) || 99,
+        imageUrl: editForm.imageUrl.trim() || undefined,
       });
       toast.success('Category updated');
       setEditingId(null);
@@ -156,17 +159,21 @@ const CategoriesManagement = ({ externalSearchQuery = '' }) => {
       {isCreating ? (
         <div className="bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-800 rounded-lg p-4 space-y-3">
           <h3 className="font-medium text-slate-900 dark:text-white">New Category</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <Input
               placeholder="Category name *"
               value={newCategory.name}
               onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
-              className="sm:col-span-2"
             />
             <Input
               placeholder="Description (optional)"
               value={newCategory.description}
               onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
+            />
+            <Input
+              placeholder="Image URL (optional)"
+              value={newCategory.imageUrl}
+              onChange={(e) => setNewCategory({ ...newCategory, imageUrl: e.target.value })}
             />
             <Input
               type="number"
@@ -176,6 +183,18 @@ const CategoriesManagement = ({ externalSearchQuery = '' }) => {
               className="w-24"
             />
           </div>
+          {newCategory.imageUrl && (
+            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+              <Image className="w-4 h-4" />
+              <span>Preview:</span>
+              <img
+                src={newCategory.imageUrl}
+                alt="Preview"
+                className="h-10 w-10 object-cover rounded border border-slate-200 dark:border-slate-700"
+                onError={(e) => e.target.style.display = 'none'}
+              />
+            </div>
+          )}
           <div className="flex gap-2">
             <Button onClick={handleCreate} disabled={saving} size="sm">
               <Check className="w-4 h-4 mr-1" /> Create
@@ -199,6 +218,9 @@ const CategoriesManagement = ({ externalSearchQuery = '' }) => {
               <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider w-20">
                 Order
               </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider w-16 hidden lg:table-cell">
+                Image
+              </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                 Name
               </th>
@@ -216,7 +238,7 @@ const CategoriesManagement = ({ externalSearchQuery = '' }) => {
           <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
             {filteredCategories.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
                   {externalSearchQuery ? 'No categories match your search' : 'No categories found'}
                 </td>
               </tr>
@@ -234,23 +256,43 @@ const CategoriesManagement = ({ externalSearchQuery = '' }) => {
                           className="w-16 h-8 text-center"
                         />
                       </td>
+                      <td className="px-4 py-3 hidden lg:table-cell">
+                        {editForm.imageUrl ? (
+                          <img 
+                            src={editForm.imageUrl} 
+                            alt="" 
+                            className="w-10 h-10 object-cover rounded"
+                            onError={(e) => e.target.style.display = 'none'}
+                          />
+                        ) : (
+                          <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded flex items-center justify-center">
+                            <Image className="w-4 h-4 text-slate-400" />
+                          </div>
+                        )}
+                      </td>
                       <td className="px-4 py-3">
                         <Input
                           value={editForm.name}
                           onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                           className="h-8"
+                          placeholder="Name *"
                         />
                       </td>
                       <td className="px-4 py-3 hidden md:table-cell">
                         <Input
                           value={editForm.description}
                           onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                          placeholder="Optional"
+                          placeholder="Description"
                           className="h-8"
                         />
                       </td>
-                      <td className="px-4 py-3 hidden sm:table-cell text-sm text-slate-500">
-                        {cat.slug}
+                      <td className="px-4 py-3 hidden sm:table-cell">
+                        <Input
+                          value={editForm.imageUrl}
+                          onChange={(e) => setEditForm({ ...editForm, imageUrl: e.target.value })}
+                          placeholder="Image URL"
+                          className="h-8"
+                        />
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-1">
@@ -283,6 +325,20 @@ const CategoriesManagement = ({ externalSearchQuery = '' }) => {
                             {cat.order ?? 99}
                           </span>
                         </div>
+                      </td>
+                      <td className="px-4 py-3 hidden lg:table-cell">
+                        {cat.imageUrl ? (
+                          <img 
+                            src={cat.imageUrl} 
+                            alt={cat.name} 
+                            className="w-10 h-10 object-cover rounded"
+                            onError={(e) => e.target.style.display = 'none'}
+                          />
+                        ) : (
+                          <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded flex items-center justify-center">
+                            <Image className="w-4 h-4 text-slate-400" />
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <span className="font-medium text-slate-900 dark:text-white">{cat.name}</span>
