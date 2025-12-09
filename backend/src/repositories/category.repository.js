@@ -6,7 +6,7 @@ const create = async (data) => {
 };
 
 const findAll = async () => {
-    return await Category.find({}).lean();
+    return await Category.find({}).sort({ order: 1, name: 1 }).lean();
 };
 
 const findById = async (id) => {
