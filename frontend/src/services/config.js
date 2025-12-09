@@ -71,10 +71,15 @@ const apiClient = {
     }
 
     try {
-      // Add timeout
-      const timeoutId = setTimeout(() => {
-        throw new Error('Request timeout');
-      }, REQUEST_TIMEOUT);
+      // Add timeout using AbortController (proper way)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+      
+      // Merge with any existing signal
+      if (signal) {
+        signal.addEventListener('abort', () => controller.abort());
+      }
+      config.signal = controller.signal;
 
       const response = await fetch(fullUrl, config);
       clearTimeout(timeoutId);
@@ -83,6 +88,14 @@ const apiClient = {
         const error = await response.json().catch(() => ({
           message: `HTTP error! status: ${response.status}`,
         }));
+        
+        // Handle rate limiting (429) - throw special error to prevent retry loops
+        if (response.status === 429) {
+          const rateLimitError = new Error('Too many requests. Please slow down.');
+          rateLimitError.status = 429;
+          rateLimitError.retryAfter = response.headers.get('Retry-After') || 60;
+          throw rateLimitError;
+        }
         
         // Don't log 404 errors (expected for non-existent resources)
         if (response.status !== 404) {
@@ -103,13 +116,19 @@ const apiClient = {
       
       return result;
     } catch (error) {
-      // Don't log 404 or timeout errors for cleaner console
+      // Handle abort/timeout
+      if (error.name === 'AbortError') {
+        throw new Error('Request timeout');
+      }
+      
+      // Don't log 404, timeout, or rate limit errors for cleaner console
       const is404 = error.message?.includes('404') || 
                     error.message?.includes('Cart not found') || 
                     error.message?.includes('Không tìm thấy');
       const isTimeout = error.message?.includes('timeout');
+      const isRateLimit = error.status === 429 || error.message?.includes('Too many requests');
       
-      if (!is404 && !isTimeout) {
+      if (!is404 && !isTimeout && !isRateLimit) {
         console.error('API request failed:', error);
       }
       throw error;

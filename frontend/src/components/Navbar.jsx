@@ -107,25 +107,27 @@ const Navbar = () => {
     }
 
     useEffect(() => {
-        // Fetch categories
+        // Fetch categories only once on mount
         const fetchCategories = async () => {
             try {
                 const data = await getCategories();
                 setCategories(data || []);
             } catch (error) {
                 console.error('Failed to fetch categories:', error);
+                // Don't retry on error - categories are optional
             }
         };
         fetchCategories();
+    }, []); // Empty deps - fetch only once
 
-        // Listen for scroll
+    // Separate effect for scroll listener
+    useEffect(() => {
         window.addEventListener('scroll', handleScroll, { passive: true });
 
         return () => {
             window.removeEventListener('scroll', handleScroll);
         };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [lastScrollY]);
+    });
 
     // Render mobile category menu
     const renderMobileCategoryMenu = () => (

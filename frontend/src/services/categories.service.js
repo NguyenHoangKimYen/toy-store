@@ -2,11 +2,23 @@ import { API_BASE_URL, ENDPOINTS } from './config';
 import { handleResponse } from '../utils/apiHelpers';
 import { getAuthHeaders } from '../utils/authHelpers';
 
+// Simple in-memory cache for categories
+let categoriesCache = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 /**
- * Get all categories
+ * Get all categories (with caching to reduce API calls)
+ * @param {boolean} forceRefresh - Force fetch from server
  * @returns {Promise<Array>}
  */
-export const getCategories = async () => {
+export const getCategories = async (forceRefresh = false) => {
+  // Return cached data if valid and not forcing refresh
+  const now = Date.now();
+  if (!forceRefresh && categoriesCache && (now - cacheTimestamp) < CACHE_DURATION) {
+    return categoriesCache;
+  }
+  
   try {
     const response = await fetch(`${API_BASE_URL}${ENDPOINTS.CATEGORIES}`, {
       method: 'GET',
@@ -19,22 +31,42 @@ export const getCategories = async () => {
     const data = await handleResponse(response);
     
     // Handle different response formats
+    let categories;
     // If data is wrapped in a 'categories' property
     if (data && data.categories) {
-      return Array.isArray(data.categories) ? data.categories : [];
+      categories = Array.isArray(data.categories) ? data.categories : [];
     }
-    
     // If data is wrapped in a 'data' property
-    if (data && data.data) {
-      return Array.isArray(data.data) ? data.data : [];
+    else if (data && data.data) {
+      categories = Array.isArray(data.data) ? data.data : [];
+    }
+    // If data is already an array
+    else {
+      categories = Array.isArray(data) ? data : [];
     }
     
-    // If data is already an array
-    return Array.isArray(data) ? data : [];
+    // Update cache
+    categoriesCache = categories;
+    cacheTimestamp = now;
+    
+    return categories;
   } catch (error) {
     console.error('Categories service error:', error);
+    // Return cached data on error (if available)
+    if (categoriesCache) {
+      console.log('Returning cached categories due to error');
+      return categoriesCache;
+    }
     throw error;
   }
+};
+
+/**
+ * Clear categories cache (call after create/update/delete)
+ */
+export const clearCategoriesCache = () => {
+  categoriesCache = null;
+  cacheTimestamp = 0;
 };
 
 /**
@@ -86,7 +118,9 @@ export const createCategory = async (categoryData) => {
     body: JSON.stringify(categoryData),
   });
   
-  return handleResponse(response);
+  const result = await handleResponse(response);
+  clearCategoriesCache(); // Clear cache after create
+  return result;
 };
 
 /**
@@ -105,7 +139,9 @@ export const updateCategory = async (id, categoryData) => {
     body: JSON.stringify(categoryData),
   });
   
-  return handleResponse(response);
+  const result = await handleResponse(response);
+  clearCategoriesCache(); // Clear cache after update
+  return result;
 };
 
 /**
@@ -122,5 +158,7 @@ export const deleteCategory = async (id) => {
     },
   });
   
-  return handleResponse(response);
+  const result = await handleResponse(response);
+  clearCategoriesCache(); // Clear cache after delete
+  return result;
 };
