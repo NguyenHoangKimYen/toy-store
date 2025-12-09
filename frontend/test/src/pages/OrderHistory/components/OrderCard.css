@@ -1,0 +1,141 @@
+.order-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
+  overflow: hidden;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.order-card-clickable {
+  cursor: pointer;
+}
+
+.order-card-clickable:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.order-card-content {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  gap: 1rem;
+}
+
+/* Preview Image */
+.order-preview-image {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.order-preview-image img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.item-count-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: #6b7280;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+/* Order Info */
+.order-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.order-header-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.order-id {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.order-date {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.order-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.item-summary {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.order-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+/* Order End (Total + Chevron) */
+.order-end {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.order-total {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.chevron-icon {
+  color: #9ca3af;
+  transition: transform 0.2s;
+}
+
+.order-card-clickable:hover .chevron-icon {
+  transform: translateX(4px);
+  color: #6b7280;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .order-card-content {
+    padding: 0.875rem 1rem;
+  }
+
+  .order-preview-image img {
+    width: 52px;
+    height: 52px;
+  }
+
+  .order-header-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .order-total {
+    font-size: 1rem;
+  }
+}

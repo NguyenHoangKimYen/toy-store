@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="MilkyBloom Toy Store - Quality toys for kids of all ages" />
+    <title>MilkyBloom Toy Store</title>
+    
+    <!-- Preconnect to API (highest priority) -->
+    <link rel="preconnect" href="https://api.milkybloomtoystore.id.vn" crossorigin />
+    <link rel="dns-prefetch" href="https://api.milkybloomtoystore.id.vn" />
+    
+    <!-- Preconnect to S3 for images (toy-store-project-of-springwang bucket) -->
+    <link rel="preconnect" href="https://toy-store-project-of-springwang.s3.ap-southeast-2.amazonaws.com" crossorigin />
+    <link rel="dns-prefetch" href="https://toy-store-project-of-springwang.s3.ap-southeast-2.amazonaws.com" />
+    
+    <!-- Async font loading (non-render-blocking) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" />
+    </noscript>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

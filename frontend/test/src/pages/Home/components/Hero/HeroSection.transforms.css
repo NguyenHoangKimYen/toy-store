@@ -1,0 +1,57 @@
+/* Hero Transforms - CSS vars for carousel item positions (scale, translate, blur, z-index) */
+:root {
+    --hero-item1-transform: translateX(-100%) translateY(-5%) scale(1.5);
+    --hero-item1-filter: blur(30px);
+    --hero-item1-zIndex: 1;
+    --hero-item1-opacity: 0;
+
+    --hero-item2-transform: translateX(0);
+    --hero-item2-filter: blur(0px);
+    --hero-item2-zIndex: 10;
+    --hero-item2-opacity: 1;
+
+    --hero-item3-transform: translate(65%, 12%) scale(0.55);
+    --hero-item3-filter: blur(8px);
+    --hero-item3-zIndex: 3;
+    --hero-item3-opacity: 1;
+
+    /* Smaller scale (0.5 -> 0.32) */
+    --hero-item4-transform: translate(105%, 22%) scale(0.32);
+    --hero-item4-filter: blur(20px);
+    --hero-item4-zIndex: 2;
+    --hero-item4-opacity: 0.7;
+
+    /* Smaller scale (0.3 -> 0.18) */
+    --hero-item5-transform: translate(135%, 30%) scale(0.18);
+    --hero-item5-filter: blur(30px);
+    --hero-item5-zIndex: 1;
+    --hero-item5-opacity: 0;
+}
+
+/* Item Positioning */
+.hero-carousel .list .item:nth-child(1) {
+    transform: var(--hero-item1-transform);
+    filter: var(--hero-item1-filter);
+    z-index: var(--hero-item1-zIndex);
+    opacity: var(--hero-item1-opacity);
+    pointer-events: none;
+}
+
+.hero-carousel .list .item:nth-child(3) {
+    transform: var(--hero-item3-transform);
+    filter: var(--hero-item3-filter);
+    z-index: var(--hero-item3-zIndex);
+}
+
+.hero-carousel .list .item:nth-child(4) {
+    transform: var(--hero-item4-transform);
+    filter: var(--hero-item4-filter);
+    z-index: var(--hero-item4-zIndex);
+}
+
+.hero-carousel .list .item:nth-child(5) {
+    transform: var(--hero-item5-transform);
+    filter: var(--hero-item5-filter);
+    opacity: var(--hero-item5-opacity);
+    pointer-events: none;
+}

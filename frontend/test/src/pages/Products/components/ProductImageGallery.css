@@ -1,0 +1,321 @@
+/* Nike-Style Product Image Gallery */
+.product-image-gallery-nike {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+/* Thumbnails Column (Left Side) */
+.thumbnails-column {
+  position: relative;
+  width: 60px;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .product-image-gallery-nike {
+    gap: 1rem;
+  }
+  
+  .thumbnails-column {
+    width: 80px;
+  }
+}
+
+.thumbnails-scroll-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  padding: 0.25rem;
+  
+  /* Hide scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.thumbnails-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+.thumbnail-item {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border: 2px solid transparent;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #f8fafc;
+}
+
+@media (min-width: 768px) {
+  .thumbnail-item {
+    width: 72px;
+    height: 72px;
+    border-radius: 0.5rem;
+  }
+}
+
+.thumbnail-item:hover {
+  border-color: #cbd5e1;
+}
+
+.thumbnail-item.active {
+  border-color: #000;
+  box-shadow: 0 0 0 1px #000;
+}
+
+.thumbnail-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbnail-scroll-btn {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e2e8f0;
+}
+
+@media (min-width: 768px) {
+  .thumbnail-scroll-btn {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.thumbnail-scroll-btn.up {
+  top: 0;
+}
+
+.thumbnail-scroll-btn.down {
+  bottom: 0;
+}
+
+.thumbnail-scroll-btn:hover {
+  background: white;
+  border-color: #000;
+}
+
+/* Main Image Container (Right Side) */
+.main-image-container {
+  flex: 1;
+  aspect-ratio: 1;
+  background: #000000;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .main-image-container {
+    border-radius: 0.5rem;
+  }
+}
+
+.main-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  cursor: zoom-in;
+}
+
+@media (min-width: 768px) {
+  .main-image {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 767px) {
+  .product-image-gallery-nike {
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+  }
+
+  .thumbnails-column {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .thumbnails-scroll-container {
+    flex-direction: row;
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 0.5rem;
+  }
+
+  .thumbnail-item {
+    width: 56px;
+    height: 56px;
+  }
+
+  .thumbnail-scroll-btn {
+    display: none;
+  }
+
+  .main-image-container {
+    width: 100%;
+    min-height: 280px;
+    aspect-ratio: 1;
+  }
+}
+
+/* Fullscreen Modal */
+.image-fullscreen-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fullscreen-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000001;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  width: 48px;
+  height: 48px;
+  backdrop-filter: blur(8px);
+}
+
+.fullscreen-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.fullscreen-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000001;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  width: 56px;
+  height: 56px;
+  backdrop-filter: blur(8px);
+}
+
+.fullscreen-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.fullscreen-nav-btn.prev {
+  left: 2rem;
+}
+
+.fullscreen-nav-btn.next {
+  right: 2rem;
+}
+
+.fullscreen-image-wrapper {
+  max-width: 90vw;
+  max-height: 90vh;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fullscreen-image {
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  animation: zoomIn 0.2s ease-out;
+}
+
+@keyframes zoomIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.fullscreen-counter {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1000002;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 0.5rem 0.875rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Mobile fullscreen adjustments */
+@media (max-width: 767px) {
+  .fullscreen-close-btn {
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 40px;
+    height: 40px;
+  }
+
+  .fullscreen-nav-btn {
+    width: 48px;
+    height: 48px;
+  }
+
+  .fullscreen-nav-btn.prev {
+    left: 0.5rem;
+  }
+
+  .fullscreen-nav-btn.next {
+    right: 0.5rem;
+  }
+
+  .fullscreen-image-wrapper {
+    max-width: 95vw;
+    max-height: 85vh;
+  }
+
+  .fullscreen-counter {
+    top: 0.5rem;
+    left: 0.5rem;
+    font-size: 0.75rem;
+    padding: 0.375rem 0.625rem;
+  }
+}
