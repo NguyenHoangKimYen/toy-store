@@ -11,6 +11,9 @@ import OrderDetailModal from './components/OrderDetailModal'
 import OrderFilters from './components/OrderFilters'
 import { AdminContent } from '../components'
 import { useDebounce } from '@/hooks'
+import { Pagination } from '@/components/common'
+
+const ITEMS_PER_PAGE = 10;
 
 const Orders = () => {
   const [orders, setOrders] = useState([])
@@ -24,22 +27,29 @@ const Orders = () => {
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(ITEMS_PER_PAGE)
+  const [totalItems, setTotalItems] = useState(0)
 
   const fetchOrders = useCallback(async () => {
     try {
       setLoading(true)
-      // Send all filter params to backend (including sort)
+      // Send all filter params to backend (including pagination)
       const params = {
         search: debouncedSearch || undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,
         deliveryType: deliveryTypeFilter !== 'all' ? deliveryTypeFilter : undefined,
         paymentMethod: paymentMethodFilter !== 'all' ? paymentMethodFilter : undefined,
-        sortBy: sortBy || 'newest', // Send sort to backend
-        limit: 1000, // Fetch more orders for admin panel (default is 20)
+        sortBy: sortBy || 'newest',
+        page: currentPage,
+        limit: pageSize,
       }
       const response = await getAllOrders(params)
-      // Backend returns { success: true, orders: [...] }
+      // Backend returns { success: true, orders: [...], total, page, limit }
       setOrders(response?.orders || [])
+      setTotalItems(response?.total || 0)
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch orders'
       if (errorMessage.includes('Invalid token') || errorMessage.includes('401')) {
@@ -48,10 +58,16 @@ const Orders = () => {
         toast.error('Failed to fetch orders: ' + errorMessage)
       }
       setOrders([])
+      setTotalItems(0)
     } finally {
       setLoading(false)
     }
-  }, [debouncedSearch, statusFilter, deliveryTypeFilter, paymentMethodFilter, sortBy])
+  }, [debouncedSearch, statusFilter, deliveryTypeFilter, paymentMethodFilter, sortBy, currentPage, pageSize])
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [debouncedSearch, statusFilter, deliveryTypeFilter, paymentMethodFilter, sortBy, pageSize])
 
   useEffect(() => {
     fetchOrders()
@@ -95,8 +111,17 @@ const Orders = () => {
     )
   }
 
-  // Sorting and filtering is now done on backend
-  const filteredOrders = orders
+  // Server-side pagination - orders already paginated from backend
+  const handlePageChange = (page) => {
+    setCurrentPage(page)
+    // Scroll to top of content
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handlePageSizeChange = (newSize) => {
+    setPageSize(newSize)
+    // Page reset handled by useEffect
+  }
 
   const headerCard = (
     <div className="admin-card bg-white/85 backdrop-blur-md border border-purple-100/70 rounded-2xl shadow-[0_18px_42px_-28px_rgba(124,58,237,0.22)] p-4 sm:p-5 md:p-6">
@@ -153,13 +178,13 @@ const Orders = () => {
         header={headerCard}
         filters={null}
       >
-        {filteredOrders.length === 0 ? (
+        {orders.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             No orders found
           </div>
         ) : (
           <div className="space-y-4">
-              {filteredOrders.map((order) => {
+              {orders.map((order) => {
                 const addressData = typeof order.addressId === 'object' ? order.addressId : null;
                 return (
                 <Card key={order._id} className="hover:shadow-md transition-shadow">
@@ -239,6 +264,18 @@ const Orders = () => {
                 </Card>
               )
             })}
+            
+            {/* Pagination */}
+            {totalItems > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalItems={totalItems}
+                pageSize={pageSize}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+                pageSizeOptions={[10, 20, 50]}
+              />
+            )}
             </div>
           )}
       </AdminContent>

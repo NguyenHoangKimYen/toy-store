@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { UserPlus, Search, Filter, Users as UsersIcon, Crown } from 'lucide-react'
 import UserTable from './components/UserTable'
 import UserStats from './components/UserStats'
@@ -8,8 +8,10 @@ import UserFilters from './components/UserFilters'
 import LoyaltyManagement from './components/LoyaltyManagement'
 import { AdminContent, AdminHeader } from '../components'
 import { useUsers, useDebounce } from '@/hooks' // Using global hook
-import { PageHeader, SearchBar, ConfirmDialog } from '@/components/common'
+import { PageHeader, SearchBar, ConfirmDialog, Pagination } from '@/components/common'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+
+const ITEMS_PER_PAGE = 10;
 
 const Users = () => {
   const [activeTab, setActiveTab] = useState('users')
@@ -23,6 +25,10 @@ const Users = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [userToDelete, setUserToDelete] = useState(null)
   const [showFilters, setShowFilters] = useState(false)
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(ITEMS_PER_PAGE)
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -37,6 +43,8 @@ const Users = () => {
     const params = {
       keyword: debouncedSearch.trim() || undefined, // Backend expects 'keyword' not 'search'
       sortBy: filters.sortBy || 'newest', // Send sort to backend
+      page: currentPage,
+      limit: pageSize,
     }
 
     // Add filters if not 'all'
@@ -45,7 +53,7 @@ const Users = () => {
     if (filters.socialProvider !== 'all') params.socialProvider = filters.socialProvider
 
     return params
-  }, [debouncedSearch, filters])
+  }, [debouncedSearch, filters, currentPage, pageSize])
 
   // Custom hook handles data fetching and CRUD operations
   const { 
@@ -53,6 +61,7 @@ const Users = () => {
     stats, 
     loading, 
     error,
+    total: totalItems,
     createUser,
     updateUser,
     deleteUser,
@@ -61,8 +70,23 @@ const Users = () => {
     dependencies: [apiParams]
   })
 
-  // Sorting is now done on backend
+  // Server-side pagination - users already paginated from backend
   const users = fetchedUsers
+
+  // Reset page when filters change (but not when page/pageSize changes)
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [debouncedSearch, filters])
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handlePageSizeChange = (newSize) => {
+    setPageSize(newSize)
+    setCurrentPage(1)
+  }
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters)
@@ -228,6 +252,18 @@ const Users = () => {
                 onEdit={handleEditUser}
                 onDelete={handleDeleteUser}
               />
+              
+              {/* Pagination */}
+              {totalItems > 0 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={totalItems}
+                  pageSize={pageSize}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
+                  pageSizeOptions={[10, 20, 50]}
+                />
+              )}
             </AdminContent>
           </TabsContent>
 

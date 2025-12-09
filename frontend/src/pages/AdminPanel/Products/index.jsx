@@ -10,7 +10,7 @@ import ReviewsManagement from './components/ReviewsManagement'
 import CategoriesManagement from './components/CategoriesManagement'
 import { AdminContent, AdminHeader } from '../components'
 import { useProducts, useDebounce } from '@/hooks' // Using global hook
-import { PageHeader, SearchBar } from '@/components/common'
+import { PageHeader, SearchBar, Pagination } from '@/components/common'
 import { getCategories } from '@/services/categories.service'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -23,6 +23,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+
+const ITEMS_PER_PAGE = 12;
 
 const Products = () => {
   const [activeTab, setActiveTab] = useState('products')
@@ -39,6 +41,10 @@ const Products = () => {
   const [productToDelete, setProductToDelete] = useState(null)
   const [categories, setCategories] = useState([])
   const [showFilters, setShowFilters] = useState(false)
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(ITEMS_PER_PAGE)
   
   // Filter state
   const [filters, setFilters] = useState({
@@ -68,7 +74,8 @@ const Products = () => {
   // Build params for API call
   const apiParams = useMemo(() => {
     const params = {
-      limit: 50,
+      page: currentPage,
+      limit: pageSize,
       keyword: debouncedSearch.trim() || undefined,
     }
 
@@ -85,7 +92,7 @@ const Products = () => {
     if (filters.sort) params.sort = filters.sort
 
     return params
-  }, [debouncedSearch, filters])
+  }, [debouncedSearch, filters, currentPage, pageSize])
 
 
   // Use global products hook with dynamic params
@@ -93,6 +100,7 @@ const Products = () => {
     products: allProducts, 
     loading, 
     error,
+    total: totalItems,
     createProduct,
     updateProduct,
     deleteProduct
@@ -101,8 +109,23 @@ const Products = () => {
     dependencies: [apiParams]
   })
 
-  // Search and filtering is now done on backend
+  // Server-side pagination - products already paginated from backend
   const products = allProducts
+
+  // Reset page when filters change (but not when page/pageSize changes)
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [debouncedSearch, filters])
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handlePageSizeChange = (newSize) => {
+    setPageSize(newSize)
+    setCurrentPage(1)
+  }
   
   // Helper function to calculate stock from variants or fallback to totalStock
   const getProductStock = (p) => {
@@ -306,6 +329,18 @@ const Products = () => {
                 }}
                 onDelete={handleDeleteProduct}
               />
+              
+              {/* Pagination */}
+              {totalItems > 0 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={totalItems}
+                  pageSize={pageSize}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
+                  pageSizeOptions={[12, 24, 48]}
+                />
+              )}
             </AdminContent>
           </TabsContent>
 

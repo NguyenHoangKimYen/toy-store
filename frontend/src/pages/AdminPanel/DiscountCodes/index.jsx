@@ -11,8 +11,10 @@ import DiscountCodeModal from './components/DiscountCodeModal'
 import DeleteConfirmDialog from './components/DeleteConfirmDialog'
 import DiscountOrdersModal from './components/DiscountOrdersModal'
 import { AdminContent } from '../components'
-import { PageHeader, SearchBar } from '@/components/common'
+import { PageHeader, SearchBar, Pagination } from '@/components/common'
 import { useDebounce } from '@/hooks'
+
+const ITEMS_PER_PAGE = 12;
 
 const DiscountCodes = () => {
   const [codes, setCodes] = useState([])
@@ -26,17 +28,25 @@ const DiscountCodes = () => {
   const [codeToDelete, setCodeToDelete] = useState(null)
   const [showOrdersModal, setShowOrdersModal] = useState(false)
   const [selectedCodeForOrders, setSelectedCodeForOrders] = useState(null)
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(ITEMS_PER_PAGE)
+  const [totalItems, setTotalItems] = useState(0)
 
   const fetchCodes = useCallback(async () => {
     try {
       setLoading(true)
-      // Send search and sort params to backend
+      // Send search, sort, and pagination params to backend
       const params = {
         search: debouncedSearch.trim() || undefined,
-        sortBy: sortBy || 'newest', // Send sort to backend
+        sortBy: sortBy || 'newest',
+        page: currentPage,
+        limit: pageSize,
       }
       const response = await getAllDiscountCodes(params)
       setCodes(response.discountCodes || response.data || [])
+      setTotalItems(response.total || 0)
     } catch (error) {
       const errorMessage = error.message || 'Failed to fetch discount codes'
       if (errorMessage.includes('404') || errorMessage.includes('Not Found')) {
@@ -47,10 +57,16 @@ const DiscountCodes = () => {
         toast.error('Failed to fetch discount codes: ' + errorMessage)
       }
       setCodes([])
+      setTotalItems(0)
     } finally {
       setLoading(false)
     }
-  }, [debouncedSearch, sortBy])
+  }, [debouncedSearch, sortBy, currentPage, pageSize])
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [debouncedSearch, sortBy, pageSize])
 
   useEffect(() => {
     fetchCodes()
@@ -105,8 +121,16 @@ const DiscountCodes = () => {
     }
   }
 
-  // Sorting and filtering is now done on backend
-  const filteredCodes = codes
+  // Server-side pagination - codes already paginated from backend
+  const handlePageChange = (page) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handlePageSizeChange = (newSize) => {
+    setPageSize(newSize)
+    setCurrentPage(1)
+  }
 
   const getUsagePercentage = (code) => {
     return ((code.usedCount || 0) / (code.usageLimit || 1)) * 100
@@ -130,6 +154,17 @@ const DiscountCodes = () => {
                 className="w-full bg-transparent outline-none text-sm text-slate-700 placeholder:text-slate-400"
               />
             </label>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-[140px] sm:w-[160px]">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest</SelectItem>
+                <SelectItem value="oldest">Oldest</SelectItem>
+                <SelectItem value="usage-high">Usage: High</SelectItem>
+                <SelectItem value="usage-low">Usage: Low</SelectItem>
+              </SelectContent>
+            </Select>
             <button
               onClick={handleCreate}
               className="px-3 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-sky-400 text-white shadow-[0_10px_26px_-14px_rgba(124,58,237,0.35)] hover:brightness-105 transition flex items-center justify-center gap-2"
@@ -150,13 +185,14 @@ const DiscountCodes = () => {
         header={headerCard}
         filters={null}
       >
-        {filteredCodes.length === 0 ? (
+        {codes.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             No discount codes found
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              {filteredCodes.map((code) => {
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              {codes.map((code) => {
                 const usagePercentage = getUsagePercentage(code)
                 const isFullyUsed = code.usedCount >= code.usageLimit
                 const isExpired = code.expiresAt && new Date(code.expiresAt) < new Date()
@@ -249,7 +285,20 @@ const DiscountCodes = () => {
                 )
               })}
             </div>
-          )}
+            
+            {/* Pagination */}
+            {totalItems > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalItems={totalItems}
+                pageSize={pageSize}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+                pageSizeOptions={[12, 24, 48]}
+              />
+            )}
+          </>
+        )}
       </AdminContent>
 
       {showModal && (
