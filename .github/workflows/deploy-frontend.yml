@@ -25,14 +25,14 @@ jobs:
 
       - name: Install FE dependencies
         run: |
-          cd frontend/test
+          cd frontend
           npm install
 
       - name: Build FE
         env:
           VITE_API_URL: https://api.milkybloomtoystore.id.vn/api
         run: |
-          cd frontend/test
+          cd frontend
           npm run build
 
       # 3 — Upload to S3 (GÁN CỨNG)
@@ -43,7 +43,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: "us-east-1"
-          SOURCE_DIR: "frontend/test/dist"
+          SOURCE_DIR: "frontend/dist"
         with:
           args: --delete
 

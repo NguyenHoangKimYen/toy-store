@@ -1,0 +1,148 @@
+/* Checkout Container */
+.checkout-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+  min-height: calc(100vh - 160px);
+  box-sizing: border-box;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* Force all children to respect container width */
+.checkout-container * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.checkout-header {
+  margin-bottom: 1.5rem;
+}
+
+.back-button {
+  margin-bottom: 0.75rem;
+}
+
+.checkout-title {
+  font-size: 1.75rem;
+  font-weight: bold;
+  color: #1a1a1a;
+}
+
+.checkout-content {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 1.5rem;
+  align-items: start;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.checkout-forms {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.checkout-summary {
+  position: sticky;
+  top: 100px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Loading & Error States */
+.checkout-loading,
+.checkout-error,
+.checkout-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  gap: 1rem;
+  text-align: center;
+  padding: 1rem;
+}
+
+.checkout-empty h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.checkout-empty p {
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .checkout-content {
+    grid-template-columns: 1fr 340px;
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 868px) {
+  .checkout-content {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .checkout-summary {
+    position: static;
+    width: 100%;
+  }
+
+  .checkout-forms {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .checkout-container {
+    padding: 1rem 0.75rem;
+  }
+
+  .checkout-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .checkout-content {
+    gap: 1rem;
+  }
+
+  .checkout-forms {
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .checkout-container {
+    padding: 0.5rem;
+    width: 100%;
+  }
+
+  .checkout-title {
+    font-size: 1.25rem;
+  }
+
+  .checkout-empty h2 {
+    font-size: 1.125rem;
+  }
+
+  .checkout-header {
+    margin-bottom: 1rem;
+  }
+
+  .back-button {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
