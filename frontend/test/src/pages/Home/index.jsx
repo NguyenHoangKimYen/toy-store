@@ -27,6 +27,11 @@ const HeroSkeleton = () => (
 const Home = () => {
   const { featuredProducts, newProducts, bestSellers, loading } = useHomeData();
 
+  // Test CI/CD deployment
+  React.useEffect(() => {
+    console.log('🚀 CI/CD Test - Monorepo deployment successful!');
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-100 to-slate-200">
       {/* Hero */}
