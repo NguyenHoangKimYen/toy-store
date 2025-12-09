@@ -27,13 +27,24 @@ const HeroSkeleton = () => (
 const Home = () => {
   const { featuredProducts, newProducts, bestSellers, loading } = useHomeData();
 
-  // Test CI/CD deployment
-  React.useEffect(() => {
-    console.log('🚀 CI/CD Test - Monorepo deployment successful!');
-  }, []);
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-100 to-slate-200">
+      {/* CI/CD Test Banner */}
+      <div style={{
+        position: 'fixed',
+        bottom: '20px',
+        right: '20px',
+        background: '#10b981',
+        color: 'white',
+        padding: '12px 20px',
+        borderRadius: '8px',
+        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+        zIndex: 9999,
+        fontSize: '14px',
+        fontWeight: '600'
+      }}>
+        🚀 Monorepo CI/CD Active
+      </div>
       {/* Hero */}
       {loading.featured ? (
         <HeroSkeleton />
