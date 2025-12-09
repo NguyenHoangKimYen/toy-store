@@ -35,10 +35,12 @@ module.exports = {
       .sort({ createdAt: -1 })
       .lean();
     
-    // Populate items for each order
-    const OrderItem = require('../models/order-item.model');
-    for (let order of orders) {
-      order.items = await OrderItem.find({ orderId: order._id })
+    // Batch populate items for all orders at once (avoid N+1 query)
+    if (orders.length > 0) {
+      const OrderItem = require('../models/order-item.model');
+      const orderIds = orders.map(o => o._id);
+      
+      const allItems = await OrderItem.find({ orderId: { $in: orderIds } })
         .populate({
           path: 'productId',
           select: 'name imageUrls'
@@ -48,6 +50,21 @@ module.exports = {
           select: 'name imageUrls'
         })
         .lean();
+      
+      // Group items by orderId
+      const itemsByOrder = {};
+      allItems.forEach(item => {
+        const orderId = item.orderId.toString();
+        if (!itemsByOrder[orderId]) {
+          itemsByOrder[orderId] = [];
+        }
+        itemsByOrder[orderId].push(item);
+      });
+      
+      // Assign items to each order
+      orders.forEach(order => {
+        order.items = itemsByOrder[order._id.toString()] || [];
+      });
     }
     
     return orders;
@@ -170,10 +187,12 @@ module.exports = {
             .limit(limit)
             .lean();
         
-        // Populate items for each order for preview
-        const OrderItem = require('../models/order-item.model');
-        for (let order of orders) {
-            order.items = await OrderItem.find({ orderId: order._id })
+        // Batch populate items for all orders at once (avoid N+1 query)
+        if (orders.length > 0) {
+            const OrderItem = require('../models/order-item.model');
+            const orderIds = orders.map(o => o._id);
+            
+            const allItems = await OrderItem.find({ orderId: { $in: orderIds } })
                 .populate({
                     path: 'productId',
                     select: 'name imageUrls'
@@ -183,9 +202,33 @@ module.exports = {
                     select: 'name imageUrls'
                 })
                 .lean();
+            
+            // Group items by orderId
+            const itemsByOrder = {};
+            allItems.forEach(item => {
+                const orderId = item.orderId.toString();
+                if (!itemsByOrder[orderId]) {
+                    itemsByOrder[orderId] = [];
+                }
+                itemsByOrder[orderId].push(item);
+            });
+            
+            // Assign items to each order
+            orders.forEach(order => {
+                order.items = itemsByOrder[order._id.toString()] || [];
+            });
         }
         
-        return orders;
+        // Get total count for pagination
+        const total = await Order.countDocuments(query);
+        
+        return {
+            orders,
+            total,
+            page: parseInt(page),
+            limit: parseInt(limit),
+            totalPages: Math.ceil(total / limit)
+        };
     },
 
     updateStatus(orderId, status) {
