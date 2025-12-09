@@ -32,7 +32,7 @@ module.exports = {
     },
 
     async getAll(params = {}) {
-        const { search, sortBy } = params;
+        const { search, sortBy, page = 1, limit = 20 } = params;
         const query = {};
         
         // Add search filter if provided
@@ -62,7 +62,26 @@ module.exports = {
             }
         }
         
-        return DiscountCode.find(query).sort(sortOptions);
+        const pageNum = parseInt(page);
+        const limitNum = parseInt(limit);
+        const skip = (pageNum - 1) * limitNum;
+        
+        const [codes, total] = await Promise.all([
+            DiscountCode.find(query)
+                .sort(sortOptions)
+                .skip(skip)
+                .limit(limitNum)
+                .populate('createdBy', 'fullName email'),
+            DiscountCode.countDocuments(query)
+        ]);
+        
+        return {
+            codes,
+            total,
+            page: pageNum,
+            limit: limitNum,
+            totalPages: Math.ceil(total / limitNum)
+        };
     },
 
     async validateAndApply({ userId, discountCodeId, orderAmount }) {
