@@ -31,11 +31,8 @@ const CategorizedProductsSection = () => {
         setCategories(allCategories);
 
         // 2. Fetch products for each category (limited to 10 per category)
-        // Only fetch for first 6 categories to reduce load
-        const categoriesToFetch = allCategories.slice(0, 6);
-        
         const categoryProducts = await Promise.all(
-          categoriesToFetch.map(async (cat) => {
+          allCategories.map(async (cat) => {
             try {
               const products = await getProducts({ 
                 categoryId: cat._id, 
