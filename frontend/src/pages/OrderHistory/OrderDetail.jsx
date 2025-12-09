@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Package, MapPin, CreditCard, Clock, TrendingUp, CloudRain, Sun, Cloud, Wind, Star, Calendar, Hash, Truck, CheckCircle, XCircle, AlertCircle, Wallet, Receipt, Copy, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, Package, MapPin, CreditCard, Clock, TrendingUp, CloudRain, Sun, Cloud, Wind, Star, Calendar, Hash, Truck, CheckCircle, XCircle, AlertCircle, Wallet, Receipt, Copy, ShoppingBag, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Badge from '@/components/ui/badge';
 import { NotFoundPage } from '@/components/common';
@@ -148,6 +148,20 @@ const OrderDetail = () => {
   
   const subtotal = totalAmount - shippingFee + discountAmount + voucherDiscount + pointsUsed;
 
+  // Check if order can be retried for payment
+  const canRetryPayment = () => {
+    const isPending = order.status?.toLowerCase() === 'pending';
+    const isUnpaid = !order.isPaid && (order.paymentStatus?.toLowerCase() !== 'paid' && order.payment?.status?.toLowerCase() !== 'paid');
+    const isOnlinePayment = ['zalopay', 'momo', 'vietqr'].includes(order.paymentMethod?.toLowerCase());
+    return isPending && isUnpaid && isOnlinePayment;
+  };
+
+  const handleRetryPayment = () => {
+    navigate(`/payment/${order._id}`);
+  };
+
+  const showRetryButton = canRetryPayment();
+
   return (
     <div className="order-detail-container">
       {/* Header */}
@@ -174,6 +188,23 @@ const OrderDetail = () => {
               <span className="relative-time">({formatRelativeTime(order.createdAt)})</span>
             )}
           </p>
+          
+          {/* Retry Payment Button for stuck pending orders */}
+          {showRetryButton && (
+            <div className="retry-payment-section">
+              <div className="retry-payment-notice">
+                <AlertCircle size={16} />
+                <span>Payment incomplete. Complete your payment to process this order.</span>
+              </div>
+              <Button 
+                onClick={handleRetryPayment}
+                className="retry-payment-btn-detail"
+              >
+                <RefreshCw size={16} />
+                Complete Payment
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 

@@ -39,6 +39,55 @@
   color: #9ca3af;
 }
 
+/* Retry Payment Section */
+.retry-payment-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 12px;
+  border: 1px solid #f59e0b;
+}
+
+.retry-payment-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  color: #92400e;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.retry-payment-notice svg {
+  flex-shrink: 0;
+  color: #f59e0b;
+}
+
+.retry-payment-btn-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #0068ff 0%, #0055cc 100%);
+  color: white !important;
+  border: none;
+  border-radius: 8px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.retry-payment-btn-detail:hover {
+  background: linear-gradient(135deg, #0055cc 0%, #004299 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 104, 255, 0.3);
+}
+
+.retry-payment-btn-detail svg {
+  flex-shrink: 0;
+}
+
 .order-detail-content {
   display: flex;
   flex-direction: column;

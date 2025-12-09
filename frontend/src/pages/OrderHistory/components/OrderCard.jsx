@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, Clock, CheckCircle, XCircle, Truck, ChevronRight } from 'lucide-react';
+import { Package, Clock, CheckCircle, XCircle, Truck, ChevronRight, CreditCard } from 'lucide-react';
 import Badge from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { formatPrice } from '@/utils/formatPrice';
 import { ROUTES } from '@/config/routes';
 import './OrderCard.css';
@@ -66,6 +67,19 @@ const OrderCard = ({ order }) => {
     navigate(`${ROUTES.ORDER_HISTORY}/${order._id}`);
   };
 
+  // Check if order can be retried for payment
+  const canRetryPayment = () => {
+    const isPending = order.status?.toLowerCase() === 'pending';
+    const isUnpaid = !order.isPaid && (order.paymentStatus?.toLowerCase() !== 'paid' && order.payment?.status?.toLowerCase() !== 'paid');
+    const isOnlinePayment = ['zalopay', 'momo', 'vietqr'].includes(order.paymentMethod?.toLowerCase());
+    return isPending && isUnpaid && isOnlinePayment;
+  };
+
+  const handleRetryPayment = (e) => {
+    e.stopPropagation(); // Prevent card click
+    navigate(`/payment/${order._id}`);
+  };
+
   const totalAmount = parseDecimal(order.totalAmount);
   const itemCount = order.items?.length || 0;
 
@@ -73,6 +87,8 @@ const OrderCard = ({ order }) => {
   const previewImage = order.items?.[0]?.productId?.imageUrls?.[0] || 
                        order.items?.[0]?.variantId?.imageUrls?.[0] || 
                        '/placeholder-product.png';
+
+  const showRetryButton = canRetryPayment();
 
   return (
     <div className="order-card order-card-clickable" onClick={handleClick}>
@@ -99,6 +115,19 @@ const OrderCard = ({ order }) => {
               {order.status}
             </Badge>
           </div>
+          
+          {/* Retry Payment Button for stuck pending orders */}
+          {showRetryButton && (
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="retry-payment-btn"
+              onClick={handleRetryPayment}
+            >
+              <CreditCard size={14} />
+              Pay Now
+            </Button>
+          )}
         </div>
         
         <div className="order-end">
