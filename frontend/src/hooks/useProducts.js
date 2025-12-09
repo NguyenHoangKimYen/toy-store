@@ -39,6 +39,9 @@ export const useProducts = (options = {}) => {
   // Stringify params for stable dependency
   const paramsKey = JSON.stringify(params);
   const depsKey = JSON.stringify(dependencies);
+  
+  // Pagination state (for server-side pagination)
+  const [pagination, setPagination] = useState(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -49,19 +52,27 @@ export const useProducts = (options = {}) => {
       if (productId) {
         // Fetch single product
         result = await productsService.getProductById(productId);
+        setData(result);
+        setPagination(null);
       } else {
         // Fetch multiple products
         result = await productsService.getProducts(params);
         
-        // Extract products array if response is wrapped
+        // Extract products array and pagination if response is wrapped
         if (result && typeof result === 'object' && !Array.isArray(result)) {
           if (result.products && Array.isArray(result.products)) {
-            result = result.products;
+            setData(result.products);
+            setPagination(result.pagination || null);
+          } else {
+            setData(result);
+            setPagination(null);
           }
+        } else {
+          setData(result);
+          setPagination(null);
         }
       }
 
-      setData(result);
       return result;
     } catch (err) {
       console.error('Error fetching products:', err);
@@ -244,6 +255,12 @@ export const useProducts = (options = {}) => {
     data,
     products: Array.isArray(data) ? data : [],
     product: !Array.isArray(data) ? data : null,
+    
+    // Server-side pagination info
+    pagination,
+    total: pagination?.total || (Array.isArray(data) ? data.length : 0),
+    totalPages: pagination?.totalPages || 1,
+    currentPage: pagination?.currentPage || 1,
     
     loading,
     error,

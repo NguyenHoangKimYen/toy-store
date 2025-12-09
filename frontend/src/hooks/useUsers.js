@@ -30,6 +30,7 @@ export const useUsers = (options = {}) => {
 
   const [users, setUsers] = useState([]);
   const [user, setUser] = useState(null);
+  const [pagination, setPagination] = useState(null);
   const [stats, setStats] = useState({
     totalUsers: 0,
     verifiedUsers: 0,
@@ -95,15 +96,24 @@ export const useUsers = (options = {}) => {
       // Handle different response formats
       const usersArray = Array.isArray(data) ? data : (data.users || data.data || []);
       
+      // Extract pagination info from response
+      const paginationInfo = data.total ? {
+        total: data.total,
+        page: data.page,
+        limit: data.limit,
+        totalPages: data.totalPages
+      } : null;
+      
       // Calculate stats
       const calculatedStats = {
-        totalUsers: usersArray.length,
+        totalUsers: paginationInfo?.total || usersArray.length,
         verifiedUsers: usersArray.filter(u => u.isVerified).length,
         totalLoyaltyPoints: usersArray.reduce((sum, u) => sum + (u.loyaltyPoints || 0), 0),
         adminUsers: usersArray.filter(u => u.role === 'admin').length,
       };
       
       setUsers(usersArray);
+      setPagination(paginationInfo);
       setStats(calculatedStats);
       return usersArray;
     } catch (err) {
@@ -199,6 +209,12 @@ export const useUsers = (options = {}) => {
     // Multiple users mode
     users,
     stats,
+    
+    // Server-side pagination info
+    pagination,
+    total: pagination?.total || users.length,
+    totalPages: pagination?.totalPages || 1,
+    currentPage: pagination?.page || 1,
     
     // Common
     loading,
