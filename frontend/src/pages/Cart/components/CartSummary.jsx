@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Tag } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { formatPrice } from '@/utils/formatPrice';
@@ -74,18 +74,7 @@ const CartSummary = ({ subtotal, onCheckout, onContinueShopping }) => {
         </div>
       </div>
 
-      {/* Promo Code */}
-      <div className="promo-code-section">
-        <Tag size={18} />
-        <input
-          type="text"
-          placeholder="Enter promo code"
-          className="promo-input"
-        />
-        <Button variant="outline" size="sm">
-          Apply
-        </Button>
-      </div>
+      {/* Note: Discount codes can be applied at checkout */}
 
       {/* Action Buttons */}
       <div className="summary-actions">

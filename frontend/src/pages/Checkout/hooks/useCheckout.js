@@ -247,7 +247,7 @@ export const useCheckout = () => {
           },
           paymentMethod,
           deliveryType,
-          discountCodeId: discountInfo.appliedCode?.id || null,
+          discountCodeId: discountInfo.appliedCode?.discountCodeId || discountInfo.appliedCode?._id || null,
           pointsToUse: loyaltyPointsUsed,
         };
       } else {
@@ -255,7 +255,7 @@ export const useCheckout = () => {
           addressId,
           paymentMethod,
           deliveryType,
-          discountCodeId: discountInfo.appliedCode?.id || null,
+          discountCodeId: discountInfo.appliedCode?.discountCodeId || discountInfo.appliedCode?._id || null,
           pointsToUse: loyaltyPointsUsed,
         };
       }

@@ -37,11 +37,11 @@ const DiscountCodeModal = ({ code, onClose, onSave }) => {
   const validateForm = () => {
     const newErrors = {}
 
-    // Code validation (8-12 characters, alphanumeric)
+    // Code validation (8-20 characters, alphanumeric)
     if (!formData.code) {
       newErrors.code = 'Code is required'
-    } else if (!/^[A-Z0-9]{8,12}$/.test(formData.code.toUpperCase())) {
-      newErrors.code = 'Code must be 8-12 alphanumeric characters'
+    } else if (!/^[A-Z0-9]{8,20}$/.test(formData.code.toUpperCase())) {
+      newErrors.code = 'Code must be 8-20 alphanumeric characters'
     }
 
     // Value validation
@@ -99,7 +99,7 @@ const DiscountCodeModal = ({ code, onClose, onSave }) => {
               value={formData.code}
               onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
               placeholder="DISCOUNT01"
-              maxLength={12}
+              maxLength={20}
               className="font-mono text-lg"
               disabled={!!code} // Can't edit code once created
             />
@@ -107,7 +107,7 @@ const DiscountCodeModal = ({ code, onClose, onSave }) => {
               <p className="text-sm text-destructive">{errors.code}</p>
             )}
             <p className="text-xs text-muted-foreground">
-              8-12 alphanumeric characters (letters and numbers only)
+              8-20 alphanumeric characters (letters and numbers only)
             </p>
           </div>
 
