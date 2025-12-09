@@ -246,11 +246,17 @@ const LoyaltyManagement = ({ externalSearchQuery = '' }) => {
                     <tr key={user._id} className="hover:bg-purple-50/30 transition">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <img
-                            src={user.avatar || '/default-avatar.png'}
-                            alt={user.fullName}
-                            className="w-9 h-9 rounded-full object-cover"
-                          />
+                          {user.avatar ? (
+                            <img
+                              src={user.avatar}
+                              alt={user.fullName}
+                              className="w-9 h-9 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-semibold text-sm">
+                              {(user.fullName || 'U').charAt(0).toUpperCase()}
+                            </div>
+                          )}
                           <div>
                             <div className="font-medium text-gray-900">{user.fullName}</div>
                             <div className="text-xs text-gray-500">{user.email}</div>

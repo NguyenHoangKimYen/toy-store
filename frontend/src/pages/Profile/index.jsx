@@ -62,11 +62,20 @@ const Profile = () => {
       <div className="profile-header">
         <div className="profile-avatar-section">
           <div className="avatar-wrapper">
-            <img
-              src={user.avatar || '/default-avatar.png'}
-              alt={user.fullName}
-              className="profile-avatar"
-            />
+            {user.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user.fullName}
+                className="profile-avatar"
+                onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+              />
+            ) : null}
+            <div 
+              className="profile-avatar-fallback" 
+              style={{ display: user.avatar ? 'none' : 'flex' }}
+            >
+              {(user.fullName || user.username || 'U').charAt(0).toUpperCase()}
+            </div>
             <label htmlFor="avatar-upload" className="avatar-upload-btn">
               <Camera size={20} />
               <input
