@@ -226,6 +226,9 @@ export function useCart(userId = null, authLoading = false) {
       setItems(optimisticItems);
       setCart(prev => ({ ...prev, items: optimisticItems }));
 
+      // 🚀 IMMEDIATE broadcast for optimistic update (other tabs see it instantly)
+      broadcastCartUpdate({ ...cart, items: optimisticItems });
+
       // Cancel previous debounce timer for this item
       if (debounceTimersRef.current[variantId]) {
         clearTimeout(debounceTimersRef.current[variantId]);
@@ -240,7 +243,7 @@ export function useCart(userId = null, authLoading = false) {
       // Show loading indicator (but UI already updated)
       setItemLoading((prev) => ({ ...prev, [variantId]: true }));
 
-      // Debounce API call: 300ms
+      // Debounce API call: 150ms (reduced from 300ms for faster sync)
       debounceTimersRef.current[variantId] = setTimeout(async () => {
         try {
           // Get the LATEST pending quantity from ref (not stale closure)
@@ -326,9 +329,9 @@ export function useCart(userId = null, authLoading = false) {
           // Clear debounce timer
           delete debounceTimersRef.current[variantId];
         }
-      }, 300);
+      }, 150);
     },
-    [cart, items, getSessionId]
+    [cart, items, getSessionId, broadcastCartUpdate]
   );
 
   const addItem = useCallback(
@@ -371,7 +374,7 @@ export function useCart(userId = null, authLoading = false) {
         setItemLoading((prev) => ({ ...prev, [variantId]: false }));
       }
     },
-    [ensureCart]
+    [ensureCart, broadcastCartUpdate]
   );
 
   const removeItem = useCallback(
@@ -411,7 +414,7 @@ export function useCart(userId = null, authLoading = false) {
         setItemLoading((prev) => ({ ...prev, [variantId]: false }));
       }
     },
-    [cart]
+    [cart, broadcastCartUpdate]
   );
 
   const removeItemCompletely = useCallback(
@@ -461,7 +464,7 @@ export function useCart(userId = null, authLoading = false) {
         setItemLoading((prev) => ({ ...prev, [variantId]: false }));
       }
     },
-    [cart, items]
+    [cart, items, broadcastCartUpdate]
   );
 
   const clearAllItems = useCallback(async () => {
@@ -486,7 +489,7 @@ export function useCart(userId = null, authLoading = false) {
     } finally {
       setLoading(false);
     }
-  }, [cart]);
+  }, [cart, broadcastCartUpdate]);
 
   // Initial fetch - wait for auth to be ready, then fetch cart
   // Use stable ref to track if we've already fetched for this user/guest session
