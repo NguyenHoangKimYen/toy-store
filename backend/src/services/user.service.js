@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const userRepository = require('../repositories/user.repository.js');
+const { getDefaultAvatar } = require('../utils/defaultAvatar.js');
 
 /**
  * GỘP GET USER:
@@ -87,6 +88,11 @@ const createUser = async (userData) => {
 
     if (password) {
         rest.password = await bcrypt.hash(password, 10);
+    }
+
+    // Assign default avatar if not provided
+    if (!rest.avatar) {
+        rest.avatar = getDefaultAvatar(rest.email || rest.username);
     }
 
     return userRepository.create({

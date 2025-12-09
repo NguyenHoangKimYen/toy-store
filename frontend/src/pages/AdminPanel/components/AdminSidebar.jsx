@@ -6,7 +6,6 @@ import { ADMIN_ROUTES, PUBLIC_ROUTES } from '@/config/routes';
 import { getUsers } from '@/services/users.service';
 import { getProducts } from '@/services/products.service';
 import { getAllOrders } from '@/services/orders.service';
-import { getDefaultAvatar } from '@/utils/defaultAvatar';
 
 const AdminSidebar = ({ onNavigate }) => {
   const [showAccountMenu, setShowAccountMenu] = useState(false);
@@ -123,9 +122,9 @@ const AdminSidebar = ({ onNavigate }) => {
             onClick={() => setShowAccountMenu((v) => !v)}
             className="flex items-center gap-2 w-full text-left rounded-lg px-2 py-1.5 transition hover:bg-slate-50"
           >
-            {user?.avatar || user?.profileImage || user?.photoURL || getDefaultAvatar(user) ? (
+            {user?.avatar || user?.profileImage || user?.photoURL ? (
               <img
-                src={user.avatar || user.profileImage || user.photoURL || getDefaultAvatar(user)}
+                src={user.avatar || user.profileImage || user.photoURL}
                 alt={user?.fullname || 'Admin'}
                 className="size-9 rounded-full object-cover border border-slate-200"
                 referrerPolicy="no-referrer"

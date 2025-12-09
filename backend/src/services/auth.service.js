@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const Joi = require("joi");
 const { generateToken, genOtp6, sha256 } = require("../utils/token.js");
+const { getDefaultAvatar } = require("../utils/defaultAvatar.js");
 const User = require("../models/user.model.js");
 const { sendMail } = require("../libs/mailer.js");
 const { message } = require("statuses");
@@ -178,6 +179,7 @@ const register = async (data) => {
         phone,
         username,
         password: passwordHash,
+        avatar: getDefaultAvatar(email), // Assign deterministic default avatar
         isVerified: false,
     });
 

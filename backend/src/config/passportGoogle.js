@@ -1,6 +1,7 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('../models/user.model');
+const { getDefaultAvatar } = require('../utils/defaultAvatar');
 
 const sanitize = (value = '') =>
     value
@@ -47,9 +48,7 @@ passport.use(
                     );
                 }
 
-                const DEFAULT_AVATAR =
-                    process.env.DEFAULT_AVATAR_URL ||
-                    'https://toy-store-project-of-springwang.s3.ap-southeast-2.amazonaws.com/defaults/unknownAvatar.png';
+                const DEFAULT_AVATAR = getDefaultAvatar(email);
 
                 //KIỂM TRA EMAIL TRƯỚC
                 let user = await User.findOne({ email });

@@ -1,7 +1,6 @@
 import React from 'react'
 import { Eye, Edit, Trash2, CheckCircle, XCircle } from 'lucide-react'
 import { getRoleBadgeColor } from '../utils/formatters'
-import { getDefaultAvatar } from '@/utils/defaultAvatar'
 
 const UserTableRow = ({ user, onViewDetails, onEdit, onDelete }) => {
   return (
@@ -10,9 +9,9 @@ const UserTableRow = ({ user, onViewDetails, onEdit, onDelete }) => {
       <td className='px-6 py-4 whitespace-nowrap'>
         <div className='flex items-center'>
           <div className='flex-shrink-0 h-10 w-10'>
-            {user.avatar || getDefaultAvatar(user) ? (
+            {user.avatar ? (
               <img
-                src={user.avatar || getDefaultAvatar(user)}
+                src={user.avatar}
                 alt={user.fullname || user.fullName || 'User'}
                 className='h-10 w-10 rounded-full object-cover'
                 referrerPolicy='no-referrer'
