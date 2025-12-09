@@ -19,21 +19,40 @@ export default defineConfig({
     // Optimize chunk sizes
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Vendor chunks for better caching
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['lucide-react', 'framer-motion', 'sonner'],
-          'radix-ui': [
-            '@radix-ui/react-alert-dialog',
-            '@radix-ui/react-checkbox',
-            '@radix-ui/react-label',
-            '@radix-ui/react-radio-group',
-            '@radix-ui/react-select',
-            '@radix-ui/react-separator',
-            '@radix-ui/react-slider',
-            '@radix-ui/react-slot',
-            '@radix-ui/react-tabs'
-          ],
+        manualChunks: (id) => {
+          // React core - load first
+          if (id.includes('node_modules/react/') || 
+              id.includes('node_modules/react-dom/') ||
+              id.includes('node_modules/react-router')) {
+            return 'react-vendor';
+          }
+          
+          // Heavy map library - only load for admin
+          if (id.includes('maplibre-gl')) {
+            return 'map-vendor';
+          }
+          
+          // Socket.io - only load when needed
+          if (id.includes('socket.io')) {
+            return 'socket-vendor';
+          }
+          
+          // UI libraries
+          if (id.includes('lucide-react') || 
+              id.includes('framer-motion') || 
+              id.includes('sonner')) {
+            return 'ui-vendor';
+          }
+          
+          // Radix UI components
+          if (id.includes('@radix-ui')) {
+            return 'radix-ui';
+          }
+          
+          // Other vendor libs
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
         },
         // Hashed filenames for long-term caching
         entryFileNames: 'assets/[name]-[hash].js',

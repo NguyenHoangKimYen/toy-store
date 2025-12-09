@@ -10,7 +10,8 @@ export * from './dashboard.service';
 export * from './addresses.service';
 export * from './payments.service';
 export * from './shipping.service';
-export * from './socket.service';
+// Socket service is NOT exported here - import directly to avoid bundling in main chunk
+// import { socketService } from '@/services/socket.service';
 export * from './config';
 export * from '../utils/apiHelpers';
 export * from '../utils/authHelpers';

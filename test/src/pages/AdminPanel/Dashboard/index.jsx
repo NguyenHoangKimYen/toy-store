@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { formatPrice, formatPriceNumber } from '@/utils/formatPrice';
 import { useDashboardData } from './hooks';
-import BranchMap from './components/BranchMap';
 import DashboardHeader from './components/DashboardHeader';
 import StatCard from './components/StatCard';
 import PieChart from './components/PieChart';
 import BarChart from './components/BarChart';
 import TinyLegend from './components/TinyLegend';
+
+// Lazy load heavy map component (~700KB)
+const BranchMap = lazy(() => import('./components/BranchMap'));
 
 const Dashboard = () => {
   const {
@@ -254,7 +256,9 @@ const Dashboard = () => {
               <h3 className="text-sm font-semibold text-stone-700 mb-3">
                 Branch Map (Vietmap)
               </h3>
-              <BranchMap branches={branches} />
+              <Suspense fallback={<div className="h-64 bg-stone-100 rounded animate-pulse flex items-center justify-center text-stone-400">Loading map...</div>}>
+                <BranchMap branches={branches} />
+              </Suspense>
               <div className="text-[11px] text-stone-500 mt-2">
                 Source: /dashboard/branches-map. VietMap API key can be configured via VITE_VIETMAP_API_KEY.
               </div>
