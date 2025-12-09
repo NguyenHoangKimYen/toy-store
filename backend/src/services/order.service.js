@@ -5,6 +5,7 @@ const bcrypt = require("bcrypt");
 const userRepository = require("../repositories/user.repository.js");
 const addressRepo = require("../repositories/address.repository");
 const paymentRepo = require("../repositories/payment.repository");
+const variantRepo = require("../repositories/variant.repository");
 const { sendMail } = require("../libs/mailer.js");
 const { generateToken, sha256 } = require("../utils/token.js");
 const { calculateShippingFee } = require("../services/shipping.service");
@@ -692,6 +693,34 @@ module.exports = {
             console.error('[EMAIL] Failed to send status update:', err);
         });
 
+        // ⭐ Decrement stock when order is confirmed
+        if (
+            newStatus === 'confirmed' &&
+            !updated._stockDeducted
+        ) {
+            try {
+                const orderItems = await itemRepo.findByOrder(orderId);
+                const stockItems = orderItems.map(item => ({
+                    variantId: typeof item.variantId === 'object' ? item.variantId._id : item.variantId,
+                    quantity: item.quantity
+                }));
+                
+                const stockResult = await variantRepo.bulkDecrementStock(stockItems);
+                
+                if (stockResult.success) {
+                    await orderRepository.updateById(orderId, { _stockDeducted: true });
+                    console.log(`[STOCK] Decremented stock for order ${orderId}`);
+                } else {
+                    // Some items don't have enough stock - log warning
+                    console.warn(`[STOCK WARNING] Insufficient stock for some items in order ${orderId}:`, stockResult.failedItems);
+                    // Still mark as deducted for items that succeeded
+                    await orderRepository.updateById(orderId, { _stockDeducted: true });
+                }
+            } catch (err) {
+                console.error('[STOCK DECREMENT ERROR]', err?.message || err);
+            }
+        }
+
         // ⭐ Mark discount code as used when order is confirmed
         if (
             newStatus === 'confirmed' &&
@@ -704,7 +733,7 @@ module.exports = {
                 if (canUse) {
                     await discountCodeService.markUsed(updated.discountCodeId);
                     // Mark order so we don't double-increment on subsequent status changes
-                    await orderRepository.update(orderId, { _discountCodeMarkedUsed: true });
+                    await orderRepository.updateById(orderId, { _discountCodeMarkedUsed: true });
                 }
             } catch (err) {
                 // Non-critical: log for debugging but order still proceeds
@@ -720,10 +749,30 @@ module.exports = {
         ) {
             try {
                 await discountCodeService.decrementUsedCount(updated.discountCodeId);
-                await orderRepository.update(orderId, { _discountCodeMarkedUsed: false });
+                await orderRepository.updateById(orderId, { _discountCodeMarkedUsed: false });
             } catch (err) {
                 // Non-critical: log for debugging
                 console.error('[DISCOUNT CODE RESTORE ERROR]', err?.message || err);
+            }
+        }
+
+        // ⭐ Restore stock when order is cancelled
+        if (
+            newStatus === 'cancelled' &&
+            updated._stockDeducted
+        ) {
+            try {
+                const orderItems = await itemRepo.findByOrder(orderId);
+                const stockItems = orderItems.map(item => ({
+                    variantId: typeof item.variantId === 'object' ? item.variantId._id : item.variantId,
+                    quantity: item.quantity
+                }));
+                
+                await variantRepo.bulkIncrementStock(stockItems);
+                await orderRepository.updateById(orderId, { _stockDeducted: false });
+                console.log(`[STOCK] Restored stock for cancelled order ${orderId}`);
+            } catch (err) {
+                console.error('[STOCK RESTORE ERROR]', err?.message || err);
             }
         }
 
@@ -761,7 +810,7 @@ module.exports = {
                     );
 
                     // lưu coin
-                    await orderRepository.update(updated._id, {
+                    await orderRepository.updateById(updated._id, {
                         pointsEarned: result.earnedCoins,
                     });
 

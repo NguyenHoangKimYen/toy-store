@@ -116,6 +116,12 @@ const OrderSchema = new mongoose.Schema(
             default: false,
         },
 
+        // Track if stock has been deducted (to prevent double deduction/restoration)
+        _stockDeducted: {
+            type: Boolean,
+            default: false,
+        },
+
         // Trạng thái hiện tại của đơn hàng
         status: {
             type: String,
