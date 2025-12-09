@@ -19,17 +19,17 @@ const createLimitHandler = (message) => (req, res) => {
 // ============================================
 
 /**
- * Login rate limiter - very strict
- * 5 attempts per 15 minutes per IP
+ * Login rate limiter - moderate (per-user OTP handles brute force)
+ * 15 attempts per 15 minutes per IP
+ * This prevents credential stuffing across multiple accounts
  */
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5,
-    message: 'Too many login attempts. Please try again after 15 minutes.',
-    handler: createLimitHandler('Too many login attempts. Please try again after 15 minutes.'),
+    max: 15, // Allow more attempts since per-user OTP kicks in at 5
+    message: 'Too many login attempts from this IP. Please try again after 15 minutes.',
+    handler: createLimitHandler('Too many login attempts from this IP. Please try again after 15 minutes.'),
     standardHeaders: true,
     legacyHeaders: false,
-    skipSuccessfulRequests: true, // Don't count successful logins
 });
 
 /**
