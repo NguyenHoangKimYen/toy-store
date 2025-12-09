@@ -24,6 +24,12 @@ const {
     forgotPassword,
     resetPassword,
 } = require("../controllers/password.controller.js");
+const {
+    loginLimiter,
+    registerLimiter,
+    passwordResetLimiter,
+    otpLimiter,
+} = require("../middlewares/rateLimit.middleware.js");
 
 setupFacebookPassport();
 
@@ -129,23 +135,23 @@ router.get(
 
 router.get("/verify-email", verifyEmail);
 
-router.post('/register', register); //đăng ký
-router.post('/login', login); //đăng nhập
+router.post('/register', registerLimiter, register); //đăng ký
+router.post('/login', loginLimiter, login); //đăng nhập
 
-router.post('/forgot-password', forgotPassword); //quên mật khẩu
-router.post('/reset-password', resetPassword); //đặt lại mật khẩu
+router.post('/forgot-password', passwordResetLimiter, forgotPassword); //quên mật khẩu
+router.post('/reset-password', passwordResetLimiter, resetPassword); //đặt lại mật khẩu
 
-router.post("/login/verify-otp", verifyLoginOtp);
-router.post("/login/resend-otp", resendLoginOtp);
+router.post("/login/verify-otp", otpLimiter, verifyLoginOtp);
+router.post("/login/resend-otp", otpLimiter, resendLoginOtp);
 router.get("/profile/:id", profile); //lấy thông tin người dùng hiện tại
-router.post("/change-email/request-old-otp", requestOldEmailOtpController);
-router.post("/change-email/verify-old-otp", verifyOldEmailOtpController);
+router.post("/change-email/request-old-otp", otpLimiter, requestOldEmailOtpController);
+router.post("/change-email/verify-old-otp", otpLimiter, verifyOldEmailOtpController);
 router.post(
     "/change-email/request-new-email",
     requestNewEmailVerifyLinkController,
 );
 router.get("/change-email/confirm", confirmNewEmailController);
-router.post("/change-phone/:id/request", requestChangePhoneController);
-router.post("/change-phone/:id/verify", verifyChangePhoneController);
+router.post("/change-phone/:id/request", otpLimiter, requestChangePhoneController);
+router.post("/change-phone/:id/verify", otpLimiter, verifyChangePhoneController);
 
 module.exports = router;

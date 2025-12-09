@@ -18,6 +18,7 @@ const {
   staticCacheMiddleware,
   s3ImageCacheMiddleware 
 } = require('./middlewares/cache.middleware.js');
+const { apiLimiter } = require('./middlewares/rateLimit.middleware.js');
 
 const app = express(); // Tạo app
 
@@ -63,6 +64,9 @@ app.use(cors({
 app.use(staticCacheMiddleware); // Static files (.jpg, .png, .woff, etc.)
 app.use(s3ImageCacheMiddleware); // S3 images proxied through backend
 app.use('/api', apiCacheMiddleware); // API responses (no cache)
+
+// Rate limiting for API endpoints (100 req/min per IP)
+app.use('/api', apiLimiter);
 
 // ============================================
 // SESSION CONFIGURATION (For OAuth flow only)
