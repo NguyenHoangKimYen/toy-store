@@ -11,7 +11,7 @@ import './Navbar.css'
 const NAV_LINKS = [
     { to: '/', label: 'HOME', icon: Home },
     { to: '/products', label: 'SHOP', icon: Box },
-    { to: '/categories', label: 'CATEGORIES', icon: Layers }, // Different path for unique key
+    { to: '/products', label: 'CATEGORIES', icon: Layers, isDropdown: true }, // Links to /products, shows dropdown
     { to: '/about', label: 'ABOUT', icon: Info },
     { to: '/contact', label: 'CONTACT', icon: Phone }
 ]
@@ -87,6 +87,7 @@ const Navbar = () => {
 
     const closeMobileMenu = () => {
         setShowMobileMenu(false)
+        setShowMobileCategoryMenu(false) // Reset category submenu too
     }
 
     const handleCategoryClick = (categoryId) => {
@@ -198,12 +199,57 @@ const Navbar = () => {
 
                 {/* Navigation Links */}
                 <ul className="mobile-nav-links">
-                    {NAV_LINKS.map(({ to, label, icon: Icon }) => (
-                        <li key={to}>
-                            <NavLink to={to} onClick={closeMobileMenu}>
-                                <Icon size={20} />
-                                {label.charAt(0) + label.slice(1).toLowerCase()}
-                            </NavLink>
+                    {NAV_LINKS.map(({ to, label, icon: Icon, isDropdown }) => (
+                        <li key={label}>
+                            {isDropdown ? (
+                                // Categories with expandable submenu
+                                <>
+                                    <button
+                                        className="mobile-nav-button mobile-category-toggle"
+                                        onClick={() => setShowMobileCategoryMenu(!showMobileCategoryMenu)}
+                                    >
+                                        <span className="mobile-nav-button-content">
+                                            <Icon size={20} />
+                                            {label.charAt(0) + label.slice(1).toLowerCase()}
+                                        </span>
+                                        <ChevronDown 
+                                            size={16} 
+                                            className={`mobile-category-arrow ${showMobileCategoryMenu ? 'open' : ''}`}
+                                        />
+                                    </button>
+                                    {showMobileCategoryMenu && (
+                                        <ul className="mobile-category-submenu">
+                                            {categories.slice(0, 8).map((category) => (
+                                                <li key={category._id}>
+                                                    <button
+                                                        className="mobile-category-item"
+                                                        onClick={() => {
+                                                            navigate(`/products?category=${category._id}`);
+                                                            closeMobileMenu();
+                                                        }}
+                                                    >
+                                                        {category.name}
+                                                    </button>
+                                                </li>
+                                            ))}
+                                            <li>
+                                                <NavLink 
+                                                    to="/products" 
+                                                    onClick={closeMobileMenu}
+                                                    className="mobile-category-view-all"
+                                                >
+                                                    View all →
+                                                </NavLink>
+                                            </li>
+                                        </ul>
+                                    )}
+                                </>
+                            ) : (
+                                <NavLink to={to} onClick={closeMobileMenu}>
+                                    <Icon size={20} />
+                                    {label.charAt(0) + label.slice(1).toLowerCase()}
+                                </NavLink>
+                            )}
                         </li>
                     ))}
                 </ul>
@@ -256,11 +302,11 @@ const Navbar = () => {
     // Render desktop navigation links
     const renderDesktopNav = () => (
         <ul className='hidden sm:flex gap-5 text-sm text-gray-700'>
-            {NAV_LINKS.map(({ to, label }) => {
+            {NAV_LINKS.map(({ to, label, isDropdown }) => {
                 // Special handling for CATEGORIES with dropdown
-                if (label === 'CATEGORIES') {
+                if (isDropdown) {
                     return (
-                        <li key={to} className='nav-link-item group relative'>
+                        <li key={label} className='nav-link-item group relative'>
                             <div className='flex items-center gap-1 cursor-pointer'>
                                 <p>{label}</p>
                                 <ChevronDown size={14} className='transition-transform group-hover:rotate-180' />
@@ -498,8 +544,11 @@ const Navbar = () => {
                 <div className='navbar-container px-3 sm:px-4 md:px-[5vw] lg:px-[7vw] xl:px-[3vw]'>
                     <div className='navbar-content flex items-center justify-between py-4 font-medium gap-4'>
                         {/* Mobile Menu Toggle */}
-                        <button className="mobile-menu-toggle flex-shrink-0" onClick={() => setShowMobileMenu(true)}>
-                            <Menu size={24} />
+                        <button 
+                            className="mobile-menu-toggle flex-shrink-0" 
+                            onClick={() => showMobileMenu ? closeMobileMenu() : setShowMobileMenu(true)}
+                        >
+                            {showMobileMenu ? <X size={24} /> : <Menu size={24} />}
                         </button>
 
                         {/* Logo - hidden when search is expanded on mobile */}
