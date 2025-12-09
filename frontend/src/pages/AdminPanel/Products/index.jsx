@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { Plus, Search, Filter, Package, MessageSquare, Star } from 'lucide-react'
+import { Plus, Search, Filter, Package, MessageSquare, Star, Layers } from 'lucide-react'
 import ProductGrid from './components/ProductGrid'
 import ProductStats from './components/ProductStats'
 import ProductDetailModal from './components/ProductDetailModal'
@@ -7,6 +7,7 @@ import ProductFormModal from './components/ProductFormModal'
 import ProductFilters from './components/ProductFilters'
 import CommentsManagement from './components/CommentsManagement'
 import ReviewsManagement from './components/ReviewsManagement'
+import CategoriesManagement from './components/CategoriesManagement'
 import { AdminContent, AdminHeader } from '../components'
 import { useProducts, useDebounce } from '@/hooks' // Using global hook
 import { PageHeader, SearchBar } from '@/components/common'
@@ -28,6 +29,7 @@ const Products = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [commentsSearchQuery, setCommentsSearchQuery] = useState('')
   const [reviewsSearchQuery, setReviewsSearchQuery] = useState('')
+  const [categoriesSearchQuery, setCategoriesSearchQuery] = useState('')
   const debouncedSearch = useDebounce(searchQuery, 500) // Debounce search input
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
@@ -238,6 +240,16 @@ const Products = () => {
     />
   )
 
+  const categoriesHeader = (
+    <AdminHeader
+      title="Categories Management"
+      description="Manage product categories and display order"
+      searchQuery={categoriesSearchQuery}
+      onSearchChange={setCategoriesSearchQuery}
+      searchPlaceholder="Search categories..."
+    />
+  )
+
   return (
     <>
       <div className='space-y-4'>
@@ -264,6 +276,13 @@ const Products = () => {
             >
               <Star size={16} />
               Reviews
+            </TabsTrigger>
+            <TabsTrigger 
+              value='categories'
+              className='flex items-center gap-2 data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 px-4 py-2 rounded-lg transition-all'
+            >
+              <Layers size={16} />
+              Categories
             </TabsTrigger>
           </TabsList>
 
@@ -301,6 +320,13 @@ const Products = () => {
           <TabsContent value='reviews' className='mt-4'>
             <AdminContent header={reviewsHeader}>
               <ReviewsManagement externalSearchQuery={reviewsSearchQuery} />
+            </AdminContent>
+          </TabsContent>
+
+          {/* Categories Tab Content */}
+          <TabsContent value='categories' className='mt-4'>
+            <AdminContent header={categoriesHeader}>
+              <CategoriesManagement externalSearchQuery={categoriesSearchQuery} />
             </AdminContent>
           </TabsContent>
         </Tabs>
