@@ -5,8 +5,15 @@ const { uploadToS3 } = require('../utils/s3.helper.js');
 // GET USERS (GỘP PARAM)
 const getAllUsers = async (req, res, next) => {
     try {
-        const users = await userService.getAllUsers(req.query);
-        res.json({ success: true, data: users });
+        const result = await userService.getAllUsers(req.query);
+        res.json({ 
+            success: true, 
+            data: result.users,
+            total: result.total,
+            page: result.page,
+            limit: result.limit,
+            totalPages: result.totalPages
+        });
     } catch (error) {
         next(error);
     }

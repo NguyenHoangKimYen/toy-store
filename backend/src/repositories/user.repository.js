@@ -2,15 +2,29 @@ const { token } = require('morgan');
 const User = require('../models/user.model.js');
 
 const findAll = async (filter = {}, options = {}) => {
-    return User.find(filter)
-        .populate({
-            path: "defaultAddressId",
-            select: "fullName phone addressLine city postalCode isDefault",
-        })
-        .skip(options.skip || 0)
-        .limit(options.limit || 20)
-        .sort(options.sort || { createdAt: -1 })
-        .select("-password"); //không trả về password
+    const [users, total] = await Promise.all([
+        User.find(filter)
+            .populate({
+                path: "defaultAddressId",
+                select: "fullName phone addressLine city postalCode isDefault",
+            })
+            .skip(options.skip || 0)
+            .limit(options.limit || 20)
+            .sort(options.sort || { createdAt: -1 })
+            .select("-password"), //không trả về password
+        User.countDocuments(filter)
+    ]);
+    
+    const page = Math.floor((options.skip || 0) / (options.limit || 20)) + 1;
+    const limit = options.limit || 20;
+    
+    return {
+        users,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+    };
 };
 
 const findById = async (id) => {
