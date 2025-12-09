@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useOrders } from '@/hooks';
+import { useAuth } from '@/hooks';
 import { toast } from 'sonner';
 
 // Helper to parse MongoDB Decimal128
@@ -12,7 +13,10 @@ const parseDecimal = (value) => {
 };
 
 export const useOrderHistory = () => {
+  const { user, loading: authLoading } = useAuth();
   const { orders: allOrders, loading, error, fetchMyOrders } = useOrders();
+  const hasFetchedRef = useRef(false);
+  const lastUserIdRef = useRef(null);
   
   const [filters, setFilters] = useState({
     status: 'all',
@@ -63,6 +67,31 @@ export const useOrderHistory = () => {
 
     return filtered;
   }, [allOrders, filters]);
+
+  // Auto-fetch orders once when user is logged in
+  useEffect(() => {
+    // Don't fetch while auth is loading
+    if (authLoading) return;
+    
+    // Don't fetch for guests
+    const userId = user?._id || user?.id;
+    if (!userId) {
+      hasFetchedRef.current = false;
+      return;
+    }
+    
+    // Detect user change (login/logout)
+    if (lastUserIdRef.current !== userId) {
+      lastUserIdRef.current = userId;
+      hasFetchedRef.current = false;
+    }
+    
+    // Only fetch once per user session
+    if (!hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      fetchMyOrders();
+    }
+  }, [authLoading, user, fetchMyOrders]);
 
   useEffect(() => {
     if (error) {
