@@ -1,45 +1,6 @@
-/* Scroll wrapper with positioned buttons */
-.products-scroll-wrapper {
-  position: relative;
-}
+/* ProductShowcaseSection - Only styles Tailwind cannot handle */
 
-/* Scroll buttons - positioned absolutely */
-.scroll-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 10;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: white;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  opacity: 0;
-}
-
-.products-scroll-wrapper:hover .scroll-btn {
-  opacity: 1;
-}
-
-.scroll-btn:hover {
-  background: #f8fafc;
-  color: #1e293b;
-  border-color: #cbd5e1;
-}
-
-.scroll-btn-left { left: -20px; }
-.scroll-btn-right { right: -20px; }
-
-@media (max-width: 768px) {
-  .scroll-btn { display: none; }
-}
-
-/* Horizontal scroll container - smooth scroll, hidden scrollbar */
+/* Scroll container - hidden scrollbar, smooth scroll */
 .products-scroll {
   display: flex;
   gap: 1rem;
@@ -52,17 +13,15 @@
 
 .products-scroll::-webkit-scrollbar { display: none; }
 
-.products-scroll .product-card {
-  flex-shrink: 0;
-  width: 200px;
+/* Scroll buttons - show on hover (opacity transition) */
+.products-scroll-wrapper:hover .scroll-btn {
+  opacity: 1;
 }
 
 @media (min-width: 640px) {
   .products-scroll { gap: 1.25rem; }
-  .products-scroll .product-card { width: 220px; }
 }
 
 @media (min-width: 1024px) {
   .products-scroll { gap: 1.5rem; }
-  .products-scroll .product-card { width: 240px; }
 }

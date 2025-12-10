@@ -83,7 +83,7 @@ const CategorizedProductsSection = () => {
   const visibleCategories = categoryData; // Already limited to 3 from backend
 
   return (
-    <div className="categorized-products-showcase">
+    <div className="relative min-h-[500px] overflow-hidden rounded-3xl mx-4 my-8 md:mx-2 md:my-4">
       {/* Animated Background */}
       <AnimatePresence mode="wait">
         <motion.div
@@ -92,7 +92,7 @@ const CategorizedProductsSection = () => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.7 }}
-          className="categorized-products-bg"
+          className="absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage: activeCategory.bgImageUrl 
               ? `url(${activeCategory.bgImageUrl})` 
@@ -103,10 +103,10 @@ const CategorizedProductsSection = () => {
 
       <div className="categorized-products-overlay" />
 
-      <div className="categorized-products-content">
+      <div className="relative z-[1] p-6 sm:p-12 max-w-[1400px] mx-auto">
         {/* Category Tabs */}
-        <div className="categorized-products-tabs-wrapper">
-          <div className="categorized-products-tabs">
+        <div className="categorized-products-tabs-wrapper flex items-center justify-start gap-2 mb-8 w-full">
+          <div className="flex gap-2 justify-start items-center flex-wrap">
             {visibleCategories.map((cat, idx) => (
               <button
                 key={cat.id}
@@ -120,7 +120,7 @@ const CategorizedProductsSection = () => {
             {/* "More" button - navigates to products page */}
             <button
               onClick={() => navigate('/products')}
-              className="categorized-products-tab categorized-more-btn"
+              className="categorized-products-tab text-slate-500 hover:text-slate-700"
             >
               <MoreHorizontal size={16} />
               More
@@ -129,7 +129,7 @@ const CategorizedProductsSection = () => {
         </div>
 
         {/* Category Header */}
-        <div className="categorized-products-header">
+        <div className="categorized-products-header text-left mb-4">
           <p className="categorized-products-subtitle">{activeCategory.description}</p>
         </div>
 
@@ -153,7 +153,7 @@ const CategorizedProductsSection = () => {
               className="categorized-products-list"
             >
               {activeCategory.products.map((product) => (
-                <div key={product._id} className="categorized-product-card">
+                <div key={product._id} className="flex-shrink-0 w-[220px] sm:w-[240px] transition-transform duration-300 hover:-translate-y-1">
                   <ProductCard
                     product={product}
                     showBadges={false}
@@ -168,7 +168,7 @@ const CategorizedProductsSection = () => {
         </div>
 
         {/* View All Button */}
-        <div className="categorized-products-footer">
+        <div className="flex justify-center mt-8">
           <button
             onClick={() => navigate(activeCategory.viewAllLink)}
             className="categorized-view-more-btn"

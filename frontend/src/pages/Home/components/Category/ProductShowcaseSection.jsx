@@ -48,9 +48,9 @@ const ProductShowcaseSection = ({
         </div>
 
         {/* Products Scroll */}
-        <div className="products-scroll-wrapper">
+        <div className="products-scroll-wrapper relative">
           <button 
-            className="scroll-btn scroll-btn-left"
+            className="scroll-btn absolute top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center bg-white border border-slate-200 text-slate-500 cursor-pointer transition-all duration-200 opacity-0 hover:bg-slate-50 hover:text-slate-800 hover:border-slate-300 -left-5 hidden md:flex"
             onClick={() => scroll('left')}
             aria-label="Scroll left"
           >
@@ -71,13 +71,14 @@ const ProductShowcaseSection = ({
                   showCategory={false}
                   showQuickView={false}
                   onClick={() => navigate(`/products/${product._id}`)}
+                  className="flex-shrink-0 w-[200px] sm:w-[220px] lg:w-[240px]"
                 />
               ))
             )}
           </div>
 
           <button 
-            className="scroll-btn scroll-btn-right"
+            className="scroll-btn absolute top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center bg-white border border-slate-200 text-slate-500 cursor-pointer transition-all duration-200 opacity-0 hover:bg-slate-50 hover:text-slate-800 hover:border-slate-300 -right-5 hidden md:flex"
             onClick={() => scroll('right')}
             aria-label="Scroll right"
           >
