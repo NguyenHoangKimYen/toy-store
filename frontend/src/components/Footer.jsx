@@ -14,8 +14,8 @@ const Footer = () => {
         {/* Top footer */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 lg:gap-8">
           {/* Brand */}
-          <div className="space-y-3">
-            <Link to={ROUTES.HOME} className="brand-logo text-3xl md:text-4xl font-semibold tracking-tight inline-block mb-2">
+          <div className="space-y-3 min-w-0">
+            <Link to={ROUTES.HOME} className="brand-logo text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold tracking-tight inline-block mb-2 break-words">
               MilkyBloom
             </Link>
             <ul className="space-y-1.5 text-sm text-slate-600">

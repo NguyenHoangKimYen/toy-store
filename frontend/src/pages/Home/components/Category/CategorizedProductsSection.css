@@ -248,6 +248,7 @@
     border-radius: 12px;
     max-width: 100%;
     overflow-x: auto;
+    margin-bottom: 0.5rem;
   }
   
   .categorized-products-tab {
@@ -257,9 +258,10 @@
   }
   
   .categorized-products-header {
-    padding: 1rem 1.25rem;
+    padding: 0.5rem 1rem;
     border-radius: 12px;
     max-width: 100%;
+    margin-bottom: 0.5rem;
   }
   
   .categorized-products-title {
@@ -329,9 +331,9 @@
   }
   
   .categorized-products-header {
-    padding: 0.875rem 1rem;
+    padding: 0.5rem 0.75rem;
     border-radius: 10px;
-    margin-bottom: 1.25rem;
+    margin-bottom: 0.5rem;
   }
   
   .categorized-products-title {
