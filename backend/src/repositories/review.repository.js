@@ -91,6 +91,53 @@ const getReviewedProductIdsByUser = async (userId) => {
     return reviews.map(r => r.productId.toString());
 };
 
+/**
+ * Get review statistics for a product (lightweight aggregation)
+ * Returns total, average rating, and rating distribution
+ */
+const getReviewStats = async (productId) => {
+    const stats = await Review.aggregate([
+        { 
+            $match: { 
+                productId: new Types.ObjectId(productId),
+                status: 'approved'
+            } 
+        },
+        {
+            $group: {
+                _id: null,
+                total: { $sum: 1 },
+                avgRating: { $avg: '$rating' },
+                rating1: { $sum: { $cond: [{ $eq: ['$rating', 1] }, 1, 0] } },
+                rating2: { $sum: { $cond: [{ $eq: ['$rating', 2] }, 1, 0] } },
+                rating3: { $sum: { $cond: [{ $eq: ['$rating', 3] }, 1, 0] } },
+                rating4: { $sum: { $cond: [{ $eq: ['$rating', 4] }, 1, 0] } },
+                rating5: { $sum: { $cond: [{ $eq: ['$rating', 5] }, 1, 0] } },
+            }
+        }
+    ]);
+
+    if (stats.length === 0) {
+        return {
+            total: 0,
+            averageRating: 0,
+            distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+        };
+    }
+
+    return {
+        total: stats[0].total,
+        averageRating: Math.round(stats[0].avgRating * 10) / 10,
+        distribution: {
+            1: stats[0].rating1,
+            2: stats[0].rating2,
+            3: stats[0].rating3,
+            4: stats[0].rating4,
+            5: stats[0].rating5,
+        }
+    };
+};
+
 module.exports = {
     createReview,
     findReviewByUserAndProduct,
@@ -99,4 +146,5 @@ module.exports = {
     updateReviewById,
     deleteReviewById,
     getReviewedProductIdsByUser,
+    getReviewStats,
 };

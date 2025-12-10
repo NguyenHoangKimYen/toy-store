@@ -325,6 +325,24 @@ const toggleHelpful = async (req, res, next) => {
     }
 };
 
+/**
+ * Get review statistics for a product
+ * @route GET /api/reviews/stats/:productId
+ */
+const getReviewStats = async (req, res, next) => {
+    try {
+        const { productId } = req.params;
+        const stats = await reviewService.getReviewStats(productId);
+        
+        res.status(200).json({
+            success: true,
+            data: stats,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createReview,
     getReviewsByProductId,
@@ -334,5 +352,6 @@ module.exports = {
     getPendingReviews,
     checkEligibility,
     toggleHelpful,
-    getAllReviewsAdmin
+    getAllReviewsAdmin,
+    getReviewStats,
 };

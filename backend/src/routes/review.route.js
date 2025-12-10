@@ -9,7 +9,8 @@ const {
     getPendingReviews,
     checkEligibility,
     toggleHelpful,
-    getAllReviewsAdmin
+    getAllReviewsAdmin,
+    getReviewStats,
 } = require("../controllers/review.controller");
 
 const { uploadReviewImages } = require("../middlewares/upload.middleware.js");
@@ -34,6 +35,7 @@ const optionalAuth = (req, res, next) => {
 
 // --- PUBLIC ROUTES (with optional auth to show user's own pending reviews) ---
 router.get("/product/:productId", optionalAuth, getReviewsByProductId);
+router.get("/stats/:productId", getReviewStats); // Lightweight review stats endpoint
 
 // --- AUTHENTICATED ROUTES ---
 router.use(authMiddleware);

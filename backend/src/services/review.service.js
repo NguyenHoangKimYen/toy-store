@@ -342,6 +342,17 @@ const getProductsToReview = async (userId) => {
     return pendingReviews;
 };
 
+/**
+ * Get review statistics for a product
+ * Uses aggregation pipeline for efficient calculation
+ */
+const getReviewStats = async (productId) => {
+    if (!productId) {
+        throw new Error('Product ID is required');
+    }
+    return await reviewRepo.getReviewStats(productId);
+};
+
 module.exports = {
     createReview,
     getReviewsByProductId,
@@ -349,6 +360,7 @@ module.exports = {
     deleteReview,
     moderateReview,
     getProductsToReview,
-    checkReviewEligibility
+    checkReviewEligibility,
+    getReviewStats,
 };
 

@@ -117,32 +117,29 @@ export const hasUserReviewedProduct = async (productId, userId) => {
 
 /**
  * Get review statistics for a product
+ * Uses lightweight backend aggregation instead of fetching all reviews
  * @param {string} productId - Product ID
  * @returns {Promise<Object>} - Review statistics (total, averageRating, distribution)
  */
 export const getReviewStats = async (productId) => {
   try {
-    const result = await getProductReviews(productId, { limit: 1000, page: 1 });
-    const reviews = result.metadata?.reviews || [];
-    
-    // Calculate rating distribution
-    const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-    let totalRating = 0;
-    
-    reviews.forEach(review => {
-      if (review.rating && review.rating >= 1 && review.rating <= 5) {
-        distribution[review.rating]++;
-        totalRating += review.rating;
-      }
+    const response = await fetch(`${API_BASE_URL}/reviews/stats/${productId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
     
-    const averageRating = reviews.length > 0 ? (totalRating / reviews.length).toFixed(1) : 0;
+    if (!response.ok) {
+      throw new Error('Failed to fetch review stats');
+    }
     
+    const result = await response.json();
     return {
-      total: result.metadata?.total || reviews.length,
-      count: reviews.length,
-      averageRating: parseFloat(averageRating),
-      distribution,
+      total: result.data?.total || 0,
+      count: result.data?.total || 0,
+      averageRating: result.data?.averageRating || 0,
+      distribution: result.data?.distribution || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
     };
   } catch (error) {
     console.error('Error getting review stats:', error);
