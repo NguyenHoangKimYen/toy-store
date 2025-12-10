@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Crown, Coins, TrendingUp, Search, RefreshCw } from 'lucide-react';
+import { Crown, Coins, TrendingUp, RefreshCw } from 'lucide-react';
 import { useUsers } from '@/hooks';
 import { formatPrice } from '@/utils';
 import { LoadingSpinner } from '@/components/common';
+import Pagination from '@/components/common/Pagination';
 
 const TIER_CONFIG = {
   none: { label: 'Member', color: 'bg-gray-100 text-gray-600', icon: '👤' },
@@ -22,19 +23,31 @@ const LoyaltyManagement = ({ externalSearchQuery = '' }) => {
   const [tierFilter, setTierFilter] = useState('all');
   const [sortBy, setSortBy] = useState('points-high');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   // Debounce external search query
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(externalSearchQuery);
+      setCurrentPage(1); // Reset to first page on search
     }, 500);
     return () => clearTimeout(timer);
   }, [externalSearchQuery]);
 
-  const { users, loading, error, refetch } = useUsers({
+  // Reset to first page when tier filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [tierFilter]);
+
+  const { users, loading, error, refetch, stats: serverStats, pagination } = useUsers({
     params: { 
-      limit: 1000,
-      keyword: debouncedSearch.trim() || undefined
+      limit: pageSize,
+      page: currentPage,
+      keyword: debouncedSearch.trim() || undefined,
+      // Sort mapping to backend format
+      sortBy: sortBy.includes('points') ? 'loyaltyPoints' : 'spentLast12Months',
+      sortOrder: sortBy.includes('high') || sortBy === 'tier' ? 'desc' : 'asc',
     },
   });
 
@@ -48,7 +61,7 @@ const LoyaltyManagement = ({ externalSearchQuery = '' }) => {
     return 'none';
   };
 
-  // Filter and sort users
+  // Filter users by tier (client-side for current page only)
   const filteredUsers = useMemo(() => {
     if (!users) return [];
 
@@ -59,32 +72,22 @@ const LoyaltyManagement = ({ externalSearchQuery = '' }) => {
       result = result.filter((u) => getUserTier(u) === tierFilter);
     }
 
-    // Sort
-    result.sort((a, b) => {
-      switch (sortBy) {
-        case 'points-high':
-          return (b.loyaltyPoints || 0) - (a.loyaltyPoints || 0);
-        case 'points-low':
-          return (a.loyaltyPoints || 0) - (b.loyaltyPoints || 0);
-        case 'spent-high':
-          return (b.spentLast12Months || 0) - (a.spentLast12Months || 0);
-        case 'spent-low':
-          return (a.spentLast12Months || 0) - (b.spentLast12Months || 0);
-        case 'tier': {
-          const tierOrder = ['diamond', 'gold', 'silver', 'none'];
-          return tierOrder.indexOf(getUserTier(a)) - tierOrder.indexOf(getUserTier(b));
-        }
-        default:
-          return 0;
-      }
-    });
-
     return result;
-  }, [users, tierFilter, sortBy]);
+  }, [users, tierFilter]);
 
-  // Calculate stats - use calculated tier from spending
+  // Use server stats for accurate totals (not affected by pagination)
   const stats = useMemo(() => {
-    if (!users) return { total: 0, byTier: {}, totalPoints: 0, totalSpent: 0 };
+    if (serverStats?.tierDistribution) {
+      return {
+        total: serverStats.totalUsers || 0,
+        byTier: serverStats.tierDistribution,
+        totalPoints: serverStats.totalLoyaltyPoints || 0,
+        totalSpent: serverStats.totalSpentLast12Months || 0,
+      };
+    }
+    
+    // Fallback to client-side calculation if server stats not available
+    if (!users) return { total: 0, byTier: { none: 0, silver: 0, gold: 0, diamond: 0 }, totalPoints: 0, totalSpent: 0 };
 
     const byTier = { none: 0, silver: 0, gold: 0, diamond: 0 };
     let totalPoints = 0;
@@ -98,7 +101,17 @@ const LoyaltyManagement = ({ externalSearchQuery = '' }) => {
     });
 
     return { total: users.length, byTier, totalPoints, totalSpent };
-  }, [users]);
+  }, [users, serverStats]);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handlePageSizeChange = (newSize) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+  };
 
   if (loading) {
     return (
@@ -305,6 +318,20 @@ const LoyaltyManagement = ({ externalSearchQuery = '' }) => {
           </table>
         </div>
       </div>
+
+      {/* Pagination */}
+      {pagination && pagination.totalPages > 1 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={pagination.totalPages}
+          totalItems={pagination.total}
+          pageSize={pageSize}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          pageSizeOptions={[10, 20, 50, 100]}
+          showInfo
+        />
+      )}
 
       {/* Summary */}
       <div className="text-sm text-gray-500 text-center">
