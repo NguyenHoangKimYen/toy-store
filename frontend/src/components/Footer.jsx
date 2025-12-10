@@ -15,7 +15,7 @@ const Footer = () => {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 lg:gap-8">
           {/* Brand */}
           <div className="space-y-3">
-            <Link to={ROUTES.HOME} className="brand-logo text-3xl md:text-4xl font-semibold tracking-tight">
+            <Link to={ROUTES.HOME} className="brand-logo text-3xl md:text-4xl font-semibold tracking-tight inline-block mb-2">
               MilkyBloom
             </Link>
             <ul className="space-y-1.5 text-sm text-slate-600">
@@ -28,10 +28,10 @@ const Footer = () => {
           <div className="space-y-3">
             <p className="text-base font-semibold text-slate-800 uppercase tracking-wide">Shop</p>
             <ul className="space-y-1.5 text-sm text-slate-600">
-              <li><Link to={`${ROUTES.PRODUCTS}?sort=newest`} className="hover:text-purple-500">New arrivals</Link></li>
-              <li><Link to={`${ROUTES.PRODUCTS}?category=plushies`} className="hover:text-purple-500">Plushies</Link></li>
-              <li><Link to={`${ROUTES.PRODUCTS}?category=figures`} className="hover:text-purple-500">Figures</Link></li>
+              <li><Link to={`${ROUTES.PRODUCTS}?sortBy=createdAt&sortOrder=desc`} className="hover:text-purple-500">New arrivals</Link></li>
               <li><Link to={ROUTES.PRODUCTS} className="hover:text-purple-500">All products</Link></li>
+              <li><Link to={ROUTES.COLLECTION} className="hover:text-purple-500">Collections</Link></li>
+              <li><Link to={ROUTES.ABOUT} className="hover:text-purple-500">About us</Link></li>
             </ul>
           </div>
 
