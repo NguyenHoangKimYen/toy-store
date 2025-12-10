@@ -82,17 +82,9 @@ const Pagination = ({
   const pageNumbers = getPageNumbers();
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t">
-      {/* Info text */}
-      {showInfo && totalItems > 0 && (
-        <div className="text-sm text-muted-foreground order-2 sm:order-1">
-          Showing <span className="font-medium">{startItem}</span> to{' '}
-          <span className="font-medium">{endItem}</span> of{' '}
-          <span className="font-medium">{totalItems}</span> results
-        </div>
-      )}
-      
-      <div className="flex items-center gap-4 order-1 sm:order-2">
+    <div className="flex flex-col items-center gap-4 mt-6 pt-4 border-t">
+      {/* Navigation controls - centered */}
+      <div className="flex items-center gap-4">
         {/* Page size selector */}
         {onPageSizeChange && (
           <div className="flex items-center gap-2">
@@ -191,6 +183,15 @@ const Pagination = ({
           </Button>
         </div>
       </div>
+      
+      {/* Info text - centered below */}
+      {showInfo && totalItems > 0 && (
+        <div className="text-sm text-muted-foreground">
+          Showing <span className="font-medium">{startItem}</span> to{' '}
+          <span className="font-medium">{endItem}</span> of{' '}
+          <span className="font-medium">{totalItems}</span> results
+        </div>
+      )}
     </div>
   );
 };

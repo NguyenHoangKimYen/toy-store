@@ -14,12 +14,26 @@ export const handleResponse = async (response) => {
   const json = await response.json();
   
   // Handle different response formats
+  // If response has pagination metadata (total, page, stats), return full structure
   if (json.success && json.data !== undefined) {
+    // Check if this is a paginated response with metadata
+    if (json.total !== undefined || json.stats !== undefined || json.totalPages !== undefined) {
+      // Return object with data renamed to standard format + metadata
+      return {
+        users: json.data,      // For users endpoint
+        products: json.data,   // For products endpoint  
+        data: json.data,       // Generic
+        total: json.total,
+        page: json.page,
+        limit: json.limit,
+        totalPages: json.totalPages,
+        stats: json.stats,
+      };
+    }
     return json.data;
   }
   
   // Return full response to preserve pagination metadata
-  // Don't extract json.products - let the caller handle the structure
   return json;
 };
 

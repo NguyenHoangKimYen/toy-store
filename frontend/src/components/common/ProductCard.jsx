@@ -2,6 +2,7 @@ import React from 'react';
 import { ShoppingCart, Star } from 'lucide-react';
 import { formatPrice } from '@/utils/formatPrice';
 import { parsePrice } from '@/utils/priceUtils';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 import './ProductCard.css';
 
 /**
@@ -83,14 +84,15 @@ const ProductCard = ({
       onClick={handleCardClick}
     >
       <div className="product-image-wrapper">
-        <img
+        <OptimizedImage
           src={imageUrl}
           alt={product.name}
           className="product-image"
-          loading="lazy"
-          decoding="async"
-          width="300"
-          height="300"
+          containerClassName="w-full h-full"
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 300px"
+          aspectRatio="1/1"
+          placeholder="blur"
+          placeholderColor="#f3f4f6"
         />
         {showBadges && product.isNew && (
           <div className="badge-container">

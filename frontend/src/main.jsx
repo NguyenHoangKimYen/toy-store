@@ -4,9 +4,13 @@ import './index.css'
 import App from './App.jsx'
 import { initAPIPreconnect } from './utils/prefetch'
 import { initPerformanceTracking } from './utils/performance'
+import { preconnectImageCDN } from './utils/imageOptimizer'
 
 // Initialize API preconnection for faster requests
 initAPIPreconnect();
+
+// Preconnect to image CDN for faster image loading
+preconnectImageCDN();
 
 // Initialize performance monitoring (dev only)
 initPerformanceTracking();
