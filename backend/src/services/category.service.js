@@ -25,8 +25,9 @@ const createCategory = async (data, imgFiles) => {
     return await categoryRepository.create(categoryData);
 };
 
-const getAllCategories = async () => {
-    return await categoryRepository.findAll();
+const getAllCategories = async (options = {}) => {
+    const { limit } = options;
+    return await categoryRepository.findAll({ limit });
 };
 
 const getCategoryById = async (id) => {

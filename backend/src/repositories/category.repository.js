@@ -5,8 +5,11 @@ const create = async (data) => {
     return await category.save();
 };
 
-const findAll = async () => {
-    return await Category.find({}).sort({ order: 1, name: 1 }).lean();
+const findAll = async (options = {}) => {
+    const { limit } = options;
+    let query = Category.find({}).sort({ order: 1, name: 1 });
+    if (limit) query = query.limit(limit);
+    return await query.lean();
 };
 
 const findById = async (id) => {

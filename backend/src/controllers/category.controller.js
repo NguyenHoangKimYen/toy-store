@@ -17,7 +17,11 @@ const createCategory = async (req, res, next) => {
 /** Lấy tất cả */
 const getAllCategories = async (req, res, next) => {
     try {
-        const categories = await categoryService.getAllCategories();
+        const { limit } = req.query;
+        const options = {};
+        if (limit) options.limit = parseInt(limit);
+        
+        const categories = await categoryService.getAllCategories(options);
         res.status(200).json({ success: true, data: categories });
     } catch (err) {
         next(err);

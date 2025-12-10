@@ -9,18 +9,34 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 /**
  * Get all categories (with caching to reduce API calls)
- * @param {boolean} forceRefresh - Force fetch from server
+ * @param {Object|boolean} options - Options object or forceRefresh boolean for backwards compatibility
+ * @param {number} options.limit - Limit number of categories returned
+ * @param {boolean} options.forceRefresh - Force fetch from server
  * @returns {Promise<Array>}
  */
-export const getCategories = async (forceRefresh = false) => {
-  // Return cached data if valid and not forcing refresh
+export const getCategories = async (options = {}) => {
+  // Backwards compatibility: if boolean passed, treat as forceRefresh
+  const opts = typeof options === 'boolean' 
+    ? { forceRefresh: options } 
+    : options;
+  
+  const { limit, forceRefresh = false } = opts;
+  
+  // Build cache key based on limit (different limits = different cache entries)
+  const cacheKey = limit ? `limit_${limit}` : 'all';
+  
+  // Return cached data if valid, not forcing refresh, and same limit
   const now = Date.now();
-  if (!forceRefresh && categoriesCache && (now - cacheTimestamp) < CACHE_DURATION) {
+  if (!forceRefresh && !limit && categoriesCache && (now - cacheTimestamp) < CACHE_DURATION) {
     return categoriesCache;
   }
   
   try {
-    const response = await fetch(`${API_BASE_URL}${ENDPOINTS.CATEGORIES}`, {
+    // Build URL with query params
+    const url = new URL(`${API_BASE_URL}${ENDPOINTS.CATEGORIES}`);
+    if (limit) url.searchParams.append('limit', limit);
+    
+    const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -45,9 +61,11 @@ export const getCategories = async (forceRefresh = false) => {
       categories = Array.isArray(data) ? data : [];
     }
     
-    // Update cache
-    categoriesCache = categories;
-    cacheTimestamp = now;
+    // Only update full cache when fetching all (no limit)
+    if (!limit) {
+      categoriesCache = categories;
+      cacheTimestamp = now;
+    }
     
     return categories;
   } catch (error) {
@@ -55,7 +73,8 @@ export const getCategories = async (forceRefresh = false) => {
     // Return cached data on error (if available)
     if (categoriesCache) {
       console.log('Returning cached categories due to error');
-      return categoriesCache;
+      // If limit requested, slice from cache
+      return limit ? categoriesCache.slice(0, limit) : categoriesCache;
     }
     throw error;
   }
