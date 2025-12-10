@@ -22,11 +22,11 @@ const contributors = [
   // },
   {
     name: 'Ngô Gia Bảo',
-    role: 'Frontend',
+    role: 'zzz',
     github: 'cuchim123123',
-    email: 'gia.huy@example.com',
-    avatar: 'https://i.pravatar.cc/240?img=47',
-    bio: 'Designs and builds the user interface for a smooth experience.'
+    email: 'randomemail123@email.ok',
+    avatar: 'https://ui-avatars.com/api/?name=N+G+B&background=random&size=240',
+    bio: '...'
   }
 ]
 
