@@ -228,6 +228,21 @@ const CommentSection = ({ productId }) => {
     return comment.userId?._id === user._id || comment.userId === user._id;
   };
 
+  // Sort comments: non-approved comments (pending/flagged) first, then by date
+  const sortedComments = React.useMemo(() => {
+    return [...comments].sort((a, b) => {
+      // Non-approved comments go first (pending, flagged, etc.)
+      const aNotApproved = a.status !== 'approved';
+      const bNotApproved = b.status !== 'approved';
+      
+      if (aNotApproved && !bNotApproved) return -1;
+      if (!aNotApproved && bNotApproved) return 1;
+      
+      // Maintain original order (newest first)
+      return 0;
+    });
+  }, [comments]);
+
   return (
     <div className="comment-section">
       <div className="comment-header">
@@ -337,18 +352,26 @@ const CommentSection = ({ productId }) => {
         </div>
       ) : (
         <div className="comments-list">
-          {comments.map((comment) => (
+          {sortedComments.map((comment) => (
             <Card 
               key={comment._id} 
               id={`comment-${comment._id}`}
-              className={`comment-card ${comment.status === 'flagged' ? 'flagged-comment' : ''}`}
+              className={`comment-card ${comment.status === 'flagged' ? 'flagged-comment' : ''} ${comment.status === 'pending' ? 'pending-comment' : ''}`}
             >
               <div className="comment-content">
                 {/* Flagged Comment Warning - Only shown to the author */}
                 {comment.status === 'flagged' && isOwnComment(comment) && (
                   <div className="flagged-warning">
                     <AlertTriangle size={16} />
-                    <span>Your comment has been flagged as potentially inappropriate and is only visible to you.</span>
+                    <span>Your comment has been flagged and is pending review. Only you can see this comment.</span>
+                  </div>
+                )}
+
+                {/* Pending Comment Notice - Only shown to the author */}
+                {comment.status === 'pending' && isOwnComment(comment) && (
+                  <div className="pending-notice">
+                    <AlertTriangle size={16} />
+                    <span>Your comment is pending approval and only visible to you.</span>
                   </div>
                 )}
 
