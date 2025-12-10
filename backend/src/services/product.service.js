@@ -162,8 +162,11 @@ const getAllProducts = async (query, user = null) => {
         filter,
         options,
     );
+    
+    // 5. Get aggregated stats (always for all matching products, not just current page)
+    const stats = await productRepository.getStats(filter);
 
-    // 5. Trả về kết quả
+    // 6. Trả về kết quả
     return {
         success: true,
         products,
@@ -174,6 +177,7 @@ const getAllProducts = async (query, user = null) => {
             limit,
             hasMore: (page - 1) * limit + products.length < total,
         },
+        stats, // Aggregated stats for all matching products
         meta: {
             took: Date.now() - startTime,
             usingAtlasSearch: false,

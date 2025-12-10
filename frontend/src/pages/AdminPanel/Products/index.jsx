@@ -101,6 +101,7 @@ const Products = () => {
     loading, 
     error,
     total: totalItems,
+    stats: backendStats,
     createProduct,
     updateProduct,
     deleteProduct
@@ -127,21 +128,13 @@ const Products = () => {
     setCurrentPage(1)
   }
   
-  // Helper function to calculate stock from variants or fallback to totalStock
-  const getProductStock = (p) => {
-    if (p.variants && p.variants.length > 0) {
-      return p.variants.reduce((sum, v) => sum + (v.stockQuantity || 0), 0);
-    }
-    return p.totalStock ?? 0;
-  };
-  
-  // Calculate stats from ALL products (not filtered)
-  const stats = useMemo(() => ({
-    totalProducts: allProducts.length,
-    totalStock: allProducts.reduce((sum, p) => sum + getProductStock(p), 0),
-    totalSold: allProducts.reduce((sum, p) => sum + (p.totalUnitsSold || 0), 0),
-    outOfStock: allProducts.filter(p => getProductStock(p) === 0).length,
-  }), [allProducts])
+  // Use aggregated stats from backend
+  const stats = useMemo(() => backendStats || {
+    totalProducts: totalItems,
+    totalStock: 0,
+    totalSold: 0,
+    outOfStock: 0,
+  }, [backendStats, totalItems])
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters)

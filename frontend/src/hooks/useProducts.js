@@ -42,6 +42,8 @@ export const useProducts = (options = {}) => {
   
   // Pagination state (for server-side pagination)
   const [pagination, setPagination] = useState(null);
+  // Aggregated stats from backend
+  const [stats, setStats] = useState(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -54,6 +56,7 @@ export const useProducts = (options = {}) => {
         result = await productsService.getProductById(productId);
         setData(result);
         setPagination(null);
+        setStats(null);
       } else {
         // Fetch multiple products
         result = await productsService.getProducts(params);
@@ -63,13 +66,16 @@ export const useProducts = (options = {}) => {
           if (result.products && Array.isArray(result.products)) {
             setData(result.products);
             setPagination(result.pagination || null);
+            setStats(result.stats || null);
           } else {
             setData(result);
             setPagination(null);
+            setStats(null);
           }
         } else {
           setData(result);
           setPagination(null);
+          setStats(null);
         }
       }
 
@@ -261,6 +267,9 @@ export const useProducts = (options = {}) => {
     total: pagination?.total || (Array.isArray(data) ? data.length : 0),
     totalPages: pagination?.totalPages || 1,
     currentPage: pagination?.currentPage || 1,
+    
+    // Aggregated stats from backend
+    stats,
     
     loading,
     error,

@@ -2,6 +2,7 @@ import React from 'react';
 import { Package, Eye, Edit, Trash2, AlertTriangle } from 'lucide-react';
 import { formatPrice } from '@/utils/formatPrice';
 import { parsePrice } from '@/utils/priceUtils';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 import './AdminProductCard.css';
 
 /**
@@ -52,7 +53,14 @@ const AdminProductCard = ({
       onClick={handleCardClick}
     >
       <div className="admin-product-image">
-        <img src={imageUrl} alt={product.name} loading="lazy" />
+        <OptimizedImage 
+          src={imageUrl} 
+          alt={product.name} 
+          className="w-full h-full object-cover"
+          containerClassName="w-full h-full"
+          aspectRatio="1/1"
+          placeholder="blur"
+        />
         
         {showBadges && (
           <div className="badge-stack">

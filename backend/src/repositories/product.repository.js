@@ -78,6 +78,52 @@ const updatePriceRange = async (id, minPrice, maxPrice, options = {}) => {
     return await Product.findByIdAndUpdate(id, { minPrice, maxPrice }, options);
 };
 
+/**
+ * Get aggregated stats for all products
+ */
+const getStats = async (filter = {}) => {
+    const Variant = require('./variant.repository');
+    
+    // Get total products count
+    const totalProducts = await Product.countDocuments(filter);
+    
+    // Aggregate stats
+    const stats = await Product.aggregate([
+        { $match: filter },
+        {
+            $lookup: {
+                from: 'variants',
+                localField: '_id',
+                foreignField: 'productId',
+                as: 'variants'
+            }
+        },
+        {
+            $group: {
+                _id: null,
+                totalStock: { $sum: { $sum: '$variants.stockQuantity' } },
+                totalSold: { $sum: '$totalUnitsSold' },
+                outOfStock: {
+                    $sum: {
+                        $cond: [
+                            { $eq: [{ $sum: '$variants.stockQuantity' }, 0] },
+                            1,
+                            0
+                        ]
+                    }
+                }
+            }
+        }
+    ]);
+    
+    return {
+        totalProducts,
+        totalStock: stats[0]?.totalStock || 0,
+        totalSold: stats[0]?.totalSold || 0,
+        outOfStock: stats[0]?.outOfStock || 0,
+    };
+};
+
 module.exports = {
     findAll,
     findById,
@@ -87,4 +133,5 @@ module.exports = {
     update,
     remove,
     updatePriceRange,
+    getStats,
 };
