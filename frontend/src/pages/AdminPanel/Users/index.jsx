@@ -88,6 +88,7 @@ const Users = () => {
     setCurrentPage(1)
   }
 
+  // Stats now comes from backend with proper aggregation
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters)
   }

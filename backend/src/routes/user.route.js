@@ -17,6 +17,7 @@ const {
     getUserById,
     checkUsername,
     checkEmail,
+    getDistinctValues,
 } = require("../controllers/user.controller.js");
 
 const router = express.Router();
@@ -30,6 +31,9 @@ router.get("/check-email", checkEmail);
 
 // ============ PROTECTED ROUTES (Auth required) ============
 router.use(auth);
+
+// GET distinct values for filters (roles, providers) - lightweight endpoint
+router.get("/distinct", adminOnly, getDistinctValues);
 
 // GET: tất cả user hoặc search theo param
 router.get("/", adminOnly, getAllUsers);

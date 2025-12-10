@@ -12,7 +12,8 @@ const getAllUsers = async (req, res, next) => {
             total: result.total,
             page: result.page,
             limit: result.limit,
-            totalPages: result.totalPages
+            totalPages: result.totalPages,
+            stats: result.stats, // Aggregated stats for all users
         });
     } catch (error) {
         next(error);
@@ -313,6 +314,26 @@ const checkEmail = async (req, res, next) => {
     }
 };
 
+// GET DISTINCT VALUES (roles, providers) for filter dropdowns
+const getDistinctValues = async (req, res, next) => {
+    try {
+        const result = await userRepository.getDistinctValues();
+        res.json({
+            success: true,
+            roles: result.roles.map(role => ({
+                value: role,
+                label: role.charAt(0).toUpperCase() + role.slice(1)
+            })),
+            providers: result.providers.map(provider => ({
+                value: provider,
+                label: provider === 'local' ? 'Email/Password' : provider.charAt(0).toUpperCase() + provider.slice(1)
+            }))
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     getAllUsers,
     getUserById,
@@ -325,4 +346,5 @@ module.exports = {
     updateAvatar,
     checkUsername,
     checkEmail,
+    getDistinctValues,
 };

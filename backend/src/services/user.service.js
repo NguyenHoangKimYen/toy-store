@@ -77,7 +77,15 @@ const getAllUsers = async (query) => {
         sort: sortOptions,
     };
 
-    return userRepository.findAll(filter, options);
+    const result = await userRepository.findAll(filter, options);
+    
+    // Get aggregated stats for all users (not just current page)
+    const stats = await userRepository.getStats(filter);
+    
+    return {
+        ...result,
+        stats,
+    };
 };
 
 // Tạo user (admin hoặc hệ thống dùng)

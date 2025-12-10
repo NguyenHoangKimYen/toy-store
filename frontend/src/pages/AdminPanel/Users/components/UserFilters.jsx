@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { getUsers } from '@/services/users.service'
+import { getDistinctValues } from '@/services/users.service'
 
 const UserFilters = ({ filters, onFilterChange, onClearFilters, showFilters }) => {
   const [availableRoles, setAvailableRoles] = useState([])
@@ -17,84 +17,40 @@ const UserFilters = ({ filters, onFilterChange, onClearFilters, showFilters }) =
   const [availableProviders, setAvailableProviders] = useState([])
   const [loadingProviders, setLoadingProviders] = useState(true)
 
-  // Fetch all unique roles from database
+  // Fetch distinct values (roles and providers) from lightweight API endpoint
   useEffect(() => {
-    const fetchRoles = async () => {
+    const fetchDistinctValues = async () => {
       try {
         setLoadingRoles(true)
-        // Fetch a large sample to get all role types
-        const response = await getUsers({ limit: 1000 })
-        const users = response.users || response || []
+        setLoadingProviders(true)
         
-        // Extract unique roles
-        const rolesSet = new Set()
-        users.forEach(user => {
-          if (user.role) {
-            rolesSet.add(user.role)
-          }
-        })
+        const response = await getDistinctValues()
         
-        // Convert to array with labels
-        const roles = Array.from(rolesSet).map(role => ({
-          value: role,
-          label: role.charAt(0).toUpperCase() + role.slice(1)
-        }))
-        
-        setAvailableRoles(roles)
+        if (response.roles) {
+          setAvailableRoles(response.roles)
+        }
+        if (response.providers) {
+          setAvailableProviders(response.providers)
+        }
       } catch (error) {
-        console.error('Failed to fetch roles:', error)
-        // Fallback to default roles if fetch fails
+        console.error('Failed to fetch distinct values:', error)
+        // Fallback to defaults
         setAvailableRoles([
           { value: 'customer', label: 'Customer' },
           { value: 'admin', label: 'Admin' },
         ])
-      } finally {
-        setLoadingRoles(false)
-      }
-    }
-
-    fetchRoles()
-  }, [])
-
-  // Fetch all unique social providers from database
-  useEffect(() => {
-    const fetchProviders = async () => {
-      try {
-        setLoadingProviders(true)
-        const response = await getUsers({ limit: 1000 })
-        const users = response.users || response || []
-        
-        // Extract unique social providers
-        const providersSet = new Set()
-        users.forEach(user => {
-          if (user.socialProvider) {
-            providersSet.add(user.socialProvider)
-          } else {
-            providersSet.add('local')
-          }
-        })
-        
-        // Convert to array with labels
-        const providers = Array.from(providersSet).map(provider => ({
-          value: provider,
-          label: provider === 'local' ? 'Email/Password' : provider.charAt(0).toUpperCase() + provider.slice(1)
-        }))
-        
-        setAvailableProviders(providers)
-      } catch (error) {
-        console.error('Failed to fetch social providers:', error)
-        // Fallback to default providers
         setAvailableProviders([
           { value: 'local', label: 'Email/Password' },
           { value: 'google', label: 'Google' },
           { value: 'facebook', label: 'Facebook' },
         ])
       } finally {
+        setLoadingRoles(false)
         setLoadingProviders(false)
       }
     }
 
-    fetchProviders()
+    fetchDistinctValues()
   }, [])
 
   const handleChange = (key, value) => {

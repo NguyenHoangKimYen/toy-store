@@ -104,8 +104,9 @@ export const useUsers = (options = {}) => {
         totalPages: data.totalPages
       } : null;
       
-      // Calculate stats
-      const calculatedStats = {
+      // Use aggregated stats from backend if available, otherwise calculate from current page
+      const backendStats = data.stats;
+      const calculatedStats = backendStats || {
         totalUsers: paginationInfo?.total || usersArray.length,
         verifiedUsers: usersArray.filter(u => u.isVerified).length,
         totalLoyaltyPoints: usersArray.reduce((sum, u) => sum + (u.loyaltyPoints || 0), 0),

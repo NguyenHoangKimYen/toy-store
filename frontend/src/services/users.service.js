@@ -246,3 +246,19 @@ export const updateAvatar = async (id, file) => {
   
   return response;
 };
+
+/**
+ * Get distinct values for filter dropdowns (roles, providers)
+ * @returns {Promise<Object>} - { roles: [{value, label}], providers: [{value, label}] }
+ */
+export const getDistinctValues = async () => {
+  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.USERS}/distinct`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+  });
+  
+  return handleResponse(response);
+};

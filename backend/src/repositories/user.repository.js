@@ -304,6 +304,84 @@ const remove = async (id) => {
     return User.findByIdAndDelete(id);
 };
 
+/**
+ * Get aggregated stats for all users including tier distribution
+ */
+const getStats = async (filter = {}) => {
+    const stats = await User.aggregate([
+        { $match: filter },
+        {
+            $addFields: {
+                // Calculate tier based on spentLast12Months
+                calculatedTier: {
+                    $switch: {
+                        branches: [
+                            { case: { $gte: ['$spentLast12Months', 20000000] }, then: 'diamond' },
+                            { case: { $gte: ['$spentLast12Months', 5000000] }, then: 'gold' },
+                            { case: { $gte: ['$spentLast12Months', 1000000] }, then: 'silver' },
+                        ],
+                        default: 'none'
+                    }
+                }
+            }
+        },
+        {
+            $group: {
+                _id: null,
+                totalUsers: { $sum: 1 },
+                verifiedUsers: { 
+                    $sum: { $cond: ['$isVerified', 1, 0] } 
+                },
+                totalLoyaltyPoints: { $sum: { $ifNull: ['$loyaltyPoints', 0] } },
+                totalSpentLast12Months: { $sum: { $ifNull: ['$spentLast12Months', 0] } },
+                totalLifetimeSpent: { $sum: { $ifNull: ['$lifetimeSpent', 0] } },
+                adminUsers: { 
+                    $sum: { $cond: [{ $eq: ['$role', 'admin'] }, 1, 0] } 
+                },
+                // Tier distribution
+                diamondTier: { $sum: { $cond: [{ $eq: ['$calculatedTier', 'diamond'] }, 1, 0] } },
+                goldTier: { $sum: { $cond: [{ $eq: ['$calculatedTier', 'gold'] }, 1, 0] } },
+                silverTier: { $sum: { $cond: [{ $eq: ['$calculatedTier', 'silver'] }, 1, 0] } },
+                noneTier: { $sum: { $cond: [{ $eq: ['$calculatedTier', 'none'] }, 1, 0] } },
+            }
+        }
+    ]);
+    
+    return {
+        totalUsers: stats[0]?.totalUsers || 0,
+        verifiedUsers: stats[0]?.verifiedUsers || 0,
+        totalLoyaltyPoints: stats[0]?.totalLoyaltyPoints || 0,
+        totalSpentLast12Months: stats[0]?.totalSpentLast12Months || 0,
+        totalLifetimeSpent: stats[0]?.totalLifetimeSpent || 0,
+        adminUsers: stats[0]?.adminUsers || 0,
+        tierDistribution: {
+            diamond: stats[0]?.diamondTier || 0,
+            gold: stats[0]?.goldTier || 0,
+            silver: stats[0]?.silverTier || 0,
+            none: stats[0]?.noneTier || 0,
+        }
+    };
+};
+
+/**
+ * Get distinct values for filter dropdowns
+ * Returns unique roles and social providers in the database
+ */
+const getDistinctValues = async () => {
+    const [roles, providers] = await Promise.all([
+        User.distinct('role'),
+        User.distinct('socialProvider')
+    ]);
+    
+    // Ensure 'local' is included for users without socialProvider
+    const allProviders = [...new Set([...providers.filter(Boolean), 'local'])];
+    
+    return {
+        roles: roles.filter(Boolean),
+        providers: allProviders
+    };
+};
+
 module.exports = {
     findAll,
     findById,
@@ -331,4 +409,6 @@ module.exports = {
     applyNewEmail,
     setChangePhoneOtp,
     applyNewPhone,
+    getStats,
+    getDistinctValues,
 };
