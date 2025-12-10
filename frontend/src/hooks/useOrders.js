@@ -22,9 +22,15 @@ export const useOrders = () => {
   const [currentOrder, setCurrentOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 10,
+    totalPages: 0
+  });
 
-  // Fetch user's orders
-  const fetchMyOrders = useCallback(async () => {
+  // Fetch user's orders with pagination
+  const fetchMyOrders = useCallback(async (params = {}) => {
     const userId = user?._id || user?.id;
     if (!userId) {
       return;
@@ -34,24 +40,30 @@ export const useOrders = () => {
       setLoading(true);
       setError(null);
 
-      const response = await getMyOrders();
+      const response = await getMyOrders(params);
       
-      // Backend returns { success: true, orders: [...] }
-      // But response might already be the data object or need data extraction
+      // Backend returns { success: true, orders: [...], total, page, limit, totalPages }
       let ordersArray = [];
       
       if (Array.isArray(response)) {
-        // Direct array response
+        // Direct array response (legacy)
         ordersArray = response;
       } else if (response?.success && response?.orders) {
-        // Wrapped in success object
+        // Wrapped in success object with pagination
         ordersArray = response.orders;
+        setPagination({
+          total: response.total || ordersArray.length,
+          page: response.page || 1,
+          limit: response.limit || 10,
+          totalPages: response.totalPages || 1
+        });
       } else if (response?.orders) {
         // Just orders property
         ordersArray = response.orders;
       }
       
       setOrders(ordersArray);
+      return { orders: ordersArray, pagination };
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.message || 'Failed to fetch orders';
       setError(errorMsg);
@@ -293,6 +305,7 @@ export const useOrders = () => {
     currentOrder,
     loading,
     error,
+    pagination,
     orderStats,
     fetchMyOrders,
     fetchAllOrders,

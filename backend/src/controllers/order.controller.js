@@ -98,8 +98,22 @@ module.exports = {
     },
 
     async getMyOrders(req, res) {
-        const orders = await orderService.getOrdersByUser(req.user.id);
-        return res.json({ success: true, orders });
+        const { page = 1, limit = 10, status, search, sortBy } = req.query;
+        const result = await orderService.getOrdersByUser(req.user.id, {
+            page,
+            limit,
+            status,
+            search,
+            sortBy
+        });
+        return res.json({ 
+            success: true, 
+            orders: result.orders,
+            total: result.total,
+            page: result.page,
+            limit: result.limit,
+            totalPages: result.totalPages
+        });
     },
 
     // Checkout từ cart cho user login

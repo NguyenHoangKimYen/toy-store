@@ -491,15 +491,42 @@ module.exports = {
         };
     },
 
-    // Lấy toàn bộ đơn của user
-    async getOrdersByUser(userId) {
+    // Lấy đơn của user với pagination và filters
+    async getOrdersByUser(userId, options = {}) {
         const Order = require('../models/order.model');
         const mongoose = require('mongoose');
         
+        const {
+            page = 1,
+            limit = 10,
+            status,
+            search,
+            sortBy = 'date-desc'
+        } = options;
+        
+        const skip = (page - 1) * limit;
+        
+        // Build match stage
+        const matchStage = { userId: new mongoose.Types.ObjectId(userId) };
+        if (status && status !== 'all') {
+            matchStage.status = status;
+        }
+        
+        // Build sort stage
+        let sortStage = { createdAt: -1 }; // default: newest first
+        if (sortBy === 'date-asc') sortStage = { createdAt: 1 };
+        else if (sortBy === 'total-desc') sortStage = { totalAmount: -1 };
+        else if (sortBy === 'total-asc') sortStage = { totalAmount: 1 };
+        
+        // Get total count for pagination
+        const totalOrders = await Order.countDocuments(matchStage);
+        
         // Use aggregation to avoid N+1 query problem
         const ordersWithItems = await Order.aggregate([
-            { $match: { userId: new mongoose.Types.ObjectId(userId) } },
-            { $sort: { createdAt: -1 } },
+            { $match: matchStage },
+            { $sort: sortStage },
+            { $skip: skip },
+            { $limit: parseInt(limit) },
             {
                 $lookup: {
                     from: 'orderitems',
@@ -635,7 +662,13 @@ module.exports = {
             }
         ]);
         
-        return ordersWithItems;
+        return {
+            orders: ordersWithItems,
+            total: totalOrders,
+            page: parseInt(page),
+            limit: parseInt(limit),
+            totalPages: Math.ceil(totalOrders / limit)
+        };
     },
 
     // Admin: lấy tất cả

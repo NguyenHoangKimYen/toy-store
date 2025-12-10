@@ -4,6 +4,8 @@ import { useOrderHistory } from './hooks/useOrderHistory';
 import { useAuth } from '@/hooks';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorMessage from '@/components/common/ErrorMessage';
+
+import Pagination from '@/components/common/Pagination';
 import OrderHistoryList from './components/OrderHistoryList';
 import OrderHistoryFilters from './components/OrderHistoryFilters';
 import { LogIn, ShoppingBag } from 'lucide-react';
@@ -17,8 +19,11 @@ const OrderHistory = () => {
     loading,
     error,
     filters,
+    pagination,
     handleFilterChange,
     handleSearch,
+    handlePageChange,
+    handlePageSizeChange,
     refetch
   } = useOrderHistory();
 
@@ -64,7 +69,7 @@ const OrderHistory = () => {
             <div className="order-history-header">
               <h1>Order History</h1>
               <p className="order-count">
-                {orders.length} {orders.length === 1 ? 'order' : 'orders'}
+                {pagination.total || orders.length} {(pagination.total || orders.length) === 1 ? 'order' : 'orders'}
               </p>
             </div>
 
@@ -83,7 +88,19 @@ const OrderHistory = () => {
                 </a>
               </div>
             ) : (
-              <OrderHistoryList orders={orders} />
+              <>
+                <OrderHistoryList orders={orders} />
+                <Pagination
+                  currentPage={pagination.currentPage}
+                  totalPages={pagination.totalPages}
+                  totalItems={pagination.total}
+                  pageSize={pagination.pageSize}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
+                  pageSizeOptions={[5, 10, 20, 50]}
+                  showInfo
+                />
+              </>
             )}
           </>
         )}
