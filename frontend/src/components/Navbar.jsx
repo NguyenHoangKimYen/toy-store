@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { getCategories } from '@/services/categories.service'
 import { useAuth } from '@/hooks/useAuth'
 import { useCartContext } from '@/context/CartProvider'
+import OptimizedImage from '@/components/ui/OptimizedImage'
 import './Navbar.css'
 
 // Navigation links configuration
@@ -147,10 +148,13 @@ const Navbar = () => {
                             className="category-item"
                         >
                             <div className="category-image">
-                                <img
+                                <OptimizedImage
                                     src={category.imageUrl || category.image || 'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?w=400&h=300&fit=crop'}
                                     alt={category.name}
-                                    loading="lazy"
+                                    className="w-full h-full object-cover"
+                                    containerClassName="w-full h-full"
+                                    sizes="(max-width: 640px) 100vw, 400px"
+                                    placeholder="blur"
                                     onError={(e) => {
                                         e.target.src = 'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?w=400&h=300&fit=crop';
                                     }}
@@ -326,11 +330,13 @@ const Navbar = () => {
                                                 onClick={() => handleCategoryClick(category._id)}
                                             >
                                                 <div className='w-full h-20 overflow-hidden bg-gray-100'>
-                                                    <img
+                                                    <OptimizedImage
                                                         src={category.imageUrl || category.image || 'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?w=400&h=300&fit=crop'}
                                                         alt={category.name}
                                                         className='w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-300'
-                                                        loading="lazy"
+                                                        containerClassName="w-full h-full"
+                                                        sizes="200px"
+                                                        placeholder="blur"
                                                         onError={(e) => {
                                                             e.target.src = 'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?w=400&h=300&fit=crop';
                                                         }}
