@@ -1,20 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { ArrowRight, MoreHorizontal } from 'lucide-react';
 import { ProductCard, ScrollArrows } from '@/components/common';
 import { getCategories } from '@/services/categories.service';
 import { getProducts } from '@/services/products.service';
 import './CategorizedProductsSection.css';
 
 const CategorizedProductsSection = () => {
-  const [categories, setCategories] = useState([]);
   const [categoryData, setCategoryData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [showAllCategories, setShowAllCategories] = useState(true); // default show all to allow scroll arrows
   const scrollRef = useRef(null);
-  const tabsScrollRef = useRef(null);
   const navigate = useNavigate();
 
   // Fetch categories and their products efficiently
@@ -23,16 +20,15 @@ const CategorizedProductsSection = () => {
       try {
         setLoading(true);
         
-        // 1. First get categories
-        const response = await getCategories();
-        const allCategories = Array.isArray(response)
+        // 1. Get only 5 categories from backend (optimized query)
+        const response = await getCategories({ limit: 5 });
+        const limitedCategories = Array.isArray(response)
           ? response
           : (response.categories || response.data || []);
-        setCategories(allCategories);
 
         // 2. Fetch products for each category (limited to 10 per category)
         const categoryProducts = await Promise.all(
-          allCategories.map(async (cat) => {
+          limitedCategories.map(async (cat) => {
             try {
               const products = await getProducts({ 
                 categoryId: cat._id, 
@@ -90,9 +86,7 @@ const CategorizedProductsSection = () => {
   if (categoryData.length === 0) return null;
 
   const activeCategory = categoryData[activeIndex] || categoryData[0];
-  const MAX_VISIBLE_TABS = 6;
-  const visibleCategories = categoryData; // render all categories; scrolling handled by arrows
-  const hasMoreCategories = categoryData.length > MAX_VISIBLE_TABS;
+  const visibleCategories = categoryData; // Already limited to 3 from backend
 
   return (
     <div className="categorized-products-showcase">
@@ -118,17 +112,7 @@ const CategorizedProductsSection = () => {
       <div className="categorized-products-content">
         {/* Category Tabs */}
         <div className="categorized-products-tabs-wrapper">
-          {categoryData.length > 4 && (
-            <button 
-              onClick={() => scrollTabs('left')} 
-              className="categorized-tabs-scroll-btn categorized-tabs-scroll-left"
-              aria-label="Scroll tabs left"
-            >
-              <ChevronLeft size={20} />
-            </button>
-          )}
-          
-          <div className="categorized-products-tabs" ref={tabsScrollRef}>
+          <div className="categorized-products-tabs">
             {visibleCategories.map((cat, idx) => (
               <button
                 key={cat.id}
@@ -139,23 +123,19 @@ const CategorizedProductsSection = () => {
               </button>
             ))}
             
-            {/* "More" button removed because we now render all and rely on scroll arrows */}
-          </div>
-          
-          {categoryData.length > 4 && (
-            <button 
-              onClick={() => scrollTabs('right')} 
-              className="categorized-tabs-scroll-btn categorized-tabs-scroll-right"
-              aria-label="Scroll tabs right"
+            {/* "More" button - navigates to products page */}
+            <button
+              onClick={() => navigate('/products')}
+              className="categorized-products-tab categorized-more-btn"
             >
-              <ChevronRight size={20} />
+              <MoreHorizontal size={16} />
+              More
             </button>
-          )}
+          </div>
         </div>
 
         {/* Category Header */}
         <div className="categorized-products-header">
-          <h2 className="categorized-products-title">{activeCategory.name}</h2>
           <p className="categorized-products-subtitle">{activeCategory.description}</p>
         </div>
 
