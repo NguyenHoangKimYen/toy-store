@@ -1,0 +1,135 @@
+/* Contact page - Custom animations (Tailwind cannot do these) */
+
+/* Animated gradient background */
+.contact-animated-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.animated-gradient {
+  background-size: 300% 300%;
+  animation: gradientShift 12s ease infinite;
+  will-change: background-position;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Flow lines */
+.flow-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.flow-line {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.4), transparent);
+  animation: flowX linear infinite;
+  will-change: transform;
+}
+
+@keyframes flowX {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Floating orbs */
+.floating-orbs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.floating-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  animation: floatOrb 8s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes floatOrb {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-20px) scale(1.05); }
+}
+
+/* Butterfly/crystal layer */
+.butterfly-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.butterfly {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, rgba(255,255,255,0.9), rgba(200,200,255,0.6));
+  border-radius: 50%;
+  animation: 
+    twinkle var(--twinkle-duration, 3s) ease-in-out infinite,
+    wander var(--drift-duration, 15s) ease-in-out infinite;
+  animation-delay: var(--twinkle-delay, 0s);
+  transform: scale(var(--crystal-scale, 1));
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+  will-change: transform, opacity;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+@keyframes wander {
+  0%, 100% { transform: translate(0, 0) scale(var(--crystal-scale, 1)); }
+  25% { transform: translate(var(--wander-x, 10px), calc(var(--wander-y, 10px) * -1)) scale(var(--crystal-scale, 1)); }
+  50% { transform: translate(calc(var(--wander-x, 10px) * -0.5), var(--wander-y, 10px)) scale(var(--crystal-scale, 1)); }
+  75% { transform: translate(calc(var(--wander-x, 10px) * 0.7), calc(var(--wander-y, 10px) * -0.5)) scale(var(--crystal-scale, 1)); }
+}
+
+/* Card animations */
+.floating-card {
+  opacity: 0;
+  animation: cardEnter 0.5s ease forwards;
+}
+
+.card-enter {
+  animation-fill-mode: both;
+}
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .animated-gradient,
+  .flow-line,
+  .floating-orb,
+  .butterfly,
+  .floating-card {
+    animation: none;
+  }
+  
+  .floating-card {
+    opacity: 1;
+  }
+}

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Heart } from 'lucide-react';
+import './About.css';
 
 const message = `Dear dreamers,
 MilkyBloom is a full-stack e-commerce web application developed as part of our Web Application Development course using Node.js. The platform is designed to provide a seamless online shopping experience for collectible toys, featuring a robust backend built with ExpressJS and MongoDB, secure authentication flows, advanced order and payment processing, and a modern user-friendly interface. This project represents the collective dedication of our team, combining practical engineering skills with real-world system design to deliver a scalable, maintainable, and production-ready application.`;
@@ -93,76 +94,7 @@ const About = () => {
         </div>
       </div>
 
-      <style>{`
-        .handwriting {
-          font-family: 'Dancing Script', 'Caveat', 'Pacifico', cursive;
-          letter-spacing: 0.6px;
-        }
-        .sparkle-fx {
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          z-index: 1;
-        }
-        .sparkle-fx span {
-          position: absolute;
-          font-size: 20px;
-          opacity: 0.6;
-          animation: drift 9s ease-in-out infinite;
-          color: #ffffff;
-          text-shadow:
-            0 0 10px rgba(255, 255, 255, 0.9),
-            0 0 18px rgba(255, 182, 193, 0.6),
-            0 0 26px rgba(150, 171, 255, 0.45);
-        }
-        .sparkle-fx span:nth-child(2) { animation-duration: 9.5s; font-size: 22px; opacity: 0.62; }
-        .sparkle-fx span:nth-child(3) { animation-duration: 10.2s; font-size: 24px; opacity: 0.66; }
-        .sparkle-fx span:nth-child(4) { animation-duration: 11s; font-size: 26px; opacity: 0.64; }
-        .sparkle-fx span:nth-child(5) { animation-duration: 12s; font-size: 28px; opacity: 0.68; }
-        .sparkle-fx span:nth-child(6) { animation-duration: 10.8s; font-size: 23px; opacity: 0.6; }
-        .sparkle-fx span:nth-child(7) { animation-duration: 12.8s; font-size: 25px; opacity: 0.65; }
-        .sparkle-fx span:nth-child(8) { animation-duration: 13.5s; font-size: 27px; opacity: 0.7; }
-        .sparkle-fx span:nth-child(9) { animation-duration: 11.8s; font-size: 21px; opacity: 0.6; }
-        .sparkle-fx span:nth-child(10) { animation-duration: 12.6s; font-size: 29px; opacity: 0.7; }
-        @keyframes drift {
-          0% { transform: translateY(10px) translateX(-6px) scale(0.9); opacity: 0.1; }
-          25% { opacity: 0.35; }
-          50% { transform: translateY(-14px) translateX(8px) scale(1.05); opacity: 0.45; }
-          75% { opacity: 0.35; }
-          100% { transform: translateY(10px) translateX(-6px) scale(0.9); opacity: 0.1; }
-        }
-        .flying-hearts {
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          overflow: hidden;
-          z-index: 0;
-          mask-image: radial-gradient(circle at 50% 50%, transparent 0%, transparent 36%, rgba(0,0,0,0.85) 52%, rgba(0,0,0,1) 100%);
-          -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 0%, transparent 36%, rgba(0,0,0,0.85) 52%, rgba(0,0,0,1) 100%);
-        }
-        .heart-float {
-          position: absolute;
-          left: -12%;
-          font-size: var(--size, 24px);
-          animation: flyHeart var(--duration, 18s) linear infinite;
-          animation-delay: calc((var(--delay) + (var(--duration) * var(--seed))) * -1);
-          filter: drop-shadow(0 10px 22px rgba(244, 114, 182, 0.24));
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          line-height: 1;
-          transform-origin: center;
-          opacity: 0.88;
-        }
-        @keyframes flyHeart {
-          0% { transform: translateX(-12vw) translateY(6px) scale(0.9) rotate(-2deg); }
-          25% { transform: translateX(26vw) translateY(calc(var(--arc) * -1)) translateX(var(--sway)) scale(1) rotate(2deg); }
-          50% { transform: translateX(54vw) translateY(calc(var(--arc) * 0.55)) translateX(calc(var(--sway) * -1)) scale(1.05) rotate(-1deg); }
-          75% { transform: translateX(84vw) translateY(calc(var(--arc) * 0.3)) translateX(calc(var(--sway) * 0.6)) scale(1); }
-          100% { transform: translateX(116vw) translateY(calc(var(--arc) * 0.12)) translateX(0) scale(0.96) rotate(1deg); }
-        }
-      `}</style>
-      <div className="sparkle-fx">
+      <div className="sparkle-fx" aria-hidden="true">
         <span style={{ top: '8%', left: '18%' }}>✨</span>
         <span style={{ top: '22%', right: '12%' }}>✨</span>
         <span style={{ bottom: '18%', left: '10%' }}>✨</span>

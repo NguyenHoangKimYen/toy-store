@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, MoreHorizontal } from 'lucide-react';
 import { ProductCard, ScrollArrows } from '@/components/common';
@@ -44,7 +45,7 @@ const CategorizedProductsSection = () => {
                 viewAllLink: `/products?category=${cat._id}`,
                 bgImageUrl: cat.backgroundImage || '',
               };
-            } catch (err) {
+            } catch {
               return null;
             }
           })
@@ -64,13 +65,6 @@ const CategorizedProductsSection = () => {
   const scroll = (direction) => {
     scrollRef.current?.scrollBy({
       left: direction === 'left' ? -800 : 800,
-      behavior: 'smooth'
-    });
-  };
-
-  const scrollTabs = (direction) => {
-    tabsScrollRef.current?.scrollBy({
-      left: direction === 'left' ? -300 : 300,
       behavior: 'smooth'
     });
   };
