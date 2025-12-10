@@ -19,11 +19,31 @@ export default defineConfig({
     // Optimize chunk sizes
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Heavy map library - only load for admin pages
-          'map-vendor': ['maplibre-gl'],
+        manualChunks: (id) => {
+          // Heavy map library - only load for admin dashboard
+          if (id.includes('maplibre-gl')) {
+            return 'map-vendor';
+          }
           // Socket.io - only load when needed for real-time features
-          'socket-vendor': ['socket.io-client'],
+          if (id.includes('socket.io')) {
+            return 'socket-vendor';
+          }
+          // React core - rarely changes, good for caching
+          if (id.includes('react-dom') || id.includes('react/')) {
+            return 'react-vendor';
+          }
+          // Router - separate chunk
+          if (id.includes('react-router')) {
+            return 'router-vendor';
+          }
+          // UI libraries (Radix, Framer Motion)
+          if (id.includes('@radix-ui') || id.includes('framer-motion')) {
+            return 'ui-vendor';
+          }
+          // Date utilities
+          if (id.includes('date-fns')) {
+            return 'date-vendor';
+          }
         },
         // Hashed filenames for long-term caching
         entryFileNames: 'assets/[name]-[hash].js',
