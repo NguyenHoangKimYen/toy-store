@@ -1,0 +1,95 @@
+"""
+Agent State — Shared state definition cho LangGraph EmpathAI pipeline.
+"""
+from typing import Any, Optional
+from typing_extensions import TypedDict
+
+
+class AgentState(TypedDict, total=False):
+    """State chung cho EmpathAI LangGraph pipeline."""
+
+    # --- Input ---
+    session_id: str
+    question: str               # Tin nhắn của khách hàng
+    history: list[dict]         # Chat history [{role, content}, ...]
+    shop_context: dict          # Real shop access context (auth, email, user_id, etc.)
+    question_image: str         # Base64 image data if attached
+
+    # --- Triage / Permission ---
+    user_scope: str             # guest | logged_in | admin
+    is_authenticated: bool
+    ownership_verified: bool
+    capability: str             # catalog | checkout | order_management | loyalty | inquiry | casual | clarify
+    capability_reason: str
+    permission_reason: str
+
+    # --- Router Output ---
+    intent: str                 # "COMPLAINT" | "INQUIRY" | "CASUAL"
+
+    # --- Sentiment Analysis Output ---
+    sentiment: str              # "toxic" | "frustrated" | "disappointed" | "neutral"
+    sentiment_score: float      # 0.0 - 1.0
+    user_vibe: str              # e.g., "genz", "formal", "friendly", "angry", "short"
+
+    # --- Retrieval Output ---
+    evidence: list[dict]        # Retrieved & reranked policy chunks
+    evidence_text: str          # Formatted policy context cho LLM
+    policy_context: str         # Chính sách áp dụng cụ thể
+    compensation: str           # Gợi ý bồi thường từ RAG
+    catalog_info: dict          # Live catalog lookup result
+    comparison_info: dict       # Side-by-side comparison info if requested
+    checkout_result: dict       # Checkout helper result
+    ticket_info: dict           # Support ticket creation/lookup result
+
+    # --- Rewrite Loop ---
+    rewrite_count: int
+    is_evidence_sufficient: bool
+    translated_query: str       # Query đã được rewrite (không dịch, chỉ rewrite)
+
+    # --- Order Tool Output ---
+    order_id: str               # Mã đơn hàng extracted từ tin nhắn
+    phone_number: str          # Số điện thoại extracted từ tin nhắn
+    order_info: dict            # {found, status, summary, return_eligible, ...}
+    suggested_actions: list     # ["create_ticket", "escalate_to_supervisor", ...]
+
+    # --- Action Executor Output ---
+    action_intent: dict         # {action, executable, new_address, block_reason, ...}
+    action_result: dict         # {success, action, message, ticket_id, updated_fields}
+    pending_action_intent: dict # Multi-turn: action from previous turn waiting for order_id
+
+    # --- Generation Output ---
+    answer: str                 # Phản hồi thấu cảm cuối cùng
+
+    # --- Reviewer Output ---
+    reviewer_triggered: bool
+    reviewer_result: dict       # {is_approved, issues, retry_count}
+
+    # --- Metadata ---
+    agent_trace: dict
+    processing_time_ms: int
+
+    # --- Streaming ---
+    stream_callback: Any
+
+    # --- Level 1: Session Memory ---
+    session_summary: dict              # SessionSummary (user intent, products, budget, etc)
+    session_summary_text: str          # Compressed text for LLM injection
+    budget: dict                       # Flattened from session_summary for easy access
+    viewed_products: list              # Flattened from session_summary for easy access
+
+    # --- Level 2: Follow-up Tracking ---
+    follow_up_type: str               # follow_up_catalog|follow_up_order|follow_up_policy|None
+    contextualized_question_with_followup: str  # Question with follow-up context injected
+
+    # --- Level 3: Tool Execution ---
+    used_llm: bool                    # Whether LLM was used (vs tool-direct answer)
+    tool_result: dict                 # Raw tool execution result
+
+    # --- Level 4: Confidence Gating ---
+    router_gate: dict                 # Gate result from router
+    action_gate: dict                 # Gate result from action_executor
+    gate_decision: str               # proceed | clarify | request_data
+
+    # --- Level 5: Voice Consistency ---
+    session_tone: str                # casual | professional | friendly
+    response_history: list[str]      # Last N responses for repetition check

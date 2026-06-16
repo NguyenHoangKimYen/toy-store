@@ -1,6 +1,10 @@
 const categoryRepository = require('../repositories/category.repository.js');
 const productRepository = require('../repositories/product.repository.js');
-const { uploadToS3, deleteFromS3 } = require('../utils/s3.helper.js');
+const {
+    storeImages,
+    removeImages,
+    normalizePublicMediaUrlsDeep,
+} = require('../utils/image-storage.js');
 
 const { default: slugify } = require('slugify');
 
@@ -16,30 +20,32 @@ const createCategory = async (data, imgFiles) => {
 
     let imageUrl = null;
     if (imgFiles && imgFiles.length > 0) {
-        const uploadedUrls = await uploadToS3(imgFiles, 'categoryImages');
+        const uploadedUrls = await storeImages(imgFiles, 'categoryImages');
         imageUrl = uploadedUrls[0];
     }
 
     const categoryData = { ...data, imageUrl };
 
-    return await categoryRepository.create(categoryData);
+    const category = await categoryRepository.create(categoryData);
+    return normalizePublicMediaUrlsDeep(category);
 };
 
 const getAllCategories = async (options = {}) => {
     const { limit } = options;
-    return await categoryRepository.findAll({ limit });
+    const categories = await categoryRepository.findAll({ limit });
+    return normalizePublicMediaUrlsDeep(categories);
 };
 
 const getCategoryById = async (id) => {
     const category = await categoryRepository.findById(id);
     if (!category) throw new Error('Category not found');
-    return category;
+    return normalizePublicMediaUrlsDeep(category);
 };
 
 const getCategoryBySlug = async (slug) => {
     const category = await categoryRepository.findBySlug(slug);
     if (!category) throw new Error('Category not found');
-    return category;
+    return normalizePublicMediaUrlsDeep(category);
 };
 
 const updateCategory = async (id, data, imgFiles) => {
@@ -54,12 +60,12 @@ const updateCategory = async (id, data, imgFiles) => {
 
     // Trường hợp 1: Có upload ảnh mới (Thay thế ảnh cũ)
     if (imgFiles && imgFiles.length > 0) {
-        // 1.1. Xóa ảnh cũ trên S3 nếu có
+        // 1.1. Xóa ảnh cũ nếu có
         if (category.imageUrl) {
-            await deleteFromS3([category.imageUrl]); // deleteFromS3 nhận vào mảng
+            await removeImages([category.imageUrl]);
         }
         // 1.2. Upload ảnh mới
-        const uploadedUrls = await uploadToS3(imgFiles, 'categoryImages');
+        const uploadedUrls = await storeImages(imgFiles, 'categoryImages');
         newImageUrl = uploadedUrls[0];
     }
     // Trường hợp 2: Không upload ảnh mới, nhưng muốn xóa ảnh cũ
@@ -70,7 +76,7 @@ const updateCategory = async (id, data, imgFiles) => {
             category.imageUrl &&
             data.deletedImages.includes(category.imageUrl)
         ) {
-            await deleteFromS3([category.imageUrl]);
+            await removeImages([category.imageUrl]);
             newImageUrl = null;
         }
     }
@@ -78,7 +84,7 @@ const updateCategory = async (id, data, imgFiles) => {
     const updateData = { ...data, imageUrl: newImageUrl };
 
     const updated = await categoryRepository.update(id, updateData);
-    return updated;
+    return normalizePublicMediaUrlsDeep(updated);
 };
 
 const deleteCategory = async (id) => {

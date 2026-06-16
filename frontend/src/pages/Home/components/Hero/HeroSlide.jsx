@@ -1,10 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { normalizeImageUrl } from '@/utils/imageOptimizer';
+import { buildProductPath } from '@/utils/productRouting';
 
 const HeroSlide = ({ product, isFirst = false }) => {
   const navigate = useNavigate();
   
-  const productImage = product.imageUrls?.[0] || '/placeholder.png';
+  const productImage = normalizeImageUrl(product.imageUrls?.[0]);
   const description = product.description?.length > 100
     ? product.description.substring(0, 100) + '...'
     : product.description;
@@ -21,7 +23,7 @@ const HeroSlide = ({ product, isFirst = false }) => {
         <div className="tag">Top Picks</div>
         <div className="name">{product.name || 'Featured Product'}</div>
         <div className="des">{description}</div>
-        <button className="cta-button" onClick={() => navigate(`/products/${product._id}`)}>
+        <button className="cta-button" onClick={() => navigate(buildProductPath(product))}>
           Shop Now <span className="arrow">→</span>
         </button>
       </div>

@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Package, MapPin, CreditCard, Clock, TrendingUp, CloudRain, Sun, Cloud, Wind, Star, Calendar, Hash, Truck, CheckCircle, XCircle, AlertCircle, Wallet, Receipt, Copy, ShoppingBag, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import Badge from '@/components/ui/badge';
 import { NotFoundPage } from '@/components/common';
 import { formatPrice } from '@/utils/formatPrice';
+import { normalizeImageUrl } from '@/utils/imageOptimizer';
 import { ROUTES } from '@/config/routes';
 import { useOrderDetail } from './hooks/useOrderDetail';
+import { requestOrderLookupOtp, verifyOrderLookupOtp } from '@/services/orders.service';
 import './OrderDetail.css';
 
 // Helper to parse MongoDB Decimal128
@@ -118,7 +121,53 @@ const getStatusVariant = (status) => {
 const OrderDetail = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
-  const { order, loading, error } = useOrderDetail(orderId);
+  const [lookupToken, setLookupToken] = useState(() => localStorage.getItem(`orderLookupToken:${orderId}`) || '');
+  const [otpCode, setOtpCode] = useState('');
+  const [otpStatus, setOtpStatus] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpRequested, setOtpRequested] = useState(false);
+  const { order, loading, error, errorStatus, errorCode } = useOrderDetail(orderId, lookupToken);
+
+  const isOtpRequired = errorStatus === 403 && errorCode === 'ORDER_LOOKUP_OTP_REQUIRED';
+
+  const handleRequestOtp = async () => {
+    setOtpLoading(true);
+    setOtpStatus('');
+    try {
+      const response = await requestOrderLookupOtp(orderId);
+      setOtpRequested(true);
+      setOtpStatus(response?.message || 'Mã OTP đã được gửi đến email của chủ đơn.');
+    } catch (err) {
+      setOtpStatus(err.response?.data?.message || err.message || 'Không thể gửi OTP lúc này.');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otpCode.trim()) {
+      setOtpStatus('Bạn nhập OTP nhé.');
+      return;
+    }
+    setOtpLoading(true);
+    setOtpStatus('');
+    try {
+      const response = await verifyOrderLookupOtp(orderId, otpCode.trim());
+      const nextToken = response?.lookupToken;
+      if (nextToken) {
+        localStorage.setItem(`orderLookupToken:${orderId}`, nextToken);
+        setLookupToken(nextToken);
+        setOtpStatus('Xác minh thành công, mình đang mở chi tiết đơn...');
+      } else {
+        setOtpStatus('Xác minh thành công nhưng chưa nhận được token mở đơn.');
+      }
+      setOtpCode('');
+    } catch (err) {
+      setOtpStatus(err.response?.data?.message || err.message || 'OTP không hợp lệ.');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -128,12 +177,43 @@ const OrderDetail = () => {
     );
   }
 
+  if (isOtpRequired) {
+    return (
+      <div className="order-detail-container">
+        <div className="otp-gate-card">
+          <h1>OTP xác minh đơn hàng</h1>
+          <p>Mình cần xác minh chủ đơn trước khi mở chi tiết đơn này.</p>
+          <p>OTP sẽ được gửi đến email của tài khoản sở hữu đơn hàng.</p>
+          <div className="otp-gate-actions">
+            <Button onClick={handleRequestOtp} disabled={otpLoading}>
+              {otpRequested ? 'Gửi lại OTP' : 'Gửi OTP'}
+            </Button>
+          </div>
+          <div className="otp-gate-form">
+            <Input
+              value={otpCode}
+              onChange={(e) => setOtpCode(e.target.value)}
+              placeholder="Nhập OTP 6 số"
+              inputMode="numeric"
+              maxLength={6}
+            />
+            <Button onClick={handleVerifyOtp} disabled={otpLoading}>
+              Xác minh OTP
+            </Button>
+          </div>
+          {otpStatus && <p className="otp-gate-status">{otpStatus}</p>}
+          {error && !otpStatus && <p className="otp-gate-status">{error}</p>}
+        </div>
+      </div>
+    );
+  }
+
   if (error || !order) {
     return (
       <NotFoundPage
         icon={ShoppingBag}
         title="Order Not Found"
-        message="This order doesn't exist or you don't have permission to view it."
+        message={error || "This order doesn't exist or you don't have permission to view it."}
         homeRoute={ROUTES.ORDER_HISTORY}
         homeLabel="View My Orders"
       />
@@ -345,7 +425,10 @@ const OrderDetail = () => {
               const isDelivered = order.status === 'delivered';
               
               // Get image: prefer variant image, then product image, then placeholder
-              const imageUrl = item.variantId?.imageUrls?.[0] || item.productId?.imageUrls?.[0] || '/placeholder-product.png';
+              const imageUrl = normalizeImageUrl(
+                item.variantId?.imageUrls?.[0] || item.productId?.imageUrls?.[0],
+                '/placeholder.svg',
+              );
               
               // Get variant attributes for display
               const variantAttrs = item.variantId?.attributes;
@@ -361,6 +444,9 @@ const OrderDetail = () => {
                       alt={item.productId?.name || 'Product'}
                       className="item-image"
                       loading="lazy"
+                      onError={(event) => {
+                        event.currentTarget.src = '/placeholder.svg';
+                      }}
                     />
                     <div className="item-info">
                       <h3>{item.productId?.name || 'Unknown Product'}</h3>

@@ -4,23 +4,57 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import './Contact.css'
 
+const buildAvatarDataUrl = (label, background = '#f472b6', foreground = '#ffffff') => {
+  const safeLabel = String(label || '').trim().slice(0, 2).toUpperCase() || 'MB';
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="${safeLabel}">
+      <defs>
+        <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0%" stop-color="${background}" />
+          <stop offset="100%" stop-color="#fb7185" />
+        </linearGradient>
+      </defs>
+      <rect width="240" height="240" rx="120" fill="url(#g)" />
+      <text x="50%" y="54%" text-anchor="middle" dominant-baseline="middle" font-family="Inter, Arial, sans-serif" font-size="86" font-weight="700" fill="${foreground}">
+        ${safeLabel}
+      </text>
+    </svg>
+  `;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+};
+
 const CONTRIBUTORS = [
   {
     name: 'Võ Xuân Quang',
-    role: 'Backend + Amazon Web Services',
+    role: 'Web Development, Architecture & Integration',
     github: 'QuangVoAI',
     email: 'vxq123@icloud.com',
-    avatar: 'https://toy-store-project-of-springwang.s3.ap-southeast-2.amazonaws.com/contact/IMG_0253.jpeg',
-    bio: 'Develops backend services and manages AWS infrastructure.'
+    avatar: buildAvatarDataUrl('VQ'),
+    bio: 'Responsible for the web stack, system architecture, backend integration, media handling, and cloud deployment.'
   },
   {
-    name: 'Ngô Gia Bảo',
-    role: 'zzz',
-    github: 'cuchim123123',
-    email: 'randomemail123@email.ok',
-    avatar: 'https://ui-avatars.com/api/?name=N+G+B&background=random&size=240',
-    bio: '... '
+    name: 'Hoàng Xuân Thành',
+    role: 'EmpathAI & Agentic Experience',
+    github: 'Thanh281105',
+    email: '',
+    avatar: buildAvatarDataUrl('HT', '#60a5fa'),
+    bio: 'Responsible for EmpathAI, agentic workflows, and the customer support intelligence layer.'
   }
+]
+
+const CONTACT_POINTS = [
+  {
+    title: 'Product Support',
+    description: 'Ask about the catalog, pricing, variants, images, or product videos.',
+  },
+  {
+    title: 'Orders & Shipping',
+    description: 'Check order status, update an address, cancel an order, or track delivery.',
+  },
+  {
+    title: 'Returns & Feedback',
+    description: 'Send feedback, request a return, report bugs, or suggest improvements.',
+  },
 ]
 
 const CRYSTALS = [
@@ -122,13 +156,14 @@ const Contact = () => {
           <div className="relative p-8 sm:p-12 space-y-4">
             <p className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 dark:text-indigo-300">
               <Sparkles className="size-4" />
-              Contributors
+              Contact MilkyBloom
             </p>
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Connect with the contributors building MilkyBloomToyStore
+              Connect quickly with the team building MilkyBloom
             </h1>
             <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-3xl">
-              We are happy to talk about the product, feedback, or collaboration opportunities. Reach out to each member directly or email the whole team.
+              Need help with products, orders, shipping, returns, or project feedback?
+              Reach out to the right contributor directly or send a shared email to the team, and we'll respond as quickly as possible.
             </p>
             <div className="flex flex-wrap gap-3 pt-2">
               <Button asChild size="lg" className="px-5">
@@ -138,9 +173,9 @@ const Contact = () => {
                 </a>
               </Button>
               <Button asChild variant="outline" size="lg" className="px-5">
-                <a href="https://github.com/NguyenHoangKimYen/toy-store.git" target="_blank" rel="noreferrer" className="flex items-center gap-2">
+                <a href="https://github.com/QuangVoAI/MilkyBloomVibeCode" target="_blank" rel="noreferrer" className="flex items-center gap-2">
                   <Github className="size-4" />
-                  View on GitHub
+                  View source
                   <ArrowUpRight className="size-4" />
                 </a>
               </Button>
@@ -148,13 +183,31 @@ const Contact = () => {
           </div>
         </section>
 
+        {/* Contact points */}
+        <section className="grid gap-4 md:grid-cols-3">
+          {CONTACT_POINTS.map((point) => (
+            <Card key={point.title} className="bg-white/90 dark:bg-slate-900/70 border-slate-200/80 dark:border-slate-800/80 shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg text-slate-900 dark:text-white">
+                  {point.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                  {point.description}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </section>
+
         {/* Contributors section */}
         <section className="space-y-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
-              <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Contributors</h2>
+              <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Project Contributors</h2>
               <p className="text-sm text-slate-600 dark:text-slate-300">
-                Direct contact info for each project member.
+                Direct contact details for each primary contributor.
               </p>
             </div>
           </div>
@@ -196,13 +249,15 @@ const Contact = () => {
                       {person.github}
                       <ArrowUpRight className="size-3.5 opacity-70" />
                     </a>
-                    <a
-                      href={`mailto:${person.email}`}
-                      className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
-                    >
-                      <Mail className="size-4 text-indigo-600 dark:text-indigo-300" />
-                      {person.email}
-                    </a>
+                    {person.email ? (
+                      <a
+                        href={`mailto:${person.email}`}
+                        className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
+                      >
+                        <Mail className="size-4 text-indigo-600 dark:text-indigo-300" />
+                        {person.email}
+                      </a>
+                    ) : null}
                   </div>
                 </CardContent>
               </Card>

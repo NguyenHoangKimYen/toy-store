@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { useProductDetail } from '@/hooks';
-import { useCartContext } from '@/context/CartProvider';
+import { useCartContext } from '@/context/CartContext';
 import { ROUTES } from '@/config/routes';
 import { getReviewStats } from '@/services/reviews.service';
 import './ProductDetail.css';
@@ -144,7 +144,7 @@ const ProductDetail = () => {
         .finally(() => {
           setAddingToCart(false);
         });
-    } catch (err) {
+    } catch {
       toast.error('Failed to add to cart', {
         description: 'Please try again.',
       });
@@ -199,7 +199,7 @@ const ProductDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-2 md:py-4">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-2 pb-[calc(5.75rem+env(safe-area-inset-bottom))] md:pb-0 md:py-4">
       <div className="max-w-[1400px] mx-auto px-2 md:px-4">
         {/* Back Button */}
         <Button

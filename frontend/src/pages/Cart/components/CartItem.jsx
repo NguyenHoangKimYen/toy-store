@@ -4,6 +4,8 @@ import { Minus, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatPrice } from '@/utils/formatPrice';
 import { parsePrice } from '@/utils/priceUtils';
+import { normalizeImageUrl } from '@/utils/imageOptimizer';
+import { buildProductPath } from '@/utils/productRouting';
 import './CartItem.css';
 
 const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
@@ -14,14 +16,16 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
   
   // Get product name - product comes from backend transform
   const productName = product?.name || 'Unknown Product';
-  const productId = product?._id || product?.id;
+  const productPath = buildProductPath(product);
   
   // Use item.price first (already calculated by backend), then fallback to variant/product
   const price = parsePrice(item.price || variant?.price || product?.minPrice || product?.price || 0);
   
   // Priority: variant images > product images > placeholder
   // Variants may have specific images (e.g., different colors)
-  const imageUrl = variant?.imageUrls?.[0] || product?.imageUrls?.[0] || '/placeholder.png';
+  const imageUrl = normalizeImageUrl(
+    variant?.imageUrls?.[0] || product?.imageUrls?.[0],
+  );
   
   const stock = variant?.stockQuantity || product?.stockQuantity || 999;
   const total = price * item.quantity;
@@ -55,8 +59,8 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
   };
 
   const handleNavigateToProduct = () => {
-    if (productId) {
-      navigate(`/products/${productId}`);
+    if (productPath) {
+      navigate(productPath);
     }
   };
 
@@ -84,7 +88,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
           height="100"
           onError={(e) => {
             e.target.onerror = null;
-            e.target.src = '/placeholder.png';
+            e.target.src = '/placeholder.svg';
           }}
         />
       </div>

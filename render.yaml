@@ -1,0 +1,74 @@
+services:
+  - type: pserv
+    name: milkybloom-qdrant
+    runtime: docker
+    dockerfilePath: qdrant/Dockerfile
+    dockerContext: qdrant
+    autoDeploy: true
+    disk:
+      name: qdrant-storage
+      mountPath: /qdrant/storage
+      sizeGB: 5
+
+  - type: web
+    name: milkybloom-backend
+    runtime: node
+    rootDir: backend
+    autoDeploy: true
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: AGENTIC_AI_WS_URL
+        fromService:
+          name: milkybloom-agentic
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: AGENTIC_AI_BASE_URL
+        fromService:
+          name: milkybloom-agentic
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+
+  - type: web
+    name: milkybloom-agentic
+    runtime: python
+    rootDir: agentic-ai
+    autoDeploy: true
+    buildCommand: pip install --no-cache-dir -r requirements.render.txt
+    startCommand: python ws_server.py
+    healthCheckPath: /health
+    initialDeployHook: python python/bootstrap_qdrant.py
+    envVars:
+      - key: AGENTIC_WARMUP
+        value: "false"
+      - key: BACKEND_URL
+        fromService:
+          name: milkybloom-backend
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: QDRANT_HOSTPORT
+        fromService:
+          name: milkybloom-qdrant
+          type: pserv
+          property: hostport
+
+  - type: web
+    name: milkybloom-frontend
+    runtime: static
+    rootDir: frontend
+    autoDeploy: true
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: milkybloom-backend
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL

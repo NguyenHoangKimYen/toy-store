@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Tag, Plus, Edit, Trash2, Eye, Search, Filter } from 'lucide-react'
 import { getAllDiscountCodes, createDiscountCode, updateDiscountCode, deleteDiscountCode } from '@/services/discountCodes.service'
@@ -13,15 +14,17 @@ import DiscountOrdersModal from './components/DiscountOrdersModal'
 import { AdminContent } from '../components'
 import { PageHeader, SearchBar, Pagination } from '@/components/common'
 import { useDebounce } from '@/hooks'
+import { readQueryPositiveInt, readQueryString, updateQueryParams } from '@/utils/queryState'
 
 const ITEMS_PER_PAGE = 12;
 
 const DiscountCodes = () => {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [codes, setCodes] = useState([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState(readQueryString(searchParams, 'q', ''))
   const debouncedSearch = useDebounce(searchTerm, 500) // Debounce search input
-  const [sortBy, setSortBy] = useState('newest')
+  const [sortBy, setSortBy] = useState(readQueryString(searchParams, 'sort', 'newest'))
   const [selectedCode, setSelectedCode] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -30,9 +33,10 @@ const DiscountCodes = () => {
   const [selectedCodeForOrders, setSelectedCodeForOrders] = useState(null)
   
   // Pagination state
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(ITEMS_PER_PAGE)
+  const [currentPage, setCurrentPage] = useState(readQueryPositiveInt(searchParams, 'page', 1))
+  const [pageSize, setPageSize] = useState(readQueryPositiveInt(searchParams, 'pageSize', ITEMS_PER_PAGE))
   const [totalItems, setTotalItems] = useState(0)
+  const hasInitializedPageReset = useRef(false)
 
   const fetchCodes = useCallback(async () => {
     try {
@@ -65,8 +69,25 @@ const DiscountCodes = () => {
 
   // Reset to page 1 when filters change
   useEffect(() => {
+    if (!hasInitializedPageReset.current) {
+      hasInitializedPageReset.current = true
+      return
+    }
     setCurrentPage(1)
   }, [debouncedSearch, sortBy, pageSize])
+
+  useEffect(() => {
+    setSearchParams(
+      (current) =>
+        updateQueryParams(current, [
+          { key: 'q', value: searchTerm, defaultValue: '' },
+          { key: 'sort', value: sortBy, defaultValue: 'newest' },
+          { key: 'page', value: currentPage, defaultValue: 1 },
+          { key: 'pageSize', value: pageSize, defaultValue: ITEMS_PER_PAGE },
+        ]),
+      { replace: true },
+    )
+  }, [currentPage, pageSize, searchTerm, setSearchParams, sortBy])
 
   useEffect(() => {
     fetchCodes()
@@ -167,10 +188,10 @@ const DiscountCodes = () => {
             </Select>
             <button
               onClick={handleCreate}
-              className="px-3 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-sky-400 text-white shadow-[0_10px_26px_-14px_rgba(124,58,237,0.35)] hover:brightness-105 transition flex items-center justify-center gap-2"
+              className="inline-flex min-w-[152px] items-center justify-center gap-2 rounded-xl border border-slate-900 bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-[0_14px_30px_-20px_rgba(15,23,42,0.65)] transition hover:-translate-y-0.5 hover:bg-slate-800"
             >
-              <Plus size={16} />
-              <span className="sm:inline">New Code</span>
+              <Plus size={16} strokeWidth={2.2} />
+              <span>New Code</span>
             </button>
           </div>
         </div>

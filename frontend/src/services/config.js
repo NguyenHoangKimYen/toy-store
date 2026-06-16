@@ -1,4 +1,44 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.milkybloomtoystore.id.vn/api';
+const normalizeApiBaseUrl = (value) => value.replace(/\/+$/, '');
+
+const hasScheme = (value) => /^[a-z][a-z0-9+.-]*:\/\//i.test(value);
+
+const resolveConfiguredBaseUrl = (value, { localProtocol = 'http', remoteProtocol = 'https' } = {}) => {
+  const trimmed = String(value || '').trim().replace(/\/+$/, '');
+  if (!trimmed) return '';
+  if (hasScheme(trimmed)) return normalizeApiBaseUrl(trimmed);
+
+  const protocol = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?(\/|$)/i.test(trimmed)
+    ? localProtocol
+    : remoteProtocol;
+
+  return normalizeApiBaseUrl(`${protocol}://${trimmed}`);
+};
+
+const ensureApiPath = (value) => {
+  const normalized = normalizeApiBaseUrl(value);
+  return normalized.endsWith('/api') ? normalized : `${normalized}/api`;
+};
+
+const resolveApiBaseUrl = () => {
+  const configured = import.meta.env.VITE_API_URL?.trim();
+  if (configured) {
+    return ensureApiPath(resolveConfiguredBaseUrl(configured, {
+      localProtocol: 'http',
+      remoteProtocol: 'https',
+    }));
+  }
+
+  if (import.meta.env.DEV) {
+    return 'http://localhost:6969/api';
+  }
+
+  return `${window.location.origin}/api`;
+};
+
+export const API_BASE_URL = resolveApiBaseUrl();
+export const APP_BASE_URL = API_BASE_URL.endsWith('/api')
+  ? API_BASE_URL.slice(0, -4)
+  : API_BASE_URL;
 
 // API Endpoints
 export const ENDPOINTS = {
@@ -6,7 +46,7 @@ export const ENDPOINTS = {
   USERS: '/users',
   AUTH: '/auth',
   ORDERS: '/orders',
-  CART: '/cart',
+  CART: '/carts',
   CATEGORIES: '/categories',
 };
 
@@ -20,7 +60,14 @@ export const REQUEST_TIMEOUT = 15000;
 // API Client with optimizations
 const apiClient = {
   async request(method, url, options = {}) {
-    const { data, params, headers = {}, signal, ...fetchOptions } = options;
+    const {
+      data,
+      params,
+      headers = {},
+      signal,
+      suppressNetworkErrorLog = false,
+      ...fetchOptions
+    } = options;
     
     // Build URL with query params
     let fullUrl = `${API_BASE_URL}${url}`;
@@ -50,7 +97,6 @@ const apiClient = {
     
     const defaultHeaders = {
       ...(isFormData ? {} : getDefaultHeaders()), // Don't set Content-Type for FormData
-      'Connection': 'keep-alive', // Enable HTTP connection reuse
       ...(token && { Authorization: `Bearer ${token}` }),
       ...(sessionId && { 'X-Session-Id': sessionId }),
       ...headers,
@@ -59,8 +105,8 @@ const apiClient = {
     const config = {
       method,
       headers: defaultHeaders,
-      keepalive: true, // Enable connection pooling
       cache: 'no-store', // Prevent browser caching
+      ...(signal ? {} : { keepalive: true }), // Avoid Chrome fetch failures on externally abortable requests
       signal, // Support abort controller
       ...fetchOptions,
     };
@@ -109,7 +155,13 @@ const apiClient = {
           window.dispatchEvent(new Event('userLoggedOut'));
         }
         
-        throw new Error(error.message || `HTTP error! status: ${response.status}`);
+        const apiError = new Error(error.message || `HTTP error! status: ${response.status}`);
+        apiError.status = response.status;
+        apiError.response = {
+          status: response.status,
+          data: error,
+        };
+        throw apiError;
       }
 
       const result = await response.json();
@@ -127,8 +179,10 @@ const apiClient = {
                     error.message?.includes('Không tìm thấy');
       const isTimeout = error.message?.includes('timeout');
       const isRateLimit = error.status === 429 || error.message?.includes('Too many requests');
+      const isNetworkFetchFailure =
+        error.name === 'TypeError' && error.message === 'Failed to fetch';
       
-      if (!is404 && !isTimeout && !isRateLimit) {
+      if (!is404 && !isTimeout && !isRateLimit && !(suppressNetworkErrorLog && isNetworkFetchFailure)) {
         console.error('API request failed:', error);
       }
       throw error;

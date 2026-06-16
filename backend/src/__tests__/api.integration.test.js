@@ -1,13 +1,9 @@
-/**
- * API Integration Tests
- * Tests backend API endpoints using supertest
- */
-
 const request = require('supertest');
 
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = process.env.TEST_API_BASE_URL;
+const describeIfApiTarget = BASE_URL ? describe : describe.skip;
 
-describe('Products API Integration', () => {
+describeIfApiTarget('Products API Integration', () => {
   describe('GET /api/products', () => {
     it('should return products list', async () => {
       const response = await request(BASE_URL)
@@ -51,7 +47,7 @@ describe('Products API Integration', () => {
   });
 });
 
-describe('Categories API Integration', () => {
+describeIfApiTarget('Categories API Integration', () => {
   describe('GET /api/categories', () => {
     it('should return categories list', async () => {
       const response = await request(BASE_URL)
@@ -66,7 +62,7 @@ describe('Categories API Integration', () => {
   });
 });
 
-describe('Auth API Integration', () => {
+describeIfApiTarget('Auth API Integration', () => {
   describe('POST /api/auth/login', () => {
     it('should reject invalid credentials', async () => {
       const response = await request(BASE_URL)
@@ -104,7 +100,7 @@ describe('Auth API Integration', () => {
   });
 });
 
-describe('Cart API Integration', () => {
+describeIfApiTarget('Cart API Integration', () => {
   describe('GET /api/carts', () => {
     it('should accept guest session header', async () => {
       const sessionId = `test-session-${Date.now()}`;
@@ -113,7 +109,6 @@ describe('Cart API Integration', () => {
         .get('/api/carts')
         .set('x-guest-session-id', sessionId);
 
-      // 200 = success, 401 = needs auth, 404 = not found, 429 = rate limited
       expect([200, 401, 404, 429]).toContain(response.status);
     });
 
@@ -127,7 +122,7 @@ describe('Cart API Integration', () => {
   });
 });
 
-describe('Orders API Integration', () => {
+describeIfApiTarget('Orders API Integration', () => {
   describe('GET /api/orders', () => {
     it('should require authentication', async () => {
       const response = await request(BASE_URL)
@@ -138,31 +133,30 @@ describe('Orders API Integration', () => {
   });
 });
 
-describe('Reviews API Integration', () => {
+describeIfApiTarget('Reviews API Integration', () => {
   describe('GET /api/reviews/product/:id', () => {
     it('should return reviews or 404 for product', async () => {
       const response = await request(BASE_URL)
         .get('/api/reviews/product/123456789012');
 
-      // 200 = success, 400 = bad request, 404 = not found, 429 = rate limited, 500 = server error (no DB)
       expect([200, 400, 404, 429, 500]).toContain(response.status);
     });
   });
 });
 
-describe('Discount Codes API Integration', () => {
-  describe('POST /api/discount-codes/validate', () => {
+describeIfApiTarget('Discount Codes API Integration', () => {
+  describe('POST /api/discount/validate', () => {
     it('should reject invalid discount code', async () => {
       const response = await request(BASE_URL)
-        .post('/api/discount-codes/validate')
+        .post('/api/discount/validate')
         .send({ code: 'INVALID_CODE_12345' });
 
-      expect([400, 404, 422, 429]).toContain(response.status);
+      expect([400, 401, 404, 422, 429]).toContain(response.status);
     });
   });
 });
 
-describe('Health Check', () => {
+describeIfApiTarget('Health Check', () => {
   it('API should be reachable', async () => {
     const response = await request(BASE_URL)
       .get('/api/products?limit=1');

@@ -32,6 +32,30 @@ const Login = () => {
     }
   }, [navigate])
 
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    const oauthError = url.searchParams.get('oauthError')
+
+    if (!oauthError) return
+
+    const messages = {
+      facebook_code_used: 'Facebook login bị lặp callback. Hãy thử đăng nhập lại một lần nữa.',
+      facebook_callback_failed: 'Facebook login thất bại ở bước xác thực. Kiểm tra callback URL và thử lại.',
+      facebook_denied: 'Bạn đã hủy hoặc từ chối đăng nhập bằng Facebook.',
+      google_code_used: 'Google login bị lặp callback. Hãy thử đăng nhập lại.',
+      google_callback_failed: 'Google login thất bại ở bước xác thực. Kiểm tra cấu hình OAuth rồi thử lại.',
+      google_denied: 'Bạn đã hủy hoặc từ chối đăng nhập bằng Google.',
+    }
+
+    toast.error(messages[oauthError] || 'Đăng nhập mạng xã hội thất bại. Vui lòng thử lại.', {
+      position: 'top-center',
+      duration: 5000,
+    })
+
+    url.searchParams.delete('oauthError')
+    window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`)
+  }, [])
+
   // Handle OTP input with auto-focus
   const handleOtpChange = (index, value) => {
     if (!/^\d*$/.test(value)) return // Only allow digits
@@ -487,7 +511,7 @@ const Login = () => {
                   type="button"
                   variant="outline"
                   className="h-11 bg-white/5 border-white/40 hover:bg-white/15 text-white [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)] backdrop-blur-sm transition-all"
-                  onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`}
+                  onClick={() => window.location.href = `${API_BASE_URL}/auth/google`}
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -502,7 +526,7 @@ const Login = () => {
                   type="button"
                   variant="outline"
                   className="h-11 bg-white/5 border-white/40 hover:bg-white/15 text-white [text-shadow:_0_1px_2px_rgb(0_0_0_/_50%)] backdrop-blur-sm transition-all"
-                  onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/facebook`}
+                  onClick={() => window.location.href = `${API_BASE_URL}/auth/facebook`}
                 >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />

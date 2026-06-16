@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const dashboardController = require('../controllers/ dashboard.controller');
+const dashboardController = require('../controllers/dashboard.controller');
 const auth = require('../middlewares/auth.middleware');
 const adminOnly = require('../middlewares/admin.middleware');
 
@@ -69,6 +69,18 @@ router.get(
     auth,
     adminOnly,
     dashboardController.getBranchesMap,
+);
+router.get(
+    "/chatbot-insights",
+    auth,
+    adminOnly,
+    dashboardController.getChatbotInsights,
+);
+router.get(
+    "/chatbot-cases",
+    auth,
+    adminOnly,
+    dashboardController.getChatbotCases,
 );
 
 module.exports = router;

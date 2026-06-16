@@ -4,6 +4,7 @@ import { Package, Clock, CheckCircle, XCircle, Truck, ChevronRight, CreditCard }
 import Badge from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatPrice } from '@/utils/formatPrice';
+import { normalizeImageUrl } from '@/utils/imageOptimizer';
 import { ROUTES } from '@/config/routes';
 import './OrderCard.css';
 
@@ -82,11 +83,18 @@ const OrderCard = ({ order }) => {
 
   const totalAmount = parseDecimal(order.totalAmount);
   const itemCount = order.items?.length || 0;
+  const firstItemName =
+    order.items?.[0]?.productId?.name ||
+    order.items?.[0]?.product?.name ||
+    order.items?.[0]?.variantId?.productId?.name ||
+    'Sản phẩm';
 
   // Get first item image for preview
-  const previewImage = order.items?.[0]?.productId?.imageUrls?.[0] || 
-                       order.items?.[0]?.variantId?.imageUrls?.[0] || 
-                       '/placeholder-product.png';
+  const previewImage = normalizeImageUrl(
+    order.items?.[0]?.variantId?.imageUrls?.[0] ||
+      order.items?.[0]?.productId?.imageUrls?.[0],
+    '/placeholder.svg',
+  );
 
   const showRetryButton = canRetryPayment();
 
@@ -94,7 +102,14 @@ const OrderCard = ({ order }) => {
     <div className="order-card order-card-clickable" onClick={handleClick}>
       <div className="order-card-content">
         <div className="order-preview-image">
-          <img src={previewImage} alt="Order preview" loading="lazy" />
+          <img
+            src={previewImage}
+            alt="Order preview"
+            loading="lazy"
+            onError={(event) => {
+              event.currentTarget.src = '/placeholder.svg';
+            }}
+          />
           {itemCount > 1 && (
             <span className="item-count-badge">+{itemCount - 1}</span>
           )}
@@ -108,7 +123,10 @@ const OrderCard = ({ order }) => {
           
           <div className="order-meta">
             <span className="item-summary">
-              {itemCount} {itemCount === 1 ? 'item' : 'items'}
+              <span className="item-summary-name">{firstItemName}</span>
+              <span className="item-summary-count">
+                {itemCount > 1 ? `+${itemCount - 1} món` : '1 món'}
+              </span>
             </span>
             <Badge variant={getStatusVariant(order.status)} className="order-status-badge">
               {getStatusIcon(order.status)}

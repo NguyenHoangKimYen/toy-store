@@ -1,9 +1,39 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Heart } from 'lucide-react';
 import './About.css';
 
-const message = `Dear dreamers,
-MilkyBloom is a full-stack e-commerce web application developed as part of our Web Application Development course using Node.js. The platform is designed to provide a seamless online shopping experience for collectible toys, featuring a robust backend built with ExpressJS and MongoDB, secure authentication flows, advanced order and payment processing, and a modern user-friendly interface. This project represents the collective dedication of our team, combining practical engineering skills with real-world system design to deliver a scalable, maintainable, and production-ready application.`;
+const message = `Xin chào, đây là MilkyBloom.
+
+MilkyBloom là dự án thương mại điện tử full-stack dành cho dòng sản phẩm sưu tầm, được thiết kế với mục tiêu tạo ra trải nghiệm mua sắm nhẹ nhàng, rõ ràng và dễ dùng trên cả desktop lẫn mobile.
+
+Không chỉ dừng ở việc hiển thị sản phẩm và xử lý đơn hàng, MilkyBloom còn được xây dựng như một trải nghiệm số có cảm xúc: nơi giao diện, tốc độ và nội dung hỗ trợ đều hướng đến sự thân thiện, tinh gọn và dễ hiểu.
+
+Dự án kết hợp React, Node.js, ExpressJS, MongoDB, hệ thống xác thực an toàn và kiến trúc media tối ưu cho deploy thực tế. Trên nền tảng đó, MilkyBloom phát triển thêm lớp hỗ trợ AI nhằm giúp người dùng tìm sản phẩm, theo dõi đơn hàng và xử lý các tình huống sau mua một cách tự nhiên hơn.
+
+Một điểm nhấn quan trọng của MilkyBloom là hướng tiếp cận empathy AI: chatbot không chỉ trả lời đúng thông tin, mà còn cố gắng phản hồi theo ngữ cảnh, rõ ràng, lịch sự và đồng cảm hơn với nhu cầu thực tế của khách hàng.
+
+Trong phiên bản triển khai hiện tại, MilkyBloom tập trung vào:
+• Danh mục sản phẩm, tìm kiếm và bộ lọc thông minh
+• Giỏ hàng, đặt hàng và xử lý thanh toán
+• AI chat hỗ trợ sản phẩm, đơn hàng, vận chuyển, đổi trả và các tình huống cần phản hồi nhanh
+• Hệ thống media, ảnh và video được tối ưu cho deploy thực tế
+
+MilkyBloom là sự giao thoa giữa e-commerce, trải nghiệm giao diện hiện đại và AI hỗ trợ mang tính đồng hành, với mục tiêu làm cho việc mua sắm trở nên mượt hơn, ấm hơn và đáng tin cậy hơn.`;
+
+const ABOUT_HIGHLIGHTS = [
+  {
+    title: 'Stack chính',
+    value: 'React, Node.js, Express, MongoDB',
+  },
+  {
+    title: 'Tính năng nổi bật',
+    value: 'Tìm kiếm, giỏ hàng, thanh toán, AI chat hỗ trợ',
+  },
+  {
+    title: 'AI experience',
+    value: 'Empathy AI, trả lời theo ngữ cảnh, rõ và thân thiện',
+  },
+];
 
 const HEART_FLIGHT = [
   { top: '8%', delay: 0, duration: 18, size: 28, arc: 24, sway: 6, seed: 0.1 },
@@ -38,10 +68,31 @@ const SPARKLE_POSITIONS = [
   { top: '60%', right: '30%' },
 ];
 
+const splitGraphemes = (text) => {
+  if (typeof Intl !== 'undefined' && typeof Intl.Segmenter !== 'undefined') {
+    const segmenter = new Intl.Segmenter('vi', { granularity: 'grapheme' });
+    return [...segmenter.segment(text)].map((segment) => segment.segment);
+  }
+  return Array.from(text);
+};
+
+const getTypingDelay = (segment) => {
+  if (segment === '\n') return 0;
+  if (/\s/.test(segment)) return 26;
+  if (/[.,;:!?]/.test(segment)) return 90;
+  if (/[•\-]/.test(segment)) return 54;
+  return 18;
+};
+
 const About = () => {
-  const [typed, setTyped] = useState('');
+  const messageLines = useMemo(() => message.split('\n'), []);
+  const graphemeLines = useMemo(
+    () => messageLines.map((line) => splitGraphemes(line)),
+    [messageLines],
+  );
+  const [visibleLines, setVisibleLines] = useState(() => messageLines.map(() => ''));
+  const [activeLineIndex, setActiveLineIndex] = useState(0);
   const [skip, setSkip] = useState(false);
-  const typingDelay = 25;
 
   // Memoize hearts to prevent re-renders
   const hearts = useMemo(() => HEART_FLIGHT.map((item, idx) => (
@@ -69,17 +120,61 @@ const About = () => {
 
   useEffect(() => {
     if (skip) {
-      setTyped(message);
-      return;
+      setVisibleLines(messageLines);
+      setActiveLineIndex(messageLines.length - 1);
+      return undefined;
     }
-    let i = 0;
-    const interval = setInterval(() => {
-      setTyped(message.slice(0, i + 1));
-      i += 1;
-      if (i >= message.length) clearInterval(interval);
-    }, typingDelay);
-    return () => clearInterval(interval);
-  }, [skip]);
+    let cancelled = false;
+    const timers = [];
+
+    setVisibleLines(messageLines.map(() => ''));
+    setActiveLineIndex(0);
+
+    const revealLine = (lineIndex, charIndex = 0) => {
+      if (cancelled) return;
+      if (lineIndex >= messageLines.length) {
+        setActiveLineIndex(messageLines.length - 1);
+        return;
+      }
+
+      const currentLine = graphemeLines[lineIndex] || [];
+      if (currentLine.length === 0) {
+        setVisibleLines((prev) => {
+          const next = [...prev];
+          next[lineIndex] = '';
+          return next;
+        });
+        setActiveLineIndex(lineIndex);
+        timers.push(setTimeout(() => revealLine(lineIndex + 1, 0), 180));
+        return;
+      }
+
+      if (charIndex < currentLine.length) {
+        const currentChar = currentLine[charIndex];
+        setVisibleLines((prev) => {
+          const next = [...prev];
+          next[lineIndex] = currentLine.slice(0, charIndex + 1).join('');
+          return next;
+        });
+        setActiveLineIndex(lineIndex);
+        timers.push(
+          setTimeout(() => revealLine(lineIndex, charIndex + 1), getTypingDelay(currentChar)),
+        );
+        return;
+      }
+
+      timers.push(setTimeout(() => revealLine(lineIndex + 1, 0), 260));
+    };
+
+    timers.push(setTimeout(() => revealLine(0, 0), 120));
+
+    return () => {
+      cancelled = true;
+      timers.forEach((timer) => clearTimeout(timer));
+    };
+  }, [skip, graphemeLines, messageLines]);
+
+  const renderedLines = skip ? messageLines : visibleLines;
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden text-slate-900 bg-gradient-to-br from-white via-rose-50 to-blue-50">
@@ -105,16 +200,47 @@ const About = () => {
               <button
                 onClick={() => {
                   setSkip(true);
-                  setTyped(message);
                 }}
                 className="absolute top-3 right-3 z-10 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white/90 border border-white/70 rounded-full px-3 py-1 shadow-sm transition-colors"
               >
                 Skip
               </button>
             )}
-            <p className="handwriting whitespace-pre-line text-lg lg:text-xl leading-9 text-slate-700 min-h-[200px]">
-              {typed}
-            </p>
+            <div className="handwriting handwriting-text text-[1.32rem] leading-[2.15rem] text-slate-700 min-h-[260px] sm:text-[1.42rem] sm:leading-[2.28rem] lg:text-[1.58rem] lg:leading-[2.55rem]">
+              {renderedLines.map((line, index) => {
+                const isCurrentLine = index === activeLineIndex && !skip;
+                const isComplete = line === messageLines[index];
+                return (
+                  <span
+                    key={`about-line-${index}`}
+                    className={`writing-line block ${isCurrentLine ? 'is-typing' : ''} ${
+                      isComplete ? 'is-complete' : ''
+                    }`}
+                  >
+                    {line.length > 0 ? line : '\u00A0'}
+                    {isCurrentLine && !isComplete && (
+                      <span className="typing-caret" aria-hidden="true" />
+                    )}
+                  </span>
+                );
+              })}
+            </div>
+
+            <div className="mt-8 grid gap-3 md:grid-cols-3">
+              {ABOUT_HIGHLIGHTS.map((item) => (
+                <div
+                  key={item.title}
+                  className="rounded-2xl border border-rose-100/80 bg-white/85 px-4 py-4 shadow-sm backdrop-blur"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-400">
+                    {item.title}
+                  </p>
+                  <p className="mt-2 text-sm font-medium leading-6 text-slate-700">
+                    {item.value}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

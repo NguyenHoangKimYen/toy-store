@@ -1,9 +1,18 @@
 const mongoose = require('mongoose');
 const productRepository = require('../repositories/product.repository.js');
 const variantRepository = require('../repositories/variant.repository.js');
-const { uploadToS3, deleteFromS3 } = require('../utils/s3.helper.js');
+const {
+    storeImages,
+    removeImages,
+    normalizePublicMediaUrlsDeep,
+} = require('../utils/image-storage.js');
 const { default: slugify } = require('slugify');
 const { searchProducts } = require('./atlas.search.service.js');
+
+const isValidCategoryFilter = (value) =>
+    typeof value === 'string' &&
+    value !== '[object Object]' &&
+    mongoose.Types.ObjectId.isValid(value);
 
 /**
  * Lấy danh sách sản phẩm (có lọc + phân trang)
@@ -34,7 +43,7 @@ const getAllProducts = async (query, user = null) => {
 
     // --- Lọc theo Category ---
     const categoryId = params.get('categoryId') || null;
-    if (categoryId) {
+    if (isValidCategoryFilter(categoryId)) {
         filter.categoryId = categoryId;
     }
 
@@ -167,7 +176,7 @@ const getAllProducts = async (query, user = null) => {
     const stats = await productRepository.getStats(filter);
 
     // 6. Trả về kết quả
-    return {
+    return normalizePublicMediaUrlsDeep({
         success: true,
         products,
         pagination: {
@@ -183,7 +192,7 @@ const getAllProducts = async (query, user = null) => {
             usingAtlasSearch: false,
             keyword: null,
         },
-    };
+    });
 };
 
 /**
@@ -192,7 +201,7 @@ const getAllProducts = async (query, user = null) => {
 const getProductById = async (id) => {
     const product = await productRepository.findById(id);
     if (!product) throw new Error('Product not found');
-    return product;
+    return normalizePublicMediaUrlsDeep(product);
 };
 
 const getProductBySlug = async (slug) => {
@@ -200,7 +209,7 @@ const getProductBySlug = async (slug) => {
     if (!product) {
         throw new Error("Product not found");
     }
-    return product;
+    return normalizePublicMediaUrlsDeep(product);
 };
 
 const getProductByPrice = (min, max) => {
@@ -236,7 +245,7 @@ const createProduct = async (productData, imgFiles) => {
             imageUrls = productData.imageUrls;
         } else if (imgFiles && imgFiles.length > 0) {
             // Upload từ server (legacy support)
-            imageUrls = await uploadToS3(imgFiles, 'productImages');
+            imageUrls = await storeImages(imgFiles, 'productImages');
         }
 
         // 4. Parse dữ liệu Variants
@@ -374,12 +383,12 @@ const createProduct = async (productData, imgFiles) => {
         // Atlas Search automatically indexes via MongoDB change streams
         // No manual indexing needed
         
-        return finalProduct;
+        return normalizePublicMediaUrlsDeep(finalProduct);
     } catch (error) {
         // 9. Rollback (Hủy tất cả thao tác DB)
         await session.abortTransaction();
 
-        // Nếu đã lỡ upload ảnh lên S3 thì xóa đi (dọn rác)
+        // Nếu có ảnh cũ thì xóa đi (dọn rác)
         // (Bạn cần implement logic lấy array url vừa upload để xóa tại đây)
 
         throw error;
@@ -393,7 +402,7 @@ const deleteProduct = async (id) => {
     if (!product) throw new Error('Product not found');
 
     if (product.imageUrls?.length) {
-        await deleteFromS3(product.imageUrls);
+        await removeImages(product.imageUrls);
     }
 
     // Delete all variants (deleteMany doesn't trigger middleware per document)
@@ -417,12 +426,12 @@ const updateProduct = async (id, updateData, retryCount = 0) => {
     const session = await mongoose.startSession();
     
     try {
-        // 1. Delete images from S3 if specified
+        // 1. Delete images if specified
         if (updateData.deletedImageUrls && Array.isArray(updateData.deletedImageUrls) && updateData.deletedImageUrls.length > 0) {
             try {
-                await deleteFromS3(updateData.deletedImageUrls);
+                await removeImages(updateData.deletedImageUrls);
             } catch (err) {
-                console.error('❌ S3 deletion failed:', err.message);
+                console.error('❌ Image deletion failed:', err.message);
             }
         }
         
@@ -563,7 +572,7 @@ const updateProduct = async (id, updateData, retryCount = 0) => {
         // Atlas Search automatically updates via MongoDB change streams
         // No manual indexing needed
 
-        return result;
+        return normalizePublicMediaUrlsDeep(result);
 
     } catch (error) {
         console.error('\n❌ UPDATE ERROR:', error.message);
@@ -581,31 +590,31 @@ const updateProduct = async (id, updateData, retryCount = 0) => {
 };
 
 /**
- * Thêm ảnh mới vào product (upload lên S3)
+ * Thêm ảnh mới vào product
  */
 const addImagesToProduct = async (id, files) => {
-    const uploadedUrls = await uploadToS3(files, 'productImages');
+    const uploadedUrls = await storeImages(files, 'productImages');
 
     const updated = await productRepository.update(id, {
         $push: { imageUrls: { $each: uploadedUrls } },
     });
 
     if (!updated) throw new Error('Product not found');
-    return updated;
+    return normalizePublicMediaUrlsDeep(updated);
 };
 
 /**
- * Xóa ảnh khỏi product (xóa cả trên S3)
+ * Xóa ảnh khỏi product
  */
 const removeImagesFromProduct = async (id, urlsToRemove) => {
-    await deleteFromS3(urlsToRemove);
+    await removeImages(urlsToRemove);
 
     const updated = await productRepository.update(id, {
         $pull: { imageUrls: { $in: urlsToRemove } },
     });
 
     if (!updated) throw new Error('Product not found');
-    return updated;
+    return normalizePublicMediaUrlsDeep(updated);
 };
 
 // Hàm tự động cập nhật giá

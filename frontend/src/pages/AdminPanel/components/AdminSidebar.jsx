@@ -1,26 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { House, User, Panda, Package, Tag, Search, ChevronDown } from 'lucide-react';
+import { House, User, Panda, Package, Tag, Search, ChevronDown, Ticket } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { ADMIN_ROUTES, PUBLIC_ROUTES } from '@/config/routes';
 import { getUsers } from '@/services/users.service';
 import { getProducts } from '@/services/products.service';
 import { getAllOrders } from '@/services/orders.service';
+import { getAllSupportTickets } from '@/services/supportTickets.service';
 
 const AdminSidebar = ({ onNavigate }) => {
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+  const displayName = user?.fullName || user?.fullname || user?.username || 'Admin';
+  const avatarUrl = user?.avatar || user?.profileImage || user?.photoURL || '';
+  const avatarInitial = displayName.charAt(0).toUpperCase();
 
   const navigationTabs = [
     {title: 'Dashboard', route: ADMIN_ROUTES.DASHBOARD },
+    { title: 'Chatbot Quality', route: ADMIN_ROUTES.CHATBOT_QUALITY },
     { title: 'Users', route: ADMIN_ROUTES.USERS },
     { title: 'Products', route: ADMIN_ROUTES.PRODUCTS },
     { title: 'Orders', route: ADMIN_ROUTES.ORDERS },
+    { title: 'Support Tickets', route: ADMIN_ROUTES.SUPPORT_TICKETS },
     { title: 'Discount Codes', route: ADMIN_ROUTES.DISCOUNT_CODES },
   ];
 
@@ -29,7 +36,10 @@ const AdminSidebar = ({ onNavigate }) => {
     onNavigate?.();
   };
 
-  const isActive = (route) => location.pathname === route;
+  const isActive = (route) =>
+    location.pathname === route ||
+    (route === ADMIN_ROUTES.SUPPORT_TICKETS &&
+      location.pathname.startsWith(`${ADMIN_ROUTES.SUPPORT_TICKETS}/`));
   const filteredTabs = navigationTabs.filter((tab) =>
     tab.title.toLowerCase().includes(searchTerm.trim().toLowerCase())
   );
@@ -44,10 +54,11 @@ const AdminSidebar = ({ onNavigate }) => {
     const timeout = setTimeout(async () => {
       try {
         setSearchLoading(true);
-        const [userRes, productRes, orderRes] = await Promise.allSettled([
+        const [userRes, productRes, orderRes, ticketRes] = await Promise.allSettled([
           getUsers({ keyword: term, limit: 5 }),
           getProducts({ keyword: term, limit: 5, status: 'all' }),
           getAllOrders({ search: term, limit: 5 }),
+          getAllSupportTickets({ search: term, limit: 5 }),
         ]);
 
         const results = [];
@@ -88,6 +99,18 @@ const AdminSidebar = ({ onNavigate }) => {
           });
         }
 
+        if (ticketRes.status === 'fulfilled') {
+          (ticketRes.value?.tickets || ticketRes.value || []).slice(0, 5).forEach((t) => {
+            results.push({
+              id: t._id,
+              type: 'Ticket',
+              title: t.ticketNumber || t.subject || 'Support ticket',
+              subtitle: t.contactEmail || t.contactName || t.category || 'Ticket',
+              route: `${ADMIN_ROUTES.SUPPORT_TICKETS}/${t._id}`,
+            });
+          });
+        }
+
         setSearchResults(results);
       } catch (err) {
         console.error('Sidebar search failed', err);
@@ -99,6 +122,10 @@ const AdminSidebar = ({ onNavigate }) => {
 
     return () => clearTimeout(timeout);
   }, [searchTerm]);
+
+  useEffect(() => {
+    setAvatarLoadFailed(false);
+  }, [avatarUrl]);
 
   const handleResultNavigate = (route) => {
     navigate(route);
@@ -120,22 +147,23 @@ const AdminSidebar = ({ onNavigate }) => {
           <button
             type="button"
             onClick={() => setShowAccountMenu((v) => !v)}
-            className="flex items-center gap-2 w-full text-left rounded-lg px-2 py-1.5 transition hover:bg-slate-50"
+            className="flex items-center gap-2 w-full min-h-[44px] text-left rounded-lg px-2 py-2 transition hover:bg-slate-50"
           >
-            {user?.avatar || user?.profileImage || user?.photoURL ? (
+            {avatarUrl && !avatarLoadFailed ? (
               <img
-                src={user.avatar || user.profileImage || user.photoURL}
-                alt={user?.fullname || 'Admin'}
+                src={avatarUrl}
+                alt={displayName}
                 className="size-9 rounded-full object-cover border border-slate-200"
                 referrerPolicy="no-referrer"
+                onError={() => setAvatarLoadFailed(true)}
               />
             ) : (
               <div className="size-9 rounded-full bg-slate-700 flex items-center justify-center text-white text-sm font-semibold">
-                {user?.fullname?.[0]?.toUpperCase() || 'A'}
+                {avatarInitial || 'A'}
               </div>
             )}
             <div className="leading-tight overflow-hidden">
-              <span className="text-sm font-semibold text-stone-800 block truncate">{user?.fullname || 'Admin'}</span>
+              <span className="text-sm font-semibold text-stone-800 block truncate">{displayName}</span>
               <span className="text-[11px] text-stone-500 block truncate">{user?.email || 'admin@example.com'}</span>
             </div>
             <ChevronDown className={`size-4 text-stone-500 transition ${showAccountMenu ? 'rotate-180' : ''}`} />
@@ -177,7 +205,7 @@ const AdminSidebar = ({ onNavigate }) => {
 
         {/* Search */}
         <div className="relative">
-          <label className="w-full bg-slate-50 border border-slate-200 rounded-lg flex items-center px-3 py-2.5 text-sm text-slate-600">
+          <label className="w-full min-h-[44px] bg-slate-50 border border-slate-200 rounded-lg flex items-center px-3 py-2.5 text-sm text-slate-600">
             <Search className="size-4 mr-1.5 text-slate-400" />
             <input
               type="text"
@@ -204,7 +232,7 @@ const AdminSidebar = ({ onNavigate }) => {
                 searchResults.map((item) => (
                   <button
                     key={`${item.type}-${item.id}`}
-                    className="w-full text-left px-3 py-2.5 hover:bg-slate-50 transition flex items-start gap-2"
+                    className="w-full text-left px-3 py-2.5 hover:bg-slate-50 transition flex items-start gap-2 min-h-[44px]"
                     onClick={() => handleResultNavigate(item.route)}
                   >
                     <span className="text-[11px] font-semibold text-slate-600">{item.type}</span>
@@ -227,7 +255,7 @@ const AdminSidebar = ({ onNavigate }) => {
             <button
               key={tab.route}
               onClick={() => handleTabClick(tab.route)}
-              className={`flex items-center justify-start gap-2.5 w-full rounded-md px-3 py-2 text-sm transition cursor-pointer ${
+              className={`flex items-center justify-start gap-2.5 w-full min-h-[44px] rounded-md px-3 py-2 text-sm transition cursor-pointer ${
                 isActive(tab.route)
                   ? 'bg-slate-900 text-white'
                   : 'text-slate-600 hover:bg-slate-50'

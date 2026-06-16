@@ -7,15 +7,18 @@ const {
     deleteVariant,
     addVariantImages,
     removeVariantImages,
-    uploadVariantImagesToS3,
+    uploadVariantImagesToMongo,
 } = require('../controllers/variant.controller');
 const { uploadVariantImages } = require('../middlewares/upload.middleware');
-
-// Upload variant images lên S3 mà không cần truyền variant ID 
-router.post('/images/upload', uploadVariantImages, uploadVariantImagesToS3);
+const auth = require('../middlewares/auth.middleware');
+const adminOnly = require('../middlewares/admin.middleware');
 
 // CRUD cơ bản
 router.get('/:id', getVariantById);
+
+router.use(auth, adminOnly);
+
+router.post('/images/upload', uploadVariantImages, uploadVariantImagesToMongo);
 router.post('/:productId', uploadVariantImages, createVariant);
 router.patch('/:id', updateVariant);
 router.delete('/:id', deleteVariant);

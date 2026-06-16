@@ -1,43 +1,88 @@
 /**
- * Image Optimization Utilities
- * Enterprise-grade image optimization like Netflix/Instagram
+ * Image utilities for the GridFS-backed catalog.
+ * Keep image URLs safe, predictable, and easy to render.
  */
+
+import { API_BASE_URL } from '@/services/config';
 
 // Browser format support cache
 let formatSupportCache = null;
 
-/**
- * Generate optimized image URL for S3 with query parameters
- * Ready for CloudFront + Lambda@Edge integration
- * 
- * @param {string} url - Original image URL
- * @param {Object} options - Optimization options
- * @returns {string} Optimized image URL
- */
-export const getOptimizedImageUrl = (url, options = {}) => {
-  if (!url || url.includes('/placeholder.png') || url.startsWith('data:')) {
-    return url;
+const LEGACY_SEED_IMAGE_PREFIX = '/seed-images/';
+const GRIDFS_IMAGE_PATH_PATTERN = /\/api\/media\/images\/([a-fA-F0-9]{24})\/stream(?:\?.*)?$/;
+const PLACEHOLDER_IMAGE = '/placeholder.svg';
+
+const getBackendOrigin = () => {
+  if (typeof window === 'undefined') {
+    return '';
   }
 
-  const {
-    width = null,
-    quality = 85,
-    format = 'webp'
-  } = options;
+  try {
+    return new URL(API_BASE_URL, window.location.origin).origin;
+  } catch {
+    return window.location.origin;
+  }
+};
 
-  // For future CloudFront + Lambda@Edge implementation
-  // When enabled, add query params: ?w=300&q=85&f=webp
-  const params = new URLSearchParams();
-  
-  if (width) params.append('w', width);
-  if (quality !== 85) params.append('q', quality);
-  if (format !== 'webp') params.append('f', format);
+const rewriteGridFsUrl = (value) => {
+  const trimmed = String(value || '').trim();
+  if (!trimmed) return '';
 
-  // Uncomment when CloudFront + Lambda@Edge is set up:
-  // const separator = url.includes('?') ? '&' : '?';
-  // return params.toString() ? `${url}${separator}${params.toString()}` : url;
-  
-  return url;
+  const backendOrigin = getBackendOrigin();
+  if (!backendOrigin) return trimmed;
+
+  try {
+    const parsed = new URL(trimmed, backendOrigin);
+    if (!parsed.pathname.includes('/api/media/images/')) {
+      return trimmed;
+    }
+
+    const match = parsed.pathname.match(/\/api\/media\/images\/([a-fA-F0-9]{24})\/stream/);
+    if (!match) {
+      return trimmed;
+    }
+
+    const search = parsed.search || '';
+    return `${backendOrigin}/api/media/images/${match[1]}/stream${search}`;
+  } catch {
+    return trimmed;
+  }
+};
+
+export const normalizeImageUrl = (url, fallback = '/placeholder.svg') => {
+  if (!url || typeof url !== 'string') return fallback;
+
+  const trimmed = url.trim();
+  if (!trimmed) return fallback;
+  if (trimmed.startsWith(LEGACY_SEED_IMAGE_PREFIX)) return fallback;
+  if (trimmed.startsWith('/placeholder')) return trimmed;
+
+  if (GRIDFS_IMAGE_PATH_PATTERN.test(trimmed) || trimmed.includes('/api/media/images/')) {
+    return rewriteGridFsUrl(trimmed);
+  }
+
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    if (trimmed.includes('/api/media/images/')) {
+      return rewriteGridFsUrl(trimmed);
+    }
+
+    return trimmed;
+  }
+
+  return fallback;
+};
+
+/**
+ * Keep the URL stable for browser rendering.
+ * We no longer optimize through a CDN, so this is just a safe passthrough.
+ */
+export const getOptimizedImageUrl = (url) => {
+  const normalized = normalizeImageUrl(url);
+  if (normalized.startsWith('/placeholder') || normalized.startsWith('data:')) {
+    return normalized;
+  }
+
+  return normalized;
 };
 
 /**
@@ -45,13 +90,12 @@ export const getOptimizedImageUrl = (url, options = {}) => {
  * Common sizes optimized for modern devices
  */
 export const generateSrcSet = (url, sizes = [320, 480, 640, 768, 1024, 1280]) => {
-  if (!url || url.includes('/placeholder.png') || url.startsWith('data:')) {
+  const normalized = normalizeImageUrl(url);
+  if (!normalized || normalized.startsWith('/placeholder') || normalized.startsWith('data:')) {
     return '';
   }
 
-  return sizes
-    .map(size => `${getOptimizedImageUrl(url, { width: size })} ${size}w`)
-    .join(', ');
+  return sizes.map(size => `${normalized} ${size}w`).join(', ');
 };
 
 /**
@@ -61,6 +105,9 @@ export const generateSrcSet = (url, sizes = [320, 480, 640, 768, 1024, 1280]) =>
 export const preloadImage = (url, options = {}) => {
   if (!url || typeof window === 'undefined') return;
 
+  const normalized = normalizeImageUrl(url);
+  if (!normalized || normalized.startsWith('/placeholder')) return;
+
   const { 
     as = 'image',
     type = 'image/webp',
@@ -68,13 +115,13 @@ export const preloadImage = (url, options = {}) => {
   } = options;
 
   // Check if already preloaded
-  const existing = document.querySelector(`link[rel="preload"][href="${url}"]`);
+  const existing = document.querySelector(`link[rel="preload"][href="${normalized}"]`);
   if (existing) return;
 
   const link = document.createElement('link');
   link.rel = 'preload';
   link.as = as;
-  link.href = url;
+  link.href = normalized;
   link.fetchPriority = fetchPriority;
   if (type) link.type = type;
   
@@ -89,26 +136,26 @@ export const preloadImages = (urls, options = {}) => {
 };
 
 /**
- * Preconnect to image CDN for faster loading
- * Call once at app startup
+ * Preconnect to the backend origin that serves GridFS images.
+ * Call once at app startup if you want a small connection warmup.
  */
 export const preconnectImageCDN = () => {
   if (typeof window === 'undefined') return;
 
-  const cdnOrigins = [
-    'https://toy-store-project-of-springwang.s3.ap-southeast-2.amazonaws.com',
-    // Add CloudFront URL when available
-  ];
+  let backendOrigin = null;
+  try {
+    backendOrigin = new URL(API_BASE_URL, window.location.origin).origin;
+  } catch {
+    backendOrigin = window.location.origin;
+  }
 
-  cdnOrigins.forEach(origin => {
-    // Preconnect
+  [backendOrigin].filter(Boolean).forEach(origin => {
     const preconnect = document.createElement('link');
     preconnect.rel = 'preconnect';
     preconnect.href = origin;
     preconnect.crossOrigin = 'anonymous';
     document.head.appendChild(preconnect);
 
-    // DNS prefetch as fallback
     const dnsPrefetch = document.createElement('link');
     dnsPrefetch.rel = 'dns-prefetch';
     dnsPrefetch.href = origin;
